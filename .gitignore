@@ -1,0 +1,6 @@
+# Lokale Claude-Code-Einstellungen
+.claude/
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
