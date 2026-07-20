@@ -5,6 +5,7 @@
 
 :root {
   --accent: #4d8cff;
+  --info: #ff974d;
   --bg: #04060f;
   --text: #e9edf8;
   --muted: #9aa4c0;
@@ -36,6 +37,16 @@ body {
 ::selection {
   background: var(--accent);
   color: #fff;
+}
+
+/* Bilder & Galaxy-Canvas sind für den Mauszeiger durchlässig: Ein Rechtsklick
+   trifft das Element dahinter, sodass der Browser das normale Seiten-
+   Kontextmenü statt „Bild speichern …" zeigt. Klicks & Tooltips hängen an den
+   Eltern-Elementen (a.brand, .logo-box) und funktionieren weiter. */
+img, canvas {
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 /* ===== Sanfte Seiten-Einblendung ======================================= */
@@ -132,7 +143,7 @@ html.lenis, html.lenis body { height: auto; }
   content: "";
   position: absolute;
   left: 0.8rem;
-  right: 0.8rem;
+  right: calc(0.8rem + 0.16em);
   bottom: 0.22rem;
   height: 2px;
   border-radius: 2px;
@@ -177,13 +188,29 @@ html.lenis, html.lenis body { height: auto; }
   transition: opacity 1s ease, letter-spacing 1.4s var(--ease-out);
 }
 
+/* Bündelt die h1 mit den beiden Spektrumlinien: Der Container schrumpft
+   im zentrierten Hero-Flex auf die Breite der Überschrift, die Linien
+   strecken sich (Flex-Standard) auf exakt dieselbe Breite. */
+.hero-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin: 0.6rem 0;
+}
+
 .hero h1 {
   font-family: var(--font-display);
   font-weight: 400;
   font-size: clamp(3rem, 9vw, 6.5rem);
   line-height: 1;
   letter-spacing: 0.04em;
-  margin: 0.6rem 0;
+  /* Bebas Neue lässt in der Zeilenbox 0.1em Luft über den Versalien und
+     0.2em unter der Grundlinie (Ascent 950 / Cap 700 / Descent 350 bei
+     upem 1000); seitlich stehen 0.048em Glyphen-Vorbreite vor dem „M" und
+     0.058em nach dem „e" (Bearing + letter-spacing). Die Negativ-Margins
+     schneiden das ab, damit die Spektrumlinien exakt so breit sind wie
+     die sichtbare Schrift und gleich weit von ihr entfernt liegen. */
+  margin: -0.1em -0.058em -0.2em -0.048em;
   background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
   -webkit-background-clip: text;
   background-clip: text;
@@ -196,16 +223,12 @@ html.lenis, html.lenis body { height: auto; }
               filter 1.2s var(--ease-out) 0.12s;
 }
 
-/* Verlaufslinie mit den Akzentfarben aller sechs Phasen – der Verlauf
-   selbst kommt aus main.js (--accent-spectrum, aus PHASES generiert). */
+/* Linien über und unter der Überschrift – Breite kommt vom .hero-title-
+   Wrapper, der auf die Textbreite der h1 schrumpft. */
 .hero-spectrum {
   position: relative;
-  width: min(420px, 70%);
   height: 3px;
-  border-radius: 999px;
-  margin: 0.9rem auto 0.3rem;
-  background: var(--accent-spectrum,
-    linear-gradient(90deg, #ffa63c, #ff4d4d, #a855f7, #34d6a0, #4d8cff, #ff46b5));
+  background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
   opacity: 0;
   transform: scaleX(0.35);
   transition: opacity 0.9s ease 0.3s, transform 1.2s var(--ease-out) 0.3s;
@@ -225,11 +248,22 @@ html.lenis, html.lenis body { height: auto; }
 .hero-sub {
   color: var(--muted);
   font-size: 1.05rem;
-  max-width: 34rem;
-  margin: 0.4rem 0 0;
+  max-width: 45rem;
+  margin: 8rem 0 0;
   opacity: 0;
   transform: translateY(22px);
   transition: opacity 0.9s ease 0.4s, transform 1s var(--ease-out) 0.4s;
+}
+
+/* Hervorgehobenes Wort im Hero-Untertitel – nutzt die Phasen-Akzentfarbe */
+.hero-sub-accent {
+  color: var(--accent);
+  text-shadow: 0 0 14px var(--accent);
+}
+
+.hero-sub-info {
+  color: var(--info);
+  text-shadow: 0 0 14px var(--info);
 }
 
 .scroll-hint {
@@ -243,6 +277,17 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .hero.ready .hero-kicker { opacity: 1; letter-spacing: 0.5em; }
+
+/* Browser mit text-box-trim beschneiden die Zeilenbox exakt auf Versal-
+   höhe und Grundlinie – font-unabhängig; nur die vertikale Margin-
+   Korrektur entfällt, die seitliche (Bearings) bleibt nötig. */
+@supports (text-box-trim: trim-both) {
+  .hero h1 {
+    margin-block: 0;
+    text-box-trim: trim-both;
+    text-box-edge: cap alphabetic;
+  }
+}
 
 .hero.ready h1 {
   opacity: 1;
@@ -273,23 +318,20 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ===== Phasen-Sektionen ================================================ */
 
-/* Die Sektion ist höher als der Viewport (Höhe setzt main.js); der
-   Pin bleibt derweil sticky stehen, während vertikales Scrollen die
-   Timeline horizontal weiterschiebt. */
+/* Jede Phase füllt einen Viewport und scrollt ganz normal im Seitenfluss;
+   die Timeline darin ist ein eigener horizontaler Scrollbereich, den
+   main.js per Mausrad über der Zeitskala bewegt. */
 .phase {
   position: relative;
 }
 
 .phase-pin {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 4.5rem 0 2rem;
-  overflow: hidden;
 }
 
 .phase-heading {
@@ -315,13 +357,76 @@ html.lenis, html.lenis body { height: auto; }
   margin: 0.35rem 0 0;
 }
 
-/* ----- Horizontale Timeline (scrollgesteuert) ----- */
+/* ----- Horizontale Timeline (Mausrad/Touch scrollbar) ----- */
 
 .timeline-viewport {
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* Kein horizontales Scroll-Chaining (z. B. Browser-History-Geste),
+     vertikales Wischen auf Touch läuft weiter an die Seite durch */
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
   padding: 1.5rem 0 0.9rem;
   mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
+}
+
+.timeline-viewport::-webkit-scrollbar { display: none; }
+
+/* Wrapper um den Viewport – Anker für den Hinweis-Pfeil, der nicht
+   mitscrollen und nicht unter die Randmaske fallen soll */
+.timeline-wrap {
+  position: relative;
+}
+
+/* Dezente Pfeile an den Rändern auf Höhe des Zeitstrahls: Die Timeline
+   lässt sich in diese Richtung weiterscrollen. Sichtbarkeit steuert
+   main.js (.visible) – am jeweiligen Timeline-Ende ausgeblendet. */
+.scroll-arrow {
+  position: absolute;
+  top: calc(1.5rem + var(--logo-h) + var(--conn-h) + 1px); /* = padding-top des Viewports + Position des Zeitstrahls */
+  transform: translateY(-50%);
+  padding: 0.4rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.scroll-arrow.right { right: 14px; }
+.scroll-arrow.left  { left: 14px; }
+
+.scroll-arrow.visible { opacity: 1; }
+
+.scroll-arrow span {
+  display: block;
+  width: 11px;
+  height: 11px;
+  transform: rotate(45deg);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+.scroll-arrow.right span {
+  border-right: 2px solid rgba(255, 255, 255, 0.65);
+  border-top: 2px solid rgba(255, 255, 255, 0.65);
+  animation: arrow-nudge-right 1.8s ease-in-out infinite;
+}
+
+.scroll-arrow.left span {
+  border-left: 2px solid rgba(255, 255, 255, 0.65);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.65);
+  animation: arrow-nudge-left 1.8s ease-in-out infinite;
+}
+
+/* translate(±4px, ∓4px) im um 45° gedrehten Koordinatensystem
+   = rein horizontale Bewegung auf dem Bildschirm */
+@keyframes arrow-nudge-right {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.55; }
+  50%      { transform: rotate(45deg) translate(4px, -4px); opacity: 1; }
+}
+
+@keyframes arrow-nudge-left {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.55; }
+  50%      { transform: rotate(45deg) translate(-4px, 4px); opacity: 1; }
 }
 
 .timeline {
@@ -330,7 +435,6 @@ html.lenis, html.lenis body { height: auto; }
   min-width: 100%;
   margin: 0 auto;
   padding: 0 clamp(2rem, 6vw, 6rem);
-  will-change: transform;
 }
 
 /* Der durchgehende Zeitstrahl */
@@ -355,6 +459,17 @@ html.lenis, html.lenis body { height: auto; }
   padding: 0;
 }
 
+/* Passt der Inhalt einer Phase (notfalls leicht verschmälert) komplett in
+   den Viewport, setzt main.js .fit: Die Timeline wird auf Viewportbreite
+   fixiert und die Einträge schrumpfen bis min-width – die Phase ist dann
+   nicht horizontal scrollbar (z. B. Phase 1 und 2 mit wenigen Filmen). */
+.timeline-wrap.fit .timeline { width: auto; }
+
+.timeline-wrap.fit .entry {
+  flex-shrink: 1;
+  min-width: 170px;
+}
+
 /* Ein-/Ausblendung ist scroll-gekoppelt: main.js setzt opacity/transform
    pro Frame aus der Position im Viewport (Scrub, keine CSS-Transition).
    will-change gibt jedem Eintrag einen eigenen Compositor-Layer, damit
@@ -370,6 +485,15 @@ html.lenis, html.lenis body { height: auto; }
   will-change: opacity, transform;
 }
 
+/* Seitliches Ein-/Ausblenden beim Timeline-Scroll läuft nur auf diesen
+   Kind-Elementen (Punkt und Datum bleiben stabil auf der Zeitskala) –
+   eigener Layer aus demselben Grund wie bei .entry */
+.logo-box,
+.connector,
+.badge {
+  will-change: opacity, transform;
+}
+
 .logo-box {
   height: var(--logo-h);
   width: 100%;
@@ -382,6 +506,7 @@ html.lenis, html.lenis body { height: auto; }
 .logo-img {
   max-width: 100%;
   max-height: calc(var(--logo-h) - 16px);
+  object-fit: contain; /* falls max-height greift, obwohl JS die Breite setzt */
   filter: drop-shadow(0 3px 12px rgba(0, 0, 0, 0.65));
 }
 
@@ -417,6 +542,21 @@ html.lenis, html.lenis body { height: auto; }
   box-shadow: 0 0 8px var(--accent),
               0 0 20px color-mix(in srgb, var(--accent) 60%, transparent);
   z-index: 1;
+}
+
+/* Infinity-Stein statt Punkt (Avengers-Filme): mittig auf der Skalenlinie;
+   die negativen Margins geben dem Stein denselben Layout-Platz wie dem
+   9px-Punkt (3.5px), damit die Datumszeilen aller Einträge bündig bleiben. */
+.dot.stone {
+  width: 26px;
+  height: 26px;
+  margin: -14px 0 -8.5px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 95%, transparent))
+          drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 65%, transparent));
 }
 
 .date {
@@ -465,11 +605,138 @@ html.lenis, html.lenis body { height: auto; }
   color: #f4f6ff;
 }
 
+/* ===== Infobox beim Hover über einen Filmtitel ========================= */
+
+/* Position (left/top) setzt main.js pro Frame; --accent kommt von der
+   Phase des Films, nicht vom globalen Akzent. */
+.movie-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 30;
+  width: min(400px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  overflow: hidden;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: 12px;
+  background: rgba(8, 12, 26, 0.92);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55),
+              0 0 26px color-mix(in srgb, var(--accent) 18%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.22s ease, transform 0.25s var(--ease-out);
+}
+
+/* Unterhalb des Titels: von oben einschweben statt von unten */
+.movie-tip.below { transform: translateY(-6px); }
+
+.movie-tip.visible { opacity: 1; transform: none; }
+
+.tip-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1.1;
+  letter-spacing: 0.05em;
+  color: #fff;
+  text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.tip-date {
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tip-label {
+  margin: 0.8rem 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+/* Key Moments: ein <li> pro Handlungspunkt, Akzent-Punkt als Bullet */
+.tip-story {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.32rem;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: #cdd5ec;
+}
+
+.tip-story li {
+  position: relative;
+  padding-left: 0.8rem;
+}
+
+.tip-story li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.48em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.tip-chars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tip-chars li {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #dfe5f7;
+  background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.04));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+}
+
+/* Streaming-Dienste: quadratische Logos als App-Icons (Radius ≈ 25 %
+   der Kantenlänge – wie auf einem Homescreen) */
+.tip-stream {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tip-stream img {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
 /* ===== Footer ========================================================== */
 
 .site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 2.5rem 1.5rem 3rem;
+  min-height: 3.5rem;
+  padding: 0.75rem 1.5rem;
   color: var(--muted);
   font-size: 0.78rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
@@ -478,7 +745,7 @@ html.lenis, html.lenis body { height: auto; }
 
 .site-footer p {
   margin: 0;
-  max-width: 40rem;
+  max-width: 45rem;
   margin-inline: auto;
 }
 
@@ -495,6 +762,11 @@ html.lenis, html.lenis body { height: auto; }
   #phase-nav a {
     font-size: 0.95rem;
     padding: 0.45rem 0.55rem 0.4rem;
+  }
+
+  #phase-nav a::after {
+    left: 0.55rem;
+    right: calc(0.55rem + 0.16em);
   }
 
   .entry { width: 175px; }
@@ -537,4 +809,8 @@ html.lenis, html.lenis body { height: auto; }
   .hero-sub { transform: none; }
 
   .scroll-hint span { animation: none; }
+
+  .scroll-arrow span { animation: none; }
+
+  .movie-tip { transition: none; }
 }
