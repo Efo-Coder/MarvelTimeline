@@ -1,14 +1,19 @@
 # MCU Timeline – Fanpage
 
-Inoffizielle Fanpage: Alle Kinofilme des Marvel Cinematic Universe als
-horizontale Timeline, aufgeteilt in die offiziellen Phasen 1–6 – vor einem
-animierten Galaxie-Hintergrund, dessen Farben sich pro Phase ändern.
+Inoffizielle Fanpage: Alle Kinofilme und Disney+-Realserien des Marvel
+Cinematic Universe als horizontale Timeline, aufgeteilt in die offiziellen
+Phasen 1–6. Innerhalb jeder Phase ist alles **chronologisch nach der
+Handlung** sortiert (Story-Reihenfolge, angelehnt an Marvels offizielle
+Timeline-Reihenfolge), nicht nach Kinostart – vor einem animierten
+Galaxie-Hintergrund, dessen Farben sich pro Phase ändern. Serien tragen
+ein „Serie“-Badge unter dem Zeitstrahl.
 
 Gescrollt wird mit [Lenis](https://github.com/darkroomengineering/lenis)
 (Smooth Scroll, lokal eingebunden unter `js/vendor/lenis.min.js`, MIT-Lizenz).
-Die Phasen-Sektionen sind „sticky“: Beim Runterscrollen bleibt die Sektion
-stehen und die Timeline schiebt sich horizontal weiter, bis alle Filme
-durchgelaufen sind – erst dann geht es vertikal zur nächsten Phase.
+Die Seite scrollt normal vertikal; nur wenn man mit dem Mausrad direkt über
+einer Zeitskala scrollt, schiebt sich diese Timeline horizontal weiter
+(auf Touch-Geräten per Wischen). Ist sie am Anfang/Ende angekommen,
+scrollt die Seite normal weiter.
 
 ## Starten
 
@@ -26,6 +31,10 @@ Filmtitel als Platzhalter. Um echte Logos zu verwenden:
 2. Datei in `assets/logos/` ablegen, exakt benannt nach dem Slug des Films
    (siehe Tabelle unten), z. B. `assets/logos/iron-man.png`.
 3. Seite neu laden – das Logo ersetzt den Platzhalter automatisch.
+
+Die Größe muss nicht angepasst werden: Jedes Logo wird beim Laden vermessen
+(sichtbarer Inhalt ohne transparenten Rand) und automatisch so skaliert, dass
+alle Logos optisch gleich groß wirken – als Referenz dient `iron-man.png`.
 
 ### Dateinamen (Slugs)
 
@@ -72,11 +81,34 @@ Filmtitel als Platzhalter. Um echte Logos zu verwenden:
 | Avengers: Doomsday | `avengers-doomsday.png` |
 | Avengers: Secret Wars | `avengers-secret-wars.png` |
 
+Serien (Staffeln teilen sich ein Logo):
+
+| Serie | Dateiname |
+| --- | --- |
+| WandaVision | `wandavision.png` |
+| The Falcon and the Winter Soldier | `the-falcon-and-the-winter-soldier.png` |
+| Loki (Staffel 1 & 2) | `loki.png` |
+| Hawkeye | `hawkeye.png` |
+| Moon Knight | `moon-knight.png` |
+| Ms. Marvel | `ms-marvel.png` |
+| She-Hulk: Attorney at Law | `she-hulk.png` |
+| Secret Invasion | `secret-invasion.png` |
+| Echo | `echo.png` |
+| Agatha All Along | `agatha-all-along.png` |
+| Daredevil: Born Again (Staffel 1 & 2) | `daredevil-born-again.png` |
+| Ironheart | `ironheart.png` |
+| Wonder Man | `wonder-man.png` |
+| VisionQuest | `visionquest.png` |
+
 ## Anpassen
 
-- **Filme & Daten**: [js/data.js](js/data.js) – Titel, Datum, Slug pro Film;
-  neue Filme einfach ins passende `movies`-Array einfügen.
-  Zukünftige Filme mit `upcoming: true` markieren („Demnächst“-Badge).
+- **Filme, Serien & Daten**: [js/data.js](js/data.js) – pro Eintrag Titel,
+  Slug, `period` (Handlungszeitraum, steht unter dem Zeitstrahl) und `date`
+  (Kinostart bzw. Disney+-Start, steht in der Infobox); neue Einträge ins
+  `movies`-Array ihrer Phase einfügen, an der passenden Stelle der
+  Handlungs-Chronologie. Serien mit `series: true` markieren
+  („Serie“-Badge, Infobox zeigt „Disney+-Start“), zukünftige Titel mit
+  `upcoming: true` („Demnächst“-Badge).
 - **Akzentfarben pro Phase**: ebenfalls in `js/data.js`
   (`accent` fürs UI, `nebula` = drei RGB-Farben für die Galaxie-Nebel).
 - **Galaxie-Animation**: [js/galaxy.js](js/galaxy.js)
@@ -87,9 +119,23 @@ Filmtitel als Platzhalter. Um echte Logos zu verwenden:
 
 ## Hinweise
 
-- Reihenfolge = US-Kinostart innerhalb der offiziellen Marvel-Phasen
-  (wie auf den Marvel-Studios-Panels). Die Daten ab 2026 sind angekündigte
-  Termine und können sich verschieben.
+- Gruppierung = offizielle Marvel-Phasen 1–6; innerhalb jeder Phase gilt
+  die Handlungs-Chronologie (angelehnt an Marvels offizielle
+  Timeline-Reihenfolge, z. B. auf Disney+), nicht der Kinostart. Unter dem
+  Zeitstrahl steht der Handlungszeitraum, der Kinostart in der
+  Hover-Infobox.
+- Serien = die Realserien von Marvel Studios / Marvel Television auf
+  Disney+ (WandaVision bis VisionQuest). Animierte Serien (*What If…?*,
+  *X-Men ’97*, *Eyes of Wakanda*, *Marvel Zombies*, …) und die Special
+  Presentations (*Werewolf by Night*, Guardians-Holiday-Special) sind
+  bewusst nicht enthalten. Staffeln mit eigener Phase (Loki,
+  Daredevil: Born Again) stehen als eigene Einträge.
+- Die Handlungszeiträume der neuesten Titel sind teils nur näherungsweise
+  bekannt („20??“ = noch geheim); *The Fantastic Four: First Steps* spielt
+  auf Erde-828, *Deadpool & Wolverine* größtenteils bei der TVA und die
+  Loki-Staffeln liegen außerhalb der Zeit – sie stehen daher an ihrer
+  offiziellen Viewing-Order-Position. Die Start-Termine ab August 2026
+  sind angekündigt und können sich verschieben.
 - Die Seite respektiert `prefers-reduced-motion` (Animationen werden dann
   deaktiviert).
 
