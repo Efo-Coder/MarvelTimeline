@@ -8,6 +8,15 @@ Timeline-Reihenfolge), nicht nach Kinostart – vor einem animierten
 Galaxie-Hintergrund, dessen Farben sich pro Phase ändern. Serien tragen
 ein „Serie“-Badge unter dem Zeitstrahl.
 
+Dazu gibt es eine zweite Seite: [characters.html](characters.html) zeigt
+alle Figuren als Raster, mit Suche über Namen, Rollen und Besetzung, Filter
+nach Phase und Sortierung nach Alphabet, Zahl der Auftritte oder erstem
+Auftritt. Ein Klick auf eine Figur öffnet dieselbe Karte wie in der
+Timeline (Porträt, Rollen, Besetzung, Kurzbiografie, alle Auftritte),
+dazu eine ausführliche Biografie in benannten Abschnitten, und jeder
+Auftritt darin führt zurück auf die Timeline, die den Titel direkt
+aufschlägt. Der Header verlinkt beide Seiten.
+
 Gescrollt wird mit [Lenis](https://github.com/darkroomengineering/lenis)
 (Smooth Scroll, lokal eingebunden unter `js/vendor/lenis.min.js`, MIT-Lizenz).
 Die Seite scrollt normal vertikal; nur wenn man mit dem Mausrad direkt über
@@ -15,26 +24,36 @@ einer Zeitskala scrollt, schiebt sich diese Timeline horizontal weiter
 (auf Touch-Geräten per Wischen). Ist sie am Anfang/Ende angekommen,
 scrollt die Seite normal weiter.
 
+Der Einstieg ist eine gepinnte Hero-Sequenz: Die Startsektion bleibt beim
+Scrollen zunächst am oberen Rand stehen und zeigt nacheinander den Titel,
+den Fan-Timeline-Hinweis und die Kurzbeschreibung. Jede Stufe blendet
+scroll-gekoppelt ein und aus, Zurückscrollen spielt alles rückwärts. Erst
+danach löst sich der Hero und es geht zu den Phasen weiter. Bei
+reduzierter Bewegung (Systemeinstellung) entfällt die Sequenz und alle
+Texte stehen statisch untereinander.
+
 ## Starten
 
 Einfach `index.html` im Browser öffnen – es wird kein Server und kein
-Build-Tool benötigt. (Nur die Schriftarten werden von Google Fonts geladen;
-ohne Internet greift ein System-Font-Fallback.)
+Build-Tool benötigt. Die Charakterseite liegt daneben als
+`characters.html`, verlinkt ist sie im Header. (Nur die Schriftarten
+werden von Google Fonts geladen; ohne Internet greift ein
+System-Font-Fallback.)
 
 ## Film-Logos einfügen
 
 Solange kein Logo vorhanden ist, zeigt die Seite automatisch den stilisierten
 Filmtitel als Platzhalter. Um echte Logos zu verwenden:
 
-1. Logo als **PNG mit transparentem Hintergrund** besorgen
+1. Logo als **WebP mit transparentem Hintergrund** besorgen
    (z. B. aus der Wikipedia oder von Fan-Wikis – nur für private Nutzung).
 2. Datei in `assets/logos/` ablegen, exakt benannt nach dem Slug des Films
-   (siehe Tabelle unten), z. B. `assets/logos/iron-man.png`.
+   (siehe Tabelle unten), z. B. `assets/logos/iron-man.webp`.
 3. Seite neu laden – das Logo ersetzt den Platzhalter automatisch.
 
 Die Größe muss nicht angepasst werden: Jedes Logo wird beim Laden vermessen
 (sichtbarer Inhalt ohne transparenten Rand) und automatisch so skaliert, dass
-alle Logos optisch gleich groß wirken – als Referenz dient `iron-man.png`.
+alle Logos optisch gleich groß wirken – als Referenz dient `iron-man.webp`.
 
 ### Dateinamen (Slugs)
 
@@ -108,13 +127,57 @@ Serien (Staffeln teilen sich ein Logo):
   `movies`-Array ihrer Phase einfügen, an der passenden Stelle der
   Handlungs-Chronologie. Serien mit `series: true` markieren
   („Serie“-Badge, Infobox zeigt „Disney+-Start“), zukünftige Titel mit
-  `upcoming: true` („Demnächst“-Badge).
+  `upcoming: true` („Demnächst“-Badge). `summary` ist die Kurzfassung für
+  die Hover-Infobox, `story` die Liste der Schlüsselmomente fürs Modal,
+  das ein Klick aufs Logo öffnet.
+- **Charaktere**: `characters` listet pro Eintrag die Figuren, einheitlich
+  als „Realname / Heldenname“. Im Modal ist jeder Name anklickbar und
+  öffnet eine Charakterübersicht mit Porträt, allen Rollen und sämtlichen
+  Auftritten in Handlungsreihenfolge. Von dort führt jeder Auftritt zurück
+  ins Film-Modal. Dieselben Figuren stehen auf der Charakterseite im
+  Raster, sie braucht keine eigene Pflege. Das Porträt liegt unter
+  `assets/characters/portraits/<slug>.webp`, der Slug entsteht aus dem Namen
+  (Kleinbuchstaben, Bindestriche). Ein Ganzkörperbild mit transparentem
+  Hintergrund unter `assets/characters/fullsize/<slug>.webp` erscheint
+  gerahmt rechts in der Biografie der Vollansicht, der Text fließt daran
+  vorbei; fehlt die Datei, steht dort ein Platzhalter. Figuren, die im
+  Lauf des Universums ihr Aussehen ändern, führen in `FULLSIZE_LOOKS`
+  ([js/chars.js](js/chars.js)) weitere Fassungen (Rüstungen, Anzüge,
+  Verwandlungen) und bekommen unter dem Rahmen Schalter dafür. Weicht der Dateiname vom Namen in
+  `data.js` ab oder wechselt eine Figur ihren Heldennamen, sorgt
+  `CHAR_ALIAS` in [js/chars.js](js/chars.js) dafür, dass beides
+  zusammenfindet. In `js/chars.js` steht alles, was sich Timeline und
+  Charakterseite teilen (Slugs, Porträts, Auftrittsindex).
+- **Porträt pro Film**: Wird eine Figur umbesetzt oder verwandelt sie sich
+  sichtbar, zeigt jeder Film die Fassung aus genau diesem Film. `CHAR_LOOKS`
+  in [js/chars.js](js/chars.js) hält dafür pro Charakter-Slug die Filme fest,
+  in denen ein anderes Bild gilt (Bruce Banner als Norton in
+  „The Incredible Hulk“, Ross als Red Hulk in „Brave New World“). Ohne
+  Eintrag gilt das Standardporträt. Die Figur bleibt trotzdem eine einzige:
+  Auftritte, Besetzung und Biografie hängen weiter am Charakter-Slug.
+- **Besetzung & Biografie**: `ACTORS` und `BIOS` am Ende von
+  [js/data.js](js/data.js), beide nach demselben Slug geschlüsselt wie das
+  Porträt. Ein Eintrag in `ACTORS` darf auch eine Liste sein, dann stehen
+  mehrere Namen nebeneinander (Umbesetzungen wie Bruce Banner oder
+  Thaddeus Ross, geteilte Rollen wie Rocket). `BIOS` sind ein bis drei
+  Sätze zur Figur. Fehlt ein Eintrag, bleibt der jeweilige Teil der Karte
+  weg, die beiden Listen lassen sich also unabhängig voneinander pflegen.
+- **Ausführliche Biografie**: `PROFILES` in
+  [js/profiles.js](js/profiles.js), pro Figur eine Liste aus
+  `[Überschrift, Text]` in Handlungsreihenfolge. Die Vollbildansicht der
+  Charakterseite zeigt sie unter Porträt und Auftritten, die Kurzfassung
+  aus `BIOS` bleibt daneben als Vorspann stehen. Ohne Eintrag entfällt der
+  Block. Die Datei gehört nur in `characters.html`, die Timeline lädt sie
+  nicht.
 - **Akzentfarben pro Phase**: ebenfalls in `js/data.js`
   (`accent` fürs UI, `nebula` = drei RGB-Farben für die Galaxie-Nebel).
 - **Galaxie-Animation**: [js/galaxy.js](js/galaxy.js)
   (Sterndichte, Nebel, Sternschnuppen).
 - **Scroll-Gefühl**: in [js/main.js](js/main.js) beim Lenis-Aufruf
   (`lerp: 0.09` – kleiner = weicher/träger, größer = direkter).
+- **Hero-Sequenz**: Länge über `.hero-track { height: 460vh }` in
+  `css/style.css` (mehr = gemächlicher), die Fenster der Textstufen in
+  `js/main.js` bei `heroStages` (Anteile 0–1 am Scrollweg des Tracks).
 - **Layout/Design**: [css/style.css](css/style.css).
 
 ## Hinweise

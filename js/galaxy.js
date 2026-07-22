@@ -23,7 +23,7 @@
   let W = 0, H = 0, nebH = 200;
   let baseGradient = null, vignette = null;
   let stars = [], flares = [], blobs = [];
-  let shoot = null, nextShoot = 6;
+  let shoot = null, nextShoot = 2;
 
   /* Verteilt eine Palette beliebiger Länge auf die Nebelwolken: pro Blob
      eine Farbe, frühe Farben bekommen bei Überhang mehr Wolken. Bei drei
@@ -211,7 +211,7 @@
     shoot.y += shoot.dy * shoot.speed * dt;
     if (shoot.life >= shoot.maxLife) {
       shoot = null;
-      nextShoot = t + rand(7, 16);
+      nextShoot = t + rand(2.5, 6);
       return;
     }
     const a = Math.sin(Math.PI * shoot.life / shoot.maxLife) * 0.85;

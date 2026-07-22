@@ -30,24 +30,86 @@
   <canvas id="galaxy" aria-hidden="true"></canvas>
 
   <header class="site-header">
-    <a class="brand" href="#hero">
-      <img class="brand-logo" src="assets/logos/Marvel_Logo.webp" alt="Marvel Logo">
-      <span class="brand-text">Timeline</span>
-    </a>
+    <div class="header-side">
+      <a class="brand" href="#hero">
+        <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
+        <span class="brand-text">Timeline</span>
+      </a>
+    </div>
+
     <nav id="phase-nav" aria-label="Phasen"></nav>
+
+    <!-- Einstellungen: reines Hover-Dropdown, komplett in CSS gelöst.
+         Der Button hat bewusst keine Klick-Aktion; er dient nur als
+         Hover-Fläche und als Fokusziel für die Tastaturbedienung. -->
+    <div class="header-side header-side--end">
+      <a class="page-link" href="characters.html">Charaktere</a>
+
+      <div class="settings has-dropdown" id="settings">
+        <button class="settings-btn" type="button" aria-haspopup="true" aria-label="Einstellungen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.2"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+
+        <div class="dropdown-menu">
+          <div class="dropdown-panel">
+            <p class="dropdown-heading">Einstellungen</p>
+
+            <label class="setting-row" for="toggle-tips">
+              <span class="setting-text">
+                <span class="setting-title">Infoboxen</span>
+                <span class="setting-sub">Details beim Zeigen auf ein Logo</span>
+              </span>
+              <input class="setting-input" type="checkbox" id="toggle-tips" checked>
+              <span class="switch" aria-hidden="true"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
   </header>
 
   <main>
-    <section class="hero" id="hero">
-      <p class="hero-kicker">Eine inoffizielle Fan-Timeline</p>
-      <div class="hero-title">
-        <div class="hero-spectrum" aria-hidden="true"></div>
-        <h1>Marvel Cinematic Universe</h1>
-        <div class="hero-spectrum" aria-hidden="true"></div>
+    <!-- Der Track gibt dem Hero zusätzlichen Scrollweg; die Sektion selbst
+         klebt darin viewportfüllend fest (sticky). updateHero() in js/main.js
+         blendet die drei Textstufen nacheinander ein und aus. -->
+    <div class="hero-track" id="hero">
+    <section class="hero">
+      <video class="hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="assets/theme/marvel-studios-theme.mp4" type="video/mp4">
+      </video>
+      <div class="hero-video-veil" aria-hidden="true"></div>
+      <div class="hero-stack">
+        <div class="hero-stage hero-stage-title">
+          <div class="hero-title">
+            <h1>Marvel Cinematic Universe</h1>
+          </div>
+        </div>
+        <div class="hero-stage hero-stage-kicker">
+          <p class="hero-kicker">Eine inoffizielle Fan-Timeline basierend auf den Fakten des offiziellen Marvel Cinematic Universe</p>
+        </div>
+        <div class="hero-stage hero-stage-subs">
+          <div class="hero-subs">
+            <p class="hero-sub">Alle Kinofilme &amp; Disney+-Serien des offiziellen Marvel Cinematic Universe.<br>Die Zeitskala orientiert sich an der Chronologie der Handlung innerhalb des Universums.</p><p class="hero-sub" style="margin: 2rem; color: #72798d;;"><span class="hero-sub-info">Spoiler-Warnung:</span> Informationen zu den einzelnen Filmen und Serien finden Sie in den jeweiligen Abschnitten und kann in den Einstellungen deaktiviert werden.</p>
+          </div>
+        </div>
       </div>
-      <p class="hero-sub">Alle Kinofilme &amp; Disney+-Serien des offiziellen Marvel Cinematic Universe.<br>Die Zeitskala orientiert sich an der <span class="hero-sub-accent">Chronologie</span> der Handlung innerhalb des Universums.</p><p class="hero-sub" style="margin: 1rem;"><span class="hero-sub-info">Spoiler-Warnung:</span> Informationen zu den einzelnen Filmen und Serien finden Sie in den jeweiligen Abschnitten.</p>
       <a class="scroll-hint" href="#phase-1" aria-label="Zur Timeline scrollen"><span></span></a>
+      <button class="hero-sound" id="hero-sound" type="button" aria-pressed="false" aria-label="Ton einschalten">
+        <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H3v6h3l5 4z"/>
+          <path d="M22 9l-6 6M16 9l6 6"/>
+        </svg>
+        <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6 9H3v6h3l5 4z"/>
+          <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+          <path d="M18.5 6a9 9 0 0 1 0 12"/>
+        </svg>
+      </button>
     </section>
+    </div>
 
     <div id="phases"></div>
   </main>
@@ -59,6 +121,7 @@
 
   <script src="js/vendor/lenis.min.js"></script>
   <script src="js/data.js"></script>
+  <script src="js/chars.js"></script>
   <script src="js/galaxy.js"></script>
   <script src="js/main.js"></script>
 </body>

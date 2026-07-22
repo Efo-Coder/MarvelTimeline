@@ -3,6 +3,36 @@
    global auf <html> für Nav/Scrollbars der gerade sichtbaren Phase.
    ====================================================================== */
 
+/* Bebas Neue Pro liegt lokal unter assets/fonts. Google Fonts liefert von
+   Bebas Neue nur den einen Standardschnitt, die Pro-Familie bringt die
+   dünneren Schnitte mit. woff2 zuerst, woff als Rückfall für alte Browser. */
+@font-face {
+  font-family: 'Bebas Neue Pro';
+  src: url('../assets/fonts/BebasNeuePro-Thin.woff2') format('woff2'),
+       url('../assets/fonts/BebasNeuePro-Thin.woff') format('woff');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bebas Neue Pro';
+  src: url('../assets/fonts/BebasNeuePro-Light.woff2') format('woff2'),
+       url('../assets/fonts/BebasNeuePro-Light.woff') format('woff');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Bebas Neue Pro';
+  src: url('../assets/fonts/BebasNeuePro-Book.woff2') format('woff2'),
+       url('../assets/fonts/BebasNeuePro-Book.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --accent: #4d8cff;
   --info: #ff974d;
@@ -10,6 +40,7 @@
   --text: #e9edf8;
   --muted: #9aa4c0;
   --font-display: 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
+  --font-brand: 'Bebas Neue Pro', var(--font-display);
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --logo-h: 130px;   /* Höhe des Logo-Bereichs über der Linie  */
   --conn-h: 54px;    /* Länge der Verbindungslinie zum Zeitstrahl */
@@ -20,6 +51,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* Platz der Scrollleiste dauerhaft reservieren: Das Info-Modal sperrt die
+     Seite über overflow: hidden – ohne stabile Rinne würde die Leiste dabei
+     verschwinden und der ganze Inhalt um ihre Breite springen. */
+  scrollbar-gutter: stable;
   /* Grundton liegt bewusst auf html statt body: Er bleibt so während der
      Seiten-Einblendung sichtbar (kein weißer Blitz) und der body bleibt
      hintergrundlos, damit der Galaxy-Canvas (z-index: -1) nicht von einem
@@ -95,7 +130,16 @@ html.lenis, html.lenis body { height: auto; }
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.header-side {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+}
+
+.header-side--end { justify-content: flex-end; }
+
 .brand {
+  --brand-h: 29px;
   display: flex;
   align-items: center;
   text-decoration: none;
@@ -103,32 +147,65 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .brand-logo {
-  height: 1.9rem;
+  height: var(--brand-h);
   width: auto;
   display: block;
 }
 
 .brand-text {
-  font-family: var(--font-display);
-  font-size: 1.15rem;
-  letter-spacing: 0.35em;
+  position: relative;
+  display: block;
+  font-family: var(--font-brand);
+  font-size: 1.8rem;
+  font-weight: 600;   /* Light; 200 wäre Thin, 400 der normale Schnitt */
+  line-height: 1.05;
+  text-box-trim: trim-both;
+  text-box-edge: cap alphabetic;
+  letter-spacing: 0.02em;
   color: var(--text);
   margin-left: 0.6rem;
   text-transform: uppercase;
 }
 
-#phase-nav {
-  margin-left: auto;
-  display: flex;
-  gap: 0.2rem;
-  overflow-x: auto;
-  scrollbar-width: none;
+/* Die Linien hängen absolut am Wort, statt seine Höhe mitzubestimmen. Die
+   Mitte des beschnittenen Textes ist zugleich die Logomitte (beide zentriert
+   .brand). Von dort geht es je eine halbe Logohöhe nach oben und unten, damit
+   liegen die Linien exakt auf Ober- und Unterkante des Logos. */
+.brand-text::before,
+.brand-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
 }
 
-#phase-nav::-webkit-scrollbar { display: none; }
+.brand-text::before { top: calc(50% - var(--brand-h) / 2); }
+.brand-text::after { bottom: calc(50% - var(--brand-h) / 2); }
 
-#phase-nav a {
+/* Bewusst ohne overflow: Ein Scroll-Container würde die Phasen-Dropdowns
+   abschneiden. Das Scrollen kommt erst im schmalen Breakpoint dazu –
+   dort sind die Dropdowns ohnehin ausgeblendet (siehe unten). */
+#phase-nav {
+  display: flex;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+/* Zentriert wird über Auto-Margins statt justify-content: center – die
+   verteilen nur vorhandenen Freiraum. Läuft die Nav auf schmalen Screens
+   über, werden sie zu 0, statt die ersten Phasen links aus dem
+   Scrollbereich zu schieben (dort wären sie nicht mehr erreichbar). */
+#phase-nav .nav-item:first-child { margin-inline-start: auto; }
+#phase-nav .nav-item:last-child { margin-inline-end: auto; }
+
+#phase-nav .nav-link {
   position: relative;
+  /* block, damit .nav-item exakt die Höhe des Links bekommt: Bei einem
+     Inline-Element zählt sein Padding nicht zur Zeilenbox, das Dropdown
+     (top: 100%) würde dann zu weit oben ansetzen. */
+  display: block;
   font-family: var(--font-display);
   font-size: 1.05rem;
   letter-spacing: 0.16em;
@@ -139,7 +216,7 @@ html.lenis, html.lenis body { height: auto; }
   transition: color 0.25s ease;
 }
 
-#phase-nav a::after {
+#phase-nav .nav-link::after {
   content: "";
   position: absolute;
   left: 0.8rem;
@@ -153,48 +230,507 @@ html.lenis, html.lenis body { height: auto; }
   transition: opacity 0.25s ease;
 }
 
-#phase-nav a:hover { color: #fff; }
+#phase-nav .nav-link:hover,
+.nav-item:hover .nav-link { color: #fff; }
 
-#phase-nav a.active { color: #fff; }
-#phase-nav a.active::after { opacity: 1; }
+#phase-nav .nav-link.active { color: #fff; }
+#phase-nav .nav-link.active::after { opacity: 1; }
+
+/* ===== Seitenwechsel Timeline / Charaktere ============================= */
+
+/* Gleiche Anmutung wie ein Phasen-Link, nur ohne Dropdown. Auf der
+   Timeline steht er rechts neben dem Zahnrad, auf der Charakterseite
+   bilden zwei davon die mittige Navigation. */
+.page-link {
+  position: relative;
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  color: rgba(233, 237, 248, 0.6);
+  text-decoration: none;
+  padding: 0.45rem 0.8rem 0.4rem;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+
+.page-link::after {
+  content: "";
+  position: absolute;
+  left: 0.8rem;
+  right: calc(0.8rem + 0.16em);
+  bottom: 0.22rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.page-link:hover,
+.page-link.active { color: #fff; }
+
+.page-link:hover::after,
+.page-link.active::after { opacity: 1; }
+
+.page-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Zwei Links statt sechs Phasen: Auto-Margins zentrieren sie wie die
+   Phasen-Nav und geben auf schmalen Screens den Platz wieder her. */
+#page-nav {
+  display: flex;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+#page-nav .page-link:first-child { margin-inline-start: auto; }
+#page-nav .page-link:last-child { margin-inline-end: auto; }
+
+/* ===== Header-Dropdowns ================================================
+   Gemeinsame Basis für das Einstellungs-Menü und die Phasen-Menüs: Wer
+   .has-dropdown trägt, klappt beim Hover ein .dropdown-menu mit dem
+   Panel darin auf.
+
+   Öffnet ausschließlich per :hover – kein Klick. Dazu :has(:focus-visible)
+   für die Tastaturbedienung: Anders als :focus-within greift das nicht,
+   wenn der Auslöser angeklickt wird (ein Klick fokussiert ihn, das Menü
+   bliebe sonst danach offen stehen). Zwischen Auslöser und Panel liegt
+   eine unsichtbare Brücke (padding-top von .dropdown-menu), damit der
+   Hover beim Hinübergleiten nicht abreißt. */
+
+.has-dropdown { position: relative; }
+
+/* Zeiger auf das Panel – wie im Vorbild ein CSS-Dreieck, das beim Öffnen
+   hochfährt. Sitzt am Wrapper, nicht am Auslöser: Der Zahnrad-Button
+   dreht sich beim Hover und würde das Dreieck mitdrehen.
+
+   Das Dreieck ragt 1px in das Panel hinein: Seine Basis liegt bei
+   100% + 13px, dessen Oberkante bei 100% + 12px (top der Menü-Brücke).
+   Bündig aneinandergesetzt läge die Nahtstelle auf einer gebrochenen
+   Pixelposition – Basis und 1px-Rand würden beide halbtransparent über
+   zwei Pixelzeilen gerastert und ergäben eine sichtbare Lücke. Die
+   Überlappung deckt sie zu; da beide dieselbe Farbe haben, fällt sie
+   nicht auf. */
+.has-dropdown::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 11px);
+  margin-left: -7px;
+  border: 7px solid transparent;
+  border-bottom-color: color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.12));
+  opacity: 0;
+  pointer-events: none;
+  transition: top 0.25s var(--ease-out), opacity 0.01s ease 0.01s;
+}
+
+.has-dropdown:hover::after,
+.has-dropdown:has(:focus-visible)::after {
+  top: calc(100% - 1px);
+  opacity: 1;
+  transition: top 0.25s var(--ease-out), opacity 0.01s ease 0.12s;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  padding-top: 0.75rem; /* Hover-Brücke zwischen Auslöser und Panel */
+  pointer-events: none;
+  z-index: 1;
+}
+
+.has-dropdown:hover .dropdown-menu,
+.has-dropdown:has(:focus-visible) .dropdown-menu { pointer-events: auto; }
+
+.dropdown-panel {
+  padding: 0.85rem 1rem 0.95rem;
+  border-radius: 12px;
+  background: rgba(8, 12, 26, 0.92);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.55),
+              0 0 26px color-mix(in srgb, var(--accent) 18%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(-6px);
+  clip-path: inset(0 0 100% 0 round 12px);
+  transition: opacity 0.22s ease, transform 0.28s var(--ease-out),
+              clip-path 0.28s var(--ease-out);
+}
+
+.has-dropdown:hover .dropdown-panel,
+.has-dropdown:has(:focus-visible) .dropdown-panel {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0 round 12px);
+}
+
+/* Überschrift im Panel (Einstellungen wie Phasen) */
+.dropdown-heading {
+  margin: 0 0 0.6rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+/* ===== Phasen-Dropdown ================================================= */
+
+.nav-item .dropdown-menu {
+  /* mittig unter der Phase; die Breite ist so gewählt, dass auch das
+     mittigste Panel bei 900px Fensterbreite nicht anstößt */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.nav-item .dropdown-panel { width: 27rem; }
+
+.nav-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.nav-panel-head .dropdown-heading { margin: 0; }
+
+.nav-panel-years {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Zwei Spalten als Mehrspalten-Layout statt Grid: Die linke Spalte läuft
+   zuerst voll (Reihenfolge von oben nach unten = Chronologie der Phase),
+   und beide Spalten packen unabhängig. Im Grid teilen sich Nachbarn eine
+   Zeilenhöhe – ein zweizeilig umbrechender Titel risse dann neben dem
+   einzeiligen Nachbarn eine Lücke auf. */
+.nav-titles {
+  columns: 2;
+  column-gap: 0.6rem;
+}
+
+.nav-title {
+  display: flex;
+  break-inside: avoid;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding: 0.28rem 0.45rem;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: #cdd5ec;
+  text-decoration: none;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.nav-title-text { min-width: 0; }
+
+.nav-title:hover,
+.nav-title:focus-visible {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: #fff;
+}
+
+.nav-title-tag {
+  flex-shrink: 0;
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 999px;
+  padding: 0.05rem 0.3rem;
+}
+
+.nav-panel-foot {
+  margin: 0.7rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* ===== Einstellungs-Dropdown =========================================== */
+
+.settings {
+  flex-shrink: 0;
+  margin-left: 0.4rem;
+}
+
+.settings .dropdown-menu { right: -0.4rem; }
+
+.settings .dropdown-panel { width: 17.5rem; }
+
+.settings-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;   /* nur für den Fokusring der Tastaturbedienung */
+  background: none;
+  color: rgba(233, 237, 248, 0.6);
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.4s var(--ease-out);
+}
+
+.settings-btn svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+}
+
+.settings:hover .settings-btn,
+.settings:has(:focus-visible) .settings-btn {
+  color: #fff;
+  transform: rotate(60deg);
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 0.3rem;
+  margin: -0.3rem;
+  transition: background 0.2s ease;
+}
+
+.setting-row:hover { background: transparent; }
+
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.setting-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #eef1fb;
+}
+
+.setting-sub {
+  font-size: 0.7rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* On/Off-Regler: die Checkbox bleibt bedienbar (Tastatur), ist aber
+   unsichtbar über dem Schalter – gezeichnet wird .switch */
+.setting-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 2.35rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: background 0.25s ease, border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.16rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-top: -0.45rem;
+  border-radius: 50%;
+  background: #cdd5ec;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s var(--ease-out), background 0.25s ease;
+}
+
+.setting-input:checked ~ .switch {
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.setting-input:checked ~ .switch::after {
+  background: #fff;
+  transform: translateX(0.98rem);
+}
+
+.setting-input:focus-visible ~ .switch {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 /* ===== Hero ============================================================ */
 
-.hero {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 6rem 1.5rem 3rem;
+/* Der Track gibt dem gepinnten Hero seinen Scrollweg: Die Sektion klebt
+   viewportfüllend am oberen Rand, während gut dreieinhalb zusätzliche
+   Viewporthöhen durchlaufen werden. updateHero() (js/main.js) übersetzt
+   den Fortschritt durch den Track in die Textstufen Titel → Kicker →
+   Untertitel; mehr Höhe = gemächlichere Übergänge. */
+.hero-track {
   position: relative;
-  /* Eigener Layer: Der Scroll-Scrub ändert opacity/transform pro Frame –
-     ohne Layer würde das den teuren Gradient-Text jedes Mal neu rastern */
-  will-change: opacity, transform;
+  height: 460vh;
 }
 
-/* Intro-Choreografie: Elemente starten unsichtbar, main.js setzt .ready
-   auf der Hero, sobald die Fonts geladen sind (Timeout als Fallback). */
+.hero {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  text-align: center;
+  will-change: opacity;
+  overflow: visible;
+}
 
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hero-video-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 30%, rgba(6, 8, 18, 0.55) 100%),
+    linear-gradient(to bottom, rgba(6, 8, 18, 0.35), rgba(6, 8, 18, 0.35));
+}
+
+.hero-video,
+.hero-video-veil {
+  -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
+}
+
+/* Textstufen: liegen deckungsgleich übereinander, jede zentriert ihren
+   Inhalt im Viewport. Sichtbarkeit, Hub und Unschärfe schreibt
+   updateHero() scroll-gekoppelt pro Frame auf die Stufen-Wrapper – die
+   Intro-Choreografie (.hero.ready) animiert weiterhin die Elemente darin,
+   beides kommt sich so nicht in die Quere. Kicker und Untertitel starten
+   unsichtbar, damit vor dem ersten JS-Frame nichts aufblitzt.
+   pointer-events: none, damit unsichtbare Stufen keine Klicks auf
+   Scroll-Hinweis und Ton-Schalter abfangen. */
+.hero-stack,
+.hero-stage {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-stack {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hero-stage {
+  display: grid;
+  place-items: center;
+  padding: 3rem 1.5rem;
+  will-change: opacity, transform, filter;
+}
+
+.hero-stage-kicker,
+.hero-stage-subs { opacity: 0; }
+
+/* Ton-Schalter unten rechts im Hero: schaltet das Theme-Video stumm/laut.
+   Startet unsichtbar und blendet mit der Intro-Choreografie ein. */
+.hero-sound {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: rgba(233, 236, 245, 0.85);
+  background: rgba(10, 14, 28, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 1s ease, color 0.2s ease, border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.hero.ready .hero-sound { opacity: 1; }
+
+.hero-sound:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.32);
+  background: rgba(14, 20, 40, 0.6);
+}
+
+.hero-sound:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hero-sound svg { width: 22px; height: 22px; display: block; }
+
+/* Standard: Video stumm => Mute-Icon zeigen, Laut-Icon verstecken.
+   Zustand .is-on (Ton an) dreht das um. */
+.hero-sound .icon-sound { display: none; }
+.hero-sound.is-on .icon-muted { display: none; }
+.hero-sound.is-on .icon-sound { display: block; }
+
+
+/* Der Kicker trägt seine Stufe allein, deshalb größer als früher über dem
+   Titel. Ein- und Ausblenden übernimmt der Stufen-Wrapper. Die Laufweite
+   steht fest auf 0.5em: Eine scroll-gekoppelte Tracking-Animation ließe
+   den satzlangen Text während der Blende neu umbrechen – sichtbare
+   Sprünge, das Gegenteil einer weichen Überblendung. text-wrap: balance
+   verteilt die Zeilen gleichmäßig, wo der Browser es kann. */
 .hero-kicker {
   font-family: var(--font-display);
-  font-size: 0.95rem;
-  letter-spacing: 0.95em;
+  font-size: clamp(1.05rem, 2.4vw, 1.6rem);
+  line-height: 1.7;
+  letter-spacing: 0.5em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 0;
-  opacity: 0;
-  transition: opacity 1s ease, letter-spacing 1.4s var(--ease-out);
+  max-width: 72rem;
+  text-wrap: balance;
+  /* Weicher dunkler Schein: Der Kicker steht allein auf dem Video und
+     muss auch auf dessen hellen Frames lesbar bleiben. */
+  text-shadow: 0 2px 22px rgba(6, 8, 18, 0.9), 0 0 10px rgba(6, 8, 18, 0.6);
+  margin: 0 -0.5em 0 0;
 }
 
-/* Bündelt die h1 mit den beiden Spektrumlinien: Der Container schrumpft
-   im zentrierten Hero-Flex auf die Breite der Überschrift, die Linien
-   strecken sich (Flex-Standard) auf exakt dieselbe Breite. */
 .hero-title {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
   margin: 0.6rem 0;
 }
 
@@ -204,12 +740,6 @@ html.lenis, html.lenis body { height: auto; }
   font-size: clamp(3rem, 9vw, 6.5rem);
   line-height: 1;
   letter-spacing: 0.04em;
-  /* Bebas Neue lässt in der Zeilenbox 0.1em Luft über den Versalien und
-     0.2em unter der Grundlinie (Ascent 950 / Cap 700 / Descent 350 bei
-     upem 1000); seitlich stehen 0.048em Glyphen-Vorbreite vor dem „M" und
-     0.058em nach dem „e" (Bearing + letter-spacing). Die Negativ-Margins
-     schneiden das ab, damit die Spektrumlinien exakt so breit sind wie
-     die sichtbare Schrift und gleich weit von ihr entfernt liegen. */
   margin: -0.1em -0.058em -0.2em -0.048em;
   background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
   -webkit-background-clip: text;
@@ -223,42 +753,16 @@ html.lenis, html.lenis body { height: auto; }
               filter 1.2s var(--ease-out) 0.12s;
 }
 
-/* Linien über und unter der Überschrift – Breite kommt vom .hero-title-
-   Wrapper, der auf die Textbreite der h1 schrumpft. */
-.hero-spectrum {
-  position: relative;
-  height: 3px;
-  background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
-  opacity: 0;
-  transform: scaleX(0.35);
-  transition: opacity 0.9s ease 0.3s, transform 1.2s var(--ease-out) 0.3s;
-}
-
-/* Weicher Farbglow: gleiche Fläche, nur geblurrt darunter */
-.hero-spectrum::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: inherit;
-  filter: blur(9px);
-  opacity: 0.75;
-}
-
 .hero-sub {
+  font-family: var(--font-display);
   color: var(--muted);
-  font-size: 1.05rem;
-  max-width: 45rem;
-  margin: 8rem 0 0;
+  font-size: 1.4rem;
+  letter-spacing: 0.3em;
+  max-width: 70rem;
+  margin: 0.3rem;
   opacity: 0;
   transform: translateY(22px);
   transition: opacity 0.9s ease 0.4s, transform 1s var(--ease-out) 0.4s;
-}
-
-/* Hervorgehobenes Wort im Hero-Untertitel – nutzt die Phasen-Akzentfarbe */
-.hero-sub-accent {
-  color: var(--accent);
-  text-shadow: 0 0 14px var(--accent);
 }
 
 .hero-sub-info {
@@ -272,11 +776,10 @@ html.lenis, html.lenis body { height: auto; }
   left: 50%;
   transform: translateX(-50%);
   padding: 0.6rem;
+  z-index: 2;
   opacity: 0;
   transition: opacity 0.9s ease 0.78s;
 }
-
-.hero.ready .hero-kicker { opacity: 1; letter-spacing: 0.5em; }
 
 /* Browser mit text-box-trim beschneiden die Zeilenbox exakt auf Versal-
    höhe und Grundlinie – font-unabhängig; nur die vertikale Margin-
@@ -294,8 +797,6 @@ html.lenis, html.lenis body { height: auto; }
   transform: none;
   filter: blur(0) drop-shadow(0 0 26px rgba(90, 120, 255, 0.35));
 }
-
-.hero.ready .hero-spectrum { opacity: 1; transform: scaleX(1); }
 
 .hero.ready .hero-sub { opacity: 1; transform: none; }
 
@@ -494,6 +995,8 @@ html.lenis, html.lenis body { height: auto; }
   will-change: opacity, transform;
 }
 
+/* Als <button> ausgezeichnet (öffnet das Info-Modal), deshalb erst die
+   Browser-Voreinstellungen des Buttons zurücknehmen. */
 .logo-box {
   height: var(--logo-h);
   width: 100%;
@@ -501,6 +1004,22 @@ html.lenis, html.lenis body { height: auto; }
   align-items: center;
   justify-content: center;
   padding: 0 14px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* Nur die Tastatur bekommt einen Rahmen – bei Mausklick würde er stören,
+   zumal der Button ohnehin nicht in der Tab-Reihenfolge liegt. */
+.logo-box:focus { outline: none; }
+
+.logo-box:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -4px;
+  border-radius: 10px;
 }
 
 .logo-img {
@@ -614,9 +1133,7 @@ html.lenis, html.lenis body { height: auto; }
   left: 0;
   top: 0;
   z-index: 30;
-  width: min(400px, calc(100vw - 24px));
-  max-height: calc(100vh - 24px);
-  overflow: hidden;
+  width: min(320px, calc(100vw - 24px));
   padding: 0.85rem 1rem 1rem;
   border-radius: 12px;
   background: rgba(8, 12, 26, 0.92);
@@ -654,6 +1171,17 @@ html.lenis, html.lenis body { height: auto; }
   color: var(--muted);
 }
 
+/* Laufzeit bzw. Folgenzahl, hängt hinter dem Datum in derselben Zeile */
+.tip-length {
+  color: color-mix(in srgb, var(--accent) 75%, #fff);
+}
+
+.tip-length::before {
+  content: "·";
+  margin: 0 0.5em;
+  color: var(--muted);
+}
+
 .tip-label {
   margin: 0.8rem 0 0.3rem;
   font-family: var(--font-display);
@@ -664,7 +1192,15 @@ html.lenis, html.lenis body { height: auto; }
   filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 45%, transparent));
 }
 
-/* Key Moments: ein <li> pro Handlungspunkt, Akzent-Punkt als Bullet */
+/* Kurzfassung in der Hover-Box: schlichter Fließtext */
+.tip-summary {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #cdd5ec;
+}
+
+/* Schlüsselmomente im Modal: ein <li> pro Punkt, Akzent-Punkt als Bullet */
 .tip-story {
   list-style: none;
   margin: 0;
@@ -702,7 +1238,12 @@ html.lenis, html.lenis body { height: auto; }
   gap: 0.3rem;
 }
 
-.tip-chars li {
+/* Die Pille selbst: in der Hover-Box das Listenelement, im Modal die
+   Schaltfläche darin (und bei Namen ohne eigene Übersicht wieder das
+   Listenelement). */
+.movie-tip .tip-chars li,
+.modal-card .char-chip,
+.modal-card .tip-chars li.char-plain {
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -711,6 +1252,20 @@ html.lenis, html.lenis body { height: auto; }
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-radius: 999px;
   padding: 0.18rem 0.55rem;
+}
+
+/* Profilbild vor dem Namen (nur im Modal, siehe .modal-card .tip-chars).
+   Die Bilder sind quadratisch beschnitten, cover fängt trotzdem die
+   wenigen ab, die anders zugeschnitten aus dem Wiki kommen. */
+.char-avatar {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 /* Streaming-Dienste: quadratische Logos als App-Icons (Radius ≈ 25 %
@@ -726,6 +1281,1230 @@ html.lenis, html.lenis body { height: auto; }
   border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== Modal beim Klick auf ein Logo =================================== */
+
+/* Gleicher Inhalt wie die Hover-Infobox (teilt sich die .tip-*-Regeln),
+   nur zentriert, größer und in sich scrollbar. */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1.25rem 2rem; /* oben Platz für den fixierten Header */
+  background: rgba(2, 4, 12, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+
+.modal.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.25s ease, visibility 0s;
+}
+
+.modal-card {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Der sticky Kopf verdeckt den oberen Rand des Scrollbereichs. Alles,
+     was der Browser selbst heranscrollt (Fokus, Suchen im Text), muss
+     darunter hervorkommen – ohne das landet die erste Überschrift hinter
+     dem Kopf. Der Wert entspricht ungefähr der Kopfhöhe. */
+  scroll-padding-top: 6.5rem;
+  /* Kein padding-top: Das obere Polster liefert .modal-head selbst, damit
+     der Kopf bündig an der Kartenkante klebt und darüber kein Streifen
+     bleibt, durch den der Text durchläuft. */
+  padding: 0 1.7rem 1.7rem;
+  border-radius: 16px;
+  background: rgba(8, 12, 26, 0.96);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.12));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.65),
+              0 0 40px color-mix(in srgb, var(--accent) 20%, transparent);
+  transform: translateY(14px) scale(0.985);
+  transition: transform 0.35s var(--ease-out);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 60%, transparent) transparent;
+}
+
+.modal.visible .modal-card { transform: none; }
+
+.modal-card::-webkit-scrollbar { width: 8px; }
+
+.modal-card::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Kopf mit Titel, Datum und Schließen-Button bleibt beim Scrollen oben.
+   Nur seitlich negative Ränder, damit Hintergrund und Trennlinie über die
+   volle Kartenbreite laufen – vertikal wäre ein negativer Rand falsch:
+   Er verkleinert den Platz, den der Kopf im Fluss belegt, zieht den
+   geklemmten sticky Kopf aber nicht mit hoch, sodass die erste
+   Überschrift unter ihm verschwände. Der Hintergrund ist bewusst deckend
+   (die Karte selbst liegt bei 0.96), sonst schimmerte der durchlaufende
+   Text durch. */
+.modal-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 -1.7rem;
+  padding: 1.5rem 1.7rem 0.85rem;
+  background: #080c1a;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.08));
+}
+
+/* Etwas großzügiger als im Tooltip – hier wird wirklich gelesen. */
+/* Rechts bleibt Platz für die drei Schaltflächen des Kopfes. */
+.modal-card .tip-title { font-size: 1.75rem; padding-right: 7.4rem; }
+.modal-card .tip-date { font-size: 0.76rem; }
+.modal-card .tip-label { margin-top: 1.15rem; }
+.modal-card .tip-story { gap: 0.5rem; font-size: 0.86rem; line-height: 1.6; }
+/* Im Modal steht jeder Charakter in einer eigenen Zeile, Porträt links
+   neben dem Namen. grid mit justify-items: start lässt die Pillen bei
+   ihrer Inhaltsbreite – als flex-column würde jede Zeile über die volle
+   Kartenbreite laufen und der kurze Name verloren darin schwimmen. */
+.modal-card .tip-chars {
+  display: grid;
+  justify-items: start;
+  gap: 0.4rem;
+}
+
+.modal-card .char-chip,
+.modal-card .tip-chars li.char-plain {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.74rem;
+  text-align: left;
+  padding: 0.25rem 0.9rem 0.25rem 0.25rem;
+}
+
+.modal-card .char-chip {
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.modal-card .char-chip:hover,
+.modal-card .char-chip:focus-visible {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 30%, rgba(255, 255, 255, 0.05));
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+}
+
+.modal-card .char-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Charaktere ohne Porträt (Platzhalter wie „Noch unbekannt“) */
+.modal-card .char-chip.no-avatar,
+.modal-card .tip-chars li.char-plain { padding-left: 0.9rem; }
+.modal-card .tip-stream img { width: 44px; height: 44px; border-radius: 11px; }
+
+/* Blättern und Schließen als eine Reihe oben rechts. Bezugspunkt ist
+   .modal-head (sticky = eigener Bezugsrahmen), nicht die Karte – dadurch
+   scrollen die Buttons nicht mehr mit weg. Die Werte messen trotzdem ab
+   derselben Ecke, weil der Kopf durch seine negativen Ränder exakt an der
+   Innenkante der Karte beginnt. */
+.modal-actions {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.modal-actions button {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 1.5rem;
+  line-height: 1;
+  border-radius: 50%;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease,
+              border-color 0.2s ease, opacity 0.2s ease;
+}
+
+.modal-actions button:hover:not(:disabled),
+.modal-actions button:focus-visible {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Am Anfang und am Ende der Chronologie: Der Pfeil bleibt stehen, damit die
+   Reihe nicht springt, zeigt aber, dass es dort nicht weitergeht. */
+.modal-actions button:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+/* Der Winkel entsteht wie bei .scroll-arrow aus einem um 45° gedrehten
+   Kästchen mit zwei Rändern. Das Kästchen selbst sitzt mittig im Kreis,
+   seine beiden Ränder liegen aber nur auf einer Seite – gedreht schaut die
+   Spitze deshalb um ein Viertel der Diagonale aus der Mitte heraus. Das
+   translateX schiebt sie wieder zurück. Rechnerisch wären das
+   (9px - 2px) / 2 / √2 ≈ 2.5px, damit hinge der Winkel aber optisch zur
+   offenen Seite hin, weil dort fast die ganze Tinte liegt. Der Wert bleibt
+   deshalb bewusst 1px darunter, so wirkt die Spitze mittig im Kreis.
+   Es steht vor der Drehung in der Liste und wirkt damit danach, also rein
+   waagerecht auf dem Bildschirm. */
+.modal-step span {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+}
+
+.modal-step.next span {
+  border-right-width: 2px;
+  border-top-width: 2px;
+  transform: translateX(-1.5px) rotate(45deg);
+}
+
+.modal-step.prev span {
+  border-left-width: 2px;
+  border-bottom-width: 2px;
+  transform: translateX(1.5px) rotate(45deg);
+}
+
+/* Fällt nur ins Gewicht, wenn Lenis nicht läuft (reduzierte Bewegung) –
+   sonst hält Lenis die Seite über .lenis-stopped selbst fest. */
+html.modal-open { overflow: hidden; }
+
+/* ===== Charakterübersicht ============================================== */
+
+/* Legt sich über das Film-Modal, das dahinter offen stehen bleibt. Der
+   eigene Schleier dunkelt es zusätzlich ab, damit klar ist, welche der
+   beiden Karten gerade dran ist. */
+.char-modal {
+  z-index: 70;
+  background: rgba(2, 4, 12, 0.55);
+}
+
+.char-card { width: min(460px, 100%); }
+
+/* Nur ein Button im Kopf statt dreien – der Titel darf entsprechend
+   weiter nach rechts laufen. */
+.char-card .tip-title {
+  font-size: 1.5rem;
+  padding-right: 2.6rem;
+}
+
+.char-card .tip-date {
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Besetzung: bewusst gemischte Groß-/Kleinschreibung als Gegengewicht zu
+   den gesperrten Versalien der Rollenzeile darüber, sonst lesen sich die
+   beiden Zeilen wie eine. */
+.char-cast {
+  margin: 0.3rem 0 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.char-cast span {
+  font-weight: 600;
+  color: #dfe5f7;
+}
+
+.char-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* min-width: 0 lässt lange Namen umbrechen, statt den Kopf zu verbreitern */
+.char-headtext { min-width: 0; }
+
+.char-portrait {
+  width: 76px;
+  height: 76px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.char-films {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+/* Ein Auftritt pro Zeile. Die Kante links trägt die Akzentfarbe seiner
+   Phase – über die ganze Liste gelesen zeigt sie, durch welche Phasen die
+   Figur läuft. */
+.char-film {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  text-align: left;
+  font-family: inherit;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-left: 3px solid var(--accent);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.char-film:hover,
+.char-film:focus-visible {
+  background: color-mix(in srgb, var(--accent) 18%, rgba(255, 255, 255, 0.04));
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  border-left-color: var(--accent);
+  transform: translateX(2px);
+}
+
+.char-film:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.char-film-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #eef2ff;
+}
+
+.char-film-meta {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+/* Der Titel, der hinter der Karte offen ist */
+.char-film.current {
+  background: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.04));
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  border-left-color: var(--accent);
+}
+
+/* ===== Charakterseite (characters.html) ================================
+   Eigene Seite statt Modal: das Raster aller Figuren mit Suche, Phasen-
+   filter und Sortierung. Die Karte, die eine Kachel öffnet, teilt sich
+   alle Regeln mit der Charakterübersicht der Timeline (siehe oben).
+   ====================================================================== */
+
+.chars-main {
+  max-width: 1240px;
+  margin-inline: auto;
+  /* Oben Platz für den fixierten Header, unten für den Footer */
+  padding: 7rem 1.4rem 4rem;
+}
+
+.chars-intro {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Wie der Hero-Kicker, nur ohne dessen Intro-Animation: Auf dieser Seite
+   steht der Text sofort. */
+.chars-kicker {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 -0.5em 0.5rem 0;
+}
+
+.chars-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.6rem, 7vw, 4.4rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  margin: 0;
+  background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 26px rgba(90, 120, 255, 0.3));
+}
+
+.chars-lead {
+  max-width: 44rem;
+  margin: 1.2rem auto 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+/* ----- Suche, Filter, Sortierung ----- */
+
+/* Zwei Zeilen: oben allein die Suche, darunter die Filter. Das Band läuft
+   etwas breiter als der Inhalt und wird zu beiden Seiten von einer Maske
+   ausgeblendet, damit es an den Rändern weich ausläuft statt hart
+   abzubrechen. Die Maske nimmt Hintergrund, Linien und Inhalt gleichzeitig
+   mit, deshalb liegt sie am Band selbst und nicht an einer Auflage. */
+.chars-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  margin-inline: -1.4rem;
+  padding: 1rem 1.4rem;
+  background: rgba(5, 8, 18, 0.5);
+  border-block: 1px solid rgba(255, 255, 255, 0.07);
+  /* Feste Breite statt Prozent: Ein prozentualer Verlauf würde mit dem
+     Fenster mitwachsen und auf breiten Screens in die äußeren Pillen
+     hineinlaufen. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 70px, #000 calc(100% - 70px), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 70px, #000 calc(100% - 70px), transparent);
+}
+
+/* Zweite Zeile. Der große Abstand trennt die beiden Gruppen deutlicher,
+   als es ihre Beschriftungen allein täten – sonst liest sich die Reihe
+   wie eine einzige lange Pillenkette. */
+.chars-filters {
+  /* Volle Breite des Bandes statt Inhaltsbreite: Sonst wüchse die Reihe
+     auf schmalen Screens über beide Ränder hinaus, statt innen zu
+     scrollen (siehe .chars-chips im schmalen Breakpoint). */
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem 2.8rem;
+}
+
+.chars-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(26rem, 100%);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: text;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.chars-search:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.chars-search svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--muted);
+}
+
+.chars-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+}
+
+.chars-search input::placeholder { color: rgba(154, 164, 192, 0.8); }
+
+/* Das kleine Kreuz, das Chrome/Safari in ein type="search"-Feld setzen –
+   es säße mitten in der Pille und passt nicht zum übrigen Bild. */
+.chars-search input::-webkit-search-cancel-button { display: none; }
+
+.chars-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.chars-group-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chars-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Filter- und Sortierpille. Die Phasenpillen tragen jeweils die
+   Akzentfarbe ihrer Phase, alle anderen den Akzent der Seite. */
+.chip {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(233, 237, 248, 0.62);
+  padding: 0.35rem 0.75rem 0.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.chip:hover {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.chip.active {
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.04));
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chars-status {
+  margin: 1.1rem 0 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ----- Raster aller Figuren ----- */
+
+.char-grid {
+  list-style: none;
+  margin: 1.3rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 0.9rem;
+}
+
+/* Eine Kachel pro Figur: Porträt, Realname, Rollen, Zahl der Auftritte.
+   Die Akzentfarbe kommt von der Phase des ersten Auftritts. */
+.char-cell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+  font-family: inherit;
+  color: inherit;
+  padding: 1rem 0.7rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-out), background 0.25s ease,
+              border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.char-cell:hover,
+.char-cell:focus-visible {
+  transform: translateY(-4px);
+  background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.04));
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45),
+              0 0 26px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.char-cell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.char-shot {
+  width: 92px;
+  height: 92px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Die Porträts sind quadratisch zugeschnitten und zeigen oben das
+   Gesicht – deshalb wird beim Zuschneiden von oben gemessen. */
+.char-shot img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* Ersatz, wenn es kein einzelnes Porträt gibt (Platzhalter wie
+   „Noch unbekannt“) oder die Datei fehlt */
+.char-shot.empty { background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.04)); }
+
+.char-initials {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--accent) 65%, #ffffff);
+}
+
+.char-cell-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #eef2ff;
+}
+
+.char-cell-role {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.25;
+  color: var(--accent);
+}
+
+/* margin-top: auto hält die Zeile am unteren Rand, egal wie viele Rollen
+   die Figur darüber sammelt – die Kacheln einer Reihe schließen unten
+   damit bündig ab. */
+.char-cell-count {
+  margin-top: auto;
+  padding-top: 0.3rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+/* Die Auftritte in der Karte sind hier Links auf die Timeline, keine
+   Schaltflächen – die Unterstreichung des Browsers stört das Bild. */
+a.char-film { text-decoration: none; }
+
+/* ----- Vollbildansicht einer Figur -----
+
+   Eine Kachel öffnet keine Karte über der Seite, sondern nimmt den ganzen
+   Bildschirm ein: das Porträt als weit aufgezogener, unscharfer Grund,
+   darüber Name, Kurzbiografie und alle Auftritte nebeneinander.
+
+   Die Porträts sind 240 Pixel breit. Scharf über einen ganzen Bildschirm
+   gezogen wären sie ein Pixelbrei, weichgezeichnet werden sie zur Farbe
+   und Stimmung der Figur. Das scharfe Bild steht daneben in seiner
+   echten Größe. */
+.char-full {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+.char-full.visible {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s;
+}
+
+.char-full-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* Der Weichzeichner franst die Bildkanten aus und ließe ringsum einen
+   hellen Saum stehen. Deshalb liegt das Bild grundsätzlich vergrößert
+   auf, die Fransen landen außerhalb des Fensters. Beim Öffnen läuft es
+   von 1.3 auf diese 1.15 zurück – dieselbe Bewegung wie ein Objektiv,
+   das die Figur einfängt. */
+.char-full-blur {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center 26%;
+  /* Gerade so viel Unschärfe, dass die 240 Pixel nicht als Treppe zu sehen
+     sind: Die Figur bleibt als Umriss erkennbar, statt zu einer Farbfläche
+     zu verschwimmen. */
+  filter: blur(26px) saturate(1.35) brightness(0.95);
+  transform: scale(1.3);
+  transition: transform 0.6s var(--ease-out);
+}
+
+.char-full.visible .char-full-blur { transform: scale(1.15); }
+
+/* Drei Lagen: Der Akzent der Phase legt sich als Schimmer über die obere
+   linke Ecke, ein waagerechter Verlauf dunkelt die linke Seite ab, wo Name
+   und Text stehen, ein senkrechter fasst oben und unten ein. Die rechte
+   Bildmitte bleibt dabei am hellsten – dort steht nichts zu lesen, dort
+   darf das Porträt durchkommen. */
+.char-full-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 12% 0%,
+      color-mix(in srgb, var(--accent) 24%, transparent), transparent 62%),
+    linear-gradient(100deg, rgba(2, 4, 12, 0.88) 0%, rgba(2, 4, 12, 0.66) 42%,
+      rgba(2, 4, 12, 0.42) 100%),
+    linear-gradient(180deg, rgba(2, 4, 12, 0.55) 0%, rgba(2, 4, 12, 0.12) 30%,
+      rgba(2, 4, 12, 0.35) 74%, rgba(2, 4, 12, 0.8) 100%);
+}
+
+/* Blättern und Schließen als eine Reihe oben rechts, wie im Film-Modal.
+   Sie bleibt beim Scrollen an derselben Stelle, weil sie an der
+   Vollbildfläche hängt und nicht am Inhalt darin. */
+.char-full-actions {
+  position: absolute;
+  top: clamp(1rem, 3vh, 2.4rem);
+  right: clamp(1rem, 3vw, 2.6rem);
+  z-index: 2;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.char-full-actions button {
+  position: relative;
+  width: 3.25rem;
+  height: 3.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Der Kreis ist eine eigene Lage hinter dem Zeichen, und nur er wächst
+   beim Hover. Wächst der Button selbst, wächst das Zeichen mit und sitzt
+   die ganze Bewegung über neben seinem Platz, bis es am Ende sichtbar
+   zurechtrückt. Getrennt bleibt es die ganze Zeit da, wo es hingehört. */
+.char-full-actions button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.25s var(--ease-out),
+              background 0.25s ease, border-color 0.25s ease;
+}
+
+/* Hebt das Zeichen über den Kreis. Ohne eigene Position läge das absolut
+   gesetzte ::before darüber und verdeckte es. */
+.char-full-actions button > * { position: relative; }
+
+.char-full.visible .char-full-actions button {
+  opacity: 1;
+  transition-delay: 0.1s;
+}
+
+.char-full-actions button:hover:not(:disabled)::before,
+.char-full-actions button:focus-visible::before {
+  background: color-mix(in srgb, var(--accent) 45%, rgba(255, 255, 255, 0.14));
+  border-color: color-mix(in srgb, var(--accent) 80%, transparent);
+  transform: scale(1.1);
+}
+
+.char-full-actions button:active:not(:disabled)::before { transform: scale(0.95); }
+
+.char-full-actions button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Bei der ersten und der letzten Figur: Der Pfeil bleibt stehen, damit die
+   Reihe nicht springt, zeigt aber, dass es dort nicht weitergeht. */
+.char-full.visible .char-full-actions button:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.char-full-close svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Der Winkel entsteht wie bei .modal-step aus einem um 45° gedrehten
+   Kästchen mit zwei Rändern. Das Kästchen sitzt mittig im Kreis, seine
+   Ränder liegen aber nur auf einer Seite – gedreht schaut die Spitze
+   deshalb um ein Viertel der Diagonale aus der Mitte heraus. Das
+   translateX schiebt sie zurück. Rechnerisch wären das
+   (11px - 2.5px) / 2 / √2 ≈ 3px, der Wert bleibt aber wie bei .modal-step
+   bewusst darunter, damit der Winkel optisch mittig sitzt statt zur
+   offenen Seite zu hängen. */
+.char-full-step span {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-color: currentColor;
+  border-style: solid;
+  border-width: 0;
+}
+
+.char-full-step.next span {
+  border-right-width: 2.5px;
+  border-top-width: 2.5px;
+  transform: translateX(-1.8px) rotate(45deg);
+}
+
+.char-full-step.prev span {
+  border-left-width: 2.5px;
+  border-bottom-width: 2.5px;
+  transform: translateX(1.8px) rotate(45deg);
+}
+
+/* Der Inhalt scrollt in sich, der Grund bleibt stehen. Oben liegt so viel
+   Polster, dass der Name unter dem fixierten Seitenkopf beginnt und nicht
+   hinter ihm. */
+.char-full-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(4.8rem, 10vh, 7rem) clamp(1.2rem, 6vw, 5.5rem) clamp(2.2rem, 6vh, 4rem);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 60%, transparent) transparent;
+}
+
+/* Figuren mit zwei Auftritten füllen den Bildschirm nicht. Statt sie oben
+   kleben und darunter eine leere Hälfte stehen zu lassen, schiebt der
+   freie Raum sie in die Mitte. Automatische Ränder statt justify-content:
+   center, weil zentrierter Inhalt, der doch überläuft, oben abgeschnitten
+   würde und nicht mehr heranzuscrollen wäre.
+
+   Beide behalten ihre volle Höhe (flex: none): Als schrumpfbare Flex-Kinder
+   würden sie sich beim Überlaufen ineinanderschieben. */
+.char-full-head { margin-top: auto; flex: none; }
+.char-full-body { margin-bottom: auto; flex: none; }
+
+.char-full-inner::-webkit-scrollbar { width: 8px; }
+
+.char-full-inner::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Porträtkugel und Namensblock stehen nebeneinander. Beide kommen von
+   links hereingeschoben, kurz nachdem der Grund steht – erst das Bild,
+   dann wer darauf zu sehen ist. */
+.char-full-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(1.2rem, 3vw, 2.4rem);
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.4s ease, transform 0.4s var(--ease-out);
+}
+
+/* Reicht der Platz neben der Kugel nicht mehr für eine lesbare Zeile,
+   rutscht der ganze Block unter sie, statt Wort für Wort umzubrechen. */
+.char-full-headtext {
+  flex: 1;
+  min-width: min(18rem, 100%);
+}
+
+.char-full.visible .char-full-head {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.15s;
+}
+
+.char-full-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.6rem, 8vw, 6rem);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+}
+
+.char-full-name span { display: block; }
+
+/* Der Heldenname steht unter dem bürgerlichen, kleiner und im Akzent der
+   Phase – dieselbe Rangfolge wie auf den Kacheln. */
+.char-full-role {
+  margin-top: 0.15em;
+  font-size: 0.42em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 80%, #fff);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Der Rest folgt dem Kopf mit etwas Abstand und steigt dabei auf:
+   erst die Auftritte über die volle Breite, darunter die Biografie. */
+.char-full-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.8rem, 4vw, 3.5rem);
+  margin-top: clamp(1.8rem, 5vh, 3rem);
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s var(--ease-out);
+}
+
+.char-full.visible .char-full-body {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.28s;
+}
+
+/* Das scharfe Porträt in seiner echten Größe. Quadratisch beschnitten und
+   oben gemessen wie überall, nur größer eingefasst. */
+.char-full-shot {
+  width: clamp(140px, 15vw, 200px);
+  height: clamp(140px, 15vw, 200px);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6),
+              0 0 40px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.char-full-shot img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.char-full-shot.empty { background: color-mix(in srgb, var(--accent) 16%, rgba(255, 255, 255, 0.05)); }
+.char-full-shot .char-initials { font-size: 3rem; }
+
+.char-full-cast {
+  margin: 0.7rem 0 0;
+  font-size: 0.82rem;
+  color: #b9c2dc;
+}
+
+.char-full-cast span {
+  font-weight: 600;
+  color: #fff;
+}
+
+.char-full-label {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 45%, transparent));
+}
+
+/* Im Vollbild ist Platz für mehrere Spalten, statt die Auftritte wie in
+   der Karte untereinander zu stapeln. */
+.char-full-films {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.5rem;
+}
+
+/* Die Einträge tragen dieselben Regeln wie in der Karte, brauchen hier
+   aber einen eigenen Grund: Über dem hellen Bild wäre das durchscheinende
+   Weiß der Karte nicht mehr vom Hintergrund zu unterscheiden. Und statt
+   des Stapels der Karte eine Zeile: links das Logo, rechts der Text. */
+.char-full-films .char-film {
+  height: 100%;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(6, 9, 20, 0.62);
+  border-color: rgba(255, 255, 255, 0.12);
+  border-left-color: var(--accent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.char-full-films .char-film:hover,
+.char-full-films .char-film:focus-visible {
+  background: color-mix(in srgb, var(--accent) 26%, rgba(6, 9, 20, 0.7));
+}
+
+/* Der Logokasten ist fest bemessen und bleibt auch ohne Bild stehen:
+   Alle Titel fangen bündig auf derselben Linie an, egal wie breit das
+   jeweilige Logo geschnitten ist. Das Logo sitzt mittig im Kasten und
+   behält beim Einpassen sein Seitenverhältnis. */
+.char-full-films .char-film-logo {
+  width: 5.5rem;
+  height: 2.4rem;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.char-full-films .char-film-logo img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.char-full-films .char-film-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+/* ---------- Ausführliche Biografie ----------
+
+   Sie läuft unter den Auftritten. Die Breite des Lesetexts bleibt
+   trotzdem begrenzt: Über die volle Fensterbreite gezogen wären die
+   Zeilen zu lang zum Lesen, die Auftrittsliste darüber lebt dagegen
+   von der Breite. */
+/* Ohne eigenen Außenabstand: Der Zeilenabstand des Rasters trennt sie
+   bereits von den Auftritten, ein zweiter Abstand darüber risse die
+   Linie zu weit vom Text darunter weg. */
+.char-full-life {
+  padding-top: clamp(1.4rem, 3vh, 2.4rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Kein Flex-Stapel: Die Abschnitte bleiben normaler Fließtext, damit sie
+   am gefloateten Ganzkörperbild vorbeilaufen können. flow-root schließt
+   den Float unten ein, falls er länger ist als der Text.
+
+   Der Kasten selbst läuft über die volle Breite: So rückt das Bild ganz
+   an den rechten Rand, während der Lesetext über die max-width der
+   Abschnitte bei seiner Zeilenlänge bleibt. Dazwischen bleibt Luft. */
+.char-full-life-sections {
+  display: flow-root;
+}
+
+.char-life { max-width: 46rem; }
+.char-life + .char-life { margin-top: 1.4rem; }
+
+/* ---------- Ganzkörperbild in der Biografie ----------
+
+   assets/characters/fullsize/<slug>.webp, freigestellt mit transparentem
+   Hintergrund. Es steht rechts oben im Text und der Rahmen gibt ihm
+   einen eigenen Grund: dunkles Glas mit einem Lichtkegel im Akzent der
+   Phase, auf dem die Figur steht. */
+.char-life-figure {
+  float: right;
+  width: min(15rem, 44%);
+  margin: 0.3rem 0 1.2rem clamp(1.2rem, 3vw, 2rem);
+}
+
+.char-life-frame {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0.85rem;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.16));
+  background:
+    radial-gradient(115% 65% at 50% 100%,
+      color-mix(in srgb, var(--accent) 26%, transparent), transparent 72%)
+    rgba(6, 9, 20, 0.55);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55),
+              0 0 32px color-mix(in srgb, var(--accent) 22%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.char-life-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.65));
+}
+
+/* Ohne Bild bleibt der Rahmen stehen: Silhouette und Anfangsbuchstaben
+   im Hochformat, bis eine Datei nachgelegt wird. */
+.char-life-frame.empty {
+  aspect-ratio: 5 / 8;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.char-life-frame.empty svg {
+  width: 38%;
+  fill: color-mix(in srgb, var(--accent) 40%, rgba(255, 255, 255, 0.3));
+  opacity: 0.75;
+}
+
+/* Fassungs-Schalter unter dem Rahmen: dieselbe Pillenform wie die
+   Sprungleiste der Biografie, nur kleiner. Die gewählte Fassung trägt
+   den Akzent der Phase. */
+.char-look-nav {
+  margin: 0.6rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.char-look {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(6, 9, 20, 0.55);
+  color: #b9c2dc;
+  font-family: inherit;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.char-look:hover,
+.char-look:focus-visible {
+  color: #fff;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, rgba(6, 9, 20, 0.6));
+}
+
+.char-look.active {
+  color: #fff;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 40%, rgba(6, 9, 20, 0.55));
+}
+
+/* Die Sprungleiste darf die volle Breite nutzen, anders als der Lesetext:
+   Sie ist eine Übersicht und keine Prosa. */
+.char-life-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.6rem;
+}
+
+.char-life-jump {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(6, 9, 20, 0.55);
+  color: #b9c2dc;
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.char-life-jump:hover,
+.char-life-jump:focus-visible {
+  color: #fff;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, rgba(6, 9, 20, 0.6));
+}
+
+/* Angesprungene Abschnitte sollen nicht am oberen Rand kleben. */
+.char-life { scroll-margin-top: 1.5rem; }
+
+/* Die Zwischentitel tragen dieselbe Schrift wie die Beschriftungen
+   darüber, nur kleiner und in Weiß: Sie gliedern den Text, statt mit dem
+   Akzent um die Aufmerksamkeit der Abschnittsüberschrift zu ringen. */
+.char-life-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.char-life-title::before {
+  content: "";
+  display: inline-block;
+  width: 0.75rem;
+  height: 2px;
+  margin-right: 0.6rem;
+  vertical-align: 0.25em;
+  background: var(--accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.char-life-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.75;
+  color: #dbe1f2;
+}
+
+/* Ohne Bewegung erscheint das Vollbild einfach, statt hereinzufahren –
+   die Einblendung der Fläche selbst bleibt als sanfter Übergang. */
+@media (prefers-reduced-motion: reduce) {
+  .char-full-blur,
+  .char-full-head,
+  .char-full-body,
+  .char-full-actions button,
+  .char-full-actions button::before {
+    transition: none;
+  }
+
+  .char-full-blur { transform: scale(1.15); }
 }
 
 /* ===== Footer ========================================================== */
@@ -751,26 +2530,126 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ===== Responsive ====================================================== */
 
+/* Phasen-Dropdowns nur dort, wo sie auch hinpassen und bedienbar sind:
+   Unter 960px Fensterbreite ragt das Panel der äußersten Phase über den
+   Fensterrand hinaus (nachgemessen: 18px bei 920, 38px bei 900) – die
+   Nav hört dort auf mitzuwandern, das Panel bleibt aber mittig unter
+   seiner Phase. Und ohne echten Hover (Touch) würde ein Tipp auf die
+   Phase erst das Menü aufklappen statt zu navigieren. Der Nav-Link
+   selbst bleibt in beiden Fällen voll funktionsfähig. */
+@media (max-width: 959px), (hover: none) {
+  .nav-item .dropdown-menu,
+  .nav-item::after { display: none; }
+}
+
+/* Erst hier wird die Nav zum Scroll-Container – oberhalb würde sie die
+   Dropdowns abschneiden. */
+@media (max-width: 959px) {
+  #phase-nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  #phase-nav::-webkit-scrollbar { display: none; }
+}
+
+/* Auf schmalen Fenstern wird die Porträtkugel kleiner, damit neben ihr
+   noch Platz für den Namen bleibt. */
+@media (max-width: 860px) {
+  .char-full-shot { width: 120px; height: 120px; }
+  .char-full-shot .char-initials { font-size: 2.2rem; }
+}
+
 @media (max-width: 640px) {
   :root {
     --logo-h: 108px;
     --conn-h: 44px;
   }
 
+  .char-full-actions {
+    gap: 0.4rem;
+  }
+
+  .char-full-actions button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .char-full-close svg { width: 18px; height: 18px; }
+
+  .char-full-step span { width: 9px; height: 9px; }
+  .char-full-step.next span { transform: translateX(-1.5px) rotate(45deg); }
+  .char-full-step.prev span { transform: translateX(1.5px) rotate(45deg); }
+
+  /* Der Weichzeichner ist auf schmalen Geräten teuer und der Grund dort
+     ohnehin fast ganz vom Inhalt verdeckt. */
+  .char-full-blur { filter: blur(30px) saturate(1.3) brightness(0.8); }
+
+  /* Neben einem Float bleibt hier keine lesbare Zeile mehr übrig – das
+     Ganzkörperbild stellt sich mittig vor den Text. */
+  .char-life-figure {
+    float: none;
+    width: min(70%, 14rem);
+    margin: 0 auto 1.4rem;
+  }
+
   .brand-text { display: none; }
 
-  #phase-nav a {
+  #phase-nav .nav-link {
     font-size: 0.95rem;
     padding: 0.45rem 0.55rem 0.4rem;
   }
 
-  #phase-nav a::after {
+  #phase-nav .nav-link::after {
     left: 0.55rem;
     right: calc(0.55rem + 0.16em);
   }
 
   .entry { width: 175px; }
   .logo-fallback { font-size: 1.3rem; }
+
+  /* Auf schmalen Karten würde das große Porträt den Namen in eine
+     Buchstabensäule quetschen */
+  .char-head { gap: 0.75rem; }
+  .char-portrait { width: 58px; height: 58px; }
+  .char-card .tip-title { font-size: 1.25rem; }
+
+  .chars-main { padding: 6rem 1rem 3rem; }
+
+  .chars-tools {
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+  }
+
+  /* Die Beschriftungen der Filterreihen kosten hier mehr Platz, als sie
+     erklären: Die Pillen sagen selbst, worum es geht. */
+  .chars-group-label { display: none; }
+
+  /* Umgebrochen bräuchten die Phasenpillen drei Zeilen, und die
+     Filterleiste stünde als hoher Block über der halben Seite. Deshalb
+     bleibt jede Reihe eine Reihe und scrollt seitlich. */
+  .chars-group { width: 100%; }
+
+  .chars-filters { gap: 0.5rem; }
+
+  .chars-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    /* Ohne das behielte die Reihe ihre Inhaltsbreite (min-width: auto bei
+       Flex-Elementen), stünde mittig über beide Ränder hinaus und die
+       erste Pille läge außerhalb des Bildes. */
+    min-width: 0;
+    scrollbar-width: none;
+  }
+
+  .chars-chips::-webkit-scrollbar { display: none; }
+
+  .char-grid {
+    grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+    gap: 0.6rem;
+  }
+
+  .char-shot { width: 74px; height: 74px; }
 }
 
 /* ===== Reduzierte Bewegung ============================================= */
@@ -788,18 +2667,47 @@ html.lenis, html.lenis body { height: auto; }
     transform: none;
   }
 
+  /* Ohne Bewegung entfällt die gepinnte Textsequenz: Der Hero wird wieder
+     eine normale viewportfüllende Sektion, die Stufen stehen untereinander
+     (Kicker über dem Titel wie früher) und sind alle sichtbar. relative
+     statt static, damit der Text über Video und Veil bleibt (z-index 2). */
+  .hero-track { height: auto; }
+
+  .hero {
+    position: static;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .hero-stack {
+    position: relative;
+    inset: auto;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+  }
+
+  .hero-stage {
+    position: static;
+    opacity: 1;
+    padding: 0;
+  }
+
+  .hero-stage-kicker { order: -1; }
+
   .hero-kicker,
   .hero h1,
-  .hero-spectrum,
   .hero-sub,
-  .scroll-hint {
+  .scroll-hint,
+  .hero-sound {
     opacity: 1;
     transition: none;
   }
-
-  .hero-spectrum { transform: none; }
-
-  .hero-kicker { letter-spacing: 0.5em; }
 
   .hero h1 {
     transform: none;
@@ -813,4 +2721,28 @@ html.lenis, html.lenis body { height: auto; }
   .scroll-arrow span { animation: none; }
 
   .movie-tip { transition: none; }
+
+  .modal { transition: opacity 0s, visibility 0s; }
+
+  .modal-card { transition: none; }
+
+  .char-chip,
+  .char-film { transition: none; }
+
+  .chip,
+  .chars-search,
+  .char-cell { transition: none; }
+
+  .char-cell:hover,
+  .char-cell:focus-visible { transform: none; }
+
+  .settings-btn,
+  .has-dropdown::after,
+  .dropdown-panel,
+  .nav-title,
+  .switch,
+  .switch::after { transition: none; }
+
+  .settings:hover .settings-btn,
+  .settings:has(:focus-visible) .settings-btn { transform: none; }
 }

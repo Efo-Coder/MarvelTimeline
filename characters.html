@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Charaktere – MCU Timeline</title>
+  <meta name="description" content="Alle Figuren aus den Filmen und Serien des Marvel Cinematic Universe: Besetzung, Biografie und sämtliche Auftritte in der Reihenfolge der Handlung.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23ec1d24'/%3E%3Cpath fill='%23fff' d='M20.3 14H28.3L31.9 39.8H32.1L35.7 14H43.7V50H38.4V22.7H38.3L34.2 50H29.4L25.3 22.7H25.2V50H20.3Z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* Gleiche sanfte Einblendung wie auf der Timeline, siehe index.html */
+    document.documentElement.classList.add('js');
+    window.addEventListener('DOMContentLoaded', function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.body.classList.add('page-ready');
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+
+  <canvas id="galaxy" aria-hidden="true"></canvas>
+
+  <header class="site-header">
+    <div class="header-side">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
+        <span class="brand-text">Timeline</span>
+      </a>
+    </div>
+
+    <nav id="page-nav" aria-label="Seiten">
+      <a class="page-link" href="index.html">Timeline</a>
+      <a class="page-link active" href="characters.html" aria-current="page">Charaktere</a>
+    </nav>
+
+    <div class="header-side header-side--end"></div>
+  </header>
+
+  <main class="chars-main">
+    <section class="chars-intro">
+      <p class="chars-kicker">Wer im Universum mitspielt</p>
+      <h1 class="chars-title">Charaktere</h1>
+      <p class="chars-lead">Jede Figur aus allen Filmen und Serien der Timeline, mit Besetzung, Biografie
+      und sämtlichen Auftritten in der Reihenfolge der Handlung.</p>
+    </section>
+
+    <!-- Suche, Phasenfilter und Sortierung. Die Schaltflächen entstehen in
+         js/characters.js aus PHASES, damit eine neue Phase in data.js hier
+         nichts nachzupflegen braucht. -->
+    <div class="chars-tools">
+      <label class="chars-search" for="char-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="M20 20l-3.6-3.6"></path>
+        </svg>
+        <input id="char-search" type="search" placeholder="Figur oder Besetzung suchen" autocomplete="off" aria-label="Figur oder Besetzung suchen">
+      </label>
+
+      <div class="chars-filters">
+        <div class="chars-group">
+          <span class="chars-group-label">Phase</span>
+          <div class="chars-chips" id="char-phases" role="group" aria-label="Nach Phase filtern"></div>
+        </div>
+
+        <div class="chars-group">
+          <span class="chars-group-label">Sortierung</span>
+          <div class="chars-chips" id="char-sort" role="group" aria-label="Sortierung"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="chars-status" id="char-status" role="status"></p>
+
+    <ul class="char-grid" id="char-grid"></ul>
+  </main>
+
+  <footer class="site-footer">
+    <p>Es handelt sich um ein Fanprojekt und ist nicht mit Marvel Studios oder The Walt Disney Company verbunden.<br>
+    Alle Filmtitel &amp; Logos gehören ihren jeweiligen Rechteinhabern.</p>
+  </footer>
+
+  <script src="js/vendor/lenis.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/profiles.js"></script>
+  <script src="js/chars.js"></script>
+  <script src="js/galaxy.js"></script>
+  <script src="js/characters.js"></script>
+</body>
+</html>
