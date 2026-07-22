@@ -1,9 +1,0 @@
-Film-Logos hier ablegen – als PNG mit transparentem Hintergrund,
-benannt nach dem Slug des Films, z. B.:
-
-  iron-man.png
-  avengers-endgame.png
-  deadpool-and-wolverine.png
-
-Die vollständige Namensliste steht in der README.md im Hauptordner.
-Fehlt ein Logo, zeigt die Seite automatisch den Filmtitel als Platzhalter.
