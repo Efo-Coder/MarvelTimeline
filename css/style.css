@@ -67,6 +67,13 @@ body {
   font-family: var(--font-body);
   color: var(--text);
   overflow-x: hidden;
+  /* Spalte über die volle Fensterhöhe, damit der Footer auch bei kurzem
+     Inhalt unten steht statt mitten im Bild zu enden (siehe margin-top
+     bei .site-footer). Kopf, Galaxie und alle Overlays liegen fixiert und
+     damit außerhalb des Flusses – flex-Kinder sind nur main und footer. */
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 ::selection {
@@ -1618,6 +1625,10 @@ html.modal-open { overflow: hidden; }
    ====================================================================== */
 
 .chars-main {
+  /* Ohne die volle Breite bliebe im Spalten-Body (siehe body) das auto der
+     Außenränder übrig und ließe die Sektion auf ihre Inhaltsbreite
+     schrumpfen – dem Raster fehlte dann eine ganze Spalte. */
+  width: 100%;
   max-width: 1240px;
   margin-inline: auto;
   /* Oben Platz für den fixierten Header, unten für den Footer */
@@ -2510,6 +2521,10 @@ a.char-film { text-decoration: none; }
 /* ===== Footer ========================================================== */
 
 .site-footer {
+  /* Schiebt den Footer im Spalten-Body ans untere Ende, sobald der Inhalt
+     darüber das Fenster nicht füllt – etwa wenn die Suche nur wenige oder
+     gar keine Figuren übrig lässt. */
+  margin-top: auto;
   display: flex;
   align-items: center;
   justify-content: center;
