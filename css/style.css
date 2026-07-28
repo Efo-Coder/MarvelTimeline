@@ -1729,7 +1729,9 @@ html.modal-open { overflow: hidden; }
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
-.chars-search svg {
+/* Nur die Lupe. Das Kreuz daneben bringt seine eigene Größe und Farbe
+   mit, damit es auf Hover heller werden kann. */
+.chars-search > svg {
   width: 16px;
   height: 16px;
   flex: none;
@@ -1752,6 +1754,44 @@ html.modal-open { overflow: hidden; }
 /* Das kleine Kreuz, das Chrome/Safari in ein type="search"-Feld setzen –
    es säße mitten in der Pille und passt nicht zum übrigen Bild. */
 .chars-search input::-webkit-search-cancel-button { display: none; }
+
+/* Das eigene Kreuz am rechten Rand der Pille, das die Eingabe wegräumt.
+   Kein Knopf, nur das Zeichen: dieselbe Strichstärke und dieselbe gedämpfte
+   Farbe wie die Lupe gegenüber, damit die Pille eine Fläche bleibt. */
+.chars-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.chars-clear svg {
+  width: 14px;
+  height: 14px;
+}
+
+.chars-clear:hover,
+.chars-clear:focus-visible { color: var(--text); }
+
+/* Nur für die Tastatur, der Mausklick zeigt ihn nie. */
+.chars-clear:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* Solange der Platzhalter steht, ist das Feld leer und es gäbe nichts zu
+   löschen. visibility statt opacity allein: So bleibt das Kreuz auch aus
+   der Tabreihenfolge, solange es niemand sehen kann. */
+.chars-search input:placeholder-shown + .chars-clear {
+  visibility: hidden;
+  opacity: 0;
+}
 
 .chars-group {
   display: flex;
@@ -2325,55 +2365,69 @@ a.char-film { text-decoration: none; }
 
 /* ---------- Ausführliche Biografie ----------
 
-   Sie läuft unter den Auftritten. Die Breite des Lesetexts bleibt
-   trotzdem begrenzt: Über die volle Fensterbreite gezogen wären die
-   Zeilen zu lang zum Lesen, die Auftrittsliste darüber lebt dagegen
-   von der Breite. */
+   Sie läuft unter den Auftritten und dem Ganzkörperbild. Die Breite des
+   Lesetexts bleibt trotzdem begrenzt: Über die volle Fensterbreite
+   gezogen wären die Zeilen zu lang zum Lesen, die Auftrittsliste und
+   der Rahmen darüber leben dagegen von der Breite. */
 /* Ohne eigenen Außenabstand: Der Zeilenabstand des Rasters trennt sie
-   bereits von den Auftritten, ein zweiter Abstand darüber risse die
-   Linie zu weit vom Text darunter weg. */
-.char-full-life {
+   bereits vom Block darüber, ein zweiter Abstand darüber risse die Linie
+   zu weit vom Text darunter weg. Dieselbe Trennlinie führt auch die
+   Sektion mit dem Ganzkörperbild. */
+.char-full-life,
+.char-full-figure {
   padding-top: clamp(1.4rem, 3vh, 2.4rem);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-/* Kein Flex-Stapel: Die Abschnitte bleiben normaler Fließtext, damit sie
-   am gefloateten Ganzkörperbild vorbeilaufen können. flow-root schließt
-   den Float unten ein, falls er länger ist als der Text.
-
-   Der Kasten selbst läuft über die volle Breite: So rückt das Bild ganz
-   an den rechten Rand, während der Lesetext über die max-width der
-   Abschnitte bei seiner Zeilenlänge bleibt. Dazwischen bleibt Luft. */
-.char-full-life-sections {
-  display: flow-root;
 }
 
 .char-life { max-width: 46rem; }
 .char-life + .char-life { margin-top: 1.4rem; }
 
-/* ---------- Ganzkörperbild in der Biografie ----------
+/* ---------- Ganzkörperbild ----------
 
    assets/characters/fullsize/<slug>.webp, freigestellt mit transparentem
-   Hintergrund. Es steht rechts oben im Text und der Rahmen gibt ihm
-   einen eigenen Grund: dunkles Glas mit einem Lichtkegel im Akzent der
-   Phase, auf dem die Figur steht. */
-.char-life-figure {
-  float: right;
-  width: min(15rem, 44%);
-  margin: 0.3rem 0 1.2rem clamp(1.2rem, 3vw, 2rem);
-}
+   Hintergrund. Es steht in einer eigenen Sektion zwischen Auftritten und
+   Biografie, und der Rahmen gibt ihm einen eigenen Grund: dunkles Glas
+   mit einem Lichtkegel im Akzent der Phase, auf dem die Figur steht.
 
-.char-life-frame {
+   Der Rahmen nimmt die volle Breite ein und wird damit zur Bühne. Seine
+   Höhe steht deshalb fest, statt aus einem Seitenverhältnis zu kommen:
+   Über die volle Breite gerechnet wäre er mehrere Bildschirme hoch. Es
+   ist genau die Höhe, die er als schmaler Rahmen hatte, damals 26rem
+   breit im Format 18/25. Die Figuren stehen damit so groß wie vorher.
+
+   Dass die Höhe überhaupt vorgegeben ist, liegt an den Dateien: Sie sind
+   randlos zugeschnitten, ihr Seitenverhältnis ist also das der Figur und
+   reicht von 0,21 bei einer schmalen stehenden Pose bis über 1,0 bei
+   einer Flugpose. Würde der Rahmen dem Bild folgen, schwankte er von
+   Fassung zu Fassung. */
+/* Bezug für den Steckbrief rechts im Bild. */
+.char-figure { position: relative; margin: 0; }
+
+/* Bezug für die Fassungsleiste: genau der Rahmen, nichts darunter. */
+.char-figure-stage { position: relative; }
+
+.char-figure-frame {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  /* Der Rahmen gibt seinen Inhalt ganz an die Ebenen weiter, die das Bild
+     tragen (siehe .char-figure-stack). Ausgerichtet wird darin. */
+  align-items: stretch;
   justify-content: center;
+  box-sizing: border-box;
+  height: calc(26rem * 25 / 18);
   overflow: hidden;
-  padding: 0.85rem;
-  border-radius: 16px;
+  padding: 1rem;
+  border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.16));
+  /* Zwei Kegel übereinander: ein enger, heller um die Figur und ein
+     breiter, schwacher, der nach außen ausläuft. Ein einzelner über die
+     ganze Breite wäre ein flächiger Schleier statt eines Lichts, ein
+     einzelner enger stünde als harter Fleck in einer schwarzen Fläche. */
   background:
-    radial-gradient(115% 65% at 50% 100%,
-      color-mix(in srgb, var(--accent) 26%, transparent), transparent 72%)
+    radial-gradient(26rem 62% at 50% 100%,
+      color-mix(in srgb, var(--accent) 34%, transparent), transparent 70%),
+    radial-gradient(75% 110% at 50% 100%,
+      color-mix(in srgb, var(--accent) 12%, transparent), transparent 72%)
     rgba(6, 9, 20, 0.55);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55),
               0 0 32px color-mix(in srgb, var(--accent) 22%, transparent);
@@ -2381,64 +2435,402 @@ a.char-film { text-decoration: none; }
   -webkit-backdrop-filter: blur(6px);
 }
 
-.char-life-frame img {
+/* Über die volle Breite steht neben der Figur viel Fläche. Die Vignette
+   macht daraus Dunkelheit um den Lichtkegel statt eines leeren Kastens:
+   Zur Mitte hin bleibt sie klar, nach außen dunkelt sie ab. Sie liegt vor
+   dem Grund und hinter dem Bild, weil sie vor dem Stapel steht, der als
+   positioniertes Element später gezeichnet wird. */
+.char-figure-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(115% 92% at 50% 62%,
+    transparent 22%, rgba(3, 5, 12, 0.62) 100%);
+}
+
+/* Der Boden, auf dem die Figur steht: eine Linie auf Höhe der Füße, die
+   nach beiden Seiten ausläuft. Sie gibt der breiten Fläche einen Halt,
+   den der Lichtkegel allein nicht hergibt. Beim Platzhalter entfällt sie,
+   dort steht die Silhouette mittig und nicht auf dem Boden. */
+.char-figure-frame:not(.empty)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  width: min(32rem, 76%);
+  height: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent,
+    color-mix(in srgb, var(--accent) 60%, transparent), transparent);
+}
+
+/* Im Rahmen liegen zwei gleich große Ebenen übereinander. Ein
+   Fassungswechsel blendet von der einen auf die andere über, statt das
+   src im laufenden Bild zu tauschen: Sonst stünde für den Moment des
+   Ladens die alte Fassung im neuen Maß im Rahmen und sprang danach hart
+   um. Deshalb sitzt --figure-scale auch an der Ebene und nicht am
+   Rahmen – während der Überblendung hat jede Fassung ihr eigenes Maß. */
+.char-figure-stack {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Beide Ebenen liegen deckungsgleich auf der Fläche des Rahmens. Sie
+   müssen absolut stehen und nicht nur gestapelt sein, damit ihre Höhe
+   feststeht: Die Bilder begrenzen sich mit max-height in Prozent, und
+   eine Ebene, die sich erst nach ihrem Bild bemisst, gäbe dafür keinen
+   Bezug her. */
+.char-figure-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.34s ease;
+}
+
+.char-figure-layer.front { opacity: 1; }
+
+/* Liegt die Fassung noch nicht im Cache, dimmt der Rahmen ab, damit der
+   Klick nicht ins Leere geht. Gesetzt wird das erst nach einem kurzen
+   Moment: Eine geladene Fassung ist vorher schon gewechselt. */
+.char-figure-frame.busy .char-figure-stack { opacity: 0.45; }
+
+/* Das Bild behält sein Seitenverhältnis und schöpft den Rahmen nur so
+   weit aus, wie --figure-scale erlaubt. Der Wert kommt aus
+   FULLSIZE_SCALE (js/chars.js) und trägt die Körpergröße nach, die dem
+   engen Zuschnitt fehlt: Ohne ihn stünde Rocket so hoch wie Thor.
+   align-items: flex-end stellt alle auf dieselbe Grundlinie, dorthin,
+   wo der Lichtkegel im Rahmen liegt.
+
+   In FULLSIZE_SCALE ist 1.0 ein Mensch, der höchste Wert ist 1.22.
+   0.82 rechnet das auf den Rahmen um: Der Mensch bleibt bei 82 Prozent
+   und über seinem Kopf bleibt der Platz, in den Hulk und Groot
+   hineinwachsen, ohne am oberen Rand abgeschnitten zu werden. */
+.char-figure-frame img {
   display: block;
-  width: 100%;
+  width: auto;
   height: auto;
+  max-width: calc(100% * var(--figure-scale, 1) * 0.82);
+  max-height: calc(100% * var(--figure-scale, 1) * 0.82);
   filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.65));
 }
 
-/* Ohne Bild bleibt der Rahmen stehen: Silhouette und Anfangsbuchstaben
-   im Hochformat, bis eine Datei nachgelegt wird. */
-.char-life-frame.empty {
-  aspect-ratio: 5 / 8;
+/* Ohne Bild bleibt der Rahmen stehen: Silhouette und Anfangsbuchstaben,
+   bis eine Datei nachgelegt wird. Das Format hat er schon. */
+.char-figure-frame.empty {
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.9rem;
 }
 
-.char-life-frame.empty svg {
-  width: 38%;
+/* Gemessen wird die Silhouette an der Höhe des Rahmens, nicht an seiner
+   Breite: Über die volle Bühne gezogen füllte sie sonst das ganze Bild.
+   Die Breite folgt ihr aus dem Seitenverhältnis des viewBox. */
+.char-figure-frame.empty svg {
+  width: auto;
+  height: 48%;
   fill: color-mix(in srgb, var(--accent) 40%, rgba(255, 255, 255, 0.3));
   opacity: 0.75;
 }
 
-/* Fassungs-Schalter unter dem Rahmen: dieselbe Pillenform wie die
-   Sprungleiste der Biografie, nur kleiner. Die gewählte Fassung trägt
-   den Akzent der Phase. */
+/* Fassungs-Schalter im Rahmen links, untereinander und auf halber
+   Höhe zentriert. Sie liegen
+   über dem Bild und nicht mehr unter dem Rahmen, deshalb tragen sie
+   keinen eigenen Kasten: Ein Rahmen um jeden Schalter stünde als zweite
+   Kante im Bild. Sie hängen absolut an .char-figure und nicht am Rahmen
+   selbst, weil der overflow: hidden trägt und ein figcaption ohnehin
+   nur im figure stehen darf.
+
+   Links sind sie bündig mit der Rahmenkante: Der Schein läuft von dort
+   nach innen aus und braucht die Kante als Ursprung. */
 .char-look-nav {
-  margin: 0.6rem 0 0;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 1;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.3rem;
+  flex-direction: column;
+  /* Alle Schalter so breit wie der längste: Der Lichtstreifen läuft
+     sonst in jeder Zeile unterschiedlich weit ins Bild. */
+  align-items: stretch;
+  gap: 0.12rem;
+  margin: 0;
 }
 
+/* Der Schein ist ein eigenes Blatt hinter der Schrift (z-index: -1 in
+   der eigenen Stapelebene des Schalters, sonst läge er vor dem Text).
+   Die linke Polsterung entspricht der des Rahmens, damit die Schrift
+   auf einer Linie mit seinem Innenrand steht, die rechte gibt dem Schein
+   den Auslauf. */
 .char-look {
-  padding: 0.25rem 0.6rem;
+  position: relative;
+  isolation: isolate;
+  padding: 0.5rem 4.5rem 0.5rem 1.1rem;
+  border: 0;
+  background: none;
+  color: #b9c2dc;
+  /* Nicht die Fließtextschrift der Seite: Die Schalter sind Beschriftung
+     im Bild, keine Prosa. Sie tragen dieselbe schmale Versalschrift wie
+     Name und Heldenname darüber. Das Gewicht bleibt über alle Zustände
+     gleich, sonst spränge die Breite der Leiste beim Wechsel der
+     gewählten Fassung. */
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+/* Rechteckig und ohne Rundung, damit er als Lichtstreifen von der Kante
+   liest und nicht als zweite Pille. Voll an der linken Kante, nach
+   rechts hin immer transparenter. */
+.char-look::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--accent) 42%, transparent),
+    color-mix(in srgb, var(--accent) 16%, transparent) 45%,
+    transparent 100%);
+  transition: opacity 0.24s ease;
+}
+
+.char-look:hover { color: #e8ecf8; }
+.char-look:hover::before { opacity: 0.55; }
+
+/* Die gewählte Fassung leuchtet voll und bleibt so auch dann kenntlich,
+   wenn die Maus auf einer anderen liegt. */
+.char-look.active { color: #fff; }
+
+.char-look.active::before {
+  opacity: 1;
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--accent) 58%, transparent),
+    color-mix(in srgb, var(--accent) 22%, transparent) 45%,
+    transparent 100%);
+}
+
+/* Für die Tastatur reicht der Schein allein nicht: Er unterscheidet sich
+   kaum von der gewählten Fassung. Eine schmale Marke an der Kante zeigt,
+   wo der Fokus steht. */
+.char-look:focus-visible {
+  outline: none;
+  color: #fff;
+}
+
+.char-look:focus-visible::before { opacity: 0.85; }
+
+.char-look:focus-visible::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  bottom: 0.15rem;
+  left: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+/* ---------- Steckbrief im Rahmen ----------
+
+   Rechts im Ganzkörperbild steht ein eigenes Fenster mit den Angaben zur
+   Figur (js/facts.js). Es trägt dieselbe Kante und denselben Grund wie
+   der Rahmen selbst und dockt rechts an dessen Linie an: Seine rechte
+   Kante stößt an die Rahmenlinie, dort ist es deshalb weder gerundet
+   noch abgesetzt. Die Rundung links entspricht der des Rahmens.
+
+   Wie die Fassungsleiste hängt es an .char-figure statt am Rahmen, der
+   overflow: hidden trägt. */
+.char-facts {
+  position: absolute;
+  top: 50%;
+  /* Genau die Randstärke des Rahmens, nicht 0: Sonst läge das Fenster mit
+     seinem Grund auf der Rahmenlinie und löschte sie über seine ganze
+     Höhe aus. So endet es davor und die Linie läuft durch. */
+  right: 1px;
+  transform: translateY(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(23rem, 42%);
+  /* Der Rahmen ist 36rem hoch. Bleibt oben und unten eine Handbreit
+     frei, steht das Fenster als Fenster darin und nicht als Wand. */
+  max-height: calc(100% - 2.4rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.1rem 1.2rem 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.16));
+  border-right: 0;
+  border-radius: 18px 0 0 18px;
+  background:
+    linear-gradient(200deg,
+      color-mix(in srgb, var(--accent) 13%, transparent), transparent 62%)
+    rgba(6, 9, 20, 0.72);
+  box-shadow: -14px 0 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 60%, transparent) transparent;
+}
+
+.char-facts::-webkit-scrollbar { width: 6px; }
+.char-facts::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* Zwischenüberschriften des Fensters, in der Schrift der Namen wie die
+   Fassungsschalter. */
+.char-facts-head {
+  margin: 1.1rem 0 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--accent) 75%, #fff);
+}
+
+.char-facts-head:first-child { margin-top: 0; }
+
+/* Angabe für Angabe untereinander: Bezeichnung klein darüber, Wert
+   darunter. Nebeneinander in zwei Spalten bliebe für Werte wie
+   „Brooklyn, New York City“ zu wenig Platz. */
+.char-facts-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.char-facts-row { display: block; }
+
+.char-facts-key {
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8e99b8;
+}
+
+.char-facts-value {
+  margin: 0.1rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: #e9edf8;
+}
+
+.char-bonds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+/* Der eingeklappte Rest der Begegnungen trägt hidden. Ohne diese Zeile
+   liefe das display: flex von oben dagegen an und die Liste stünde
+   immer offen – das Attribut setzt nur den Vorgabewert des Browsers. */
+.char-bonds[hidden] { display: none; }
+
+/* Jeder Name führt zu seiner Figur. Der Schein kommt von links wie bei
+   den Fassungsschaltern, damit beide Seiten des Rahmens dieselbe Sprache
+   sprechen – hier aber im Akzent der Phase, in der die genannte Figur
+   zuerst auftritt. */
+.char-bond {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  color: #c6cee6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.char-bond::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--accent) 42%, transparent),
+    color-mix(in srgb, var(--accent) 16%, transparent) 45%,
+    transparent 100%);
+  transition: opacity 0.2s ease;
+}
+
+.char-bond:hover,
+.char-bond:focus-visible { color: #fff; outline: none; }
+.char-bond:hover::before,
+.char-bond:focus-visible::before { opacity: 0.9; }
+
+/* Die Bezeichnung steht vor dem Namen und in fester Breite: Die Namen
+   fangen dadurch alle auf derselben Linie an.
+
+   Sie bleibt grau, obwohl jede Zeile den Akzent ihrer Zielfigur trägt:
+   Eine Liste, in der Vater blau, Bruder rot und Rivale violett leuchtet,
+   liest sich als Farbmuster und nicht als Liste. Die Farbe kommt erst
+   unter dem Zeiger dazu. */
+.char-bond-label {
+  flex: none;
+  width: 6.6rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8e99b8;
+  transition: color 0.2s ease;
+}
+
+.char-bond:hover .char-bond-label,
+.char-bond:focus-visible .char-bond-label {
+  color: color-mix(in srgb, var(--accent) 55%, #fff);
+}
+
+.char-bond-name {
+  font-size: 0.86rem;
+  line-height: 1.3;
+}
+
+/* Ohne Bezeichnung rückt der Name an den linken Rand. */
+.char-bonds-met .char-bond-name { font-size: 0.84rem; }
+
+.char-facts-more {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  padding: 0.3rem 0.7rem;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(6, 9, 20, 0.55);
   color: #b9c2dc;
   font-family: inherit;
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
-.char-look:hover,
-.char-look:focus-visible {
+.char-facts-more:hover,
+.char-facts-more:focus-visible {
   color: #fff;
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 22%, rgba(6, 9, 20, 0.6));
-}
-
-.char-look.active {
-  color: #fff;
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 40%, rgba(6, 9, 20, 0.55));
 }
 
 /* Die Sprungleiste darf die volle Breite nutzen, anders als der Lesetext:
@@ -2511,7 +2903,11 @@ a.char-film { text-decoration: none; }
   .char-full-head,
   .char-full-body,
   .char-full-actions button,
-  .char-full-actions button::before {
+  .char-full-actions button::before,
+  .char-figure-stack,
+  .char-figure-layer,
+  .char-look,
+  .char-look::before {
     transition: none;
   }
 
@@ -2600,12 +2996,32 @@ a.char-film { text-decoration: none; }
      ohnehin fast ganz vom Inhalt verdeckt. */
   .char-full-blur { filter: blur(30px) saturate(1.3) brightness(0.8); }
 
-  /* Neben einem Float bleibt hier keine lesbare Zeile mehr übrig – das
-     Ganzkörperbild stellt sich mittig vor den Text. */
-  .char-life-figure {
-    float: none;
-    width: min(70%, 14rem);
-    margin: 0 auto 1.4rem;
+  /* Auch hier die Höhe von früher: Der Rahmen war auf schmalen Fenstern
+     18rem breit im selben Format 18/25. */
+  .char-figure-frame { height: 25rem; }
+
+  /* Der Rahmen ist hier zwei Fünftel niedriger und deutlich schmaler.
+     Figuren mit vielen Fassungen (Tony Stark hat zehn) stünden in der
+     großen Schrift oben und unten aus dem Rahmen heraus, und die Leiste
+     legte sich über die halbe Bühne. */
+  .char-look {
+    padding: 0.3rem 2.2rem 0.3rem 0.8rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+  }
+
+  /* Im Rahmen ist hier kein Platz mehr für ein Fenster: Neben der Figur
+     blieben keine zehn Zeichen Breite. Der Steckbrief rückt deshalb
+     unter den Rahmen und wird zur vollen Karte, die Kante bleibt. */
+  .char-facts {
+    position: static;
+    transform: none;
+    width: auto;
+    max-height: none;
+    margin-top: 0.8rem;
+    border-right: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.16));
+    border-radius: 18px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
   }
 
   .brand-text { display: none; }
@@ -2746,6 +3162,7 @@ a.char-film { text-decoration: none; }
 
   .chip,
   .chars-search,
+  .chars-clear,
   .char-cell { transition: none; }
 
   .char-cell:hover,

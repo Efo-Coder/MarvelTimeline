@@ -16,6 +16,7 @@
   const grid = document.getElementById('char-grid');
   const status = document.getElementById('char-status');
   const searchInput = document.getElementById('char-search');
+  const searchClear = document.getElementById('char-clear');
   const phaseChips = document.getElementById('char-phases');
   const sortChips = document.getElementById('char-sort');
   const root = document.documentElement;
@@ -72,6 +73,55 @@
       cell: null,   // die gebaute Kachel, siehe buildCell()
     };
   });
+
+  /* Für den Sprung von einer Beziehung zur genannten Figur: Aus dem Slug
+     im Steckbrief (js/facts.js) wird der Datensatz, den die Vollansicht
+     anzeigen kann. */
+  const bySlug = new Map(chars.map(item => [item.char.slug, item]));
+
+  /* Alle Figuren, denen jemand im Lauf der Reihe begegnet ist. Gezählt
+     wird, in wie vielen Titeln sich beide treffen, und danach sortiert –
+     die ständigen Weggefährten stehen so vorn und die einmalige
+     Begegnung am Ende.
+
+     Maßgeblich ist meets in js/data.js, die Gruppen der Figuren, die im
+     jeweiligen Titel wirklich zusammenstehen. Fehlt das Feld, trifft
+     jeder jeden, und bei den meisten Titeln ist genau das der Fall.
+     Bloße Namensnachbarschaft in derselben Liste reicht dagegen nicht:
+     Raza steht in Iron Man neben Pepper Potts und Phil Coulson, ohne
+     einem von beiden je zu begegnen.
+
+     Gerechnet wird erst beim Öffnen einer Figur und nur über ihre eigenen
+     Auftritte. Ein Index über alle Paare wäre bei 223 Figuren und Filmen
+     mit sechzig Namen ein Vielfaches an Arbeit, von der fast nichts
+     gebraucht wird. */
+  function metCharacters(item) {
+    const counts = new Map();
+    for (const record of item.char.entries) {
+      const movie = record.movie;
+      /* Ohne meets zählt die ganze Besetzung als eine Gruppe. */
+      const groups = movie.meets
+        || [(movie.characters || []).filter(name => !CHAR_NO_PROFILE.has(name)).map(charSlug)];
+      const here = new Set();
+      for (const group of groups) {
+        if (!group.includes(item.char.slug)) continue;
+        for (const slug of group) if (slug !== item.char.slug) here.add(slug);
+      }
+      for (const slug of here) counts.set(slug, (counts.get(slug) || 0) + 1);
+    }
+    const met = [];
+    for (const [slug, shared] of counts) {
+      const other = bySlug.get(slug);
+      if (other) met.push({ item: other, shared });
+    }
+    /* Bei gleicher Zahl gemeinsamer Titel steht die Figur vorn, die
+       insgesamt öfter auftritt: Nick Fury vor einer Nebenfigur, die
+       zufällig im selben einen Film steht. */
+    met.sort((a, b) => b.shared - a.shared
+      || b.item.char.entries.length - a.item.char.entries.length
+      || a.item.real.localeCompare(b.item.real, 'de'));
+    return met;
+  }
 
   /* ---------- Kacheln ---------- */
 
@@ -206,6 +256,16 @@
     render();
   });
 
+  /* Das Kreuz räumt das Feld und gibt den Fokus zurück, damit gleich
+     weitergetippt werden kann. Ob es überhaupt zu sehen ist, entscheidet
+     das Stylesheet am Platzhalter. */
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    query = '';
+    render();
+    searchInput.focus();
+  });
+
   function matches(item) {
     if (activePhase && !item.phases.includes(activePhase)) return false;
     return !query || item.haystack.includes(query);
@@ -307,6 +367,13 @@
   const charFilmsBox = el('div', 'char-full-filmsbox');
   charFilmsBox.append(charCount, charFilms);
 
+  /* Das Ganzkörperbild als eigene Sektion zwischen Auftritten und
+     Biografie, über die volle Breite. Gefüllt wird sie beim Öffnen, weil
+     buildFigure() an der Figur hängt. */
+  const charFigureSlot = el('div', 'char-figure-slot');
+  const charFigureBox = el('div', 'char-full-figure');
+  charFigureBox.append(el('p', 'char-full-label', 'Erscheinung'), charFigureSlot);
+
   /* Die ausführliche Biografie aus PROFILES (js/profiles.js): benannte
      Abschnitte in Handlungsreihenfolge, unter Porträt und Auftritten über
      die volle Breite. Fehlt der Eintrag, entfällt der ganze Block. */
@@ -320,7 +387,7 @@
   charLifeBox.append(el('p', 'char-full-label', 'Biografie'), charLifeNav, charLife);
 
   const charBody = el('div', 'char-full-body');
-  charBody.append(charFilmsBox, charLifeBox);
+  charBody.append(charFilmsBox, charFigureBox, charLifeBox);
 
   const charInner = el('div', 'char-full-inner');
   charInner.append(charHead, charBody);
@@ -332,38 +399,278 @@
   let charItem = null;     // Figur, die gerade im Vollbild steht
   let charList = [];       // Reihenfolge, durch die die Pfeile blättern
 
-  /* Das Ganzkörperbild zur Biografie (assets/characters/fullsize/
-     <slug>.webp, freigestellt mit transparentem Hintergrund). Es steht
-     gerahmt rechts im Text, der daran vorbeifließt. Fehlt die Datei,
-     bleibt der Rahmen als Platzhalter stehen: Silhouette und
-     Anfangsbuchstaben, wie beim Porträtersatz.
+  /* Das Ganzkörperbild (assets/characters/fullsize/<slug>.webp,
+     freigestellt mit transparentem Hintergrund). Es steht in einem
+     Rahmen über die volle Breite, wie auf einer Bühne im Lichtkegel.
+     Fehlt die Datei, bleibt der Rahmen als Platzhalter stehen:
+     Silhouette und Anfangsbuchstaben, wie beim Porträtersatz.
 
-     Figuren mit Einträgen in FULLSIZE_LOOKS (js/chars.js) bekommen
-     unter dem Rahmen Schalter für ihre Fassungen: Rüstungen,
+     Figuren mit Einträgen in FULLSIZE_LOOKS (js/chars.js) bekommen im
+     Rahmen links Schalter für ihre Fassungen: Rüstungen,
      Verwandlungen und neue Anzüge im Lauf des Universums. */
-  function buildLifeFigure(item) {
-    const figure = el('figure', 'char-life-figure');
-    const frame = el('span', 'char-life-frame');
-    const img = el('img');
-    img.src = 'assets/characters/fullsize/' + item.char.slug + '.webp';
-    img.alt = 'Ganzkörperbild von ' + item.real;
-    img.loading = 'lazy';
-    img.decoding = 'async';
-    img.addEventListener('error', () => {
-      img.remove();
+  function lookSrc(file) {
+    return 'assets/characters/fullsize/' + file + '.webp';
+  }
+
+  /* Schon geladene und dekodierte Fassungen. Was hier steht, kann ohne
+     Warten eingeblendet werden. */
+  const lookReady = new Set();
+
+  /* Lädt eine Fassung im Hintergrund. decode() statt load, damit das Bild
+     beim Einblenden nicht noch im Dekoder hängt und die erste Bildfolge
+     der Überblendung leer bleibt. */
+  function loadLook(file) {
+    if (lookReady.has(file)) return Promise.resolve();
+    const probe = new Image();
+    probe.src = lookSrc(file);
+    const done = typeof probe.decode === 'function'
+      ? probe.decode()
+      : new Promise((resolve, reject) => {
+        probe.addEventListener('load', resolve);
+        probe.addEventListener('error', reject);
+      });
+    return done.then(
+      () => { lookReady.add(file); },
+      /* decode() weist auch mal ein fertig geladenes Bild zurück. Erst
+         wenn wirklich nichts angekommen ist, gilt die Datei als fehlend. */
+      err => {
+        if (!probe.complete || !probe.naturalWidth) throw err;
+        lookReady.add(file);
+      }
+    );
+  }
+
+  /* ---------- Steckbrief ----------
+
+     Das Fenster rechts im Rahmen: links steht die Figur, rechts steht,
+     was sie ausmacht. Die Angaben kommen aus CHAR_FACTS (js/facts.js),
+     die Beziehungen aus CHAR_BONDS und aus den gemeinsamen Filmen.
+
+     Wie viele Begegnungen vor dem Ausklappen stehen. Nick Fury kommt auf
+     weit über hundert – die gesamte Liste stünde als Wand im Bild und
+     wäre für die Frage, mit wem er dauernd zu tun hat, unbrauchbar. */
+  const MET_SHOWN = 10;
+
+  function buildFacts(item) {
+    /* CHAR_FACTS lädt wie PROFILES nur die Charakterseite. Über dem
+       Generat aus den Wikis liegen die Angaben von Hand, Feld für Feld:
+       Kräfte stehen in keiner Infobox, und was das Wiki ungenau führt,
+       wird dort überschrieben. */
+    const facts = typeof CHAR_FACTS === 'undefined' ? null
+      : Object.assign({}, CHAR_FACTS[item.char.slug],
+        typeof CHAR_FACTS_EXTRA === 'undefined' ? null : CHAR_FACTS_EXTRA[item.char.slug]);
+    const bonds = typeof CHAR_BONDS === 'undefined' ? null : CHAR_BONDS[item.char.slug];
+    const box = el('aside', 'char-facts');
+    box.setAttribute('aria-label', 'Steckbrief von ' + item.real);
+
+    const list = el('dl', 'char-facts-list');
+    /* Jede Angabe ist freiwillig: Was zu einer Figur nicht bekannt ist,
+       lässt das Fenster weg, statt eine Zeile mit Strich zu zeigen. */
+    function addRow(label, value) {
+      if (!value || (Array.isArray(value) && !value.length)) return;
+      const row = el('div', 'char-facts-row');
+      row.append(
+        el('dt', 'char-facts-key', label),
+        el('dd', 'char-facts-value', Array.isArray(value) ? value.join(' · ') : value)
+      );
+      list.append(row);
+    }
+
+    if (facts) {
+      addRow('Herkunft', facts.origin);
+      addRow('Spezies', facts.species);
+      addRow('Größe', facts.height);
+      addRow('Zugehörigkeit', facts.teams);
+      addRow('Status', facts.status);
+      addRow('Kräfte', facts.powers);
+    }
+    if (list.children.length) box.append(list);
+
+    /* Ein Name führt zur Figur: Der Link trägt denselben Hash, den auch
+       die Adressleiste beim Öffnen setzt (characters.html#<slug>). Ein
+       gewöhnlicher Klick schaltet die offene Ansicht direkt um, Mittel-
+       und Strg-Klick öffnen die Figur im neuen Tab, wo der Hash sie
+       aufschlägt. */
+    function bondLink(target, label) {
+      const link = el('a', 'char-bond');
+      link.href = '#' + target.char.slug;
+      link.style.setProperty('--accent', target.accent);
+      if (label) link.append(el('span', 'char-bond-label', label));
+      link.append(el('span', 'char-bond-name', target.real));
+      link.addEventListener('click', e => {
+        if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        jumpToChar(target);
+      });
+      const li = el('li');
+      li.append(link);
+      return li;
+    }
+
+    const named = [];
+    const namedSlugs = new Set();
+    for (const [label, slug] of bonds || []) {
+      const target = bySlug.get(slug);
+      /* Ein Slug, den es nicht gibt, wird übersprungen: In js/facts.js
+         steht auch, wer noch keinen eigenen Auftritt hat. */
+      if (!target) continue;
+      namedSlugs.add(slug);
+      named.push(bondLink(target, label));
+    }
+    if (named.length) {
+      box.append(el('h4', 'char-facts-head', 'Beziehungen'));
+      const ul = el('ul', 'char-bonds');
+      ul.append(...named);
+      box.append(ul);
+    }
+
+    /* Die benannten Beziehungen stehen schon oben, hier folgt der Rest:
+       jeder, mit dem die Figur eine Leinwand geteilt hat. */
+    const met = metCharacters(item).filter(entry => !namedSlugs.has(entry.item.char.slug));
+    if (met.length) {
+      box.append(el('h4', 'char-facts-head', 'Begegnet'));
+      const ul = el('ul', 'char-bonds char-bonds-met');
+      ul.append(...met.slice(0, MET_SHOWN).map(entry => bondLink(entry.item, '')));
+      box.append(ul);
+
+      if (met.length > MET_SHOWN) {
+        const rest = el('ul', 'char-bonds char-bonds-met');
+        rest.hidden = true;
+        rest.append(...met.slice(MET_SHOWN).map(entry => bondLink(entry.item, '')));
+        const more = el('button', 'char-facts-more',
+          'Alle ' + met.length + ' anzeigen');
+        more.type = 'button';
+        more.setAttribute('aria-expanded', 'false');
+        more.addEventListener('click', () => {
+          const open = rest.hidden;
+          rest.hidden = !open;
+          more.setAttribute('aria-expanded', open ? 'true' : 'false');
+          more.textContent = open ? 'Weniger anzeigen' : 'Alle ' + met.length + ' anzeigen';
+        });
+        box.append(rest, more);
+      }
+    }
+
+    /* Ohne einen einzigen Eintrag bliebe ein leerer Kasten im Bild
+       stehen. Figuren ohne Steckbrief haben immerhin ihre Begegnungen,
+       ganz leer wird das Fenster nur bei einer Figur, die allein in
+       ihrem einzigen Film steht. */
+    return box.children.length ? box : null;
+  }
+
+  function buildFigure(item) {
+    const figure = el('figure', 'char-figure');
+    /* Rahmen und alles, was in ihm liegt: die Fassungsleiste hängt an
+       dieser Bühne und nicht am figure. Auf schmalen Fenstern rückt der
+       Steckbrief unter den Rahmen und macht das figure damit doppelt so
+       hoch – eine an ihm ausgerichtete Leiste stünde dann in der Mitte
+       des Steckbriefs statt in der Mitte des Bildes. */
+    const stage = el('div', 'char-figure-stage');
+    const frame = el('span', 'char-figure-frame');
+    const stack = el('span', 'char-figure-stack');
+    frame.append(stack);
+    stage.append(frame);
+    figure.append(stage);
+
+    /* Zwei Ebenen übereinander: Eine trägt die sichtbare Fassung, die
+       andere nimmt die nächste auf und wird darübergeblendet. */
+    function buildLayer() {
+      const layer = el('span', 'char-figure-layer');
+      const img = el('img');
+      img.alt = '';
+      img.decoding = 'async';
+      layer.append(img);
+      stack.append(layer);
+      return layer;
+    }
+
+    const layers = [buildLayer(), buildLayer()];
+    let front = 0;      // Ebene, die gerade vorne liegt
+    let shown = null;    // Fassung darauf
+    let ticket = 0;      // nur der jüngste Wechsel darf noch durchkommen
+    let busyTimer = 0;
+    let gone = false;    // Datei fehlt, der Rahmen zeigt den Platzhalter
+
+    /* Der Rahmen hat ein festes Format, das Bild schöpft ihn nur so weit
+       aus, wie die Körpergröße der Figur es hergibt (FULLSIZE_SCALE in
+       js/chars.js). Der Wert hängt an der Datei, nicht an der Figur, und
+       zieht deshalb mit der Ebene um. */
+    function paint(layer, file) {
+      layer.firstElementChild.src = lookSrc(file);
+      layer.style.setProperty('--figure-scale', FULLSIZE_SCALE[file] || 1);
+    }
+
+    /* Nur die vordere Ebene ist sichtbar, nur sie beschreibt das Bild.
+       Die hintere bleibt für Vorlesegeräte stumm. */
+    function setFront(index) {
+      front = index;
+      layers.forEach((layer, at) => {
+        const isFront = at === index;
+        layer.classList.toggle('front', isFront);
+        layer.setAttribute('aria-hidden', isFront ? 'false' : 'true');
+        layer.firstElementChild.alt = isFront
+          ? 'Ganzkörperbild von ' + item.real : '';
+      });
+    }
+
+    /* Fehlt die Datei, tritt der Buchstabenersatz an ihre Stelle, statt
+       ein kaputtes Bild stehen zu lassen. Das Format hat der Rahmen. */
+    function showEmpty() {
+      gone = true;
+      clearTimeout(busyTimer);
+      frame.classList.remove('busy');
       frame.classList.add('empty');
       frame.innerHTML = '<svg viewBox="0 0 24 48" aria-hidden="true">'
         + '<path d="M12 3a4.4 4.4 0 1 1 0 8.8A4.4 4.4 0 0 1 12 3Z'
         + 'M8.2 14h7.6c1.8 0 3.2 1.4 3.2 3.2V28h-2.6v17h-3.4V32.5h-2V45'
         + 'H7.6V28H5V17.2C5 15.4 6.4 14 8.2 14Z"></path></svg>';
       frame.append(el('span', 'char-initials', initials(item.real)));
-    });
-    frame.append(img);
-    figure.append(frame);
+    }
+
+    /* Ein Fassungswechsel wartet, bis die neue Datei fertig dekodiert ist,
+       und blendet dann über. Würde stattdessen das src im sichtbaren Bild
+       getauscht, stünde die alte Fassung erst noch im Maß der neuen im
+       Rahmen und sprang danach hart um. */
+    function showLook(file) {
+      if (gone || file === shown) return;
+      const mine = ++ticket;
+      const next = layers[1 - front];
+      const swap = () => {
+        if (gone || mine !== ticket) return;
+        clearTimeout(busyTimer);
+        frame.classList.remove('busy');
+        paint(next, file);
+        shown = file;
+        setFront(1 - front);
+      };
+      if (lookReady.has(file)) {
+        swap();
+        return;
+      }
+      /* Beim ersten Mal kann das Laden dauern. Der Rahmen dimmt dann ab,
+         damit der Klick nicht ins Leere geht. */
+      busyTimer = setTimeout(() => {
+        if (!gone && mine === ticket) frame.classList.add('busy');
+      }, 140);
+      loadLook(file).then(swap, () => {
+        if (mine === ticket) showEmpty();
+      });
+    }
+
+    /* Die Fassung des ersten Auftritts steht sofort und ohne Überblendung
+       im Rahmen, geladen wird sie wie jedes Bild der Seite erst, wenn sie
+       in Sicht kommt. */
+    const first = layers[0].firstElementChild;
+    first.loading = 'lazy';
+    first.addEventListener('error', showEmpty);
+    first.addEventListener('load', () => lookReady.add(item.char.slug));
+    paint(layers[0], item.char.slug);
+    shown = item.char.slug;
+    setFront(0);
 
     const looks = FULLSIZE_LOOKS[item.char.slug];
     if (looks) {
-      const nav = el('figcaption', 'char-look-nav');
+      const nav = el('div', 'char-look-nav');
       nav.setAttribute('aria-label', 'Fassungen von ' + item.real);
       for (const [label, file] of looks) {
         const chip = el('button', 'char-look', label);
@@ -371,6 +678,12 @@
         const active = file === item.char.slug;
         chip.setAttribute('aria-pressed', active ? 'true' : 'false');
         if (active) chip.classList.add('active');
+        /* Wer die Maus auf einen Schalter legt, hat sich meist schon
+           entschieden: Die Fassung lädt dann vor dem Klick und wechselt
+           danach ohne Wartezeit. */
+        chip.addEventListener('pointerenter', () => {
+          loadLook(file).catch(() => {});
+        });
         chip.addEventListener('click', () => {
           for (const other of nav.children) {
             other.classList.remove('active');
@@ -378,12 +691,15 @@
           }
           chip.classList.add('active');
           chip.setAttribute('aria-pressed', 'true');
-          img.src = 'assets/characters/fullsize/' + file + '.webp';
+          showLook(file);
         });
         nav.append(chip);
       }
-      figure.append(nav);
+      stage.append(nav);
     }
+
+    const facts = buildFacts(item);
+    if (facts) figure.append(facts);
     return figure;
   }
 
@@ -397,6 +713,7 @@
     charCast.hidden = !item.castNames;
 
     charShotBox.replaceChildren(buildShot(item, 'char-full-shot'));
+    charFigureSlot.replaceChildren(buildFigure(item));
 
     charBlur.hidden = !item.hasImage;
     if (item.hasImage) {
@@ -428,9 +745,7 @@
         jumps.push(jump);
         return section;
       });
-      /* Das Bild zuerst: Als erstes Kind floatet es nach rechts oben,
-         die Abschnitte fließen daran vorbei. */
-      charLife.replaceChildren(buildLifeFigure(item), ...sections);
+      charLife.replaceChildren(...sections);
       /* Bei wenigen Abschnitten steht die Leiste nur im Weg: Sie wäre
          länger als der Weg, den sie abkürzt. */
       charLifeNav.hidden = jumps.length < 5;
@@ -515,6 +830,22 @@
     showChar(target);
     if (held === charPrev && charPrev.disabled) charNext.focus();
     else if (held === charNext && charNext.disabled) charPrev.focus();
+  }
+
+  /* Ein Klick auf eine Beziehung im Steckbrief schlägt die genannte Figur
+     auf, ohne den Umweg über das Raster. */
+  function jumpToChar(target) {
+    /* Die Zielfigur kann durch Suche oder Phasenfilter aus dem Raster
+       gefallen sein. Die Pfeile blättern dann ab hier durch alle Figuren
+       statt an Ort und Stelle stehen zu bleiben. Das nächste render()
+       stellt die gefilterte Reihenfolge wieder her. */
+    if (charList.indexOf(target) === -1) {
+      charList = chars.slice().sort(activeSort.compare);
+    }
+    showChar(target);
+    /* Der angeklickte Link ist mit dem Inhalt verschwunden, der Fokus
+       stünde sonst wieder ganz am Anfang der Seite. */
+    charClose.focus({ preventScroll: true });
   }
 
   charPrev.addEventListener('click', () => stepChar(-1));
