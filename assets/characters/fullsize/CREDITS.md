@@ -3,6 +3,13 @@
 Alle Render stammen von DeviantArt und wurden für dieses private
 Fanprojekt zu WebP verkleinert. Dank an die jeweiligen Ersteller.
 
+Die Tabelle unten führt die Bilder der ersten beiden Runden. Die
+Nachlieferungen ab dem 26.07.2026 (124 Bilder in der dritten Runde, 65 in
+der vierten, 36 in der fünften und 26 in der sechsten) kamen als fertig
+freigestellte PNGs über
+`assets/ersetzen/` herein, ihre Originalquellen sind hier nicht bekannt.
+Auch für sie gilt der Dank an die jeweiligen Ersteller.
+
 | Datei | Titel | Ersteller | Quelle |
 |---|---|---|---|
 | adam-warlock.webp | Adam Warlock: GotG3 PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Adam-Warlock-GotG3-PNG-945492347 |
@@ -94,7 +101,7 @@ Fanprojekt zu WebP verkleinert. Dank an die jeweiligen Ersteller.
 | miss-minutes.webp | Miss Minutes (MCU) - Transparent | matuta2002 | https://www.deviantart.com/matuta2002/art/Miss-Minutes-MCU-Transparent-1174957940 |
 | mj.webp | Michelle Jones (Far From Home) (1) - PNG | Captain-Kingsman16 | https://www.deviantart.com/captain-kingsman16/art/Michelle-Jones-Far-From-Home-1-PNG-810713866 |
 | mobius.webp | Mobius (Owen Wilson) 1 (Loki Disney+) - PNG | Captain-Kingsman16 | https://www.deviantart.com/captain-kingsman16/art/Mobius-Owen-Wilson-1-Loki-Disney-PNG-872404150 |
-| modok.webp | Ant-Man and The Wasp Quantumania MODOK PNG | NoahVilgaxsane | https://www.deviantart.com/noahvilgaxsane/art/Ant-Man-and-The-Wasp-Quantumania-MODOK-PNG-951053650 |
+| darren-cross-modok.webp | Ant-Man and The Wasp Quantumania MODOK PNG | NoahVilgaxsane | https://www.deviantart.com/noahvilgaxsane/art/Ant-Man-and-The-Wasp-Quantumania-MODOK-PNG-951053650 |
 | monica-rambeau.webp | Monica Rambeau/Photon: The Marvels PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Monica-Rambeau-Photon-The-Marvels-PNG-970409329 |
 | mr-paradox.webp | Mr Paradox - Deadpool  and wolverine png MCU | kevinalexande23 | https://www.deviantart.com/kevinalexande23/art/Mr-Paradox-Deadpool-and-wolverine-png-MCU-1154225726 |
 | muse.webp | Muse MCU PNG  | HunterC-10 | https://www.deviantart.com/hunterc-10/art/Muse-MCU-PNG-1168667530 |
