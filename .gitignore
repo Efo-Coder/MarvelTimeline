@@ -4,3 +4,9 @@
 # Windows / OneDrive
 Thumbs.db
 desktop.ini
+
+# Arbeitsordner: Rohmaterial und Zwischenstände, aus denen die fertigen
+# WebP-Dateien unter assets/characters/ entstehen. Das Ergebnis liegt im
+# Repo, die Vorlagen mit mehreren hundert Megabyte gehören nicht hinein.
+assets/ersetzen/
+vorschau/
