@@ -36,9 +36,41 @@ Texte stehen statisch untereinander.
 
 Einfach `index.html` im Browser öffnen – es wird kein Server und kein
 Build-Tool benötigt. Die Charakterseite liegt daneben als
-`characters.html`, verlinkt ist sie im Header. (Nur die Schriftarten
-werden von Google Fonts geladen; ohne Internet greift ein
-System-Font-Fallback.)
+`characters.html`, verlinkt ist sie im Header. (Die beiden Marvel-Schriften
+liegen lokal unter `assets/fonts`; nur Bebas Neue und Inter kommen von
+Google Fonts, ohne Internet greift dort ein System-Font-Fallback.)
+
+### Schriften
+
+Die Seite folgt dem Aufbau des Marvel-Studios-Schriftzugs und arbeitet
+mit drei Ebenen, gesetzt als CSS-Variablen in [css/style.css](css/style.css):
+
+| Variable | Schrift | Wo |
+| --- | --- | --- |
+| `--font-impact` | BentonSans Comp Black | Die Schrift des fetten „MARVEL": Hero-Überschrift, Titel der Charakterseite, Name in der Figurenansicht, Ersatz für ein fehlendes Filmlogo, Monogramm ohne Porträt |
+| `--font-brand` | Dharma Gothic E | Die Schrift des gesperrten „STUDIOS": „Timeline" im Header, Hero-Zeilen darunter, Saga-Zeile, Phasenband, die Zeilen über und unter „Charaktere" |
+| `--font-display` | Bebas Neue | Die Bedienoberfläche: Navigation, Chips, Datumsangaben, Infoboxen, Beschriftungen |
+| `--font-body` | Inter | Fließtext |
+
+Beide Marvel-Schriften bringen nur einen Schnitt mit und haben echte
+Kleinbuchstaben. Wer sie an einer neuen Stelle einsetzt, setzt deshalb
+`text-transform: uppercase` dazu, wo Versalien gemeint sind. Bebas Neue
+hat gar keine Kleinbuchstaben und brauchte die Angabe nie.
+
+Wer beides zusammen braucht, Seite und Bild-Studio, startet
+[start.cmd](start.cmd) per Doppelklick oder im Terminal:
+
+```
+node start.js
+```
+
+Das bedient die Fanpage unter [http://127.0.0.1:4320](http://127.0.0.1:4320)
+und startet das Bild-Studio unter
+[http://127.0.0.1:4321](http://127.0.0.1:4321) gleich mit; beide Adressen
+gehen im Browser auf. Die Ausgabe des Studios steht eingerückt in
+derselben Konsole, Strg+C beendet beide. Die Ports lassen sich mit
+`--port` und `--studio-port` verschieben, `--kein-browser` lässt den
+Browser zu, `--ohne-studio` startet nur die Seite.
 
 ## Film-Logos einfügen
 
@@ -118,6 +150,280 @@ Serien (Staffeln teilen sich ein Logo):
 | Ironheart | `ironheart.png` |
 | Wonder Man | `wonder-man.png` |
 | VisionQuest | `visionquest.png` |
+
+## Bilder zuschneiden
+
+Die runden Profilbilder liegen als quadratisches WebP unter
+`assets/characters/portraits/<slug>.webp`, die Ganzkörperbilder unter
+`assets/characters/fullsize/<datei>.webp`. Wer sie selbst setzen möchte,
+startet das Bild-Studio:
+
+```
+node tools/portrait-studio/server.js
+```
+
+Wer die Fanpage daneben laufen lassen will, nimmt stattdessen
+`node start.js` (siehe [Starten](#starten)).
+
+Es öffnet [http://127.0.0.1:4321](http://127.0.0.1:4321) und listet jede
+Figur aus `js/data.js`. Oben wird zwischen **Porträts** und
+**Ganzkörper** umgeschaltet, die Bedienung ist in beiden Bereichen
+dieselbe.
+
+### Rückgängig und wiederholen
+
+Über der Bühne stehen **↶ ↷**, dazu Strg+Z und Strg+Y. Sie fassen zwei
+Sorten von Schritten in einer Reihe zusammen, in der Reihenfolge, in der
+sie passiert sind. Der Tooltip nennt jeweils den Schritt, um den es geht.
+
+**Die Arbeit an der Bühne** liegt nur im Browser: Ausschnitt verschieben,
+an Ecke oder Kante ziehen, zoomen, *Automatisch zuschneiden*,
+*Zurücksetzen*. Zusammenhängendes wird zu einem Schritt — ein Zug mit der
+Maus ist einer, ein Stapel Radbewegungen auch, sobald eine halbe Sekunde
+Ruhe ist. Jeder Schritt merkt sich, wo er entstanden ist; führt ein
+Rückgängig zu einer anderen Fassung, wechselt das Studio erst dorthin.
+Zoom und Lage des Bildes stehen bewusst nicht drin, sie ändern nichts am
+Ergebnis.
+
+**Die Eingriffe, die geschrieben wurden**, hält der Server: gespeicherte
+Bilder, Fassungen, Namen, Schlüssel, Auftritte, Körpergrößen und
+Offen-Markierungen. Dahinter stehen keine Gegenrechnungen, sondern
+Schnappschüsse: Vor und nach jedem Eingriff sichert das Studio genau die
+Dateien, die er anfassen kann, unter `tools/portrait-studio/.verlauf`.
+Rückgängig spielt den Stand von vorher zurück, wiederholen den von
+nachher. Deshalb stimmt es auch dort, wo Dateien umbenannt, verschoben
+oder gelöscht wurden. Wer nach einem Rückgängig etwas Neues tut,
+schneidet die Zukunft ab, wie überall.
+
+Der Verlauf gilt für die laufende Sitzung und wird beim Start des Servers
+geleert. Nach einem Neustart weiß niemand mehr, ob die Dateien in der
+Zwischenzeit von Hand angefasst wurden, und ein Rückgängig würde dann
+fremde Arbeit überschreiben. Er hält die letzten 40 Schritte.
+
+### Neue Figur anlegen
+
+Unter den Filtern in der Liste steht **＋ Neue Figur**. Eine Figur ist in
+dieser Datenbank nichts als ein Name in den Besetzungslisten, sie entsteht
+deshalb mit ihrem ersten Auftritt. Der Dialog fragt dreierlei:
+
+- **Realname und Heldenname** in zwei Feldern, zusammengesetzt wird mit
+  `&nbsp;/&nbsp;`. Der rechte darf leer bleiben. Der Schlüssel wird beim
+  Tippen vorgerechnet.
+- **Kürzel für den Schlüssel (CHAR_ALIAS)**, freiwillig. Ohne Angabe kommt
+  der Schlüssel aus dem ganzen Namen, aus „Riri Williams / Ironheart“ also
+  `riri-williams-ironheart`. Wer die Bilder unter `riri-williams` führen
+  will, trägt das hier ein.
+- **Auftritte**, mindestens einer, aus derselben Filmliste wie beim
+  Bearbeiten.
+
+Gehört der Schlüssel schon einer Figur, sagt der Dialog, welcher, und
+lässt sich nicht abschicken. Nach dem Anlegen ist die Figur ausgewählt und
+wartet auf ihre Bilder: Porträt und Ganzkörperbild stehen mit rotem Punkt
+da, bis eine Vorlage hochgeladen und gespeichert wird. Alles zusammen ist
+ein Schritt im Verlauf, ein Rückgängig nimmt die Figur wieder heraus.
+
+### Namen, Schlüssel und Auftritte
+
+Neben dem Namen der Figur stehen zwei Knöpfe, die in `js/data.js` und
+`js/chars.js` schreiben:
+
+**Namen …** hält drei Dinge auseinander, die leicht durcheinandergehen:
+
+- **Realname und Heldenname** stehen in `data.js` als eine Zeichenkette,
+  getrennt durch `&nbsp;/&nbsp;` mit Leerzeichen davor und danach. Im
+  Dialog haben sie je ein Feld, zusammengesetzt wird beim Speichern.
+  Getrennt wird am **ersten** Slash, wie es auch `splitName()` tut: Bei
+  „Marc Spector / Steven Grant / Moon Knight“ steht links der Realname und
+  rechts der ganze Rest. Wer keinen Heldennamen hat, lässt das rechte Feld
+  leer. Der Dialog zeigt jeden Namen, unter dem die Figur in den
+  Besetzungslisten steht — Sam Wilson steht zweimal drin, als Falcon und
+  als Captain America — und jede Zeile hat ihr eigenes *Übernehmen*.
+- Das **Kürzel für den Schlüssel** ist der Eintrag in `CHAR_ALIAS`, also
+  `Tony Stark`. Auch eine Zeichenkette, kein Schlüssel. Es hat ein eigenes
+  Feld mit eigenem *Übernehmen* und gilt für alle Namen der Figur
+  zugleich, sonst zerfiele sie in zwei Schlüssel.
+- Der **Schlüssel** ist, was `charSlug()` daraus macht, `tony-stark`. Er
+  wird nur vorgerechnet und nie direkt gesetzt.
+
+Beim **Umbenennen eines Namens** bleibt der Schlüssel in jedem Fall
+stehen: Ergäbe der neue Name für sich einen anderen, entsteht automatisch
+der passende Alias; wird ein Alias dadurch überflüssig, fällt er weg.
+
+Beim **Ändern des Kürzels** kann sich der Schlüssel ändern — muss aber
+nicht, `Ronan` und `Ronan!` ergeben denselben. Ändert er sich, zieht alles
+mit: die Bilddateien in beiden Ordnern und die Verweise in `data.js`,
+`chars.js`, `profiles.js` und `facts.js`. Das ist der einzige Eingriff im
+Studio, der mehrere Dateien auf einmal anfasst, deshalb steht eine Warnung
+im Dialog, geschrieben wird erst auf *Übernehmen*, und von jeder berührten
+Datei liegt vorher eine Kopie in `tools/portrait-studio/.sicherung`.
+
+**Auftritte …** listet alle Filme und Serien mit einem Kontrollkästchen.
+Ein Haken schreibt die Besetzungsliste des Films sofort um. Beim
+Streichen fallen auch die Begegnungen (`meets`) mit dieser Figur in dem
+Film weg, sonst zeigten sie ins Leere. Wer den letzten Auftritt streicht,
+bekommt einen Hinweis: Ohne Auftritt steht die Figur in keiner Liste mehr
+und verschwindet aus der Datenbank.
+
+### Porträts
+
+Ein Klick zeigt das Ganzkörperbild der Figur mit dem Kreis,
+der daraus das Porträt wird. Ziehen im Kreis verschiebt den Ausschnitt,
+das Mausrad ändert seine Größe, die Ecken lassen sich anfassen und die
+Pfeiltasten schieben pixelweise.
+
+Das Bild selbst zoomt die Leiste oben rechts auf der Bühne, ebenso Strg
+mit dem Mausrad. Ziehen neben dem Ausschnitt verschiebt es, *Einpassen*
+holt die ganze Figur zurück ins Bild. 100 Prozent heißt dabei ein
+Bildschirmpunkt je Pixel der Vorlage. Eine selbst gewählte Ansicht bleibt
+stehen, bis eine andere Vorlage an die Reihe kommt.
+
+**Hilfslinien & Einrasten** legt Linien an den sichtbaren Inhalt der
+Vorlage: den *Boden* unter den Füßen und die *Mitte* der Figur in Grün,
+Scheitel und Seiten sowie die Bildkanten schwächer. Kanten, Ecken und die
+Mitte des Ausschnitts rasten daran ein, sobald sie auf sieben
+Bildschirmpunkte herankommen, die eingerastete Linie leuchtet dabei auf.
+Wer einen Wert dicht daneben braucht, hält beim Ziehen Alt. Gemessen wird
+die Hülle im Browser, mit derselben Alphaschwelle wie beim randlosen
+Zuschnitt.
+
+Figuren mit mehreren Fassungen (Bruce Banner, Tony
+Stark, …) haben je Fassung ein eigenes Porträt und ein eigenes
+Ganzkörperbild, beides ist oben umschaltbar. Statt des Ganzkörperbildes
+geht auch ein eigenes Bild vom Rechner, per Knopf, Ablegen oder Einfügen.
+
+Das Kontrollkästchen **Noch offen, soll neu gemacht werden** stellt ein
+Bild von Hand auf offen, auch wenn die Datei längst da ist. Das wirkt
+sofort, ohne Speichern: Die Figur bekommt einen gelben Punkt und zählt
+oben als markiert. Bei den Porträts steht sie zusätzlich in
+`A - Portraits noch offen.txt` mit dem Zusatz `[von Hand markiert]`.
+Gespeichert wird die Markierung in `tools/portrait-studio/offen.json`,
+getrennt nach Porträts und Ganzkörperbildern, denn dieselbe Figur heißt in
+beiden Ordnern gleich. Wer das Bild danach neu schneidet und speichert,
+ist die Markierung wieder los.
+
+*Automatisch zuschneiden* übernimmt den Vorschlag der Bilderkennung:
+Gesicht suchen, von dort bis zum Scheitel laufen, den Kopf 60 Prozent der
+Bildhöhe füllen lassen. Rechts steht die Vorschau in Originalgröße neben
+dem bisherigen Porträt. **Speichern** schreibt die Datei endgültig, legt
+die alte nach `tools/portrait-studio/.sicherung` und erneuert die Liste
+`assets/ersetzen/A - Portraits noch offen.txt`.
+
+### Ganzkörper
+
+Hier ist der Ausschnitt ein freies Rechteck: Neben den Ecken lassen sich
+auch die vier Kantenmitten anfassen, jede Seite geht für sich. Anders als
+beim Porträt gibt es keine Wahl der Vorlage, die Fassung ist ihre eigene:
+Zugeschnitten wird das Bild, das an dieser Stelle steht, oder ein
+hochgeladenes. Welches das ist, steht unter der Vorschau bei *Bisher*.
+Eine Fassung ohne Datei steht mit rotem Punkt in der Liste und wartet auf
+ein eigenes Bild.
+
+*Randlos beschneiden* legt das Rechteck um die Hülle aller sichtbaren
+Pixel, nach derselben Regel wie `tools/crop-fullsize.py`. Das ist keine
+Kosmetik: Der Rahmen auf der Charakterseite rechnet damit, dass die Datei
+keine leere Fläche trägt. Ist sie doch da, steht die Figur zu klein im
+Rahmen und schwebt über der Bodenlinie. Die Vorschau rechts ist deshalb
+genau dieser Rahmen, maßstäblich, mit Bodenlinie und der Größe aus
+`FULLSIZE_SCALE` und `FULLSIZE_FIT`. Sehr große Vorlagen werden beim Speichern auf das Maß
+des Bestandes gebracht (höchstens 1500 Pixel hoch und 1200 breit),
+kleinere bleiben, wie sie sind.
+
+Unter den Fassungs-Chips steht die Leiste **＋ Neu / Umbenennen / ▲ / ▼ /
+Löschen**. Sie schreibt in `FULLSIZE_LOOKS` in `js/chars.js`, aus dem auch
+die Charakterseite ihre Fassungsleiste nimmt:
+
+**Die Beschriftung ist der einzige Wert, der gepflegt wird.** Der
+Dateiname entsteht aus ihr: Leerzeichen werden zu Bindestrichen, Umlaute
+aufgelöst, aus „Im Flug“ wird `adrian-toomes-vulture-im-flug.webp`. Ändert
+sich die Beschriftung, wird das Bild mit umbenannt, und mit ihm ziehen
+Körpergröße (`FULLSIZE_SCALE`), Bildkorrektur (`FULLSIZE_FIT`),
+Offen-Markierung (`offen.json`) und die
+Quellenangabe in `assets/characters/fullsize/CREDITS.md` nach. Gedacht
+werden muss der Name also nur einmal.
+
+**Standard ist, was an erster Stelle steht**, unabhängig vom Dateinamen.
+Nur Figuren ohne Eintrag in `FULLSIZE_LOOKS` haben ihr eines Bild unter
+`<slug>.webp`.
+
+- **Neu** legt eine Fassung an, gefragt wird nur nach der Beschriftung.
+  Der entstehende Dateiname steht im Dialog. Die Fassung erscheint sofort
+  mit rotem Punkt und wartet auf ihr Bild, das per Upload und *Speichern*
+  dazukommt. Hat eine Figur bisher nur ihr eines Bild, entsteht der
+  Listeneintrag dabei neu.
+- **Umbenennen** ändert Beschriftung und Dateinamen zusammen. Bei einer
+  Figur mit nur einem Bild ist der Knopf gesperrt: Dort gibt es nichts zu
+  unterscheiden, und die Datei soll wie die Figur heißen.
+- **▲ ▼** verschieben die Fassung in der Reihenfolge, in der die
+  Charakterseite ihre Schalter zeigt. Wer nach ganz vorn rutscht, ist die
+  neue Standardansicht.
+- **Zum Standard** ist die Abkürzung dafür: Die Fassung rückt an die
+  erste Stelle, die bisherige Standardansicht eine nach hinten. Es wandert
+  keine Datei, beide Bilder behalten ihre Namen.
+- **Löschen** nimmt die Fassung aus der Liste, das Bild wandert in
+  `tools/portrait-studio/.sicherung` und die Größenangaben fallen mit weg.
+  Bleibt danach ein einzelnes Bild übrig, das ohnehin wie die Figur heißt,
+  verschwindet der ganze Eintrag.
+
+Die meisten Ganzkörperbilder liegen nur als Datei im Ordner und stehen
+gar nicht in `FULLSIZE_LOOKS`: Figuren mit einer Ansicht brauchen dort
+keinen Eintrag. Sobald jemand an Reihenfolge, Beschriftung oder Bestand
+dreht, entsteht die Liste von selbst, und zwar aus dem, was die
+Oberfläche ohnehin schon zeigt. Erst danach lässt sich sortieren.
+
+Vor jedem Schreiben
+wird die neue `chars.js` geladen und geprüft, eine Kopie der alten liegt
+in der Sicherung. Die Porträt-Fassungen bleiben außen vor: Sie hängen in
+`CHAR_LOOKS` am Film und nicht an einer Beschriftung.
+
+Unter der Vorschau stehen zwei Regler. **Körpergröße** trägt nach, was
+dem engen Zuschnitt fehlt: Ohne ihn stünde Rocket so hoch wie Thor. 1.0
+ist ein erwachsener Mensch, 1.22 füllt den Rahmen. **Bildkorrektur**
+gehört daneben nicht der Figur, sondern dieser einen Datei. Eine
+Sprungpose, ein wehender Umhang oder ein Sockel macht das Bild höher als
+die Figur, und weil der Rahmen das Bild misst, steht sie darin zu klein.
+Der zweite Regler gleicht genau das aus, in Prozent, ohne der Figur eine
+Größe anzudichten, die sie nicht hat. Beide wirken sofort auf die obere
+Vorschau, darunter steht zum Vergleich, was gerade gilt. Das ↺ neben
+einem Regler stellt ihn auf den Stand aus `chars.js` zurück.
+
+Gearbeitet wird damit auf der Bühne, nicht in der Vorschau: Der Schalter
+*Rahmen der Seite* legt den Rahmen der Charakterseite über die
+Arbeitsfläche, mit Bodenlinie unten und Oberkante oben. Der Rahmen bleibt
+stehen, die Figur wächst und schrumpft darin, genau wie sie es später auf
+der Seite tut. Wie viel sie vom Rahmen füllt, steht an der Oberkante.
+
+Dazu gehört die **Referenz** oben im Kopf. Mit dem Rahmen wird eine
+andere Fassung derselben Figur nicht mehr in den Ausschnitt gequetscht,
+sondern steht daneben in ihrer eigenen Größe, auf derselben Bodenlinie
+und mit einer Linie an ihrem Scheitel. Genau dafür ist die Bildkorrektur
+da: Regler schieben, bis die Köpfe zusammenpassen, und alle Fassungen
+einer Figur stehen später gleich groß im Rahmen. Ohne den Rahmen füllt
+die Referenz wie eh und je den Ausschnitt, dann geht es um die Pose
+statt um die Größe.
+
+Im Rahmen zählt das Produkt aus beidem, und die Zeile darunter zeigt es.
+Sie warnt auch, wenn es aus dem Bereich 0.2 bis 1.22 läuft, denn mehr
+zeigt der Rahmen nicht.
+
+**Speichern nimmt beide Werte mit.** Zuschnitt und Größe gehören
+zusammen, wer das Bild schneidet, will die Figur auch in der Größe, die
+im Studio davorsteht. Beides ist damit ein Schritt im Verlauf, ein
+Rückgängig holt Datei und Zahlen zusammen zurück. Läuft das Produkt aus
+dem Rahmen, wird nur geschnitten und die Größe bleibt stehen, die Meldung
+sagt es dazu. Der Knopf *In chars.js schreiben* bleibt daneben für den
+anderen Fall: Größe setzen, ohne die Datei neu zu schneiden.
+
+Geschrieben wird die Körpergröße in `FULLSIZE_SCALE`, an der richtigen
+Stelle der kommentierten Gruppen und aufsteigend sortiert, die
+Bildkorrektur in `FULLSIZE_FIT`, nach Dateinamen sortiert. 1.0 nimmt den
+jeweiligen Eintrag wieder heraus, weil das der Vorgabewert ist. Vor dem
+Schreiben wird die neue Fassung geladen und geprüft, und eine Kopie der
+alten `chars.js` liegt in `tools/portrait-studio/.sicherung`.
+
+Für den Vorschlag und das Speichern braucht es Python mit Pillow, NumPy
+und OpenCV. Ohne diese Umgebung startet das Studio zwar, kann aber nichts
+schneiden. Der Pfad lässt sich über die Umgebungsvariable
+`PORTRAIT_PYTHON` vorgeben.
 
 ## Anpassen
 
