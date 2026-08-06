@@ -1,0 +1,7 @@
+# Kopien der überschriebenen Dateien, die das Studio vor jedem Eingriff
+# anlegt. Reine Rückfallebene für diesen Rechner.
+.sicherung/
+
+# Schnappschüsse für Rückgängig und Wiederholen. Gilt nur für die
+# laufende Sitzung und wird beim Start des Servers geleert.
+.verlauf/

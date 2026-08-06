@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bild-Studio – MCU Timeline</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23ec1d24'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23fff' stroke-width='5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="studio.css">
+</head>
+<body>
+
+<!-- Die treibenden Linien hinter der Oberfläche, gezeichnet in
+     hintergrund.js. Die Leinwand liegt fest hinter allem und nimmt keine
+     Zeiger an. -->
+<canvas id="hintergrund" class="hintergrund" aria-hidden="true"></canvas>
+
+<header class="kopf">
+  <div class="kopf-titel">
+    <button type="button" id="liste-schalter" class="kopf-schalter"
+            title="Figurenliste ausblenden" aria-expanded="true"
+            aria-controls="spalte-liste">◀</button>
+    <h1 class="schriftzug">
+      <span class="schriftzug-logo">Marvel</span>
+      <span class="schriftzug-text">Bild&#8209;Studio</span>
+    </h1>
+  </div>
+  <div class="bereich" id="bereich">
+    <button type="button" data-bereich="portrait" class="an">Porträts</button>
+    <button type="button" data-bereich="ganzkoerper">Ganzkörper</button>
+  </div>
+  <p id="zaehler" class="zaehler">lädt …</p>
+</header>
+
+<!-- Die Hinweise stehen als eigenes Band unter dem Kopf. Im Kopf selbst
+     drängten sie sich früher neben den Zähler und machten die Zeile
+     unruhig, hier haben sie ihren eigenen Platz und sind nur da, wenn es
+     wirklich etwas zu melden gibt. -->
+<div class="hinweise">
+  <p id="python-hinweis" class="warnung" hidden></p>
+  <p id="stand-hinweis" class="warnung" hidden></p>
+</div>
+
+<main class="raster">
+
+  <!-- ---------- Liste aller Figuren ---------- -->
+  <aside class="spalte-liste" id="spalte-liste">
+    <div class="panel-kopf">
+      <span class="panel-marke">Figuren</span>
+    </div>
+    <div class="suchfeld">
+      <input id="suche" type="search" placeholder="Figur, Rolle oder Dateiname" autocomplete="off">
+    </div>
+    <div class="filter" id="filter">
+      <button type="button" data-filter="alle" class="an">Alle</button>
+      <button type="button" data-filter="offen">Offen</button>
+      <button type="button" data-filter="fertig">Fertig</button>
+      <button type="button" data-filter="fehlt">Ohne Bild</button>
+    </div>
+    <ul id="liste" class="liste"></ul>
+    <div class="listenfuss">
+      <button type="button" id="figur-neu" class="knopf leise">＋ Neue Figur</button>
+    </div>
+  </aside>
+
+  <!-- ---------- Arbeitsfläche ---------- -->
+  <section class="spalte-arbeit" id="arbeit" hidden>
+
+    <div class="arbeit-kopf">
+      <div class="arbeit-titel">
+        <h2 id="figur-name"></h2>
+        <p id="figur-rolle" class="rolle"></p>
+        <div class="figur-knoepfe">
+          <button type="button" id="figur-bearbeiten" class="knopf leise"
+                  title="Namen und Schlüssel der Figur ändern">Namen …</button>
+          <button type="button" id="figur-auftritte" class="knopf leise"
+                  title="In welchen Filmen die Figur auftritt">Auftritte …</button>
+        </div>
+      </div>
+      <p id="figur-filme" class="filme"></p>
+    </div>
+
+    <!-- Die Konsole trägt alles, was die Vorlage und das Ziel betrifft.
+         Die Fassungsleiste steht bei den Fassungen selbst, denn sie
+         verwaltet genau diese Chips. Es gibt sie nur im Ganzkörper-Betrieb,
+         dort stehen die Fassungen als gepflegte Liste in FULLSIZE_LOOKS. -->
+    <div class="konsole">
+      <div class="konsole-block" id="ziel-block">
+        <span class="wahl-titel" id="ziel-titel">Porträt</span>
+        <div class="chips" id="ziele"></div>
+        <div class="fassung-leiste" id="fassung-leiste" hidden>
+          <button type="button" data-tat="neu" data-hilfe="Neue Fassung anlegen">＋ Neu</button>
+          <button type="button" data-tat="umbenennen" data-hilfe="Beschriftung ändern">Umbenennen</button>
+          <button type="button" data-tat="hoch" data-hilfe="Eine Stelle nach vorn">▲</button>
+          <button type="button" data-tat="runter" data-hilfe="Eine Stelle nach hinten">▼</button>
+          <button type="button" data-tat="standard"
+                  data-hilfe="Diese Fassung wird die Standardansicht, die bisherige bleibt als Fassung erhalten">Zum Standard</button>
+          <button type="button" data-tat="loeschen" class="gefahr" data-hilfe="Fassung entfernen">Löschen</button>
+        </div>
+      </div>
+
+      <div class="konsole-block quellen-block">
+        <span class="wahl-titel" id="quell-titel">Vorlage</span>
+        <div class="chips" id="quellen">
+          <button type="button" class="chip chip-upload" id="upload-knopf">
+            Eigenes Bild …
+          </button>
+        </div>
+        <input type="file" id="upload" accept="image/*" hidden>
+      </div>
+    </div>
+
+    <div class="werkbank">
+
+      <!-- Die Bühne mit allem, was auf sie wirkt: oben Verlauf und
+           Referenz, unten die Werkzeuge und die Herkunft des Vorschlags.
+           Der Kasten .buehne-feld bleibt allein die Leinwand, seine Größe
+           liest studio.js über den ResizeObserver ab. -->
+      <section class="tafel buehne-tafel">
+        <div class="panel-kopf">
+          <span class="panel-marke">Bühne</span>
+
+          <div class="verlauf" id="verlauf">
+            <button type="button" data-richtung="zurueck" disabled
+                    title="Rückgängig (Strg+Z)">↶</button>
+            <button type="button" data-richtung="vor" disabled
+                    title="Wiederholen (Strg+Y)">↷</button>
+          </div>
+
+          <!-- Eine vorhandene Fassung als halb durchsichtige Schablone im
+               Ausschnitt, nur zum Ausrichten. Sie lässt sich nicht anfassen
+               und wird nicht gespeichert. -->
+          <div class="referenz-feld" id="referenz-feld"
+               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert.">
+            <label for="referenz">Referenz</label>
+            <select id="referenz" disabled><option value="">Ohne</option></select>
+            <input type="range" id="referenz-alpha" min="10" max="90" value="45" disabled
+                   title="Deckkraft der Referenz">
+          </div>
+        </div>
+
+        <div class="buehne-feld">
+          <canvas id="buehne" tabindex="0"
+                  aria-label="Bühne: im Kreis ziehen verschiebt den Ausschnitt, daneben ziehen verschiebt das Bild"></canvas>
+          <div class="ansicht" id="ansicht">
+            <button type="button" id="ansicht-minus" title="Bild kleiner (Strg + Mausrad)">−</button>
+            <span id="ansicht-wert">100 %</span>
+            <button type="button" id="ansicht-plus" title="Bild größer (Strg + Mausrad)">+</button>
+            <button type="button" id="ansicht-fit" title="Das ganze Bild zeigen">Einpassen</button>
+          </div>
+          <p id="buehne-leer" class="buehne-leer" hidden></p>
+          <div id="ablage" class="ablage">Bild hier ablegen</div>
+        </div>
+
+        <div class="tafel-fuss">
+          <div class="werkzeuge">
+            <button type="button" id="auto" class="knopf">Automatisch zuschneiden</button>
+            <button type="button" id="zurueck" class="knopf leise">Zurücksetzen</button>
+            <button type="button" id="hochskalieren" class="knopf leise"
+                    title="Rechnet die Vorlage hoch und baut auf Wunsch die Gesichter neu auf. Öffnet die Einstellungen dazu.">Upscale …</button>
+            <label class="schalter" id="hilfslinien-feld"
+                   title="Boden, Mitte und Ränder der Figur als Linien. Der Ausschnitt rastet daran ein, Alt beim Ziehen hält das an.">
+              <input type="checkbox" id="hilfslinien" checked> Hilfslinien &amp; Einrasten
+            </label>
+            <label class="schalter" id="rahmen-feld" hidden
+                   title="Legt den Rahmen der Charakterseite um den Ausschnitt: Bodenlinie unten, Oberkante dort, wo der Rahmen endet. Körpergröße und Bildkorrektur verschieben ihn, so steht beim Zuschneiden vor Augen, wie hoch die Figur später im Rahmen steht.">
+              <input type="checkbox" id="rahmen" checked> Rahmen der Seite
+            </label>
+          </div>
+
+          <p class="werkzeug-info" id="art"></p>
+        </div>
+      </section>
+
+      <aside class="tafel vorschau-tafel">
+        <div class="panel-kopf">
+          <span class="panel-marke">Vorschau</span>
+          <div class="grund" id="grund">
+            <button type="button" data-grund="dunkel" class="an" title="Dunkel wie die Seite">Dunkel</button>
+            <button type="button" data-grund="hell" title="Heller Grund">Hell</button>
+            <button type="button" data-grund="karo" title="Transparenz sichtbar">Karo</button>
+          </div>
+        </div>
+
+        <div class="vorschau">
+
+        <!-- Porträt: der runde Ausschnitt in seinen echten Größen -->
+        <div id="vorschau-portrait">
+          <div class="vorschau-gross" id="vorschau-gross">
+            <canvas id="pv-gross" width="200" height="200"></canvas>
+          </div>
+
+          <div class="vorschau-reihe">
+            <figure>
+              <img id="pv-alt" alt="" width="76" height="76">
+              <figcaption>Aktuell</figcaption>
+            </figure>
+            <figure>
+              <canvas id="pv-76" width="76" height="76"></canvas>
+              <figcaption>Neu, 76&nbsp;px</figcaption>
+            </figure>
+            <figure>
+              <canvas id="pv-40" width="40" height="40"></canvas>
+              <figcaption>Karte, 40&nbsp;px</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Ganzkörper: der Rahmen der Charakterseite, maßstäblich -->
+        <div id="vorschau-ganzkoerper" hidden>
+          <div class="gk-rahmen">
+            <span class="gk-ebene"><canvas id="pv-gk" width="10" height="10"></canvas></span>
+          </div>
+          <p class="gk-hinweis">Rahmen der Charakterseite, maßstäblich.</p>
+
+          <div class="skala-feld">
+            <label class="regler" title="Wie groß die Figur ist. 1.0 ist ein erwachsener Mensch von etwa 1,80 m, 1.22 füllt den Rahmen.">
+              Körpergröße
+              <input type="range" id="skala" min="0.2" max="1.22" step="0.01" value="1">
+              <b id="d-skala">1</b>
+            </label>
+            <button type="button" id="skala-zurueck" class="knopf leise zurueck"
+                    title="Körpergröße zurück auf den Wert aus chars.js">↺</button>
+          </div>
+
+          <div class="skala-feld">
+            <label class="regler" title="Feinkorrektur nur für dieses Bild. Sprungpose, wehender Umhang oder Sockel machen die Datei höher als die Figur, dann steht sie im Rahmen zu klein. Die Körpergröße bleibt davon unberührt.">
+              Bildkorrektur
+              <input type="range" id="korrektur" min="0.4" max="1.6" step="0.01" value="1">
+              <b id="d-korrektur">100 %</b>
+            </label>
+            <button type="button" id="korrektur-zurueck" class="knopf leise zurueck"
+                    title="Bildkorrektur zurück auf den Wert aus chars.js">↺</button>
+          </div>
+
+          <div class="skala-fuss">
+            <p class="gk-hinweis" id="d-wirkung">Im Rahmen: <b>1.00</b></p>
+            <button type="button" id="skala-speichern" class="knopf leise" disabled>
+              In chars.js schreiben
+            </button>
+          </div>
+          <div class="gk-alt">
+            <span class="wahl-titel">Bisher: <b id="d-bisher">—</b></span>
+            <div class="gk-rahmen klein"><span class="gk-ebene"><img id="pv-gk-alt" alt=""></span></div>
+          </div>
+        </div>
+
+        <dl class="daten">
+          <div><dt>Datei</dt><dd id="d-datei">—</dd></div>
+          <div><dt>Ergebnis</dt><dd id="d-groesse">—</dd></div>
+          <div><dt>Vorlage</dt><dd id="d-quelle">—</dd></div>
+        </dl>
+
+        <p id="d-warnung" class="warnung klein" hidden></p>
+
+        <label class="schalter merker" title="Nimmt dieses Porträt in die Liste „A - Portraits noch offen.txt“ auf, auch wenn die Datei längst freigestellt ist. Speichern hebt die Markierung wieder auf.">
+          <input type="checkbox" id="offen"> Noch offen, soll neu gemacht werden
+        </label>
+
+        <label class="schalter" id="merken-feld" title="Trägt den Zuschnitt in manuell.json des Skills ein, damit er ihn beim nächsten Lauf von allein trifft.">
+          <input type="checkbox" id="merken" checked> Zuschnitt für den Skill merken
+        </label>
+
+        </div>
+
+        <!-- Der Fuß bleibt stehen, während die Vorschau darüber rollt.
+             Speichern ist der letzte Schritt jeder Figur und soll nie
+             erst weggescrollt werden müssen. -->
+        <div class="tafel-fuss vorschau-fuss">
+          <button type="button" id="speichern" class="knopf gross">Speichern</button>
+          <p id="speicher-info" class="speicher-info"></p>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+  <section class="spalte-arbeit leer" id="leerzustand">
+    <div class="tafel leer-tafel">
+      <div class="panel-kopf"><span class="panel-marke">Bedienung</span></div>
+      <h2>Figur wählen</h2>
+      <p>Links steht jede Figur aus der Datenbank. Ein Klick öffnet ihr Bild:
+         bei <b>Porträts</b> das Ganzkörperbild mit dem Kreis, der daraus das
+         Profilbild wird, bei <b>Ganzkörper</b> das Bild selbst mit dem
+         Rechteck, das randlos an der Figur sitzen soll.</p>
+      <ul class="hilfe">
+        <li><b>Ziehen im Kreis</b> verschiebt den Ausschnitt, <b>Mausrad</b> ändert seine Größe.</li>
+        <li>Die <b>Ecken</b> lassen sich anfassen, <b>Pfeiltasten</b> schieben pixelweise.</li>
+        <li><b>Ziehen daneben</b> verschiebt das Bild, <b>Strg&nbsp;+&nbsp;Mausrad</b> zoomt es.</li>
+        <li>Der Ausschnitt <b>rastet</b> an Boden, Mitte und Rändern der Figur ein,
+            <b>Alt</b> beim Ziehen hält das an.</li>
+        <li><b>Automatisch zuschneiden</b> nimmt den Vorschlag des Porträt-Skills,
+            im Ganzkörper-Betrieb schneidet <b>Randlos beschneiden</b> auf die Figur.</li>
+        <li><b>Eigenes Bild</b> lädt eine Vorlage vom Rechner, Ablegen und Einfügen geht auch.</li>
+        <li>Im Ganzkörper-Betrieb sagt <b>Körpergröße</b>, wie groß die Figur ist, und
+            <b>Bildkorrektur</b>, wie weit dieses eine Bild davon abweicht. Beides
+            zusammen ergibt, wie hoch sie im Rahmen steht.</li>
+        <li><b>Rahmen der Seite</b> legt genau diesen Rahmen über die Bühne. Er bleibt
+            stehen, die Figur wächst und schrumpft darin, sobald einer der beiden
+            Regler sich bewegt.</li>
+        <li>Die <b>Referenz</b> steht dann in ihrer eigenen Größe auf derselben
+            Bodenlinie. Bildkorrektur schieben, bis die Köpfe zusammenpassen, und alle
+            Fassungen einer Figur sind im Rahmen gleich groß.</li>
+        <li><b>Speichern</b> schreibt beim Ganzkörperbild beide Werte mit nach
+            js/chars.js, Zuschnitt und Größe sind ein Schritt.</li>
+        <li><b>Upscale</b> rechnet eine zu kleine Vorlage mit Real&#8209;ESRGAN hoch,
+            bevor daraus geschnitten wird. Im Fenster dazu lässt sich ein
+            <b>Gesichtsmodell</b> wählen, das die Gesichter danach neu aufbaut,
+            sonst bleiben sie wächsern.</li>
+      </ul>
+    </div>
+  </section>
+
+</main>
+
+<!-- Neue Figur -->
+<dialog id="neu-dialog" class="dialog breit">
+  <form method="dialog">
+    <h2>Neue Figur</h2>
+    <p class="dialog-text">
+      Eine Figur entsteht mit ihrem ersten Auftritt: Der Name kommt in die
+      Besetzungsliste des Films in <b>js/data.js</b>. Bilder, Biografie und
+      Steckbrief kommen danach.
+    </p>
+
+    <div class="dialog-feld">
+      <span>Realname und Heldenname</span>
+      <div class="namenszeile">
+        <input id="neu-name" type="text" maxlength="60" autocomplete="off"
+               placeholder="Riri Williams">
+        <b class="trenner">/</b>
+        <input id="neu-held" type="text" maxlength="60" autocomplete="off"
+               placeholder="Ironheart, darf leer bleiben">
+      </div>
+    </div>
+
+    <label class="dialog-feld">
+      <span>Kürzel für den Schlüssel (CHAR_ALIAS), freiwillig</span>
+      <input id="neu-alias" type="text" maxlength="60" autocomplete="off"
+             placeholder="leer = aus dem Namen">
+    </label>
+    <p class="dialog-hinweis" id="neu-slug"></p>
+
+    <label class="dialog-feld">
+      <span>Auftritte, mindestens einer</span>
+      <input id="neu-suche" type="search" autocomplete="off" placeholder="Film oder Serie suchen">
+    </label>
+    <div class="filmliste" id="neu-filme"></div>
+
+    <p class="dialog-warnung" id="neu-fehler" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="abbrechen" class="knopf leise">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="neu-ok" disabled>Anlegen</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Namen und Schlüssel der Figur -->
+<dialog id="figur-dialog" class="dialog breit">
+  <form method="dialog">
+    <h2>Figur bearbeiten</h2>
+    <p class="dialog-text">
+      Realname und Heldenname stehen in <b>js/data.js</b> in einer Zeile,
+      getrennt durch <b>&nbsp;/&nbsp;</b>. Hier haben sie je ein Feld, das
+      Studio setzt sie beim Speichern wieder zusammen. Wer keinen
+      Heldennamen hat, lässt das rechte Feld leer.
+    </p>
+
+    <span class="feld-titel">Namen</span>
+    <div class="namensliste" id="namensliste"></div>
+
+    <div class="dialog-feld">
+      <span>Kürzel für den Schlüssel (CHAR_ALIAS), gilt für alle Namen dieser Figur</span>
+      <div class="namenszeile">
+        <input id="figur-alias" type="text" maxlength="60" autocomplete="off"
+               placeholder="leer = der Name selbst">
+        <button type="button" class="knopf" id="alias-uebernehmen" disabled>Übernehmen</button>
+      </div>
+    </div>
+    <p class="dialog-hinweis" id="figur-slug"></p>
+    <p class="dialog-warnung" id="figur-warnung" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="zu" class="knopf leise">Schließen</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Auftritte -->
+<dialog id="auftritt-dialog" class="dialog breit">
+  <form method="dialog">
+    <h2>Auftritte</h2>
+    <p class="dialog-text" id="auftritt-text"></p>
+
+    <label class="dialog-feld" id="auftritt-namensfeld">
+      <span>Name für neue Auftritte</span>
+      <select id="auftritt-name"></select>
+    </label>
+
+    <label class="dialog-feld">
+      <span>Film suchen</span>
+      <input id="auftritt-suche" type="search" autocomplete="off" placeholder="Titel oder Phase">
+    </label>
+
+    <div class="filmliste" id="filmliste"></div>
+    <p class="dialog-warnung" id="auftritt-warnung" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="zu" class="knopf leise">Schließen</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Upscale: Vorlage hochrechnen, auf Wunsch mit neuem Gesicht -->
+<dialog id="upscale-dialog" class="dialog">
+  <form method="dialog">
+    <h2>Upscale</h2>
+    <p class="dialog-text">
+      Rechnet die Vorlage mit Real&#8209;ESRGAN vierfach hoch. Das Ergebnis
+      erscheint als eigenes Bild bei den Vorlagen, gespeichert wird dadurch
+      noch nichts.
+    </p>
+
+    <div class="dialog-feld">
+      <label for="gesicht">Gesichter neu aufbauen</label>
+      <select id="gesicht">
+        <option value="ohne">Ohne, nur hochrechnen</option>
+        <option value="gfpgan">GFPGAN &nbsp;·&nbsp; gutmütig, glättet etwas</option>
+        <option value="codeformer">CodeFormer &nbsp;·&nbsp; mit Treue-Regler</option>
+      </select>
+    </div>
+
+    <div class="dialog-feld" id="treue-feld" hidden>
+      <label for="treue">Treue zum Original <b id="d-treue">0.80</b></label>
+      <input type="range" id="treue" min="0" max="1" step="0.05" value="0.8">
+      <span class="reglerskala">
+        <span>Erfindet mehr</span>
+        <span>Näher am Original</span>
+      </span>
+    </div>
+
+    <p class="dialog-hinweis" id="upscale-vorschau"></p>
+    <p class="dialog-warnung" id="upscale-warnung" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="abbrechen" class="knopf leise">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="upscale-ok">Starten</button>
+    </menu>
+  </form>
+</dialog>
+
+<dialog id="fassung-dialog" class="dialog">
+  <form method="dialog">
+    <h2 id="fassung-titel">Neue Fassung</h2>
+    <p class="dialog-text" id="fassung-text"></p>
+
+    <label class="dialog-feld">
+      <span>Beschriftung</span>
+      <input id="fassung-label" type="text" maxlength="40" autocomplete="off">
+    </label>
+
+    <p class="dialog-hinweis" id="fassung-datei" hidden></p>
+
+    <p class="dialog-warnung" id="fassung-fehler" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="abbrechen" class="knopf leise">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="fassung-ok">Anlegen</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Fortschritt der laufenden Arbeit. Der Server schickt den Stand über
+     einen Ereignisstrom, hier steht nur die Anzeige. -->
+<div id="fortschritt" class="fortschritt" hidden role="status" aria-live="polite">
+  <div class="fortschritt-kopf">
+    <span id="fortschritt-titel" class="fortschritt-titel"></span>
+    <span id="fortschritt-zahl" class="fortschritt-zahl">0 %</span>
+  </div>
+  <div class="fortschritt-schiene">
+    <div id="fortschritt-balken" class="fortschritt-balken"></div>
+  </div>
+  <p id="fortschritt-schritt" class="fortschritt-schritt"></p>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="hintergrund.js"></script>
+<script src="studio.js"></script>
+</body>
+</html>
