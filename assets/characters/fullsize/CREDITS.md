@@ -5,10 +5,18 @@ Fanprojekt zu WebP verkleinert. Dank an die jeweiligen Ersteller.
 
 Die Tabelle unten führt die Bilder der ersten beiden Runden. Die
 Nachlieferungen ab dem 26.07.2026 (124 Bilder in der dritten Runde, 65 in
-der vierten, 36 in der fünften und 26 in der sechsten) kamen als fertig
+der vierten, 36 in der fünften, 26 in der sechsten und 13 in der siebten)
+kamen als fertig
 freigestellte PNGs über
 `assets/ersetzen/` herein, ihre Originalquellen sind hier nicht bekannt.
 Auch für sie gilt der Dank an die jeweiligen Ersteller.
+
+Zwei Bilder stammen nicht von DeviantArt, sondern aus dem MCU-Wiki bei
+Fandom und wurden hier selbst freigestellt: `azazel.webp` aus einer
+Aufnahme vom Set von Deadpool & Wolverine und `dormammu.webp` aus einem
+Standbild aus Doctor Strange. Dormammu besteht aus der Dunklen Dimension
+selbst und hat keine Silhouette, deshalb trägt sein Bild statt eines
+Freistellers eine weiche Vignette.
 
 | Datei | Titel | Ersteller | Quelle |
 |---|---|---|---|
@@ -28,7 +36,7 @@ Auch für sie gilt der Dank an die jeweiligen Ersteller.
 | bob-sentry.webp | Thunderbolts Sentry PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Thunderbolts-Sentry-PNG-1197841334 |
 | bruce-banner.webp | HULK (Avengers: age of Ultron) 6 png  | joaolucasvingaprimos | https://www.deviantart.com/joaolucasvingaprimos/art/HULK-Avengers-age-of-Ultron-6-png-1113938297 |
 | bruce-banner-smart-hulk.webp | Avengers Endgame Hulk PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Avengers-Endgame-Hulk-PNG-763863336 |
-| bucky-barnes.webp | 'Bucky' Barnes/The Winter Soldier: CATWS/FaTWS PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Bucky-Barnes-The-Winter-Soldier-CATWS-FaTWS-PNG-1030585557 |
+| bucky-barnes-winter-soldier-unmasked.webp | 'Bucky' Barnes/The Winter Soldier: CATWS/FaTWS PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Bucky-Barnes-The-Winter-Soldier-CATWS-FaTWS-PNG-1030585557 |
 | carol-danvers.webp | Captain Marvel Carol Danvers PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Captain-Marvel-Carol-Danvers-PNG-788858018 |
 | carol-danvers-starforce.webp | Captain Marvel Carol Danvers Starforce PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Captain-Marvel-Carol-Danvers-Starforce-PNG-783104933 |
 | cassandra-nova.webp | Cassandra Nova (MCU) - Transparent 01 | matuta2002 | https://www.deviantart.com/matuta2002/art/Cassandra-Nova-MCU-Transparent-01-1044794861 |
@@ -171,3 +179,12 @@ Auch für sie gilt der Dank an die jeweiligen Ersteller.
 | yondu.webp | Guardians of The Galaxy vol.2 Yondu PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-The-Galaxy-vol-2-Yondu-PNG-701571775 |
 | zeus.webp | Thor: Love and Thunder Zeus PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/Thor-Love-and-Thunder-Zeus-PNG-922511951 |
 | ﻿thor.webp | Thor PNG/RENDER from Marvel's The Avengers AoU | Joaohbd | https://www.deviantart.com/joaohbd/art/Thor-PNG-RENDER-from-Marvel-s-The-Avengers-AoU-518421465 |
+
+## Aus dem MCU-Wiki freigestellt (31.07.2026)
+
+Für Justin Hammer gab es keinen Render. Das Bild stammt aus dem
+Marvel-Cinematic-Universe-Wiki und wurde mit rembg freigestellt.
+
+| Datei | Quelle |
+|---|---|
+| justin-hammer.webp | https://marvelcinematicuniverse.fandom.com/wiki/File:Justin_Hammer_with_gun.jpg |
