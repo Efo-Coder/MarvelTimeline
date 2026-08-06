@@ -593,11 +593,12 @@
 
     /* Der Rahmen hat ein festes Format, das Bild schöpft ihn nur so weit
        aus, wie die Körpergröße der Figur es hergibt (FULLSIZE_SCALE in
-       js/chars.js). Der Wert hängt an der Datei, nicht an der Figur, und
-       zieht deshalb mit der Ebene um. */
+       js/chars.js, dazu die Feinkorrektur der Datei aus FULLSIZE_FIT).
+       Der Wert hängt an der Datei, nicht an der Figur, und zieht deshalb
+       mit der Ebene um. */
     function paint(layer, file) {
       layer.firstElementChild.src = lookSrc(file);
-      layer.style.setProperty('--figure-scale', FULLSIZE_SCALE[file] || 1);
+      layer.style.setProperty('--figure-scale', fullsizeScale(file));
     }
 
     /* Nur die vordere Ebene ist sichtbar, nur sie beschreibt das Bild.
@@ -657,25 +658,30 @@
       });
     }
 
-    /* Die Fassung des ersten Auftritts steht sofort und ohne Überblendung
-       im Rahmen, geladen wird sie wie jedes Bild der Seite erst, wenn sie
-       in Sicht kommt. */
+    /* Die Standardansicht ist der erste Eintrag in FULLSIZE_LOOKS, egal
+       wie seine Datei heißt: Die Reihenfolge dort bestimmt, was im Rahmen
+       steht und welcher Schalter gedrückt ist. Figuren ohne Eintrag haben
+       nur ihr eines Bild, das wie ihr Schlüssel heißt. */
+    const looks = FULLSIZE_LOOKS[item.char.slug];
+    const standard = looks && looks.length ? looks[0][1] : item.char.slug;
+
+    /* Sie steht sofort und ohne Überblendung im Rahmen, geladen wird sie
+       wie jedes Bild der Seite erst, wenn sie in Sicht kommt. */
     const first = layers[0].firstElementChild;
     first.loading = 'lazy';
     first.addEventListener('error', showEmpty);
-    first.addEventListener('load', () => lookReady.add(item.char.slug));
-    paint(layers[0], item.char.slug);
-    shown = item.char.slug;
+    first.addEventListener('load', () => lookReady.add(standard));
+    paint(layers[0], standard);
+    shown = standard;
     setFront(0);
 
-    const looks = FULLSIZE_LOOKS[item.char.slug];
     if (looks) {
       const nav = el('div', 'char-look-nav');
       nav.setAttribute('aria-label', 'Fassungen von ' + item.real);
       for (const [label, file] of looks) {
         const chip = el('button', 'char-look', label);
         chip.type = 'button';
-        const active = file === item.char.slug;
+        const active = file === standard;
         chip.setAttribute('aria-pressed', active ? 'true' : 'false');
         if (active) chip.classList.add('active');
         /* Wer die Maus auf einen Schalter legt, hat sich meist schon

@@ -3,32 +3,34 @@
    global auf <html> für Nav/Scrollbars der gerade sichtbaren Phase.
    ====================================================================== */
 
-/* Bebas Neue Pro liegt lokal unter assets/fonts. Google Fonts liefert von
-   Bebas Neue nur den einen Standardschnitt, die Pro-Familie bringt die
-   dünneren Schnitte mit. woff2 zuerst, woff als Rückfall für alte Browser. */
+/* Die beiden Schriften des echten Marvel-Studios-Schriftzugs. Im Logo trägt
+   das fette „MARVEL" BentonSans Comp Black, das gesperrte „STUDIOS" darunter
+   Dharma Gothic E. Beide liegen lokal unter assets/fonts, woff2 zuerst,
+   woff als Rückfall für alte Browser.
+
+   Benton kommt aus der vollständigen BentonSans-Familie (Schnitt
+   „Compressed Black"). Der einzeln erhältliche Schnitt „BentonSans Comp
+   Black Regular" ist zeichengleich, bringt aber nur 236 statt 653 Glyphen
+   mit; die volle Fassung ist bei Umlauten und Anführungszeichen sicherer.
+
+   Beide Familien haben nur diesen einen Schnitt. Deshalb steht hier eine
+   Gewichtsspanne statt einer einzelnen Zahl: Jedes angeforderte Gewicht
+   landet auf der echten Datei, statt dass der Browser sich einen fetten
+   oder dünnen Schnitt selbst dazurechnet. */
 @font-face {
-  font-family: 'Bebas Neue Pro';
-  src: url('../assets/fonts/BebasNeuePro-Thin.woff2') format('woff2'),
-       url('../assets/fonts/BebasNeuePro-Thin.woff') format('woff');
-  font-weight: 200;
+  font-family: 'BentonSans Comp';
+  src: url('../assets/fonts/BentonSansComp-Black.woff2') format('woff2'),
+       url('../assets/fonts/BentonSansComp-Black.woff') format('woff');
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'Bebas Neue Pro';
-  src: url('../assets/fonts/BebasNeuePro-Light.woff2') format('woff2'),
-       url('../assets/fonts/BebasNeuePro-Light.woff') format('woff');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Bebas Neue Pro';
-  src: url('../assets/fonts/BebasNeuePro-Book.woff2') format('woff2'),
-       url('../assets/fonts/BebasNeuePro-Book.woff') format('woff');
-  font-weight: 400;
+  font-family: 'Dharma Gothic E';
+  src: url('../assets/fonts/DharmaGothicE-Regular.woff2') format('woff2'),
+       url('../assets/fonts/DharmaGothicE-Regular.woff') format('woff');
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
@@ -39,8 +41,17 @@
   --bg: #04060f;
   --text: #e9edf8;
   --muted: #9aa4c0;
+  /* Drei Ebenen, den Aufbau des Marvel-Studios-Logos nachempfunden:
+     --font-impact ist die Stimme des fetten „MARVEL" und bleibt den
+     wenigen großen Überschriften vorbehalten. --font-brand ist das
+     gesperrte „STUDIOS", also die schmalen Beschriftungszeilen, die über
+     oder unter einer Überschrift stehen. --font-display trägt weiter die
+     Bedienoberfläche (Navigation, Chips, Daten, Infoboxen): Bebas Neue
+     bleibt bei 12 bis 17 Pixeln kräftiger und ruhiger lesbar als die sehr
+     schmale Dharma. */
+  --font-impact: 'BentonSans Comp', 'Arial Narrow', Impact, sans-serif;
   --font-display: 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
-  --font-brand: 'Bebas Neue Pro', var(--font-display);
+  --font-brand: 'Dharma Gothic E', var(--font-display);
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
   --logo-h: 130px;   /* Höhe des Logo-Bereichs über der Linie  */
   --conn-h: 54px;    /* Länge der Verbindungslinie zum Zeitstrahl */
@@ -162,9 +173,13 @@ html.lenis, html.lenis body { height: auto; }
 .brand-text {
   position: relative;
   display: block;
+  /* Dieselbe Stelle wie „STUDIOS" im Original: ein gesperrtes Wort neben
+     dem Schriftzug, oben und unten von einer Linie gefasst. Dharma Gothic E
+     hat nur einen Schnitt, das Gewicht bleibt deshalb auf 400. Alles
+     darüber ließe der Browser künstlich fett rechnen. */
   font-family: var(--font-brand);
   font-size: 1.8rem;
-  font-weight: 600;   /* Light; 200 wäre Thin, 400 der normale Schnitt */
+  font-weight: 400;
   line-height: 1.05;
   text-box-trim: trim-both;
   text-box-edge: cap alphabetic;
@@ -721,7 +736,7 @@ html.lenis, html.lenis body { height: auto; }
    Sprünge, das Gegenteil einer weichen Überblendung. text-wrap: balance
    verteilt die Zeilen gleichmäßig, wo der Browser es kann. */
 .hero-kicker {
-  font-family: var(--font-display);
+  font-family: var(--font-brand);
   font-size: clamp(1.05rem, 2.4vw, 1.6rem);
   line-height: 1.7;
   letter-spacing: 0.5em;
@@ -742,12 +757,16 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .hero h1 {
-  font-family: var(--font-display);
+  /* Der Auftakt der Seite trägt die Schrift des Schriftzugs selbst.
+     text-transform, weil Benton anders als Bebas echte Kleinbuchstaben
+     mitbringt. Ohne die Angabe stünde hier Gemischtschreibung. */
+  font-family: var(--font-impact);
   font-weight: 400;
   font-size: clamp(3rem, 9vw, 6.5rem);
   line-height: 1;
   letter-spacing: 0.04em;
-  margin: -0.1em -0.058em -0.2em -0.048em;
+  text-transform: uppercase;
+  margin: -0.1em -0.03em -0.2em -0.03em;
   background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
   -webkit-background-clip: text;
   background-clip: text;
@@ -761,10 +780,11 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .hero-sub {
-  font-family: var(--font-display);
+  font-family: var(--font-brand);
   color: var(--muted);
   font-size: 1.4rem;
   letter-spacing: 0.3em;
+  text-transform: uppercase;
   max-width: 70rem;
   margin: 0.3rem;
   opacity: 0;
@@ -849,7 +869,7 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .saga {
-  font-family: var(--font-display);
+  font-family: var(--font-brand);
   font-size: 0.95rem;
   letter-spacing: 0.45em;
   text-transform: uppercase;
@@ -1037,8 +1057,10 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 /* Platzhalter, solange kein Logo-PNG vorhanden ist */
+/* Steht an der Stelle eines fehlenden Filmlogos, ist also selbst ein
+   Schriftzug – dafür die Schrift des Marvel-Schriftzugs. */
 .logo-fallback {
-  font-family: var(--font-display);
+  font-family: var(--font-impact);
   font-size: 1.55rem;
   line-height: 1.05;
   text-align: center;
@@ -1122,7 +1144,7 @@ html.lenis, html.lenis body { height: auto; }
 
 .phase-band h2 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-brand);
   font-weight: 400;
   font-size: clamp(1.1rem, 2.4vw, 1.6rem);
   letter-spacing: 0.85em;
@@ -1643,7 +1665,7 @@ html.modal-open { overflow: hidden; }
 /* Wie der Hero-Kicker, nur ohne dessen Intro-Animation: Auf dieser Seite
    steht der Text sofort. */
 .chars-kicker {
-  font-family: var(--font-display);
+  font-family: var(--font-brand);
   font-size: 0.95rem;
   letter-spacing: 0.5em;
   text-transform: uppercase;
@@ -1652,11 +1674,12 @@ html.modal-open { overflow: hidden; }
 }
 
 .chars-title {
-  font-family: var(--font-display);
+  font-family: var(--font-impact);
   font-weight: 400;
   font-size: clamp(2.6rem, 7vw, 4.4rem);
   line-height: 1;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin: 0;
   background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
   -webkit-background-clip: text;
@@ -1665,12 +1688,18 @@ html.modal-open { overflow: hidden; }
   filter: drop-shadow(0 0 26px rgba(90, 120, 255, 0.3));
 }
 
+/* Das Gegenstück zur Hero-Unterzeile der Timeline und deshalb dieselbe
+   Schrift. Sie steht größer und weiter gesperrt als der frühere Fließtext:
+   Dharma läuft sehr schmal, bei 0.92rem wäre die Zeile dünn geraten. */
 .chars-lead {
   max-width: 44rem;
   margin: 1.2rem auto 0;
   color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.7;
+  font-family: var(--font-brand);
+  font-size: 1.15rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  line-height: 1.5;
 }
 
 /* ----- Suche, Filter, Sortierung ----- */
@@ -1871,7 +1900,11 @@ html.modal-open { overflow: hidden; }
 }
 
 /* Eine Kachel pro Figur: Porträt, Realname, Rollen, Zahl der Auftritte.
-   Die Akzentfarbe kommt von der Phase des ersten Auftritts. */
+   Die Akzentfarbe kommt von der Phase des ersten Auftritts.
+
+   Die Kachel selbst bleibt rahmenlos, damit im Raster nur die runden
+   Porträts stehen. Alles, was auf den Zeiger reagiert, spielt sich
+   deshalb am Kreis und an der Beschriftung ab. */
 .char-cell {
   width: 100%;
   height: 100%;
@@ -1882,27 +1915,16 @@ html.modal-open { overflow: hidden; }
   text-align: center;
   font-family: inherit;
   color: inherit;
-  padding: 1rem 0.7rem 0.85rem;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  padding: 0.7rem 0.4rem 0.55rem;
+  border: 0;
+  background: none;
   cursor: pointer;
-  transition: transform 0.25s var(--ease-out), background 0.25s ease,
-              border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.char-cell:hover,
-.char-cell:focus-visible {
-  transform: translateY(-4px);
-  background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.04));
-  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45),
-              0 0 26px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .char-cell:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+  border-radius: 14px;
 }
 
 .char-shot {
@@ -1917,6 +1939,27 @@ html.modal-open { overflow: hidden; }
   background: rgba(255, 255, 255, 0.06);
   border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
   box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 18%, transparent);
+  transition: transform 0.25s var(--ease-out), border-color 0.25s ease,
+              box-shadow 0.25s ease;
+}
+
+/* Der Kreis hebt sich beim Zeigen leicht an, der Ring zieht die
+   Akzentfarbe an und der Schein ringsum wird kräftiger. */
+.char-cell:hover .char-shot,
+.char-cell:focus-visible .char-shot {
+  transform: translateY(-5px) scale(1.06);
+  border-color: color-mix(in srgb, var(--accent) 85%, transparent);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5),
+              0 0 30px color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+.char-cell-name,
+.char-cell-role,
+.char-cell-count { transition: color 0.25s ease; }
+
+.char-cell:hover .char-cell-name,
+.char-cell:focus-visible .char-cell-name {
+  color: color-mix(in srgb, var(--accent) 45%, #ffffff);
 }
 
 /* Die Porträts sind quadratisch zugeschnitten und zeigen oben das
@@ -1933,8 +1976,9 @@ html.modal-open { overflow: hidden; }
    „Noch unbekannt“) oder die Datei fehlt */
 .char-shot.empty { background: color-mix(in srgb, var(--accent) 14%, rgba(255, 255, 255, 0.04)); }
 
+/* Monogramm statt Porträt: ein Zeichen als Marke, keine Textzeile. */
 .char-initials {
-  font-family: var(--font-display);
+  font-family: var(--font-impact);
   font-size: 1.6rem;
   letter-spacing: 0.08em;
   color: color-mix(in srgb, var(--accent) 65%, #ffffff);
@@ -2215,11 +2259,12 @@ a.char-film { text-decoration: none; }
 
 .char-full-name {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-impact);
   font-weight: 400;
   font-size: clamp(2.6rem, 8vw, 6rem);
   line-height: 0.95;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   color: #fff;
   text-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
 }
@@ -2502,8 +2547,9 @@ a.char-film { text-decoration: none; }
 
 /* Das Bild behält sein Seitenverhältnis und schöpft den Rahmen nur so
    weit aus, wie --figure-scale erlaubt. Der Wert kommt aus
-   FULLSIZE_SCALE (js/chars.js) und trägt die Körpergröße nach, die dem
-   engen Zuschnitt fehlt: Ohne ihn stünde Rocket so hoch wie Thor.
+   fullsizeScale() (js/chars.js), also aus der Körpergröße der Figur mal
+   der Feinkorrektur ihrer Datei, und trägt nach, was dem engen
+   Zuschnitt fehlt: Ohne ihn stünde Rocket so hoch wie Thor.
    align-items: flex-end stellt alle auf dieselbe Grundlinie, dorthin,
    wo der Lichtkegel im Rahmen liegt.
 
@@ -2577,10 +2623,11 @@ a.char-film { text-decoration: none; }
   background: none;
   color: #b9c2dc;
   /* Nicht die Fließtextschrift der Seite: Die Schalter sind Beschriftung
-     im Bild, keine Prosa. Sie tragen dieselbe schmale Versalschrift wie
-     Name und Heldenname darüber. Das Gewicht bleibt über alle Zustände
-     gleich, sonst spränge die Breite der Leiste beim Wechsel der
-     gewählten Fassung. */
+     im Bild, keine Prosa. Sie bleiben aber bewusst auf der Schrift der
+     Bedienoberfläche und übernehmen nicht die fette Schrift des Namens
+     darüber. Sie sind Bedienelemente, keine Überschrift. Das Gewicht
+     bleibt über alle Zustände gleich, sonst spränge die Breite der Leiste
+     beim Wechsel der gewählten Fassung. */
   font-family: var(--font-display);
   font-weight: 400;
   font-size: 1.5rem;
@@ -3163,10 +3210,10 @@ a.char-film { text-decoration: none; }
   .chip,
   .chars-search,
   .chars-clear,
-  .char-cell { transition: none; }
+  .char-shot { transition: none; }
 
-  .char-cell:hover,
-  .char-cell:focus-visible { transform: none; }
+  .char-cell:hover .char-shot,
+  .char-cell:focus-visible .char-shot { transform: none; }
 
   .settings-btn,
   .has-dropdown::after,
