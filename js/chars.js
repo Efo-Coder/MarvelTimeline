@@ -30,14 +30,27 @@
    sparen sich den 404-Umweg über den error-Handler. */
 const CHAR_ALIAS = {
   'Alexei / Red Guardian': 'Alexei',
+  'Arishem der Richter': 'Arishem',
+  'Eson der Sucher': 'Eson',
+  'Gorr der Götterschlächter': 'Gorr',
+  'Herman Schultz / Shocker': 'Shocker',
+  'Jemiah der Analytiker': 'Jemiah',
+  'Jener der bleibt': 'Der da bleibt',
+  'Nezarr der Rechner': 'Nezarr',
+  'Piotr Rasputin / Colossus': 'Colossus',
+  'Algrim / Kurse': 'Kurse',
+  'Antonia Dreykov / Taskmaster': 'Taskmaster',
   'Ava Starr / Ghost': 'Ava Starr',
+  'Cain Marko / Juggernaut': 'Juggernaut',
+  'Raza Hamidmi Al-Wazar': 'Raza',
+  'Sharon Davis / Mrs. Hart': 'Mrs. Hart',
   'Benjamin Poindexter / Bullseye': 'Bullseye',
   'Mac Gargan / Scorpion': 'Scorpion',
   'Baby Groot': 'Groot',
   'Brock Rumlow / Crossbones': 'Crossbones',
+  'Brunnhilde / Valkyrie': 'Valkyrie',
   'Bill Foster / Goliath': 'Bill Foster',
   'Bruce Banner / Hulk': 'Bruce Banner',
-  'Bruce Banner / Hulk (angekündigt)': 'Bruce Banner',
   'Eric Brooks / Blade': 'Blade',
   'Bucky Barnes / Winter Soldier': 'Bucky Barnes',
   'Carol Danvers / Captain Marvel': 'Carol Danvers',
@@ -46,31 +59,39 @@ const CHAR_ALIAS = {
   'Darren Cross / Yellowjacket': 'Darren Cross',
   'Darren Cross / MODOK': 'Darren Cross',
   'Ezekiel Stane / Joe McGillicuddy': 'Ezekiel Stane',
-  'Frank Castle / Punisher (angekündigt)': 'Frank Castle / Punisher',
+  'Flint Marko / Sandman': 'Sandman',
   'Gamora (2014)': 'Gamora',
   'General Thaddeus „Thunderbolt“ Ross': 'Thaddeus Ross',
   'General Thaddeus „Thunderbolt“ Ross / Red Hulk': 'Thaddeus Ross',
+  'Hector Ayala / White Tiger': 'White Tiger',
   'Hope van Dyne / Wasp': 'Hope van Dyne',
   'James Rhodes / War Machine': 'James Rhodes',
   'Jane Foster / Mighty Thor': 'Jane Foster',
+  'Joaquin Torres': 'Joaquin Torres / Falcon',
   'John Walker / U.S. Agent': 'John Walker',
   'Li Ching-Lin / Death Dealer': 'Death Dealer',
   'Max Dillon / Electro': 'Electro',
   'Natasha Romanoff / Black Widow': 'Natasha Romanoff',
+  'Norman Osborn / Green Goblin': 'Green Goblin',
+  'Obadiah Stane / Iron Monger': 'Obadiah Stane',
   'Otto Octavius / Doctor Octopus': 'Doc Ock',
   'Peter Parker (Holland, Maguire & Garfield)': 'Peter Parker',
   'Peter Parker / Spider-Man': 'Peter Parker',
   'Peter Quill / Star-Lord': 'Peter Quill',
+  'Pietro Maximoff / Quicksilver': 'Pietro Maximoff',
   'Riri Williams / Ironheart': 'Riri Williams',
   'Ronan der Ankläger': 'Ronan',
   'Sam Wilson / Captain America': 'Sam Wilson',
   'Sam Wilson / Falcon': 'Sam Wilson',
   'Scott Lang / Ant-Man': 'Scott Lang',
+  'Shalla-Bal / Silver Surfer': 'Silver Surfer',
+  'Shuri / Black Panther': 'Shuri',
   'Simon Williams / Wonder Man': 'Simon Williams',
   'Stephen Strange / Doctor Strange': 'Stephen Strange',
   'Steve Rogers / Captain America': 'Steve Rogers',
   'Taneleer Tivan / The Collector': 'The Collector',
   "T'Challa / Black Panther": "T'Challa",
+  'Tiamut der Kommunikator': 'Tiamut',
   'Tony Stark / Iron Man': 'Tony Stark',
   'Trevor Slattery / Mandarin': 'Trevor Slattery',
   'Wanda Maximoff / Scarlet Witch': 'Wanda Maximoff',
@@ -111,7 +132,6 @@ const CHAR_LOOKS = {
     'the-incredible-hulk': 'bruce-banner-norton',
     'avengers-endgame': 'bruce-banner-smart-hulk',
     'she-hulk': 'bruce-banner-smart-hulk',
-    'spider-man-brand-new-day': 'bruce-banner-smart-hulk',
   },
   'darren-cross': {
     'ant-man-and-the-wasp-quantumania': 'darren-cross-modok',
@@ -146,13 +166,18 @@ const FULLSIZE_LOOKS = {
     ['Mark 50', 'tony-stark'],
     ['Mark I', 'tony-stark-mark-1'],
     ['Mark II', 'tony-stark-mark-2'],
+    ['Mark III', 'tony-stark-mark-3'],
+    ['Mark V', 'tony-stark-mark-5'],
     ['Mark VI', 'tony-stark-mark-6'],
+    ['Mark VII', 'tony-stark-mark-7'],
     ['Mark XIV', 'tony-stark-mark-14'],
     ['Mark 24', 'tony-stark-mark-24'],
     ['Mark 25', 'tony-stark-mark-25'],
     ['Mark 26', 'tony-stark-mark-26'],
+    ['Mark 38 (Igor)', 'tony-stark-mark-38'],
     ['Mark 85', 'tony-stark-mark-85'],
     ['Hulkbuster', 'tony-stark-hulkbuster'],
+    ['Zivil', 'tony-stark-civil'],
   ],
   'marc-spector-steven-grant-moon-knight': [
     ['Zeremonie', 'marc-spector-steven-grant-moon-knight'],
@@ -178,27 +203,31 @@ const FULLSIZE_LOOKS = {
     ['Winter Soldier', 'steve-rogers-winter-soldier'],
   ],
   'bucky-barnes': [
-    ['Bucky Barnes', 'bucky-barnes'],
-    ['First Avenger', 'bucky-barnes-first-avenger'],
+    ['Zivil', 'bucky-barnes-zivil'],
     ['Winter Soldier', 'bucky-barnes-winter-soldier'],
-    ['White Wolf', 'bucky-barnes-white-wolf'],
+    ['Winter Soldier Unmasked', 'bucky-barnes-winter-soldier-unmasked'],
     ['Thunderbolts', 'bucky-barnes-thunderbolts'],
   ],
   'taskmaster': [
     ['Maskiert', 'taskmaster'],
     ['Unmaskiert', 'taskmaster-unmasked'],
+    ['Thunderbolts', 'taskmaster-thunderbolts'],
   ],
   'natasha-romanoff': [
     ['Black Widow', 'natasha-romanoff'],
+    ['Weißer Anzug', 'natasha-romanoff-white'],
     ['Age of Ultron', 'natasha-romanoff-age-of-ultron'],
     ['Ultron (Action)', 'natasha-romanoff-age-of-ultron-action'],
+    ['Suit 1', 'natasha-romanoff-suit-1'],
   ],
   'peter-parker': [
     ['Far From Home', 'peter-parker'],
     ['Homecoming', 'peter-parker-homecoming'],
-    ['Infinity War', 'peter-parker-infinity-war'],
+    ['Stark Suit', 'peter-parker-stark-suit'],
     ['Iron Spider', 'peter-parker-iron-spider'],
     ['No Way Home', 'peter-parker-no-way-home'],
+    ['Black Suit', 'peter-parker-black-suit'],
+    ['Night Monkey', 'peter-parker-night-monkey'],
   ],
   'wanda-maximoff': [
     ['Civil War', 'wanda-maximoff'],
@@ -230,12 +259,14 @@ const FULLSIZE_LOOKS = {
     ['Baby Groot', 'groot-baby'],
     ['Teenager', 'groot-teenager'],
     ['Vol. 3', 'groot-vol-3'],
+    ['King Groot', 'groot-king'],
   ],
   'carol-danvers': [
     ['Captain Marvel', 'carol-danvers'],
-    ['Fliegend', 'carol-danvers-flight'],
     ['The Marvels', 'carol-danvers-the-marvels'],
+    ['Fliegend', 'carol-danvers-flight'],
     ['Starforce', 'carol-danvers-starforce'],
+    ['Aladna', 'carol-danvers-aladna'],
   ],
   'shuri': [
     ['Shuri', 'shuri'],
@@ -289,9 +320,16 @@ const FULLSIZE_LOOKS = {
   ],
   'james-rhodes': [
     ['Zivil', 'james-rhodes'],
-    ['War Machine', 'james-rhodes-war-machine'],
-    ['Endgame', 'james-rhodes-endgame'],
-    ['Iron Patriot', 'james-rhodes-iron-patriot'],
+    ['Colonel', 'james-rhodes-colonel'],
+    ['Mark I', 'james-rhodes-mark-1'],
+    ['Mark II', 'james-rhodes-mark-2'],
+    ['Mark II - Iron Patriot', 'james-rhodes-mark-ii-iron-patriot'],
+    ['Mark III', 'james-rhodes-mark-3'],
+    ['Mark IV', 'james-rhodes-mark-iv'],
+    ['Mark V', 'james-rhodes-mark-v'],
+    ['Mark VI', 'james-rhodes-mark-6'],
+    ['Quantum Suit', 'james-rhodes-quantum-suit'],
+    ['Mark VII - Iron Patriot MK II', 'james-rhodes-mark-vii-iron-patriot-mk-ii'],
   ],
   'samuel-sterns-the-leader': [
     ['Mensch', 'samuel-sterns-the-leader'],
@@ -321,17 +359,17 @@ const FULLSIZE_LOOKS = {
     ['Neuer Anzug', 'yelena-belova-new'],
   ],
   'adrian-toomes-vulture': [
-    ['Vulture', 'adrian-toomes-vulture'],
-    ['Im Flug', 'adrian-toomes-vulture-flight'],
+    ['Unmaskiert', 'adrian-toomes-vulture'],
+    ['Maskiert', 'adrian-toomes-vulture-flight'],
   ],
   'alexei': [
     ['Maskiert', 'alexei'],
-    ['Unmaskiert', 'alexei-unmasked'],
+    ['Thunderbolts', 'alexei-thunderbolts'],
   ],
   'ava-starr': [
     ['Zivil', 'ava-starr'],
-    ['Ghost', 'ava-starr-ghost'],
-    ['New Avengers', 'ava-starr-new-avengers'],
+    ['Ghost', 'ava-starr-new-avengers'],
+    ['Thunderbolts', 'ava-starr-thunderbolts'],
   ],
   'charles-xavier-professor-x': [
     ['Multiverse of Madness', 'charles-xavier-professor-x'],
@@ -346,6 +384,7 @@ const FULLSIZE_LOOKS = {
     ['Darren Cross', 'darren-cross'],
     ['Yellowjacket', 'darren-cross-suit'],
     ['MODOK', 'darren-cross-modok'],
+    ['MODOK maskiert', 'darren-cross-modok-masked'],
   ],
   'doc-ock': [
     ['Doc Ock', 'doc-ock'],
@@ -396,10 +435,12 @@ const FULLSIZE_LOOKS = {
   'johann-schmidt-red-skull': [
     ['Johann Schmidt', 'johann-schmidt-red-skull'],
     ['Red Skull', 'johann-schmidt-red-skull-skull'],
+    ['Steinwaechter', 'johann-schmidt-red-skull-stonekeeper'],
   ],
   'logan-wolverine': [
     ['Unmaskiert', 'logan-wolverine'],
     ['Maskiert', 'logan-wolverine-masked'],
+    ['Anzug', 'logan-wolverine-suit'],
   ],
   'm-baku': [
     ['M’Baku', 'm-baku'],
@@ -409,6 +450,7 @@ const FULLSIZE_LOOKS = {
   'nakia': [
     ['Nakia', 'nakia'],
     ['Wakanda Forever', 'nakia-wakanda-forever'],
+    ['Bahadir', 'nakia-bahadir'],
   ],
   'quake': [
     ['Daisy Johnson', 'quake'],
@@ -435,6 +477,10 @@ const FULLSIZE_LOOKS = {
   'talos': [
     ['Mensch', 'talos'],
     ['Skrull', 'talos-skrull'],
+  ],
+  'reed-richards-mister-fantastic': [
+    ['First Steps', 'reed-richards-mister-fantastic'],
+    ['Erde-838', 'reed-richards-mister-fantastic-838'],
   ],
   'erik-selvig': [
     ['Erik Selvig', 'erik-selvig'],
@@ -467,6 +513,7 @@ const FULLSIZE_LOOKS = {
   'karl-mordo': [
     ['Doctor Strange', 'karl-mordo'],
     ['Multiverse of Madness', 'karl-mordo-multiverse'],
+    ['Sorcerer Supreme', 'karl-mordo-supreme'],
   ],
   'layla-el-faouly': [
     ['Scarlet Scarab', 'layla-el-faouly'],
@@ -497,8 +544,8 @@ const FULLSIZE_LOOKS = {
     ['Iron Monger', 'obadiah-stane-iron-monger'],
   ],
   'pepper-potts': [
-    ['Rescue', 'pepper-potts'],
     ['Zivil', 'pepper-potts-civil'],
+    ['Mark 49 - Rescue', 'pepper-potts-mark-49-rescue'],
   ],
   'peter-quill': [
     ['Peter Quill', 'peter-quill'],
@@ -512,6 +559,84 @@ const FULLSIZE_LOOKS = {
   'wade-wilson-deadpool': [
     ['Deadpool', 'wade-wilson-deadpool'],
     ['Wade Wilson', 'wade-wilson-deadpool-civil'],
+  ],
+  'maria-rambeau': [
+    ['Maria Rambeau', 'maria-rambeau'],
+    ['Erde-838', 'maria-rambeau-838'],
+    ['Binary', 'maria-rambeau-binary'],
+  ],
+  'peggy-carter': [
+    ['Peggy Carter', 'peggy-carter'],
+    ['Captain Carter', 'peggy-carter-captain-carter'],
+  ],
+  'cassie-lang': [
+    ['Cassie Lang', 'cassie-lang'],
+    ['Maskiert', 'cassie-lang-masked'],
+  ],
+  'agatha-harkness': [
+    ['WandaVision', 'agatha-harkness'],
+    ['Agathas Zirkel', 'agatha-harkness-coven'],
+  ],
+  'america-chavez': [
+    ['Kamar-Taj', 'america-chavez'],
+    ['Zivil', 'america-chavez-civil'],
+  ],
+  'bullseye': [
+    ['Maskiert', 'bullseye'],
+    ['Unmaskiert', 'bullseye-unmasked'],
+  ],
+  'stephen-strange': [
+    ['Doctor Strange', 'stephen-strange'],
+    ['Zombie', 'stephen-strange-zombie'],
+    ['Oberster Zauberer', 'stephen-strange-oberster-zauberer'],
+  ],
+  'g-iah': [
+    ['Mensch', 'g-iah'],
+    ['Skrull', 'g-iah-skrull'],
+  ],
+  'kurse': [
+    ['Kurse', 'kurse'],
+    ['Dunkelelf', 'kurse-dark-elf'],
+  ],
+  'mantis': [
+    ['Guardians', 'mantis'],
+    ['Vol. 3', 'mantis-vol-3'],
+  ],
+  'valkyrie': [
+    ['Ragnarok', 'valkyrie'],
+    ['Asgard-Panzer', 'valkyrie-armor'],
+  ],
+  'joaquin-torres-falcon': [
+    ['Falcon', 'joaquin-torres-falcon'],
+    ['Im Flug', 'joaquin-torres-falcon-flight'],
+  ],
+  'stakar-ogord': [
+    ['Stakar Ogord', 'stakar-ogord'],
+    ['Starhawk', 'stakar-ogord-starhawk'],
+  ],
+  'ulysses-klaue': [
+    ['Age of Ultron', 'ulysses-klaue'],
+    ['Black Panther', 'ulysses-klaue-black-panther'],
+  ],
+  'arnim-zola': [
+    ['Standard', 'arnim-zola'],
+    ['Künstliche Intelligenz', 'arnim-zola-kuenstliche-intelligenz'],
+  ],
+  'sandman': [
+    ['Standard', 'sandman'],
+    ['Zivil', 'sandman-zivil'],
+  ],
+  'hank-pym': [
+    ['Standard', 'hank-pym'],
+    ['Quantum Suit', 'hank-pym-quantum-suit'],
+  ],
+  'okoye': [
+    ['Standard', 'okoye'],
+    ['Midnight Angel', 'okoye-midnight-angel'],
+  ],
+  'skurge': [
+    ['Standard', 'skurge'],
+    ['Mit Zer und Stör', 'skurge-mit-zer-und-stoer'],
   ],
 };
 
@@ -538,11 +663,22 @@ const FULLSIZE_SCALE = {
   'miss-minutes': 0.36,
   'dogpool': 0.38,
   'groot-baby': 0.4,
+  'throg': 0.3,
+  'lylla': 0.42,
+  'floor': 0.45,
+  'morris': 0.5,
+  'cosmo': 0.55,
+  'h-e-r-b-i-e': 0.6,
+  'teefs': 0.62,
   'rocket': 0.64,
   'gamora-kid': 0.72,
   'darren-cross-modok': 0.73,
+  'darren-cross-modok-masked': 0.73,
   'sprite': 0.82,
+  'phyla-vell': 0.85,
   'america-chavez': 0.9,
+  'america-chavez-civil': 0.9,
+  'veb': 0.92,
 
   // Deutlich größer als ein Mensch
   'drax': 1.05,
@@ -555,14 +691,24 @@ const FULLSIZE_SCALE = {
   'volstagg': 1.06,
   'groot-teenager': 1.06,
   'tony-stark-mark-1': 1.08,
+  'tony-stark-mark-38': 1.15,
+  'groot-king': 1.15,
   'riri-williams-mark-1': 1.05,
   'hank-mccoy-beast': 1.08,
   'ivan-vanko-whiplash-mark-2': 1.1,
   'jennifer-walters-she-hulk': 1.1,
   'ben-grimm-the-thing': 1.12,
+  'colossus': 1.16,
+  'juggernaut': 1.12,
+  'hercules': 1.06,
+  'piledriver': 1.05,
+  'eros-starfox': 1.02,
   'ronan': 1.12,
   'ultron': 1.15,
   'bill-foster-masked': 1.12,
+  'rintrah': 1.14,
+  'kro': 1.15,
+  'kurse': 1.18,
   'eitri': 1.15,
   'laufey': 1.15,
   'cull-obsidian': 1.2,
@@ -572,7 +718,7 @@ const FULLSIZE_SCALE = {
   'korg': 1.18,
   'groot': 1.18,
   'groot-vol-3': 1.18,
-  'obadiah-stane': 1.2,
+  'obadiah-stane-iron-monger': 1.2,
   'sandman': 1.2,
   'thanos': 1.2,
   'thanos-armor': 1.2,
@@ -586,10 +732,45 @@ const FULLSIZE_SCALE = {
   'emil-blonsky-abomination-2008': 1.22,
 
   // Jenseits jeder Skala, deshalb am oberen Anschlag
+  'dormammu': 1.22,
   'khonshu': 1.22,
   'galactus': 1.22,
   'surtur': 1.22,
+  'arishem': 1.22,
+  'tiamut': 1.22,
+  'nezarr': 1.22,
+  'eson': 1.22,
+  'jemiah': 1.22,
+  'alioth': 1.22,
 };
+
+/* ---------- Feinkorrektur je Bild ----------
+
+   Die Körpergröße oben beschreibt die Figur, nicht ihre Datei. Die
+   meisten Vorlagen zeigen eine Figur ruhig stehend, manche aber nicht:
+   Ein Sprung, ein wehender Umhang oder ein Sockel macht die Datei höher
+   als die Figur selbst, und weil der Rahmen die Datei misst, steht die
+   Figur darin zu klein. Umgekehrt wirkt eine breite Flugpose zu groß.
+   FULLSIZE_FIT gleicht genau das aus, als Faktor auf die Körpergröße.
+   Ohne Eintrag gilt 1.0, dann ist am Bild nichts zu korrigieren.
+
+   Zwei getrennte Zahlen statt einer, weil sie zwei verschiedene Dinge
+   sagen. Stünde für Rocket am Ende 0.71 in einer einzigen Liste, wüsste
+   später niemand mehr, ob er gewachsen ist oder ob nur sein Bild zu viel
+   Luft hatte. Der Schlüssel ist wie oben der Dateiname, gepflegt wird
+   die Liste im Bildstudio.
+
+   Auf der Seite zählt das Produkt aus beidem, und mehr als 1.22 kann es
+   nicht werden: Da ist der Rahmen voll. */
+const FULLSIZE_FIT = {
+  'skurge': 1.1,
+};
+
+/* Was am Ende in den Rahmen geht: Körpergröße mal Feinkorrektur. */
+function fullsizeScale(file) {
+  const wert = (FULLSIZE_SCALE[file] || 1) * (FULLSIZE_FIT[file] || 1);
+  return Math.min(1.22, Math.round(wert * 1000) / 1000);
+}
 
 /* In data.js heißt jede Figur "Realname / Heldenname". Überschriften
    zeigen den Realnamen, die Rollenzeile darunter die Heldennamen. Der

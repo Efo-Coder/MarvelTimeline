@@ -68,7 +68,7 @@ const CHAR_FACTS = {
     status: 'Am Leben',
   },
   'johann-schmidt-red-skull': {
-    origin: 'Deutschland',
+    origin: 'Nazi German',
     species: 'Mensch',
     teams: ['HYDRA', 'Schutzstaffel'],
     status: 'Am Leben',
@@ -89,6 +89,12 @@ const CHAR_FACTS = {
     origin: 'Switzerland',
     species: 'Mensch (früher)',
     teams: ['S.H.I.E.L.D.', 'HYDRA', 'Sturmabteilung', 'Schutzstaffel'],
+    status: 'Verstorben',
+  },
+  'chester-phillips': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['S.H.I.E.L.D.', 'SSR', '107th Infantry Regiment'],
     status: 'Verstorben',
   },
   'carol-danvers': {
@@ -133,14 +139,16 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'phil-coulson': {
-    origin: 'Manitowoc, Wisconsin',
+    origin: 'USA',
     species: 'Mensch (Cyborg)',
-    height: '1,83 m',
     teams: ['Avengers Initiative', 'S.H.I.E.L.D.', 'Project T.A.H.I.T.I', 'Coulson\'s Team'],
     status: 'Verstorben',
   },
   'ronan': {
-    status: 'Am Leben',
+    origin: 'Hala',
+    species: 'Kree',
+    teams: ['Accusers'],
+    status: 'Verstorben',
   },
   'tony-stark': {
     origin: 'Manhattan, New York City, New York',
@@ -191,9 +199,14 @@ const CHAR_FACTS = {
   'ivan-vanko-whiplash': {
     origin: 'Sowjetunion',
     species: 'Mensch',
-    height: '1,80 m',
     teams: ['Hammer Industries'],
     status: 'Verstorben',
+  },
+  'justin-hammer': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['US-Verteidigungsministerium', 'Hammer Industries'],
+    status: 'Am Leben',
   },
   'bruce-banner': {
     origin: 'USA',
@@ -241,7 +254,6 @@ const CHAR_FACTS = {
   'jane-foster': {
     origin: 'USA',
     species: 'Mensch',
-    height: '1,60 m',
     teams: ['S.H.I.E.L.D.'],
     status: 'Verstorben',
   },
@@ -324,7 +336,16 @@ const CHAR_FACTS = {
     teams: ['S.H.I.E.L.D.', 'Stark Industries', 'Nick Fury\'s Crew'],
     status: 'Verstorben',
   },
+  'der-andere': {
+    status: 'Am Leben',
+  },
   'malekith': {
+    origin: 'Svartalfheim',
+    species: 'Dunkelelf',
+    teams: ['Dunkelelfen'],
+    status: 'Verstorben',
+  },
+  'kurse': {
     origin: 'Svartalfheim',
     species: 'Dunkelelf',
     teams: ['Dunkelelfen'],
@@ -348,9 +369,8 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'trevor-slattery': {
-    origin: 'Liverpool, England, United Kingdom',
+    origin: 'Großbritannien',
     species: 'Mensch',
-    height: '1,73 m',
     teams: ['A.I.M', 'Ta Lo Armed Forces'],
     status: 'Am Leben',
   },
@@ -376,7 +396,6 @@ const CHAR_FACTS = {
   'wanda-maximoff': {
     origin: 'Sokovia',
     species: 'Mensch',
-    height: '1,68 m',
     teams: ['Avengers', 'HYDRA'],
     status: 'Verstorben',
   },
@@ -427,6 +446,11 @@ const CHAR_FACTS = {
     teams: ['Guardians of the Galaxy', 'Ravagers', 'Stakar Ogord\'s Team', 'Yondu Ravager Clan'],
     status: 'Verstorben',
   },
+  'kraglin': {
+    origin: 'Xandar',
+    species: 'Xandarian',
+    status: 'Am Leben',
+  },
   'nebula': {
     species: 'Luphomoid (Cyborg)',
     teams: ['Avengers', 'Guardians of the Galaxy'],
@@ -436,6 +460,10 @@ const CHAR_FACTS = {
     origin: 'Duckworldian',
     species: 'Duckworldian',
     teams: ['Knowhere', 'Fomerly', 'Collector'],
+    status: 'Am Leben',
+  },
+  'eson': {
+    species: 'Celestial',
     status: 'Am Leben',
   },
   'ego': {
@@ -459,9 +487,19 @@ const CHAR_FACTS = {
     teams: ['Ravagers', 'Stakar Ravager Clan', 'Stakar Ogord\'s Team', 'United Ravagers'],
     status: 'Am Leben',
   },
+  'krugarr': {
+    species: 'Lem',
+    teams: ['Ravagers', 'Stakar Ogord\'s Team', 'United Ravagers'],
+    status: 'Am Leben',
+  },
   'ayesha': {
     species: 'Sovereign',
     status: 'Verstorben',
+  },
+  'martinex': {
+    species: 'Pluvian',
+    teams: ['Ravagers', 'Stakar Ravager Clan', 'Stakar Ogord\'s Team', 'United Ravagers'],
+    status: 'Am Leben',
   },
   'ultron': {
     species: 'Roboter (früher Künstliche Intelligenz)',
@@ -477,6 +515,12 @@ const CHAR_FACTS = {
     origin: 'Deutschland',
     species: 'Mensch',
     teams: ['HYDRA', 'Project Destroyer of Worlds'],
+    status: 'Verstorben',
+  },
+  'ulysses-klaue': {
+    origin: 'Belgian',
+    species: 'Mensch (Cyborg)',
+    teams: ['Intelligencia'],
     status: 'Verstorben',
   },
   'scott-lang': {
@@ -521,7 +565,7 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'peter-parker': {
-    origin: 'Queens, New York City, New York, Erde',
+    origin: 'USA',
     species: 'Mensch',
     teams: ['Avengers', 'Stark Industries'],
     status: 'Am Leben',
@@ -553,7 +597,6 @@ const CHAR_FACTS = {
   'yelena-belova': {
     origin: 'Sowjetunion',
     species: 'Mensch',
-    height: '1,65 m',
     teams: ['New Avengers', 'Red Room', 'West Chesapeake Valley Thunderbolts', 'Black Widows'],
     status: 'Am Leben',
   },
@@ -642,6 +685,7 @@ const CHAR_FACTS = {
   'scorpion': {
     origin: 'USA',
     species: 'Mensch',
+    height: '1,68 m',
     status: 'Am Leben',
   },
   'ned-leeds': {
@@ -654,6 +698,12 @@ const CHAR_FACTS = {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Peter Pan Donut & Pastry Shop'],
+    status: 'Am Leben',
+  },
+  'shocker': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Bestman Salvage', 'Adrian Toomes\' Crew'],
     status: 'Am Leben',
   },
   'stephen-strange': {
@@ -686,6 +736,12 @@ const CHAR_FACTS = {
     teams: ['Masters of the Mystic Arts', 'Zealots'],
     status: 'Am Leben',
   },
+  'dormammu': {
+    origin: 'Dark Dimension',
+    species: 'Faltine',
+    teams: ['Zealots'],
+    status: 'Am Leben',
+  },
   'christine-palmer': {
     origin: 'USA',
     species: 'Mensch',
@@ -698,7 +754,7 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'valkyrie': {
-    origin: 'Asgard',
+    origin: 'City of Asgard, Asgard',
     species: 'Asgardier',
     teams: ['Revengers', 'Valkyrie', 'Sakaaran Scrappers'],
     status: 'Am Leben',
@@ -743,7 +799,6 @@ const CHAR_FACTS = {
     status: 'Am Leben',
   },
   'ebony-maw': {
-    species: 'Außerirdischer',
     teams: ['Black Order'],
     status: 'Verstorben',
   },
@@ -758,7 +813,6 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'cull-obsidian': {
-    species: 'Außerirdischer; later turned into a Cyborg',
     teams: ['Black Order'],
     status: 'Verstorben',
   },
@@ -798,6 +852,19 @@ const CHAR_FACTS = {
   'der-da-bleibt': {
     status: 'Am Leben',
   },
+  'throg': {
+    origin: 'Asgard',
+    species: 'Asgardier/',
+    status: 'Am Leben',
+  },
+  'alioth': {
+    status: 'Am Leben',
+  },
+  'white-vision': {
+    species: 'Synthezoid',
+    teams: ['S.W.O.R.D'],
+    status: 'Am Leben',
+  },
   'agatha-harkness': {
     origin: 'England',
     species: 'Mensch Ghost',
@@ -821,6 +888,12 @@ const CHAR_FACTS = {
     species: 'Mensch',
     teams: ['Hokey Pokey Bowl', 'Agatha Harkness\' Coven'],
     status: 'Am Leben',
+  },
+  'mrs-hart': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Westview Historical Society', 'Agatha Harkness\' Coven'],
+    status: 'Verstorben',
   },
   'shang-chi': {
     origin: 'China',
@@ -868,6 +941,12 @@ const CHAR_FACTS = {
     teams: ['Ten Rings'],
     status: 'Verstorben',
   },
+  'morris': {
+    origin: 'Ta Lo',
+    species: 'Dijiang',
+    teams: ['Ta Lo', 'Trevor Slattery'],
+    status: 'Am Leben',
+  },
   'john-walker': {
     origin: 'Custer\'s Grove, Georgia',
     species: 'Mensch',
@@ -904,6 +983,12 @@ const CHAR_FACTS = {
     species: 'Mensch',
     teams: ['Stark Industries', 'Quentin Beck\'s Crew'],
     status: 'Verstorben',
+  },
+  'j-jonah-jameson': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['The Daily Bugle'],
+    status: 'Am Leben',
   },
   'sersi': {
     origin: 'World Forge',
@@ -959,6 +1044,34 @@ const CHAR_FACTS = {
     teams: ['Arishem the Judge'],
     status: 'Verstorben',
   },
+  'kro': {
+    species: 'Deviant',
+    teams: ['Deviant'],
+    status: 'Verstorben',
+  },
+  'arishem': {
+    species: 'Celestial',
+    teams: ['Celestials'],
+    status: 'Am Leben',
+  },
+  'tiamut': {
+    species: 'Celestial',
+    status: 'Verstorben',
+  },
+  'nezarr': {
+    species: 'Celestial',
+    status: 'Am Leben',
+  },
+  'eros-starfox': {
+    origin: 'Titan',
+    species: 'Eternal',
+    teams: ['Titan Royal Family'],
+    status: 'Am Leben',
+  },
+  'jemiah': {
+    species: 'Celestial',
+    status: 'Am Leben',
+  },
   'green-goblin': {
     origin: 'USA',
     species: 'Mensch',
@@ -975,6 +1088,11 @@ const CHAR_FACTS = {
     status: 'Am Leben',
   },
   'curt-connors': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'sandman': {
     origin: 'USA',
     species: 'Mensch',
     status: 'Am Leben',
@@ -1002,6 +1120,22 @@ const CHAR_FACTS = {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Fantastic Four', 'ReedTech', 'American National Space Agency', 'Future Foundation'],
+    status: 'Am Leben',
+  },
+  'black-bolt': {
+    origin: 'Attilan',
+    species: 'Inhuman',
+    teams: ['Inhuman Royal Family'],
+    status: 'Am Leben',
+  },
+  'clea': {
+    origin: 'Dark Dimension',
+    species: 'Dark Dimensional sorceress',
+    status: 'Am Leben',
+  },
+  'rintrah': {
+    species: 'R\'Vaalian',
+    teams: ['Masters of the Mystic Arts'],
     status: 'Am Leben',
   },
   'kate-bishop': {
@@ -1056,6 +1190,28 @@ const CHAR_FACTS = {
   'remy-lebeau-gambit': {
     species: 'Mutant',
     teams: ['Widerstand'],
+    status: 'Am Leben',
+  },
+  'juggernaut': {
+    origin: 'USA',
+    species: 'Mutant',
+    teams: ['Cassandra Nova\'s Henchmen'],
+    status: 'Verstorben',
+  },
+  'toad': {
+    species: 'Mutant',
+    teams: ['Cassandra Nova\'s Henchmen'],
+    status: 'Verstorben',
+  },
+  'azazel': {
+    species: 'Mutant',
+    teams: ['Cassandra Nova\'s Henchmen'],
+    status: 'Verstorben',
+  },
+  'colossus': {
+    origin: 'Sowjetunion',
+    species: 'Mutant',
+    teams: ['X-Men'],
     status: 'Am Leben',
   },
   'marc-spector-steven-grant-moon-knight': {
@@ -1114,6 +1270,16 @@ const CHAR_FACTS = {
     species: 'Mensch Hybrid',
     status: 'Am Leben',
   },
+  'aamir-khan': {
+    origin: 'Pakistan',
+    species: 'Mensch Hybrid',
+    status: 'Am Leben',
+  },
+  'sana-ali': {
+    origin: 'British Indian',
+    species: 'Mensch Hybrid',
+    status: 'Am Leben',
+  },
   'gorr': {
     origin: 'unbekannte Welt',
     species: 'Unidentified Außerirdischer',
@@ -1124,10 +1290,13 @@ const CHAR_FACTS = {
     teams: ['Council of Godheads'],
     status: 'Am Leben',
   },
+  'hercules': {
+    species: 'Olympier',
+    status: 'Am Leben',
+  },
   'jennifer-walters-she-hulk': {
     origin: 'USA',
     species: 'Mensch',
-    height: '2,01 m',
     teams: ['UCLA', 'Los Angeles County District Attorney\'s Office', 'Goodman, Lieber, Kurtzberg & Holliway', 'Abomaste'],
     status: 'Am Leben',
   },
@@ -1141,6 +1310,12 @@ const CHAR_FACTS = {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Titania Worldwide'],
+    status: 'Am Leben',
+  },
+  'piledriver': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Wrecking Crew', 'Intelligencia'],
     status: 'Am Leben',
   },
   'namor': {
@@ -1171,6 +1346,16 @@ const CHAR_FACTS = {
     teams: ['Council of Kangs', 'Kang\'s Empire'],
     status: 'Verstorben',
   },
+  'rama-tut': {
+    origin: 'Ancient Egyptian',
+    species: 'Mensch',
+    teams: ['Council of Kangs'],
+    status: 'Am Leben',
+  },
+  'veb': {
+    teams: ['Freedom Fighters'],
+    status: 'Am Leben',
+  },
   'high-evolutionary': {
     species: 'Cyborg',
     teams: ['OrgoCorp'],
@@ -1178,6 +1363,35 @@ const CHAR_FACTS = {
   },
   'adam-warlock': {
     species: 'Sovereign',
+    teams: ['Guardians of the Galaxy'],
+    status: 'Am Leben',
+  },
+  'cosmo': {
+    origin: 'Russland',
+    species: 'Hund',
+    teams: ['Guardians of the Galaxy'],
+    status: 'Am Leben',
+  },
+  'lylla': {
+    origin: 'Erde',
+    species: 'Halfworlder (Evolved )',
+    teams: ['Batch 89'],
+    status: 'Verstorben',
+  },
+  'teefs': {
+    origin: 'Erde',
+    species: 'Halfworlder (Evolved )',
+    teams: ['Batch 89'],
+    status: 'Verstorben',
+  },
+  'floor': {
+    origin: 'Erde',
+    species: 'Halfworlder (Evolved Rabbit)',
+    teams: ['Batch 89'],
+    status: 'Verstorben',
+  },
+  'phyla-vell': {
+    species: 'Star Child (evolved Fish)',
     teams: ['Guardians of the Galaxy'],
     status: 'Am Leben',
   },
@@ -1207,11 +1421,10 @@ const CHAR_FACTS = {
   'chula': {
     origin: 'Choctaw Nation of Oklahoma',
     species: 'Mensch',
-    teams: ['Choctaw', 'US-Post'],
     status: 'Am Leben',
   },
   'bonnie': {
-    origin: 'USA',
+    origin: 'Choctaw Nation of Oklahoma',
     species: 'Mensch',
     teams: ['Choctaw', 'Tamaha Fire Department'],
     status: 'Am Leben',
@@ -1257,9 +1470,8 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'bullseye': {
-    origin: 'Portsmouth, New Hampshire',
+    origin: 'USA',
     species: 'Mensch',
-    height: '1,83 m',
     teams: ['Lyndhurst Home for Boys', 'Brooklyn Suicide Prevention Center', 'FBI', 'CIA'],
     status: 'Am Leben',
   },
@@ -1281,9 +1493,8 @@ const CHAR_FACTS = {
     status: 'Verstorben',
   },
   'karen-page': {
-    origin: 'Fagan Corners, Vermont',
+    origin: 'USA',
     species: 'Mensch',
-    height: '1,75 m',
     teams: ['Penny\'s Place', 'Union Allied Construction', 'Nelson and Murdock', 'New York Bulletin'],
     status: 'Am Leben',
   },
@@ -1303,8 +1514,7 @@ const CHAR_FACTS = {
   'white-tiger': {
     origin: 'Puerto Rico',
     species: 'Mensch',
-    teams: ['Daredevil\'s Army'],
-    status: 'Am Leben',
+    status: 'Verstorben',
   },
   'parker-robbins-the-hood': {
     origin: 'USA',
@@ -1320,7 +1530,6 @@ const CHAR_FACTS = {
   'ezekiel-stane': {
     origin: 'USA',
     species: 'Mensch',
-    teams: ['Parker Robbins', 'Riri Williams'],
     status: 'Am Leben',
   },
   'mephisto': {
@@ -1364,6 +1573,9 @@ const CHAR_FACTS = {
     species: 'Mensch',
     status: 'Am Leben',
   },
+  'h-e-r-b-i-e': {
+    status: 'Am Leben',
+  },
   'simon-williams': {
     origin: 'USA',
     species: 'Mensch',
@@ -1376,8 +1588,14 @@ const CHAR_FACTS = {
   'jessica-jones': {
     origin: 'USA',
     species: 'Mensch',
-    height: '1,75 m',
     teams: ['Defenders', 'Alias Investigations', 'Daredevil\'s Army'],
+    status: 'Am Leben',
+  },
+  'elektra': {
+    origin: 'East Asia',
+    species: 'Mensch',
+    height: '1,70 m',
+    teams: ['Chaste', 'Hand'],
     status: 'Am Leben',
   },
   'jocasta-angekuendigt': {
@@ -1431,6 +1649,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Supersoldaten-Serum', 'Vibranium-Arm', 'Scharfschütze'],
   },
   'johann-schmidt-red-skull': {
+    origin: 'Deutschland',
     species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
     height: '1,88 m',
     powers: ['unfertiges Supersoldaten-Serum', 'Waffen aus Tesserakt-Energie', 'Wächter des Seelensteins'],
@@ -1491,6 +1710,8 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Personenschutz', 'Boxen', 'Leitung der Stark-Sicherheit'],
   },
   'phil-coulson': {
+    origin: 'Manitowoc, Wisconsin',
+    height: '1,83 m',
     powers: ['S.H.I.E.L.D.-Agent', 'Destroyer-Kanone', 'Ruhe in jeder Lage'],
   },
   'raza': {
@@ -1498,7 +1719,15 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Befehl über die Zehn Ringe in Afghanistan', 'Arsenal aus Stark-Waffen'],
   },
   'ivan-vanko-whiplash': {
+    height: '1,80 m',
     powers: ['nachgebauter Arc-Reaktor', 'Elektropeitschen', 'Physiker'],
+  },
+  'justin-hammer': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Hammer Industries', 'Verteidigungsministerium'],
+    status: 'Am Leben',
+    powers: ['Rüstungsunternehmer', 'Hammer-Drohnen', 'Ex-Wife-Rakete'],
   },
   'betty-ross': {
     height: '1,75 m',
@@ -1531,6 +1760,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Illusionen und Gestaltwandel', 'Magie', 'Zeitkontrolle als Hüter'],
   },
   'jane-foster': {
+    height: '1,60 m',
     powers: ['Astrophysikerin', 'als Mighty Thor Trägerin des Mjölnir', 'Einstein-Rosen-Brücken'],
   },
   'odin': {
@@ -1606,6 +1836,8 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Extremis-Virus', 'Hitze aus bloßer Hand', 'Gründer von A.I.M.'],
   },
   'trevor-slattery': {
+    origin: 'Liverpool, England',
+    height: '1,73 m',
     powers: ['Schauspieler', 'Gesicht des falschen Mandarin', 'Bühnenpräsenz'],
   },
   'sam-wilson': {
@@ -1617,6 +1849,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Leitung des Weltsicherheitsrats', 'HYDRA an der Spitze von S.H.I.E.L.D.', 'Projekt Einsicht'],
   },
   'crossbones': {
+    height: '1,83 m',
     powers: ['Nahkampf', 'Panzerhandschuhe', 'STRIKE-Einheit'],
   },
   'pietro-maximoff': {
@@ -1625,6 +1858,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Überschallgeschwindigkeit', 'schnelle Heilung', 'Nahkampf im Lauf'],
   },
   'wanda-maximoff': {
+    height: '1,68 m',
     powers: ['Chaosmagie', 'Telekinese', 'Realität formen'],
   },
   'peter-quill': {
@@ -1654,6 +1888,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Yaka-Pfeil per Pfiff', 'Anführer der Ravager', 'Nahkampf'],
   },
   'ronan': {
+    status: 'Verstorben',
     species: 'Kree',
     origin: 'Hala',
     teams: ['Kree-Imperium', 'Accuser Corps'],
@@ -1723,6 +1958,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Herzförmiges Kraut', 'Vibranium-Anzug', 'Wakandas Thron'],
   },
   'peter-parker': {
+    origin: 'Queens, New York City, New York',
     species: 'Mensch, durch einen Spinnenbiss verändert',
     height: '1,78 m',
     powers: ['Wandhaftung', 'Spinnensinn', 'Netzschleudern'],
@@ -1746,6 +1982,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Wissenschaftlerin des Roten Raums', 'chemische Gedankenkontrolle', 'im Roten Raum ausgebildet'],
   },
   'taskmaster': {
+    origin: 'Russland',
     height: '1,73 m',
     powers: ['ahmt jede Bewegung nach', 'Schild, Bogen und Schwert', 'Photonenkopie im Helm'],
   },
@@ -1830,11 +2067,19 @@ const CHAR_FACTS_EXTRA = {
     height: '1,80 m',
     powers: ['Zauberklingen', 'Raum falten', 'Kraft von Dormammu'],
   },
+  'dormammu': {
+    origin: 'Dunkle Dimension',
+    species: 'Faltine',
+    teams: ['Zeloten'],
+    height: 'füllt den Himmel',
+    powers: ['Magie der Dunklen Dimension', 'verschlingt ganze Dimensionen', 'unsterblich außerhalb der Zeit'],
+  },
   'hela': {
     height: '1,73 m',
     powers: ['erschafft Klingen aus dem Nichts', 'zieht Kraft aus Asgard', 'Göttin des Todes'],
   },
   'valkyrie': {
+    origin: 'Asgard',
     height: '1,73 m',
     powers: ['asgardische Kriegerin', 'Dragonfang', 'König von Neu-Asgard'],
   },
@@ -1863,6 +2108,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Phasen durch feste Materie', 'Quantenschwankung im Körper', 'Nahkampf'],
   },
   'yelena-belova': {
+    height: '1,65 m',
     powers: ['Nahkampf und Spionage', 'im Roten Raum ausgebildet', 'Präzisionswaffen'],
   },
 
@@ -2006,6 +2252,13 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Sinister Six'],
     powers: ['Herrschaft über Strom', 'Körper aus Energie', 'saugt jedes Netz leer'],
   },
+  'sandman': {
+    origin: 'USA',
+    species: 'Mensch, verwandelt durch einen Teilchenbeschleuniger',
+    teams: ['Sinister Six'],
+    status: 'Am Leben',
+    powers: ['Körper aus Sand', 'wächst zum Sandriesen', 'Sandstürme'],
+  },
   'curt-connors': {
     species: 'Mensch, verwandelt durch Reptilien-Serum',
     height: '1,80 m',
@@ -2139,6 +2392,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Blitzbündel Thunderbolt', 'Herrscher über den Götterrat', 'nahezu unsterblich'],
   },
   'jennifer-walters-she-hulk': {
+    height: '2,01 m',
     species: 'Mensch, durch Gammablut verwandelt',
     powers: ['Verwandlung in She-Hulk mit klarem Kopf', 'übermenschliche Kraft', 'Anwältin für Übermenschen'],
   },
@@ -2214,6 +2468,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Präsident der USA', 'Oberbefehl über die Streitkräfte'],
   },
   'chula': {
+    teams: ['Choctaw', 'US-Post'],
     height: '1,68 m',
     powers: ['Wissen der Choctaw-Ahnen', 'Heilkunde', 'Zusammenhalt der Familie'],
   },
@@ -2261,6 +2516,8 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Flügelanzug', 'Ausbildung bei der Air Force', 'Aufklärung aus der Luft'],
   },
   'bullseye': {
+    origin: 'Portsmouth, New Hampshire',
+    height: '1,83 m',
     powers: ['trifft mit jedem Gegenstand', 'FBI-Scharfschütze', 'Nahkampf'],
   },
   'frank-castle-punisher': {
@@ -2277,6 +2534,8 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Kunstwerke aus dem Blut seiner Opfer', 'Nahkampf', 'kennt jeden Winkel der Stadt'],
   },
   'karen-page': {
+    origin: 'Fagan Corners, Vermont',
+    height: '1,75 m',
     powers: ['Recherche im Investigativjournalismus', 'Kanzleiarbeit', 'sucht die Wahrheit hinter jeder Akte'],
   },
   'connor-powell': {
@@ -2287,6 +2546,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Polizist der Anti-Vigilanten-Einheit', 'Ermittlungsarbeit'],
   },
   'white-tiger': {
+    teams: ['Daredevils Truppe'],
     height: '1,78 m',
     powers: ['Tigeramulett', 'Kampfkunst', 'übermenschliche Reflexe'],
   },
@@ -2364,6 +2624,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Regie einer Neuverfilmung', 'Einfluss auf jede Besetzung'],
   },
   'jessica-jones': {
+    height: '1,75 m',
     powers: ['übermenschliche Kraft', 'Privatdetektivin', 'Sprünge über mehrere Stockwerke'],
   },
   'jocasta-angekuendigt': {
@@ -2408,6 +2669,7 @@ const CHAR_FACTS_EXTRA = {
     powers: ['Wachstum auf über sieben Meter', 'Biochemiker von Rang', 'Pym-Partikel'],
   },
   'ebony-maw': {
+    species: 'Außerirdischer',
     origin: 'unbekannte Welt',
     height: '1,88 m',
     powers: ['Telekinese', 'Manipulation von Materie', 'Redekunst'],
@@ -2473,6 +2735,270 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Ta Lo'],
     height: '1,63 m',
     powers: ['Kampfkunst von Ta Lo', 'Waffen aus Drachenschuppen', 'Hüterin des Dunklen Tors'],
+  },
+  'black-bolt': {
+    species: 'Inhuman',
+    height: '1,88 m',
+    teams: ['Illuminati', 'Königsfamilie der Inhumans'],
+    status: 'Verstorben',
+    powers: ['zerstörerische Stimme', 'Flug', 'übermenschliche Kraft'],
+  },
+  'clea': {
+    origin: 'Dunkle Dimension',
+    species: 'Zauberin der Dunklen Dimension',
+    height: '1,77 m',
+    powers: ['Portale zwischen den Dimensionen', 'mystische Künste', 'Nichte von Dormammu'],
+  },
+  'chester-phillips': {
+    height: '1,85 m',
+    teams: ['SSR', 'S.H.I.E.L.D.', 'US-Armee'],
+    powers: ['Kommando über die SSR', 'Taktik', 'Mitgründer von S.H.I.E.L.D.'],
+  },
+  'kurse': {
+    origin: 'Svartalfheim',
+    species: 'Dunkelelf, zum Kursed umgeformt',
+    height: '2,29 m',
+    powers: ['übermenschliche Kraft', 'Armklingen', 'nahezu unverwundbar'],
+  },
+  'kraglin': {
+    origin: 'Xandar',
+    species: 'Xandarianer',
+    height: '1,80 m',
+    teams: ['Guardians of the Galaxy', 'Ravagers'],
+    powers: ['Yaka-Pfeil', 'Pilot', 'Nahkampf'],
+  },
+  'krugarr': {
+    origin: 'unbekannte Welt',
+    species: 'Lem',
+    teams: ['Ravagers', 'United Ravagers'],
+    powers: ['mystische Künste', 'Portale', 'Energieschilde'],
+  },
+  'kro': {
+    origin: 'Erde',
+    species: 'Deviant',
+    height: '2,44 m',
+    teams: ['Deviants'],
+    powers: ['Kräfte getöteter Eternals', 'Klauen und Ranken', 'Selbstheilung'],
+  },
+  'rintrah': {
+    origin: "R'Vaal",
+    species: "R'Vaalianer",
+    height: '2,13 m',
+    teams: ['Meister der mystischen Künste'],
+    powers: ['mystische Künste', 'Schutzschilde', 'Portale'],
+  },
+  'rama-tut': {
+    origin: 'Altes Ägypten',
+    species: 'Mensch aus dem 31. Jahrhundert',
+    teams: ['Rat der Kangs'],
+    powers: ['Technik aus der Zukunft', 'Zeitreise', 'Herrschaft über eine Epoche'],
+  },
+  'white-vision': {
+    species: 'Synthezoid ohne Gedankenstein',
+    height: '1,91 m',
+    teams: ['S.W.O.R.D.'],
+    powers: ['Dichteveränderung', 'Flug', 'Energiestrahl', 'Vibranium-Körper'],
+  },
+  'aamir-khan': {
+    origin: 'Jersey City, New Jersey',
+    species: 'Mensch',
+    height: '1,80 m',
+    powers: ['keine, Familie der Khans'],
+  },
+  'sana-ali': {
+    origin: 'Karatschi, Pakistan',
+    species: 'Mensch',
+    height: '1,55 m',
+    powers: ['sieht das Muster aus Sternen', 'Hüterin der Familiengeschichte'],
+  },
+  'mrs-hart': {
+    origin: 'Westview, New Jersey',
+    species: 'Mensch',
+    height: '1,55 m',
+    teams: ['Westview Historical Society', 'Agathas Zirkel'],
+    powers: ['keine, vom Hex in ihre Rolle gezwungen'],
+  },
+  'juggernaut': {
+    origin: 'die Leere',
+    species: 'Mutant',
+    height: '2,03 m',
+    teams: ['Cassandra Novas Gefolge'],
+    powers: ['unaufhaltsamer Ansturm', 'übermenschliche Kraft', 'Helm schützt vor Telepathie'],
+  },
+  'arishem': {
+    origin: 'die Weltenschmiede',
+    species: 'Celestial',
+    height: 'über 2 km',
+    teams: ['Celestials'],
+    powers: ['erschafft Sterne und Arten', 'baut die Eternals', 'richtet über ganze Welten'],
+  },
+  'tiamut': {
+    origin: 'Erdkern',
+    species: 'Celestial',
+    height: 'über 2 km',
+    teams: ['Celestials'],
+    powers: ['kosmische Energie', 'seine Geburt zerreißt Planeten', 'von Sersi versteinert'],
+  },
+  'nezarr': {
+    origin: 'die Weltenschmiede',
+    species: 'Celestial',
+    height: 'über 2 km',
+    teams: ['Celestials'],
+    powers: ['erschafft Welten', 'kosmische Energie'],
+  },
+  'eros-starfox': {
+    origin: 'Titan',
+    species: 'Eternal',
+    height: '1,78 m',
+    teams: ['Eternals von Titan'],
+    powers: ['beeinflusst Gefühle', 'Raumfahrt', 'Bruder des Thanos'],
+  },
+  'cosmo': {
+    origin: 'Sowjetunion, dann Knowhere',
+    species: 'Hund',
+    teams: ['Guardians of the Galaxy', 'Knowhere'],
+    powers: ['Telekinese', 'Telepathie', 'Raumanzug'],
+  },
+  'lylla': {
+    origin: 'Labor des High Evolutionary',
+    species: 'Otter mit Kybernetik',
+    teams: ['Batch 89'],
+    powers: ['mechanische Vorderbeine', 'Sprache', 'gibt Rocket seinen Namen'],
+  },
+  'teefs': {
+    origin: 'Labor des High Evolutionary',
+    species: 'Walross mit Kybernetik',
+    teams: ['Batch 89'],
+    powers: ['Räder statt Flossen', 'Sprache'],
+  },
+  'floor': {
+    origin: 'Labor des High Evolutionary',
+    species: 'Kaninchen mit Kybernetik',
+    teams: ['Batch 89'],
+    powers: ['Spinnenbeine', 'Sprache'],
+  },
+  'phyla-vell': {
+    origin: 'die Arête',
+    species: 'Kree',
+    teams: ['Guardians of the Galaxy'],
+    powers: ['Kree-Physiologie', 'im Labor des High Evolutionary aufgewachsen'],
+  },
+  'der-andere': {
+    origin: 'unbekannte Welt',
+    species: 'Chitauri',
+    teams: ['Schwarzer Orden', 'Chitauri'],
+    powers: ['spricht für Thanos', 'befehligt die Chitauri'],
+  },
+  'h-e-r-b-i-e': {
+    origin: 'Baxter Building, New York',
+    species: 'Roboter',
+    teams: ['Fantastic Four'],
+    powers: ['Bordrechner', 'ausfahrbare Arme', 'Navigation und Haushalt'],
+  },
+  'hercules': {
+    origin: 'Olymp',
+    species: 'Gott',
+    height: '1,88 m',
+    teams: ['Götter des Olymp'],
+    powers: ['göttliche Kraft', 'goldene Keule', 'Sohn des Zeus'],
+  },
+  'piledriver': {
+    origin: 'USA',
+    species: 'Mensch mit asgardischem Vibranium',
+    teams: ['Wrecking Crew', 'Intelligencia'],
+    powers: ['übermenschliche Kraft in den Fäusten', 'Nahkampf'],
+  },
+  'morris': {
+    origin: 'Ta Lo',
+    species: 'Fabelwesen aus Ta Lo',
+    teams: ['Ta Lo'],
+    powers: ['Flug', 'kennt den Weg durch das Nebellabyrinth', 'gesichtslos'],
+  },
+  'veb': {
+    origin: 'Quantenraum',
+    species: 'Wesen aus dem Quantenraum',
+    teams: ['Freiheitskämpfer'],
+    powers: ['Körper ohne Öffnungen', 'Übersetzungsflüssigkeit', 'formbare Masse'],
+  },
+  'toad': {
+    origin: 'die Leere',
+    species: 'Mutant',
+    teams: ['Cassandra Novas Gefolge'],
+    powers: ['meterlange Zunge', 'Sprungkraft', 'ätzender Speichel'],
+  },
+  'azazel': {
+    origin: 'die Leere',
+    species: 'Mutant',
+    teams: ['Cassandra Novas Gefolge'],
+    powers: ['Teleportation in roter Rauchwolke', 'Greifschwanz als Stichwaffe', 'Schwertkampf'],
+  },
+  'elektra': {
+    origin: 'Griechenland',
+    species: 'Mensch',
+    height: '1,65 m',
+    teams: ['Die Hand', 'Chaste'],
+    powers: ['Kampfkunst', 'zwei Sai', 'als Black Sky ausgebildet'],
+  },
+  'throg': {
+    origin: 'gekappte Zeitlinie',
+    species: 'Asgardier als Frosch',
+    height: '12 cm',
+    powers: ['winziger Mjölnir', 'Donnerkraft', 'würdig'],
+  },
+  'alioth': {
+    origin: 'die Leere am Ende der Zeit',
+    species: 'Wesen aus reiner Zeitenergie',
+    height: 'mehrere Kilometer',
+    powers: ['verschlingt Materie und Zeit', 'unangreifbar', 'Wächter der Leere'],
+  },
+  'colossus': {
+    origin: 'Russland',
+    species: 'Mutant',
+    height: '2,08 m',
+    teams: ['X-Men'],
+    powers: ['Haut aus organischem Stahl', 'übermenschliche Kraft', 'nahezu unverwundbar'],
+  },
+  'eson': {
+    origin: 'unbekannt',
+    species: 'Celestial',
+    height: 'über 2 km',
+    teams: ['Celestials'],
+    powers: ['trägt den Machtstein im Stab', 'löscht ganze Welten', 'kosmische Energie'],
+  },
+  'jemiah': {
+    origin: 'die Weltenschmiede',
+    species: 'Celestial',
+    height: 'über 2 km',
+    teams: ['Celestials'],
+    powers: ['erschafft Welten und Arten', 'kosmische Energie'],
+  },
+  'j-jonah-jameson': {
+    origin: 'New York City, New York',
+    species: 'Mensch',
+    height: '1,80 m',
+    teams: ['TheDailyBugle.net'],
+    powers: ['Reichweite im Netz', 'enthüllt Spider-Mans Identität'],
+  },
+  'martinex': {
+    origin: 'Pluto',
+    species: 'Pluvianer',
+    height: '1,80 m',
+    teams: ['Ravagers', 'United Ravagers'],
+    powers: ['Körper aus Kristall', 'Hitze und Kälte aus den Händen', 'Ravager-Hauptmann'],
+  },
+  'shocker': {
+    origin: 'New York City, New York',
+    species: 'Mensch',
+    height: '1,85 m',
+    teams: ['Adrian Toomes’ Bande'],
+    powers: ['Vibrationshandschuh', 'Chitauri-Technik', 'Nahkampf'],
+  },
+  'ulysses-klaue': {
+    origin: 'Südafrika',
+    species: 'Mensch mit Armprothese',
+    height: '1,75 m',
+    teams: ['Schwarzmarkt', 'Erik Killmongers Plan'],
+    powers: ['Schallkanone im Arm', 'Vibranium-Handel', 'Waffenschmuggel'],
   },
 };
 
