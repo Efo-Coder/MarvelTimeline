@@ -26,6 +26,12 @@
    und später Captain America, Ross wird zum Red Hulk. Verschiedene
    Namen im Verlauf, aber eine Figur mit einer Übersicht.
 
+   Varianten aus anderen Universen oder anderen Zeiten sind eigene
+   Figuren mit eigenem Bild, eigener Biografie und eigenen Auftritten:
+   Die Maria Rambeau der Erde-838 ist nicht dieselbe Frau wie die
+   Pilotin aus Captain Marvel, sie hat nur dasselbe Gesicht. Ihr Name
+   trägt den Zusatz der Herkunft, ihr Dateiname die Kurzform davon.
+
    CHAR_NO_IMAGE sind Platzhalter ohne einzelnes Porträt, sie
    sparen sich den 404-Umweg über den error-Handler. */
 const CHAR_ALIAS = {
@@ -36,6 +42,7 @@ const CHAR_ALIAS = {
   'Herman Schultz / Shocker': 'Shocker',
   'Jemiah der Analytiker': 'Jemiah',
   'Jener der bleibt': 'Der da bleibt',
+  'Michelle Jones-Watson / MJ': 'Michelle Jones-Watson',
   'Nezarr der Rechner': 'Nezarr',
   'Piotr Rasputin / Colossus': 'Colossus',
   'Algrim / Kurse': 'Kurse',
@@ -62,7 +69,6 @@ const CHAR_ALIAS = {
   'Darren Cross / MODOK': 'Darren Cross',
   'Ezekiel Stane / Joe McGillicuddy': 'Ezekiel Stane',
   'Flint Marko / Sandman': 'Sandman',
-  'Gamora (2014)': 'Gamora',
   'General Thaddeus „Thunderbolt“ Ross': 'Thaddeus Ross',
   'General Thaddeus „Thunderbolt“ Ross / Red Hulk': 'Thaddeus Ross',
   'Hector Ayala / White Tiger': 'White Tiger',
@@ -77,7 +83,6 @@ const CHAR_ALIAS = {
   'Norman Osborn / Green Goblin': 'Green Goblin',
   'Obadiah Stane / Iron Monger': 'Obadiah Stane',
   'Otto Octavius / Doctor Octopus': 'Doc Ock',
-  'Peter Parker (Holland, Maguire & Garfield)': 'Peter Parker',
   'Peter Parker / Spider-Man': 'Peter Parker',
   'Peter Quill / Star-Lord': 'Peter Quill',
   'Pietro Maximoff / Quicksilver': 'Pietro Maximoff',
@@ -97,6 +102,24 @@ const CHAR_ALIAS = {
   'Tony Stark / Iron Man': 'Tony Stark',
   'Trevor Slattery / Mandarin': 'Trevor Slattery',
   'Wanda Maximoff / Scarlet Witch': 'Wanda Maximoff',
+  'William Metzger / Bill': 'William Metzger',
+
+  /* Varianten: eigene Figuren, deren Bilder unter der Kurzform der
+     Herkunft liegen. Ohne diese Brücke hieße die Datei
+     "maria-rambeau-captain-marvel-erde-838". */
+  'Maria Rambeau / Captain Marvel (Erde-838)': 'Maria Rambeau 838',
+  'Maria Rambeau / Binary (andere Welt)': 'Maria Rambeau Binary',
+  'Peggy Carter / Captain Carter (Erde-838)': 'Peggy Carter 838',
+  'Reed Richards / Mister Fantastic (Erde-838)': 'Reed Richards 838',
+  'Karl Mordo / Baron Mordo (Erde-838)': 'Karl Mordo 838',
+  'Wanda Maximoff / Scarlet Witch (Erde-838)': 'Wanda Maximoff 838',
+  'Christine Palmer (Erde-838)': 'Christine Palmer 838',
+  'Stephen Strange / Defender Strange (Erde-617)': 'Defender Strange',
+  'Peter Parker / Spider-Man (Maguire)': 'Peter Parker Maguire',
+  'Peter Parker / Spider-Man (Garfield)': 'Peter Parker Garfield',
+  'Gamora (2014)': 'Gamora 2014',
+  'Thanos (2014)': 'Thanos 2014',
+  'Nebula (2014)': 'Nebula 2014',
 };
 
 const CHAR_NO_IMAGE = new Set(['Noch unbekannt']);
@@ -104,6 +127,17 @@ const CHAR_NO_IMAGE = new Set(['Noch unbekannt']);
 /* Namen ohne eigene Übersicht: „Noch unbekannt“ ist ein Platzhalter für
    eine Besetzung, die noch nicht feststeht, und keine Figur. */
 const CHAR_NO_PROFILE = new Set(['Noch unbekannt']);
+
+/* K.I.-Systeme und Roboter ohne Körper vor der Kamera: Wer sie darstellt,
+   hat ihnen nur die Stimme geliehen, deshalb heißt die Zeile im Kopf der
+   Karte hier „gesprochen von“ statt „gespielt von“.
+
+   Nicht gemeint sind künstliche Wesen, die jemand tatsächlich spielt:
+   Vision und White Vision stehen als Paul Bettany im Bild, Ultron bewegt
+   sich nach James Spaders Aufnahmen, die Supreme Intelligence nimmt die
+   Gestalt ihrer Darstellerin an und N.A.T.A.L.I.E. das Gesicht von Lyric
+   Ross. Sie bleiben deshalb bei „gespielt von“. */
+const CHAR_VOICE_ONLY = new Set(['e-v', 'e-d-i-t-h', 'miss-minutes', 'h-e-r-b-i-e']);
 
 function charSlug(name) {
   return (CHAR_ALIAS[name] || name).toLowerCase()
@@ -256,19 +290,17 @@ const FULLSIZE_LOOKS = {
   'gamora': [
     ['Guardians', 'gamora'],
     ['Kind', 'gamora-kid'],
-    ['Vol. 3', 'gamora-vol-3'],
   ],
   'groot': [
-    ['Groot', 'groot'],
+    ['Adult Groot', 'groot-adult-groot'],
     ['Baby Groot', 'groot-baby'],
-    ['Teenager', 'groot-teenager'],
-    ['Vol. 3', 'groot-vol-3'],
-    ['King Groot', 'groot-king'],
+    ['Adolescent Groot', 'groot-adolescent-groot'],
+    ['Swole Groot', 'groot-swole-groot'],
+    ['Alpha Groot', 'groot-alpha-groot'],
   ],
   'carol-danvers': [
     ['Captain Marvel', 'carol-danvers'],
     ['The Marvels', 'carol-danvers-the-marvels'],
-    ['Fliegend', 'carol-danvers-flight'],
     ['Starforce', 'carol-danvers-starforce'],
     ['Aladna', 'carol-danvers-aladna'],
   ],
@@ -368,12 +400,12 @@ const FULLSIZE_LOOKS = {
   ],
   'alexei': [
     ['Maskiert', 'alexei'],
-    ['Thunderbolts', 'alexei-thunderbolts'],
+    ['Unmaskiert', 'alexei-unmaskiert'],
   ],
   'ava-starr': [
-    ['Zivil', 'ava-starr'],
-    ['Ghost', 'ava-starr-new-avengers'],
-    ['Thunderbolts', 'ava-starr-thunderbolts'],
+    ['Schwarzer Ghost-Anzug (Unmaskiert)', 'ava-starr-schwarzer-ghost-anzug-unmaskiert'],
+    ['Schwarzer Ghost-Anzug', 'ava-starr-schwarzer-ghost-anzug'],
+    ['Weißer Ghost-Anzug', 'ava-starr-weisser-ghost-anzug'],
   ],
   'charles-xavier-professor-x': [
     ['Multiverse of Madness', 'charles-xavier-professor-x'],
@@ -482,10 +514,6 @@ const FULLSIZE_LOOKS = {
     ['Mensch', 'talos'],
     ['Skrull', 'talos-skrull'],
   ],
-  'reed-richards-mister-fantastic': [
-    ['First Steps', 'reed-richards-mister-fantastic'],
-    ['Erde-838', 'reed-richards-mister-fantastic-838'],
-  ],
   'erik-selvig': [
     ['Erik Selvig', 'erik-selvig'],
     ['The Dark World', 'erik-selvig-dark-world'],
@@ -514,10 +542,13 @@ const FULLSIZE_LOOKS = {
     ['Maskiert', 'kang-der-eroberer'],
     ['Unmaskiert', 'kang-der-eroberer-unmasked'],
   ],
-  'karl-mordo': [
-    ['Doctor Strange', 'karl-mordo'],
-    ['Multiverse of Madness', 'karl-mordo-multiverse'],
-    ['Sorcerer Supreme', 'karl-mordo-supreme'],
+  'karl-mordo-838': [
+    ['Baron Mordo', 'karl-mordo-838'],
+    ['Im Kampf', 'karl-mordo-838-fight'],
+  ],
+  'defender-strange': [
+    ['Defender Strange', 'defender-strange'],
+    ['Dead Strange', 'defender-strange-dead'],
   ],
   'layla-el-faouly': [
     ['Scarlet Scarab', 'layla-el-faouly'],
@@ -564,15 +595,6 @@ const FULLSIZE_LOOKS = {
     ['Deadpool', 'wade-wilson-deadpool'],
     ['Wade Wilson', 'wade-wilson-deadpool-civil'],
   ],
-  'maria-rambeau': [
-    ['Maria Rambeau', 'maria-rambeau'],
-    ['Erde-838', 'maria-rambeau-838'],
-    ['Binary', 'maria-rambeau-binary'],
-  ],
-  'peggy-carter': [
-    ['Peggy Carter', 'peggy-carter'],
-    ['Captain Carter', 'peggy-carter-captain-carter'],
-  ],
   'cassie-lang': [
     ['Cassie Lang', 'cassie-lang'],
     ['Maskiert', 'cassie-lang-masked'],
@@ -583,17 +605,12 @@ const FULLSIZE_LOOKS = {
     ['Agathas Zirkel', 'agatha-harkness-coven'],
   ],
   'america-chavez': [
-    ['Kamar-Taj', 'america-chavez'],
     ['Zivil', 'america-chavez-civil'],
+    ['Kamar-Taj', 'america-chavez'],
   ],
   'bullseye': [
     ['Maskiert', 'bullseye'],
     ['Unmaskiert', 'bullseye-unmasked'],
-  ],
-  'stephen-strange': [
-    ['Doctor Strange', 'stephen-strange'],
-    ['Zombie', 'stephen-strange-zombie'],
-    ['Oberster Zauberer', 'stephen-strange-oberster-zauberer'],
   ],
   'g-iah': [
     ['Mensch', 'g-iah'],
@@ -624,7 +641,7 @@ const FULLSIZE_LOOKS = {
     ['Black Panther', 'ulysses-klaue-black-panther'],
   ],
   'arnim-zola': [
-    ['Standard', 'arnim-zola'],
+    ['Zivil', 'arnim-zola-zivil'],
     ['Künstliche Intelligenz', 'arnim-zola-kuenstliche-intelligenz'],
   ],
   'sandman': [
@@ -643,6 +660,19 @@ const FULLSIZE_LOOKS = {
   'skurge': [
     ['Standard', 'skurge'],
     ['Mit Zer und Stör', 'skurge-mit-zer-und-stoer'],
+  ],
+  'remy-lebeau-gambit': [
+    ['Pose 1', 'remy-lebeau-gambit-pose-1'],
+    ['Pose 2', 'remy-lebeau-gambit-pose-2'],
+  ],
+  'scorpion': [
+    ['Pose 1', 'scorpion-pose-1'],
+    ['Pose 2', 'scorpion-pose-2'],
+    ['Zivil', 'scorpion-zivil'],
+  ],
+  'ned-leeds': [
+    ['Standard', 'ned-leeds'],
+    ['Brand New Day', 'ned-leeds-brand-new-day'],
   ],
 };
 
@@ -689,21 +719,21 @@ const FULLSIZE_SCALE = {
   // Deutlich größer als ein Mensch
   'drax': 1.05,
   'm-baku': 1.05,
+  'groot-adolescent-groot': 1.06,
   'm-baku-man-ape': 1.08,
   'm-baku-fur': 1.05,
   'corvus-glaive': 1.06,
   'proxima-midnight': 1.05,
   'ebony-maw': 1.06,
   'volstagg': 1.06,
-  'groot-teenager': 1.06,
   'tony-stark-mark-i-1': 1.08,
-  'groot-king': 1.15,
   'riri-williams-mark-1': 1.05,
   'hank-mccoy-beast': 1.08,
   'ivan-vanko-whiplash-mark-2': 1.1,
   'jennifer-walters-she-hulk': 1.1,
   'ben-grimm-the-thing': 1.12,
   'tony-stark-mark-xxxviii-igor-38': 1.15,
+  'groot-alpha-groot': 1.15,
   'colossus': 1.16,
   'juggernaut': 1.12,
   'hercules': 1.06,
@@ -717,13 +747,13 @@ const FULLSIZE_SCALE = {
   'kurse': 1.18,
   'eitri': 1.15,
   'laufey': 1.15,
+  'groot-adult-groot': 1.18,
+  'groot-swole-groot': 1.18,
   'cull-obsidian': 1.2,
   'cull-obsidian-hammer': 1.2,
   'destroyer': 1.16,
   'curt-connors-lizard': 1.16,
   'korg': 1.18,
-  'groot': 1.18,
-  'groot-vol-3': 1.18,
   'obadiah-stane-iron-monger': 1.2,
   'sandman': 1.2,
   'thanos': 1.2,
@@ -773,6 +803,9 @@ const FULLSIZE_FIT = {
   'jean-grey': 0.96,
   'loki-god-of-stories': 1.18,
   'love': 0.78,
+  'parker-robbins-the-hood': 0.96,
+  'remy-lebeau-gambit-pose-2': 0.9,
+  'scorpion-pose-1': 1.22,
   'skurge': 1.1,
 };
 
@@ -785,15 +818,26 @@ function fullsizeScale(file) {
 /* In data.js heißt jede Figur "Realname / Heldenname". Überschriften
    zeigen den Realnamen, die Rollenzeile darunter die Heldennamen. Der
    Zusatz „(angekündigt)“ gehört zum Film, nicht zur Figur, und fällt
-   hier weg. */
+   hier weg.
+
+   Ein Zusatz in Klammern am Ende benennt dagegen die Variante: die
+   Fassung aus einem anderen Universum oder einer anderen Zeit. Er
+   gehört zur Person und nicht zur Rolle, sonst stünden zwei Figuren mit
+   derselben Überschrift nebeneinander. Aus "Maria Rambeau / Captain
+   Marvel (Erde-838)" wird deshalb die Überschrift "Maria Rambeau
+   (Erde-838)" mit der Rolle "Captain Marvel". */
 const CHAR_ANNOUNCED = / \(angekündigt\)$/;
+const CHAR_VARIANT = / (\([^()]+\))$/;
 
 function splitName(name) {
   const clean = name.replace(CHAR_ANNOUNCED, '');
-  const cut = clean.indexOf(' / ');
+  const variant = clean.match(CHAR_VARIANT);
+  const rest = variant ? clean.slice(0, -variant[0].length) : clean;
+  const suffix = variant ? ' ' + variant[1] : '';
+  const cut = rest.indexOf(' / ');
   return cut === -1
-    ? { real: clean, role: '' }
-    : { real: clean.slice(0, cut), role: clean.slice(cut + 3) };
+    ? { real: rest + suffix, role: '' }
+    : { real: rest.slice(0, cut) + suffix, role: rest.slice(cut + 3) };
 }
 
 /* ---------- Index aller Figuren ----------

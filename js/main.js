@@ -762,8 +762,9 @@
   /* Besetzung aus ACTORS (js/data.js). Steht als eigene Zeile unter den
      Rollen, weil sie zur Figur gehört und nicht zum einzelnen Film. */
   const charCast = el('p', 'char-cast');
+  const charCastLabel = el('span');
   const charCastNames = el('span');
-  charCast.append('gespielt von ', charCastNames);
+  charCast.append(charCastLabel, charCastNames);
 
   const charClose = el('button', 'modal-close', '×');
   charClose.type = 'button';
@@ -809,6 +810,8 @@
        einzelner Name. Ohne Eintrag (Sammelbegriffe, noch offene Rollen)
        bleibt die Zeile weg. */
     const cast = ACTORS[char.slug];
+    charCastLabel.textContent = CHAR_VOICE_ONLY.has(char.slug)
+      ? 'gesprochen von ' : 'gespielt von ';
     charCastNames.textContent = Array.isArray(cast) ? cast.join(', ') : cast || '';
     charCast.hidden = !cast;
 

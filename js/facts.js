@@ -694,7 +694,7 @@ const CHAR_FACTS = {
     teams: ['Spidey Tracker'],
     status: 'Am Leben',
   },
-  'mj': {
+  'michelle-jones-watson': {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Peter Pan Donut & Pastry Shop'],
@@ -1607,7 +1607,7 @@ const CHAR_FACTS = {
     species: 'Roboter',
     status: 'Am Leben',
   },
-  'e-d-i-t-h-angekuendigt': {
+  'e-d-i-t-h': {
     origin: 'USA',
     species: 'Mensch',
     status: 'Am Leben',
@@ -1650,6 +1650,13 @@ const CHAR_FACTS_EXTRA = {
   'peggy-carter': {
     powers: ['Nahkampf und Schusswaffen', 'Feldagentin der SSR', 'Gründerin von S.H.I.E.L.D.'],
   },
+  'peggy-carter-838': {
+    origin: 'Erde-838',
+    species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
+    teams: ['Illuminati', 'Avengers'],
+    status: 'Verstorben',
+    powers: ['Supersoldaten-Serum', 'Schild in den Farben des Union Jack', 'Jetpack'],
+  },
   'bucky-barnes': {
     powers: ['Supersoldaten-Serum', 'Vibranium-Arm', 'Scharfschütze'],
   },
@@ -1685,6 +1692,21 @@ const CHAR_FACTS_EXTRA = {
   'maria-rambeau': {
     height: '1,78 m',
     powers: ['Kampfpilotin', 'Nervenstärke', 'Technikverstand'],
+  },
+  'maria-rambeau-838': {
+    origin: 'Erde-838',
+    species: 'Mensch-Kree-Hybrid',
+    teams: ['Illuminati'],
+    status: 'Verstorben',
+    height: '1,78 m',
+    powers: ['Energieprojektion', 'Flug', 'Widerstandskraft im All'],
+  },
+  'maria-rambeau-binary': {
+    origin: 'andere Welt',
+    species: 'Mensch',
+    status: 'Am Leben',
+    height: '1,78 m',
+    powers: ['Heldin ihrer Welt unter dem Namen Binary'],
   },
   'goose': {
     origin: 'unbekannte Welt',
@@ -1818,6 +1840,14 @@ const CHAR_FACTS_EXTRA = {
     height: '2,49 m',
     powers: ['übermenschliche Kraft', 'Infinity-Handschuh', 'Feldherr'],
   },
+  'thanos-2014': {
+    origin: 'Titan',
+    species: 'Titan',
+    teams: ['Black Order'],
+    status: 'Verstorben',
+    height: '2,49 m',
+    powers: ['übermenschliche Kraft', 'Doppelklingenschwert', 'Feldherr'],
+  },
   'maria-hill': {
     powers: ['stellvertretende Direktorin von S.H.I.E.L.D.', 'Feldeinsatz und Schusswaffen', 'Logistik'],
   },
@@ -1866,6 +1896,14 @@ const CHAR_FACTS_EXTRA = {
     height: '1,68 m',
     powers: ['Chaosmagie', 'Telekinese', 'Realität formen'],
   },
+  'wanda-maximoff-838': {
+    origin: 'Erde-838',
+    species: 'Mensch',
+    teams: ['Avengers'],
+    status: 'Am Leben',
+    height: '1,68 m',
+    powers: ['Chaosmagie', 'Telekinese', 'Flug'],
+  },
   'peter-quill': {
     height: '1,88 m',
     powers: ['Element-Blaster', 'Raketenstiefel', 'halb Celestial'],
@@ -1873,6 +1911,14 @@ const CHAR_FACTS_EXTRA = {
   'gamora': {
     height: '1,83 m',
     powers: ['tödlichste Frau der Galaxis', 'Schwert Godslayer', 'kybernetisch verstärkt'],
+  },
+  'gamora-2014': {
+    origin: 'Zen-Whoberi',
+    species: 'Zehoberei',
+    teams: ['Ravagers', 'Black Order'],
+    status: 'Am Leben',
+    height: '1,83 m',
+    powers: ['Schwert- und Nahkampf', 'kybernetisch verstärkt', 'Attentäterin des Thanos'],
   },
   'drax': {
     origin: 'Kylos',
@@ -1904,6 +1950,14 @@ const CHAR_FACTS_EXTRA = {
     origin: 'Luphom',
     height: '1,85 m',
     powers: ['kybernetische Glieder', 'Nahkampf', 'schmerzunempfindlich'],
+  },
+  'nebula-2014': {
+    origin: 'Luphom',
+    species: 'Luphomoide (Cyborg)',
+    teams: ['Black Order'],
+    status: 'Verstorben',
+    height: '1,85 m',
+    powers: ['kybernetische Glieder', 'Nahkampf', 'Speicher, der sich mit dem eigenen Ich verbindet'],
   },
   'ego': {
     origin: 'eigener Planet',
@@ -1967,6 +2021,18 @@ const CHAR_FACTS_EXTRA = {
     species: 'Mensch, durch einen Spinnenbiss verändert',
     height: '1,78 m',
     powers: ['Wandhaftung', 'Spinnensinn', 'Netzschleudern'],
+  },
+  'peter-parker-maguire': {
+    origin: 'New York City',
+    species: 'Mensch, durch einen Spinnenbiss verändert',
+    status: 'Am Leben',
+    powers: ['Netze aus den Handgelenken', 'Spinnensinn', 'Wandhaftung'],
+  },
+  'peter-parker-garfield': {
+    origin: 'New York City',
+    species: 'Mensch, durch einen Spinnenbiss verändert',
+    status: 'Am Leben',
+    powers: ['selbstgebaute Netzschleudern', 'Spinnensinn', 'Wandhaftung'],
   },
   'helmut-zemo': {
     height: '1,78 m',
@@ -2054,6 +2120,14 @@ const CHAR_FACTS_EXTRA = {
     height: '1,88 m',
     powers: ['Magie der Mystischen Künste', 'Umhang der Levitation', 'Portale'],
   },
+  'defender-strange': {
+    origin: 'Erde-617',
+    species: 'Mensch',
+    teams: ['Meister der mystischen Künste'],
+    status: 'Verstorben',
+    height: '1,88 m',
+    powers: ['Magie der mystischen Künste', 'Oberster Zauberer seiner Erde', 'Portale'],
+  },
   'the-ancient-one': {
     origin: 'Kamar-Taj, Nepal',
     height: '1,70 m',
@@ -2062,6 +2136,14 @@ const CHAR_FACTS_EXTRA = {
   'karl-mordo': {
     height: '1,83 m',
     powers: ['Mystische Künste', 'Stab der Lebenden Tribunale', 'entzieht anderen die Magie'],
+  },
+  'karl-mordo-838': {
+    origin: 'Erde-838',
+    species: 'Mensch',
+    teams: ['Meister der mystischen Künste', 'Illuminati'],
+    status: 'Am Leben',
+    height: '1,83 m',
+    powers: ['Mystische Künste', 'Schwertkampf', 'Oberster Zauberer seiner Erde'],
   },
   'wong': {
     origin: 'Kamar-Taj, Nepal',
@@ -2128,6 +2210,40 @@ const CHAR_FACTS_EXTRA = {
   'sylvie': {
     height: '1,63 m',
     powers: ['Verzauberung fremder Gedanken', 'Magie und Gestaltwandel', 'Schwertkampf'],
+  },
+  'classic-loki': {
+    origin: 'Jotunheim',
+    species: 'Frostriese',
+    teams: ['Kid Lokis Bande'],
+    status: 'Verstorben',
+    powers: ['Illusionen von enormer Größe', 'Gestaltwandel', 'Magie'],
+  },
+  'kid-loki': {
+    origin: 'Jotunheim',
+    species: 'Frostriese',
+    teams: ['Kid Lokis Bande'],
+    status: 'Am Leben',
+    powers: ['Schwert Laevateinn', 'Magie', 'König der Leere'],
+  },
+  'boastful-loki': {
+    origin: 'Jotunheim',
+    species: 'Frostriese',
+    teams: ['Kid Lokis Bande'],
+    status: 'Am Leben',
+    powers: ['Magie', 'Nahkampf', 'Geschichten über sich selbst'],
+  },
+  'alligator-loki': {
+    species: 'Alligator',
+    teams: ['Kid Lokis Bande'],
+    status: 'Am Leben',
+    powers: ['Biss', 'durchschaut andere Lokis'],
+  },
+  'president-loki': {
+    origin: 'Jotunheim',
+    species: 'Frostriese',
+    teams: ['Loki-Banditen'],
+    status: 'Am Leben',
+    powers: ['Magie', 'Armee aus Varianten', 'Taktik'],
   },
   'mobius': {
     height: '1,80 m',
@@ -2208,7 +2324,7 @@ const CHAR_FACTS_EXTRA = {
     height: '1,80 m',
     powers: ['Drohnen mit Projektionstechnik', 'Illusionen in Stadtgröße', 'ehemaliger Stark-Ingenieur'],
   },
-  'mj': {
+  'michelle-jones-watson': {
     height: '1,73 m',
     powers: ['Beobachtungsgabe', 'Recherche', 'durchschaut jede Lüge'],
   },
@@ -2291,7 +2407,15 @@ const CHAR_FACTS_EXTRA = {
   'christine-palmer': {
     height: '1,70 m',
     teams: ['Metro-General Hospital'],
-    powers: ['Notfallchirurgin', 'Ruhe am Operationstisch', 'in einem Zweig Forscherin der Illuminati'],
+    powers: ['Notfallchirurgin', 'Ruhe am Operationstisch', 'kennt Strange länger als jeder andere'],
+  },
+  'christine-palmer-838': {
+    origin: 'Erde-838',
+    species: 'Mensch',
+    teams: ['Baxter Foundation'],
+    status: 'Am Leben',
+    height: '1,70 m',
+    powers: ['Forschung am Multiversum', 'benannte die Erde-838', 'Fesseln aus dem Sand von Nisanti'],
   },
   'charles-xavier-professor-x': {
     height: '1,80 m',
@@ -2300,6 +2424,14 @@ const CHAR_FACTS_EXTRA = {
   'reed-richards-mister-fantastic': {
     height: '1,88 m',
     powers: ['dehnt seinen Körper beliebig', 'klügster Kopf seiner Erde', 'Führung der Fantastic Four'],
+  },
+  'reed-richards-838': {
+    origin: 'Erde-838',
+    species: 'Mensch',
+    teams: ['Fantastic Four', 'Illuminati', 'Baxter Foundation'],
+    status: 'Verstorben',
+    height: '1,88 m',
+    powers: ['dehnt seinen Körper beliebig', 'klügster Kopf seiner Erde', 'Gründer der Baxter Foundation'],
   },
   'kate-bishop': {
     height: '1,68 m',
@@ -2409,6 +2541,13 @@ const CHAR_FACTS_EXTRA = {
     origin: 'Olymp',
     height: '1,80 m',
     powers: ['Blitzbündel Thunderbolt', 'Herrscher über den Götterrat', 'nahezu unsterblich'],
+  },
+  'love': {
+    origin: 'Rapus Planet',
+    species: 'Außerirdische, von Eternity zurückgeholt',
+    teams: ['Thors Familie'],
+    status: 'Am Leben',
+    powers: ['kosmische Strahlen aus den Augen', 'übermenschliche Kraft', 'führt Stormbreaker'],
   },
   'jennifer-walters-she-hulk': {
     height: '2,01 m',
@@ -2659,9 +2798,11 @@ const CHAR_FACTS_EXTRA = {
     height: '1,80 m',
     powers: ['Körper aus Metall', 'Gegenstück zu Vision', 'Bewusstsein aus fremder Vorlage'],
   },
-  'e-d-i-t-h-angekuendigt': {
+  'e-d-i-t-h': {
+    origin: 'Tony Starks Werkstatt',
     species: 'Künstliche Intelligenz',
     teams: ['Stark Industries'],
+    status: 'Am Leben',
     powers: ['Zugriff auf Starks Satellitennetz', 'Drohnenflotte', 'sitzt in einer Brille'],
   },
   'erik-lehnsherr-magneto': {
@@ -3026,6 +3167,58 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Schwarzmarkt', 'Erik Killmongers Plan'],
     powers: ['Schallkanone im Arm', 'Vibranium-Handel', 'Waffenschmuggel'],
   },
+  'jean-grey': {
+    origin: 'USA',
+    species: 'Mutantin',
+    status: 'Am Leben',
+    powers: ['übernimmt fremde Körper', 'Telepathie über weite Strecken', 'Telekinese und psionische Wellen'],
+  },
+  'sara-grey': {
+    origin: 'USA',
+    species: 'Mutantin',
+    status: 'Verstorben',
+    powers: ['Telepathie', 'übernimmt fremde Körper', 'Sprünge über mehrere Menschen hinweg'],
+  },
+  'william-metzger': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Damage Control'],
+    status: 'Am Leben',
+    powers: ['Leitung von Damage Control', 'Zugriff auf beschlagnahmte Technik', 'Versuche an Gefangenen'],
+  },
+  'jean-dewolff': {
+    origin: 'New York City, New York',
+    species: 'Mensch',
+    teams: ['New York City Police Department'],
+    status: 'Am Leben',
+    powers: ['Ermittlungen gegen das organisierte Verbrechen', 'Kontakte im gesamten Revier', 'kurzer Draht zu Spider-Man'],
+  },
+  'e-v': {
+    origin: 'Peter Parkers Werkstatt',
+    species: 'Künstliche Intelligenz',
+    teams: ['Spider-Mans Anzug'],
+    status: 'Am Leben',
+    powers: ['Anzeige im Sichtfeld der Maske', 'Auswertung von Kampfdaten', 'Wartung und Kalibrierung des Anzugs'],
+  },
+  'paul-rabin': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+    powers: ['Studium am MIT', 'Freund von MJ', 'nichts von alledem, was um ihn herum passiert'],
+  },
+  'lonnie-lincoln-tombstone': {
+    origin: 'USA',
+    species: 'Mensch mit verstärkter Konstitution',
+    teams: ['eigene Bande in New York'],
+    status: 'Am Leben',
+    powers: ['übermenschliche Kraft', 'sehr widerstandsfähige Haut', 'schnelle Reflexe'],
+  },
+  'fred-myers-boomerang': {
+    origin: 'Australien',
+    species: 'Mensch',
+    status: 'Am Leben',
+    powers: ['Wurfbumerangs mit verschiedener Wirkung', 'Anzug mit Visier und Halterungen', 'trifft auf große Entfernung'],
+  },
 };
 
 /* Benannte Beziehungen: slug -> [[Bezeichnung, Ziel-Slug], ...].
@@ -3041,6 +3234,19 @@ const CHAR_FACTS_EXTRA = {
    Fenster darunter. Ein Ziel-Slug, den es nicht gibt, wird beim Bauen
    übersprungen. */
 const CHAR_BONDS = {
+  'maria-rambeau': [
+    ['Fassung der Erde-838', 'maria-rambeau-838'],
+    ['Fassung einer anderen Welt', 'maria-rambeau-binary'],
+  ],
+  'karl-mordo': [
+    ['Fassung der Erde-838', 'karl-mordo-838'],
+  ],
+  'christine-palmer': [
+    ['Fassung der Erde-838', 'christine-palmer-838'],
+  ],
+  'reed-richards-mister-fantastic': [
+    ['Fassung der Erde-838', 'reed-richards-838'],
+  ],
   'steve-rogers': [
     ['Bester Freund', 'bucky-barnes'],
     ['Große Liebe', 'peggy-carter'],
@@ -3069,12 +3275,38 @@ const CHAR_BONDS = {
     ['Weggefährte', 'bruce-banner'],
   ],
   'loki': [
+    ['Weitere Fassungen', 'kid-loki'],
     ['Bruder', 'thor'],
     ['Ziehvater', 'odin'],
     ['Leiblicher Vater', 'laufey'],
     ['Ziehmutter', 'frigga'],
     ['Variante', 'sylvie'],
     ['Freund', 'mobius'],
+  ],
+  'classic-loki': [
+    ['Andere Fassung', 'loki'],
+    ['König', 'kid-loki'],
+    ['Bezwinger', 'alioth'],
+  ],
+  'kid-loki': [
+    ['Andere Fassung', 'loki'],
+    ['Gefolgsmann', 'classic-loki'],
+    ['Verräter', 'boastful-loki'],
+    ['Gegenspieler', 'president-loki'],
+  ],
+  'boastful-loki': [
+    ['Andere Fassung', 'loki'],
+    ['Verratener König', 'kid-loki'],
+    ['Auftraggeber', 'president-loki'],
+  ],
+  'alligator-loki': [
+    ['Andere Fassung', 'loki'],
+    ['König', 'kid-loki'],
+  ],
+  'president-loki': [
+    ['Andere Fassung', 'loki'],
+    ['Gegenspieler', 'kid-loki'],
+    ['Komplize', 'boastful-loki'],
   ],
   'bruce-banner': [
     ['Große Liebe', 'betty-ross'],
@@ -3097,27 +3329,47 @@ const CHAR_BONDS = {
     ['Rivale', 'john-walker'],
   ],
   'peter-parker': [
+    ['Weitere Fassung', 'peter-parker-maguire'],
     ['Mentor', 'tony-stark'],
-    ['Große Liebe', 'mj'],
+    ['Große Liebe', 'michelle-jones-watson'],
     ['Bester Freund', 'ned-leeds'],
     ['Tante', 'may-parker'],
     ['Erzfeind', 'green-goblin'],
     ['Gegenspieler', 'adrian-toomes-vulture'],
     ['Ausbilder', 'happy-hogan'],
   ],
+  'peter-parker-maguire': [
+    ['Jüngste Fassung', 'peter-parker'],
+    ['Weitere Fassung', 'peter-parker-garfield'],
+    ['Erzfeind', 'green-goblin'],
+  ],
+  'peter-parker-garfield': [
+    ['Jüngste Fassung', 'peter-parker'],
+    ['Weitere Fassung', 'peter-parker-maguire'],
+    ['Erzfeind', 'electro'],
+  ],
   'wanda-maximoff': [
+    ['Fassung der Erde-838', 'wanda-maximoff-838'],
     ['Bruder', 'pietro-maximoff'],
     ['Große Liebe', 'vision'],
     ['Sohn', 'billy-maximoff-wiccan'],
     ['Gegenspielerin', 'agatha-harkness'],
     ['Gegenspieler', 'stephen-strange'],
   ],
+  'wanda-maximoff-838': [
+    ['Andere Fassung', 'wanda-maximoff'],
+  ],
   'stephen-strange': [
+    ['Weitere Fassung', 'defender-strange'],
     ['Lehrerin', 'the-ancient-one'],
     ['Weggefährte', 'wong'],
     ['Große Liebe', 'christine-palmer'],
     ['Gegenspieler', 'karl-mordo'],
     ['Schützling', 'america-chavez'],
+  ],
+  'defender-strange': [
+    ['Andere Fassung', 'stephen-strange'],
+    ['Verratene Freundin', 'america-chavez'],
   ],
   'sam-wilson': [
     ['Vorgänger', 'steve-rogers'],
@@ -3134,14 +3386,27 @@ const CHAR_BONDS = {
     ['Weggefährte', 'drax'],
   ],
   'gamora': [
+    ['Fassung von 2014', 'gamora-2014'],
     ['Ziehvater', 'thanos'],
     ['Schwester', 'nebula'],
     ['Große Liebe', 'peter-quill'],
   ],
+  'gamora-2014': [
+    ['Andere Fassung', 'gamora'],
+    ['Vater', 'thanos-2014'],
+    ['Schwester', 'nebula-2014'],
+    ['Verehrer', 'peter-quill'],
+  ],
   'nebula': [
+    ['Fassung von 2014', 'nebula-2014'],
     ['Ziehvater', 'thanos'],
     ['Schwester', 'gamora'],
     ['Freund', 'rocket'],
+  ],
+  'nebula-2014': [
+    ['Späteres Ich', 'nebula'],
+    ['Vater', 'thanos-2014'],
+    ['Schwester', 'gamora-2014'],
   ],
   'rocket': [
     ['Bester Freund', 'groot'],
@@ -3197,10 +3462,17 @@ const CHAR_BONDS = {
     ['Gegenspieler', 'alexander-pierce'],
   ],
   'thanos': [
+    ['Fassung von 2014', 'thanos-2014'],
     ['Ziehtochter', 'gamora'],
     ['Ziehtochter', 'nebula'],
     ['Handlanger', 'ronan'],
     ['Erzfeind', 'tony-stark'],
+  ],
+  'thanos-2014': [
+    ['Späteres Ich', 'thanos'],
+    ['Ältere Tochter', 'gamora-2014'],
+    ['Jüngere Tochter', 'nebula-2014'],
+    ['Bezwinger', 'tony-stark'],
   ],
   'vision': [
     ['Große Liebe', 'wanda-maximoff'],
@@ -3221,9 +3493,39 @@ const CHAR_BONDS = {
     ['Weggefährte', 'bob-sentry'],
   ],
   'peggy-carter': [
+    ['Fassung der Erde-838', 'peggy-carter-838'],
     ['Große Liebe', 'steve-rogers'],
     ['Verbündeter', 'howard-stark'],
     ['Großnichte', 'sharon-carter'],
+  ],
+  'peggy-carter-838': [
+    ['Andere Fassung', 'peggy-carter'],
+    ['Mörderin', 'wanda-maximoff'],
+    ['Weggefährte', 'karl-mordo-838'],
+  ],
+  'maria-rambeau-838': [
+    ['Andere Fassung', 'maria-rambeau'],
+    ['Mörderin', 'wanda-maximoff'],
+    ['Weggefährtin', 'peggy-carter-838'],
+  ],
+  'maria-rambeau-binary': [
+    ['Andere Fassung', 'maria-rambeau'],
+    ['Kollege', 'hank-mccoy-beast'],
+  ],
+  'reed-richards-838': [
+    ['Andere Fassung', 'reed-richards-mister-fantastic'],
+    ['Mörderin', 'wanda-maximoff'],
+    ['Mitarbeiterin', 'christine-palmer-838'],
+  ],
+  'karl-mordo-838': [
+    ['Andere Fassung', 'karl-mordo'],
+    ['Gegenspieler', 'stephen-strange'],
+    ['Weggefährtin', 'peggy-carter-838'],
+  ],
+  'christine-palmer-838': [
+    ['Andere Fassung', 'christine-palmer'],
+    ['Arbeitgeber', 'reed-richards-838'],
+    ['Verbündeter', 'stephen-strange'],
   ],
   'jane-foster': [
     ['Große Liebe', 'thor'],
@@ -3273,5 +3575,33 @@ const CHAR_BONDS = {
     ['Gott', 'khonshu'],
     ['Ehefrau', 'layla-el-faouly'],
     ['Erzfeind', 'arthur-harrow'],
+  ],
+  'love': [
+    ['Vater', 'gorr'],
+    ['Ziehvater', 'thor'],
+  ],
+  'jean-grey': [
+    ['Schwester', 'sara-grey'],
+    ['Erzfeind', 'william-metzger'],
+    ['Retter', 'peter-parker'],
+  ],
+  'sara-grey': [
+    ['Schwester', 'jean-grey'],
+    ['Gegenspieler', 'william-metzger'],
+  ],
+  'william-metzger': [
+    ['Gefangene', 'sara-grey'],
+    ['Gegenspielerin', 'jean-grey'],
+    ['Belogener Verbündeter', 'peter-parker'],
+  ],
+  'jean-dewolff': [
+    ['Verbündeter', 'peter-parker'],
+  ],
+  'e-v': [
+    ['Erbauer', 'peter-parker'],
+  ],
+  'paul-rabin': [
+    ['Freundin', 'michelle-jones-watson'],
+    ['Freund', 'ned-leeds'],
   ],
 };

@@ -352,8 +352,9 @@
   const charShotBox = el('div', 'char-full-shotbox');
 
   const charCast = el('p', 'char-full-cast');
+  const charCastLabel = el('span');
   const charCastNames = el('span');
-  charCast.append('gespielt von ', charCastNames);
+  charCast.append(charCastLabel, charCastNames);
 
   /* Porträt links, daneben Name, Heldenname und Besetzung: Der Kopf
      stellt die Figur komplett vor, ehe darunter die Auftritte folgen. */
@@ -715,6 +716,8 @@
     charRoles.textContent = item.roles.join(' · ');
     charRoles.hidden = item.roles.length === 0;
 
+    charCastLabel.textContent = CHAR_VOICE_ONLY.has(char.slug)
+      ? 'gesprochen von ' : 'gespielt von ';
     charCastNames.textContent = item.castNames;
     charCast.hidden = !item.castNames;
 
