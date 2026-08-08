@@ -27,10 +27,10 @@
 (() => {
   /* ---------- Was sich einstellen lässt ----------
 
-     Die Namen folgen den Eigenschaften der Vorlage. Die Farben sind die
-     des Studios, von tief nach hell: Der Verlauf aus dem Beispiel
-     (Magenta auf Grau) stünde quer zu allem anderen auf der Seite. Wer
-     ihn doch will, trägt hier '#e945f5', '#6f6f6f', '#6a6a6a' ein. */
+     Die Namen folgen den Eigenschaften der Vorlage. Die Farben stehen
+     nicht hier, sondern als --hg-a bis --hg-c in studio.css: Sie gehören
+     zum Farbschema und wechseln mit ihm. Die Werte unten sind nur der
+     Rückfall, falls das Stylesheet einmal nicht dasteht. */
   const E = {
     wellen: { oben: true, mitte: true, unten: true },
     linien: 8,            // je Welle
@@ -221,6 +221,16 @@
     return [(zahl >> 16 & 255) / 255, (zahl >> 8 & 255) / 255, (zahl & 255) / 255];
   }
 
+  /* Die drei Töne des gültigen Farbschemas, gelesen aus dem Stylesheet.
+     Steht dort nichts, gilt der Rückfall aus E. */
+  function toene() {
+    const stil = getComputedStyle(document.documentElement);
+    return ['--hg-a', '--hg-b', '--hg-c'].map((name, i) => {
+      const wert = stil.getPropertyValue(name).trim();
+      return ausHex(wert || E.farben[i]);
+    });
+  }
+
   /* ---------- WebGL ---------- */
 
   let gl = null;
@@ -291,6 +301,9 @@
       maus: ort('iMouse'),
       biegeAnteil: ort('biegeAnteil'),
       parallaxeVersatz: ort('parallaxeVersatz'),
+      farbeA: ort('farbeA'),
+      farbeB: ort('farbeB'),
+      farbeC: ort('farbeC'),
     };
 
     /* Alles, was sich zur Laufzeit nicht ändert, geht einmal hinein. */
@@ -322,13 +335,21 @@
     zahl('biegeStaerke', E.biegeStaerke);
     ganz('parallaxe', E.parallaxe && !ruhig ? 1 : 0);
 
-    const [a, b, c] = E.farben.map(ausHex);
-    gl.uniform3f(ort('farbeA'), a[0], a[1], a[2]);
-    gl.uniform3f(ort('farbeB'), b[0], b[1], b[2]);
-    gl.uniform3f(ort('farbeC'), c[0], c[1], c[2]);
+    setzeFarben();
 
     passeAn();
     return true;
+  }
+
+  /* Die Töne des Schemas in den Shader. Beim Aufbau einmal, danach bei
+     jedem Wechsel des Farbschemas. */
+  function setzeFarben() {
+    if (!gl || !programm) return;
+    const [a, b, c] = toene();
+    gl.useProgram(programm);
+    gl.uniform3f(u.farbeA, a[0], a[1], a[2]);
+    gl.uniform3f(u.farbeB, b[0], b[1], b[2]);
+    gl.uniform3f(u.farbeC, c[0], c[1], c[2]);
   }
 
   /* ---------- Größe ---------- */
@@ -418,18 +439,25 @@
   }
 
   if (ruhig) {
-    /* Ein Bild, dann Ruhe. */
-    gl.uniform1f(u.zeit, 0);
-    gl.uniform2f(u.maus, -1e4, -1e4);
-    gl.uniform1f(u.biegeAnteil, 0);
-    gl.uniform2f(u.parallaxeVersatz, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
-    window.addEventListener('resize', () => {
+    /* Ein Bild, dann Ruhe. Neu gezeichnet wird nur, wenn sich das Fenster
+       oder das Farbschema ändert. */
+    const einBild = () => {
       passeAn();
+      gl.uniform1f(u.zeit, 0);
+      gl.uniform2f(u.maus, -1e4, -1e4);
+      gl.uniform1f(u.biegeAnteil, 0);
+      gl.uniform2f(u.parallaxeVersatz, 0, 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
-    });
+    };
+    einBild();
+    window.addEventListener('resize', einBild);
+    window.addEventListener('schemawechsel', () => { setzeFarben(); einBild(); });
     return;
   }
+
+  /* Ein anderes Farbschema heißt andere Töne für die Linien. Das nächste
+     Bild trägt sie, dafür läuft ohnehin schon eine Schleife. */
+  window.addEventListener('schemawechsel', setzeFarben);
 
   if (E.interaktiv || E.parallaxe) {
     window.addEventListener('pointermove', zeiger, { passive: true });

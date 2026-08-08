@@ -1,10 +1,9 @@
 {
   "_hinweis": "Bilder, die von Hand als noch offen markiert sind: Die Datei ist zwar da, das Bild soll aber trotzdem noch einmal gemacht werden. Gesetzt wird das im Porträt-Studio. offen sind Porträts unter assets/characters/portraits, offenGanzkoerper sind Ganzkörperbilder unter assets/characters/fullsize, jeweils der Dateiname ohne Endung. Beide Listen stehen getrennt, weil dieselbe Figur in beiden Ordnern gleich heißt. Die Porträts liest auch tools/portraits-offen.js. Ein erfolgreiches Speichern im Studio nimmt die Markierung wieder heraus.",
   "offen": [
-    "crossbones",
-    "jimmy-woo",
-    "raven-darkhoelme-mystique",
     "throg"
   ],
-  "offenGanzkoerper": []
+  "offenGanzkoerper": [
+    "e-v"
+  ]
 }

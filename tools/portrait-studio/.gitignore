@@ -5,3 +5,15 @@
 # Schnappschüsse für Rückgängig und Wiederholen. Gilt nur für die
 # laufende Sitzung und wird beim Start des Servers geleert.
 .verlauf/
+
+# Gemessene Dauern der Arbeiten, aus denen der Fortschrittsbalken seine
+# Schätzung nimmt. Sie gelten für diesen Rechner und seine Grafikkarte,
+# auf einem anderen wären sie eher irreführend als hilfreich.
+.durations.json
+
+# Rohtext der Infoboxen aus den beiden Marvel-Wikis, dazu die
+# Namenslisten der Läufe. Zwischenlager für tools/fetch-facts.py: Was
+# einmal geholt ist, wird nicht noch einmal geholt. Der fertige
+# Steckbrief steht in js/facts.js und gehört ins Repo, dieser Ordner
+# nicht.
+.wiki/

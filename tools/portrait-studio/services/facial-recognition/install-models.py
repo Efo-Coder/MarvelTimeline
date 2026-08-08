@@ -1,6 +1,6 @@
 """Holt alles, was die Gesichtsveredelung braucht, und richtet es ein.
 
-    python tools/gesicht/einrichten.py
+    python tools/portrait-studio/services/facial-recognition/install-models.py
 
 Zwei Modelle stehen danach bereit: GFPGAN v1.4 und CodeFormer. Beide
 bauen ein Gesicht aus einem gelernten Modell neu auf, statt es nur zu
@@ -9,8 +9,8 @@ wird.
 
 Was hier landet, ist Fremdcode und Fremdgewicht, zusammen rund 800 MB.
 Beides steht in .gitignore und gehört nicht ins Repo, deshalb ist dieses
-Skript die Bezugsquelle: Wer tools/gesicht/fremd und tools/gesicht/modelle
-löscht und es erneut laufen lässt, hat den Stand wieder.
+Skript die Bezugsquelle: Wer die Ordner vendor und models daneben löscht
+und es erneut laufen lässt, hat den Stand wieder.
 
 Der Umweg über einen basicsr-Ersatz
 -----------------------------------
@@ -30,8 +30,8 @@ import sys
 import urllib.request
 
 HIER = os.path.dirname(os.path.abspath(__file__))
-FREMD = os.path.join(HIER, "fremd")
-MODELLE = os.path.join(HIER, "modelle")
+VENDOR = os.path.join(HIER, "vendor")
+MODELS = os.path.join(HIER, "models")
 
 # Fremdcode: Zieldatei -> Quelle. Die Architekturdateien sind reines
 # PyTorch, sie werden unverändert übernommen.
@@ -55,9 +55,9 @@ GEWICHTE = {
 
 # Der basicsr-Ersatz. Mehr holen die Architekturdateien nicht daraus.
 SHIM = {
-    "basicsr/__init__.py": '"""Ersatz, erzeugt von tools/gesicht/einrichten.py."""\n',
+    "basicsr/__init__.py": '"""Ersatz, erzeugt von install-models.py."""\n',
     "basicsr/archs/__init__.py": "",
-    "basicsr/utils/__init__.py": '''"""Ersatz, erzeugt von tools/gesicht/einrichten.py."""
+    "basicsr/utils/__init__.py": '''"""Ersatz, erzeugt von install-models.py."""
 
 import logging
 
@@ -65,7 +65,7 @@ import logging
 def get_root_logger(*_args, **_kwargs):
     return logging.getLogger("gesicht")
 ''',
-    "basicsr/utils/registry.py": '''"""Ersatz, erzeugt von tools/gesicht/einrichten.py.
+    "basicsr/utils/registry.py": '''"""Ersatz, erzeugt von install-models.py.
 
 Die Registrierung sammelt bei basicsr Architekturen unter einem Namen,
 damit eine Konfigurationsdatei sie auswählen kann. Hier werden die
@@ -90,7 +90,7 @@ class _Registry:
 
 ARCH_REGISTRY = _Registry()
 ''',
-    "basicsr/archs/arch_util.py": '''"""Ersatz, erzeugt von tools/gesicht/einrichten.py.
+    "basicsr/archs/arch_util.py": '''"""Ersatz, erzeugt von install-models.py.
 
 Wortgleich zu default_init_weights aus BasicSR. Die Funktion setzt die
 Startwerte der Gewichte, bevor die trainierten geladen werden. Sie wird
@@ -122,7 +122,7 @@ def default_init_weights(module_list, scale=1, bias_fill=0, **kwargs):
 
 
 def schreibe(rel, inhalt):
-    ziel = os.path.join(FREMD, rel)
+    ziel = os.path.join(VENDOR, rel)
     os.makedirs(os.path.dirname(ziel), exist_ok=True)
     with open(ziel, "w", encoding="utf-8") as fh:
         fh.write(inhalt)
@@ -154,7 +154,7 @@ def hole(url, ziel, name):
 def pruefe():
     """Lädt beide Architekturen einmal, damit ein Fehler jetzt auffällt
     und nicht erst beim ersten Bild."""
-    sys.path.insert(0, FREMD)
+    sys.path.insert(0, VENDOR)
     from basicsr.archs.codeformer_arch import CodeFormer          # noqa: F401
     from gfpgan_archs.gfpganv1_clean_arch import GFPGANv1Clean    # noqa: F401
     print("  Beide Architekturen lassen sich laden.")
@@ -163,7 +163,7 @@ def pruefe():
 def main():
     print("Fremdcode:")
     for rel, url in CODE.items():
-        hole(url, os.path.join(FREMD, rel), rel)
+        hole(url, os.path.join(VENDOR, rel), rel)
 
     print("basicsr-Ersatz:")
     for rel, inhalt in SHIM.items():
@@ -172,7 +172,7 @@ def main():
 
     print("Modellgewichte:")
     for name, url in GEWICHTE.items():
-        hole(url, os.path.join(MODELLE, name), name)
+        hole(url, os.path.join(MODELS, name), name)
 
     print("Probe:")
     pruefe()

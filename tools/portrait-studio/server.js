@@ -32,12 +32,12 @@
 
    Bildarbeit
    ----------
-   Macht bild.py über Pillow, damit das Ergebnis Pixel für Pixel dem
+   Macht crop-image.py über Pillow, damit das Ergebnis Pixel für Pixel dem
    entspricht, was der Skill portraits liefert. Der Browser zeigt nur die
    Vorschau. Gespeichert wird erst auf Knopfdruck, die alte Datei wandert
    vorher nach .sicherung.
 
-   Zwei Dinge macht nicht bild.py: Das Hochrechnen einer zu kleinen
+   Zwei Dinge macht nicht crop-image.py: Das Hochrechnen einer zu kleinen
    Vorlage übernimmt Real-ESRGAN, das Neuaufbauen der Gesichter danach
    GFPGAN oder CodeFormer. Beides steht in eigenen Abschnitten weiter
    unten, beides ist freiwillig und beides braucht Programme, die nicht
@@ -53,7 +53,22 @@ const path = require('path');
 const vm = require('vm');
 const { execFile, spawn } = require('child_process');
 
+/* Der Studioordner: Oben liegen der Server und die beiden Dateien, die
+   die Oberfläche tragen, index.html und studio.js. Darunter vier Ordner.
+
+     components/  Die eigenständigen Stücke der Oberfläche.
+     styles/      Das Stilblatt.
+     services/    Was der Server aufruft: crop-image.py schneidet zu,
+                  remove-background.py nimmt den Hintergrund weg, und
+                  facial-recognition/ baut Gesichter neu auf und holt
+                  sich seine Modelle selbst.
+     vendor/      Fremdes, hier nur Real-ESRGAN. Nicht im Repo, siehe
+                  die .gitignore ganz oben.
+
+   Was der Browser sieht, liegt unter demselben Weg wie auf der Platte,
+   siehe SEITENDATEIEN weiter unten. */
 const HIER = __dirname;
+const BILD_SKRIPT = path.join(HIER, 'services', 'crop-image.py');
 const REPO = path.dirname(path.dirname(HIER));
 const PORTRAITS = path.join(REPO, 'assets', 'characters', 'portraits');
 const FULLSIZE = path.join(REPO, 'assets', 'characters', 'fullsize');
@@ -73,7 +88,7 @@ function wert(flagge) {
 /* ---------- Python finden ----------
 
    Zuerst die Umgebung des Skills, dann eine eigene Angabe, dann was auf
-   dem Pfad liegt. Gefunden ist sie erst, wenn bild.py damit auch
+   dem Pfad liegt. Gefunden ist sie erst, wenn crop-image.py damit auch
    durchläuft, ein blankes python.exe ohne Pillow nützt nichts. */
 const PYTHON_KANDIDATEN = [
   process.env.PORTRAIT_PYTHON,
@@ -99,7 +114,7 @@ function pythonSuchen() {
         return fertig();
       }
       const kandidat = PYTHON_KANDIDATEN[i++];
-      execFile(kandidat, [path.join(HIER, 'bild.py'), 'pruefen'],
+      execFile(kandidat, [BILD_SKRIPT, 'pruefen'],
         { timeout: 30000 }, (fehler, aus) => {
           if (fehler) return naechster();
           try {
@@ -119,14 +134,14 @@ function pythonSuchen() {
 function python(args) {
   return new Promise((fertig, scheitern) => {
     if (!PYTHON) return scheitern(new Error(PYTHON_INFO.grund));
-    execFile(PYTHON, [path.join(HIER, 'bild.py'), ...args],
+    execFile(PYTHON, [BILD_SKRIPT, ...args],
       { timeout: 180000, maxBuffer: 8 * 1024 * 1024 }, (fehler, aus, err) => {
         const zeile = (aus || '').trim().split('\n').pop();
         let daten = null;
         try { daten = JSON.parse(zeile); } catch { /* gleich unten */ }
         if (daten && daten.fehler) return scheitern(new Error(daten.fehler));
         if (fehler) return scheitern(new Error((err || fehler.message).trim()));
-        if (!daten) return scheitern(new Error('Unlesbare Antwort von bild.py: ' + zeile));
+        if (!daten) return scheitern(new Error('Unlesbare Antwort von crop-image.py: ' + zeile));
         fertig(daten);
       });
   });
@@ -134,18 +149,46 @@ function python(args) {
 
 /* ---------- Datenbank lesen ---------- */
 
+const QUELLDATEIEN = ['js/data.js', 'js/chars.js', 'js/profiles.js', 'js/facts.js'];
+
+/* Wie die vier Dateien gerade dastehen: Zeitpunkt und Länge jeder
+   einzelnen. Ändert eine sich, ändert sich diese Zeichenkette. */
+function quellStand() {
+  return QUELLDATEIEN.map((rel) => {
+    try {
+      const s = fs.statSync(path.join(REPO, rel));
+      return `${rel}:${s.mtimeMs}:${s.size}`;
+    } catch {
+      return rel + ':-';
+    }
+  }).join('|');
+}
+
+/* Die vier Dateien zu lesen und auszuwerten sind eine halbe Million
+   Zeichen JavaScript, und fast jede Anfrage braucht sie, manche mehrfach.
+   Das Ergebnis wird deshalb gehalten, bis eine der Dateien sich rührt.
+   Geschrieben werden sie ohnehin nur von hier oder von Hand, und beides
+   rückt den Zeitpunkt weiter. */
+let datenSpeicher = null;
+
 function ladeDaten() {
+  const stand = quellStand();
+  if (datenSpeicher && datenSpeicher.stand === stand) return datenSpeicher.daten;
+
   const ctx = {};
   vm.createContext(ctx);
-  /* Beide Dateien in einem Rutsch, denn const aus getrennten Läufen sieht
-     der jeweils andere nicht. Die Zuweisung am Ende holt sie heraus. */
+  /* Alle vier in einem Rutsch, denn const aus getrennten Läufen sieht der
+     jeweils andere nicht. Die Zuweisung am Ende holt sie heraus.
+     profiles.js und facts.js gehören dazu, seit das Studio auch die Texte
+     einer Figur führt: Biografie, Steckbrief, Beziehungen. */
   const src = [
-    fs.readFileSync(path.join(REPO, 'js', 'data.js'), 'utf8'),
-    fs.readFileSync(path.join(REPO, 'js', 'chars.js'), 'utf8'),
+    ...QUELLDATEIEN.map((rel) => fs.readFileSync(path.join(REPO, rel), 'utf8')),
     ';globalThis.OUT = { PHASES, CHAR_ALIAS, CHAR_LOOKS, FULLSIZE_LOOKS, FULLSIZE_SCALE,'
-      + ' FULLSIZE_FIT, CHAR_NO_IMAGE, CHAR_NO_PROFILE, charSlug, splitName };',
+      + ' FULLSIZE_FIT, CHAR_NO_IMAGE, CHAR_NO_PROFILE, charSlug, splitName,'
+      + ' ACTORS, BIOS, PROFILES, CHAR_FACTS, CHAR_FACTS_EXTRA, CHAR_BONDS };',
   ].join('\n');
   vm.runInContext(src, ctx, { filename: 'daten.js' });
+  datenSpeicher = { stand, daten: ctx.OUT };
   return ctx.OUT;
 }
 
@@ -232,6 +275,39 @@ function zustand(datei) {
    ist freigestellt. Offen ist, was fehlt oder von Hand markiert wurde. */
 function zustandGk(datei) {
   return fs.existsSync(path.join(FULLSIZE, datei + '.webp')) ? 'fertig' : 'fehlt';
+}
+
+/* Wie weit die Texte einer Figur gediehen sind. Die Liste im Studio malt
+   daraus ihren Punkt, ohne für jede Figur die Texte selbst zu holen:
+   Zahlen reichen, der Wortlaut nicht.
+
+   „fertig“ heißt hier nicht vollständig im Sinne des Wikis, sondern
+   brauchbar für die Charakterseite: eine Biografie mit genug Abschnitten,
+   die Kurzfassung für die Timeline und ein Steckbrief, der über das
+   hinausgeht, was der Wiki-Abruf von allein findet. */
+const BIO_ABSCHNITTE = 6;         // ab hier gilt eine Biografie als ausgeführt
+
+function texteStand(D, slug) {
+  const profil = D.PROFILES[slug] || [];
+  const wiki = D.CHAR_FACTS[slug] || {};
+  const hand = D.CHAR_FACTS_EXTRA[slug] || {};
+  const facts = { ...wiki, ...hand };
+  const stand = {
+    abschnitte: profil.length,
+    kurz: !!D.BIOS[slug],
+    felder: FACT_FELDER.filter((f) => {
+      const wert = facts[f];
+      return Array.isArray(wert) ? wert.length > 0 : !!wert;
+    }).length,
+    kraefte: !!(facts.powers && facts.powers.length),
+    bonds: (D.CHAR_BONDS[slug] || []).length,
+    besetzung: !!D.ACTORS[slug],
+  };
+  if (!stand.abschnitte) stand.zustand = 'fehlt';
+  else if (stand.abschnitte < BIO_ABSCHNITTE || !stand.kurz || !stand.kraefte) {
+    stand.zustand = 'alt';
+  } else stand.zustand = 'fertig';
+  return stand;
 }
 
 /* Alle Figuren der Datenbank, jede mit ihren Zielen und Quellen. */
@@ -333,6 +409,7 @@ function baueFiguren() {
       ziele,
       ganzkoerper,
       quellen,
+      texte: texteStand(D, slug),
     });
   }
 
@@ -346,7 +423,13 @@ function baueFiguren() {
 function zaehlen(figuren) {
   const z = { gesamt: 0, fertig: 0, alt: 0, fehlt: 0, markiert: 0, ohneQuelle: 0 };
   const gk = { gesamt: 0, fertig: 0, alt: 0, fehlt: 0, markiert: 0 };
+  /* Bei den Texten zählt die Figur, nicht die Datei: Jede hat genau eine
+     Biografie und genau einen Steckbrief. */
+  const bio = { gesamt: figuren.length, fertig: 0, alt: 0, fehlt: 0, kurz: 0, kraefte: 0 };
   for (const figur of figuren) {
+    bio[figur.texte.zustand] += 1;
+    if (figur.texte.kurz) bio.kurz += 1;
+    if (figur.texte.kraefte) bio.kraefte += 1;
     if (!figur.quellen.length) z.ohneQuelle += 1;
     for (const ziel of figur.ziele) {
       z.gesamt += 1;
@@ -362,6 +445,7 @@ function zaehlen(figuren) {
     }
   }
   z.gk = gk;
+  z.bio = bio;
   return z;
 }
 
@@ -390,13 +474,25 @@ function zahl(wert) {
 /* Zwei Nachkommastellen, mehr trägt weder der Regler noch chars.js. */
 const runde = (wert) => Math.round(Number(wert) * 100) / 100;
 
+/* Der Winkel, mit dem die Bühne ihre Vorlage ausrichtet. Was keine Zahl
+   ist, ist keine Drehung: Ein NaN käme sonst als Zeichenkette bei
+   crop-image.py an und legte den Zuschnitt lahm. */
+function grad(wert) {
+  const zahlWert = Number(wert);
+  if (!Number.isFinite(zahlWert)) return 0;
+  return Math.max(-180, Math.min(180, Math.round(zahlWert * 100) / 100));
+}
+
 const WERT_ZEILE = /^\s*'([^']+)':\s*([0-9.]+),/;
 
 /* Der Inhalt einer Tabelle als Zeilen, dazu die Stellen, zwischen denen
-   er in der Quelle steht. Beides zusammen ergibt wieder die Datei. */
-function blockVon(quelle, name) {
+   er in der Quelle steht. Beides zusammen ergibt wieder die Datei.
+
+   „wo“ steht nur in der Fehlermeldung. Dieselbe Zerlegung trägt auch die
+   Texte, und die stehen in drei anderen Dateien. */
+function blockVon(quelle, name, wo = 'js/chars.js') {
   const anfang = quelle.indexOf(`const ${name} = {`);
-  if (anfang === -1) throw new Error(`${name} steht nicht in js/chars.js.`);
+  if (anfang === -1) throw new Error(`${name} steht nicht in ${wo}.`);
   const kopf = quelle.indexOf('\n', anfang) + 1;
   /* Eine leere Tabelle trägt ihren Abschluss direkt hinter dem Kopf. Von
      kopf an gesucht fände die Suche ihn nicht mehr, sondern erst den der
@@ -1230,6 +1326,520 @@ function auftrittAendern(filmTitel, name, dabei, slug) {
   return { geaendert: true, begegnungen };
 }
 
+/* ---------- Texte: Biografie, Steckbrief, Beziehungen, Besetzung ----------
+
+   Zu jeder Figur gehört mehr als ihr Bild, und das steht verteilt in drei
+   Dateien:
+
+     js/data.js      BIOS, die Kurzfassung in ein bis drei Sätzen, und
+                     ACTORS, die Darsteller.
+     js/profiles.js  PROFILES, die ausführliche Biografie als benannte
+                     Abschnitte in Handlungsreihenfolge.
+     js/facts.js     CHAR_FACTS_EXTRA, der Steckbrief von Hand, und
+                     CHAR_BONDS, die benannten Beziehungen.
+
+   Alle fünf Tabellen sind nach demselben Schlüssel geordnet und tragen je
+   Figur genau einen Eintrag. Geschrieben wird deshalb nicht die Datei,
+   sondern der Eintrag: Seine Zeilen werden ausgetauscht, alles davor und
+   dahinter bleibt Zeichen für Zeichen stehen. Kommentare, Gruppen und die
+   Reihenfolge überleben das, und der erzeugte Block CHAR_FACTS wird gar
+   nicht erst angefasst.
+
+   CHAR_FACTS selbst ist die einzige Ausnahme: Er kommt aus den beiden
+   Marvel-Wikis und gehört tools/fetch-facts.py und tools/build-facts.py,
+   siehe weiter unten. */
+
+const FACT_FELDER = ['origin', 'species', 'height', 'teams', 'status', 'powers'];
+const FACT_LISTEN = new Set(['teams', 'powers']);
+
+/* Was in eine Zeile der Quelldatei geht. Alle fünf Tabellen führen ihre
+   Texte einzeilig, ein Umbruch aus dem Textfeld wird deshalb zum
+   Leerzeichen. */
+function einzeilig(text) {
+  return String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+}
+
+/* Ein Text als JavaScript-Zeichenkette in den Anführungszeichen der
+   jeweiligen Datei: profiles.js und data.js führen doppelte, facts.js
+   einfache. */
+function jsText(text, q) {
+  return q + einzeilig(text).replace(/\\/g, '\\\\').split(q).join('\\' + q) + q;
+}
+
+/* Die Kopfzeile eines Eintrags: '<slug>': oder "<slug>": am Zeilenanfang.
+   Die Zeilen im Inneren eines Eintrags fangen mit [ oder einem blanken
+   Feldnamen an und werden davon nicht getroffen. */
+const SCHLUESSEL_ZEILE = /^(\s*)(['"])(.+?)\2:\s*(.*)$/;
+
+/* Schlüssel -> { von, bis } über alle Einträge einer Tabelle, in einem
+   Durchgang. Ein Eintrag reicht von seiner Kopfzeile bis zu der Zeile,
+   die ihn auf derselben Einrückung schließt. Was in einer Zeile beginnt
+   und endet, etwa in BIOS, ist beides zugleich. */
+function eintraege(zeilen) {
+  const raus = new Map();
+  for (let i = 0; i < zeilen.length; i++) {
+    const treffer = SCHLUESSEL_ZEILE.exec(zeilen[i]);
+    if (!treffer) continue;
+    const [, einzug, , slug, rest] = treffer;
+    if (!/[[{]\s*$/.test(rest)) {
+      raus.set(slug, { von: i, bis: i });
+      continue;
+    }
+    const schluss = new RegExp('^' + einzug + '[\\]}],?\\s*$');
+    let j = i + 1;
+    while (j < zeilen.length && !schluss.test(zeilen[j])) j += 1;
+    if (j >= zeilen.length) continue;          // unfertig, lieber nichts anfassen
+    raus.set(slug, { von: i, bis: j });
+    i = j;
+  }
+  return raus;
+}
+
+/* Alle Figuren in der Reihenfolge ihres ersten Auftritts. So stehen die
+   Einträge in allen fünf Tabellen, und dorthin gehört ein neuer auch. */
+function reihenfolge(D) {
+  const raus = [];
+  const gesehen = new Set();
+  for (const phase of D.PHASES) {
+    for (const film of phase.movies) {
+      for (const name of film.characters || []) {
+        if (D.CHAR_NO_PROFILE.has(name)) continue;
+        const slug = D.charSlug(name);
+        if (gesehen.has(slug)) continue;
+        gesehen.add(slug);
+        raus.push(slug);
+      }
+    }
+  }
+  return raus;
+}
+
+/* Wohin ein neuer Eintrag kommt: hinter den letzten, der schon dasteht
+   und vor dieser Figur zum ersten Mal auftritt. Damit landet er in seiner
+   Phase und nicht am Ende der Datei. */
+function einfuegeStelle(bereiche, slug, ordnung) {
+  const platz = ordnung.indexOf(slug);
+  const bis = platz === -1 ? ordnung.length : platz;
+  let stelle = 0;
+  for (let i = 0; i < bis; i++) {
+    const bereich = bereiche.get(ordnung[i]);
+    if (bereich) stelle = Math.max(stelle, bereich.bis + 1);
+  }
+  return stelle;
+}
+
+/* Den Eintrag einer Figur setzen, ersetzen oder streichen. Ohne Zeilen
+   fällt er weg, null heißt: Es hat sich nichts geändert. */
+function setzeEintrag(quelle, tabelle, wo, slug, zeilen, ordnung) {
+  const block = blockVon(quelle, tabelle, wo);
+  const liste = block.zeilen;
+  const bereiche = eintraege(liste);
+  const da = bereiche.get(slug);
+  if (!zeilen) {
+    if (!da) return null;
+    liste.splice(da.von, da.bis - da.von + 1);
+  } else if (da) {
+    if (liste.slice(da.von, da.bis + 1).join('\n') === zeilen.join('\n')) return null;
+    liste.splice(da.von, da.bis - da.von + 1, ...zeilen);
+  } else {
+    liste.splice(einfuegeStelle(bereiche, slug, ordnung), 0, ...zeilen);
+  }
+  return mitBlock(quelle, block, liste);
+}
+
+/* --- Die Zeilen je Tabelle --- */
+
+function profilZeilen(slug, abschnitte) {
+  if (!abschnitte.length) return null;
+  const raus = [`  ${jsText(slug, '"')}: [`];
+  for (const [titel, text] of abschnitte) {
+    raus.push(`    [${jsText(titel, '"')}, ${jsText(text, '"')}],`);
+  }
+  raus.push('  ],');
+  return raus;
+}
+
+function factZeilen(slug, felder) {
+  const gesetzt = FACT_FELDER.filter((name) => (FACT_LISTEN.has(name)
+    ? (felder[name] || []).length : einzeilig(felder[name])));
+  if (!gesetzt.length) return null;
+  const raus = [`  ${jsText(slug, "'")}: {`];
+  for (const name of gesetzt) {
+    raus.push(FACT_LISTEN.has(name)
+      ? `    ${name}: [${felder[name].map((w) => jsText(w, "'")).join(', ')}],`
+      : `    ${name}: ${jsText(felder[name], "'")},`);
+  }
+  raus.push('  },');
+  return raus;
+}
+
+function bondZeilen(slug, paare) {
+  if (!paare.length) return null;
+  const raus = [`  ${jsText(slug, "'")}: [`];
+  for (const [label, ziel] of paare) {
+    raus.push(`    [${jsText(label, "'")}, ${jsText(ziel, "'")}],`);
+  }
+  raus.push('  ],');
+  return raus;
+}
+
+function bioZeilen(slug, text) {
+  return einzeilig(text) ? [`  ${jsText(slug, '"')}: ${jsText(text, '"')},`] : null;
+}
+
+/* Ein Darsteller steht als Zeichenkette, mehrere als Liste. Genau so
+   liest js/characters.js die Tabelle wieder. */
+function actorZeilen(slug, namen) {
+  if (!namen.length) return null;
+  const wert = namen.length === 1 ? jsText(namen[0], '"')
+    : `[${namen.map((n) => jsText(n, '"')).join(', ')}]`;
+  return [`  ${jsText(slug, '"')}: ${wert},`];
+}
+
+/* --- Lesen --- */
+
+function texteLesen(slug) {
+  const D = ladeDaten();
+  return {
+    slug,
+    /* Der Steckbrief steht in zwei Schichten: Was das Wiki liefert, und
+       was von Hand darüberliegt. Beides geht einzeln hinaus, damit im
+       Studio zu sehen ist, welches Feld wirklich der Handarbeit gehört
+       und was nur die Vorgabe wiederholt. */
+    wiki: D.CHAR_FACTS[slug] || {},
+    hand: D.CHAR_FACTS_EXTRA[slug] || {},
+    profil: (D.PROFILES[slug] || []).map(([titel, text]) => [titel, text]),
+    bio: D.BIOS[slug] || '',
+    bonds: (D.CHAR_BONDS[slug] || []).map(([label, ziel]) => [label, ziel]),
+    actors: D.ACTORS[slug] === undefined ? []
+      : [].concat(D.ACTORS[slug]),
+  };
+}
+
+/* --- Schreiben --- */
+
+const gleich = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/* Alles, was zu einer Figur an Text gehört, in einem Schritt. Drei
+   Dateien sind daran beteiligt, und sie gehören zusammen: Wer die
+   Biografie ergänzt und dabei die Kräfte nachträgt, hat einen Gedanken
+   gefasst und nicht zwei.
+
+   Geprüft wird vor dem Schreiben: Die neuen Fassungen werden geladen und
+   müssen genau das tragen, was hineingeschrieben werden sollte. Erst
+   danach werden die Dateien gesichert und ersetzt. */
+function texteSchreiben(auftrag) {
+  const slug = auftrag.slug;
+  const D = ladeDaten();
+  const ordnung = reihenfolge(D);
+
+  const profil = (auftrag.profil || [])
+    .map(([titel, text]) => [einzeilig(titel), einzeilig(text)])
+    .filter(([titel, text]) => titel || text);
+  for (const [titel, text] of profil) {
+    if (!titel) throw new Error('Jeder Abschnitt braucht eine Überschrift.');
+    if (!text) throw new Error(`Der Abschnitt „${titel}“ hat keinen Text.`);
+  }
+
+  const bonds = (auftrag.bonds || [])
+    .map(([label, ziel]) => [einzeilig(label), einzeilig(ziel)])
+    .filter(([label, ziel]) => label || ziel);
+  const bekannt = new Set(reihenfolge(D));
+  for (const [label, ziel] of bonds) {
+    if (!label) throw new Error('Jede Beziehung braucht eine Bezeichnung.');
+    if (!bekannt.has(ziel)) throw new Error(`Die Beziehung „${label}“ zeigt auf `
+      + `${ziel || 'niemanden'}, und den gibt es nicht.`);
+    if (ziel === slug) throw new Error('Eine Figur steht nicht mit sich selbst in Beziehung.');
+  }
+
+  const actors = (auftrag.actors || []).map(einzeilig).filter(Boolean);
+
+  const hand = {};
+  for (const name of FACT_FELDER) {
+    const wert = (auftrag.hand || {})[name];
+    if (FACT_LISTEN.has(name)) {
+      hand[name] = (Array.isArray(wert) ? wert : []).map(einzeilig).filter(Boolean);
+    } else {
+      hand[name] = einzeilig(wert);
+    }
+  }
+  if (hand.status && !['Am Leben', 'Verstorben'].includes(hand.status)) {
+    throw new Error('Der Status ist „Am Leben“ oder „Verstorben“.');
+  }
+
+  /* js/data.js: Kurzbiografie und Besetzung */
+  const dataAlt = fs.readFileSync(DATA, 'utf8');
+  let dataNeu = setzeEintrag(dataAlt, 'BIOS', 'js/data.js', slug,
+    bioZeilen(slug, auftrag.bio), ordnung);
+  const nachBio = dataNeu === null ? dataAlt : dataNeu;
+  const nachActors = setzeEintrag(nachBio, 'ACTORS', 'js/data.js', slug,
+    actorZeilen(slug, actors), ordnung);
+  if (nachActors !== null) dataNeu = nachActors;
+
+  /* js/profiles.js: die ausführliche Biografie */
+  const profilAlt = fs.readFileSync(PROFILES, 'utf8');
+  const profilNeu = setzeEintrag(profilAlt, 'PROFILES', 'js/profiles.js', slug,
+    profilZeilen(slug, profil), ordnung);
+
+  /* js/facts.js: Steckbrief von Hand und Beziehungen */
+  const factsAlt = fs.readFileSync(FACTS, 'utf8');
+  let factsNeu = setzeEintrag(factsAlt, 'CHAR_FACTS_EXTRA', 'js/facts.js', slug,
+    factZeilen(slug, hand), ordnung);
+  const nachFacts = factsNeu === null ? factsAlt : factsNeu;
+  const nachBonds = setzeEintrag(nachFacts, 'CHAR_BONDS', 'js/facts.js', slug,
+    bondZeilen(slug, bonds), ordnung);
+  if (nachBonds !== null) factsNeu = nachBonds;
+
+  const geaendert = [dataNeu, profilNeu, factsNeu].some((q) => q !== null);
+  if (!geaendert) return { geaendert: false };
+
+  /* Probe: laden und nachsehen, ob genau das dasteht, was gewollt war. */
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext([
+    dataNeu === null ? dataAlt : dataNeu,
+    fs.readFileSync(CHARS, 'utf8'),
+    profilNeu === null ? profilAlt : profilNeu,
+    factsNeu === null ? factsAlt : factsNeu,
+    ';globalThis.PROBE = { BIOS, ACTORS, PROFILES, CHAR_FACTS_EXTRA, CHAR_BONDS };',
+  ].join('\n'), ctx, { filename: 'texte-probe.js' });
+
+  const P = ctx.PROBE;
+  const sollHand = {};
+  for (const name of FACT_FELDER) {
+    const wert = hand[name];
+    if (FACT_LISTEN.has(name) ? wert.length : wert) sollHand[name] = wert;
+  }
+  const proben = [
+    ['Kurzbiografie', P.BIOS[slug], einzeilig(auftrag.bio) || undefined],
+    ['Besetzung', P.ACTORS[slug],
+      actors.length === 0 ? undefined : (actors.length === 1 ? actors[0] : actors)],
+    ['Biografie', P.PROFILES[slug], profil.length ? profil : undefined],
+    ['Steckbrief', P.CHAR_FACTS_EXTRA[slug],
+      Object.keys(sollHand).length ? sollHand : undefined],
+    ['Beziehungen', P.CHAR_BONDS[slug], bonds.length ? bonds : undefined],
+  ];
+  for (const [was, ist, soll] of proben) {
+    if (!gleich(ist, soll)) {
+      throw new Error(`Die neue Fassung trägt bei „${was}“ nicht das Erwartete. `
+        + 'Es wurde nichts geschrieben.');
+    }
+  }
+
+  const stempel = stempelJetzt();
+  fs.mkdirSync(SICHERUNG, { recursive: true });
+  const dateien = [];
+  for (const [pfad, neu, name] of [[DATA, dataNeu, 'js/data.js'],
+    [PROFILES, profilNeu, 'js/profiles.js'], [FACTS, factsNeu, 'js/facts.js']]) {
+    if (neu === null) continue;
+    sichereQuelle(pfad, stempel);
+    fs.writeFileSync(pfad, neu, 'utf8');
+    dateien.push(name);
+  }
+  return { geaendert: true, dateien };
+}
+
+/* ---------- Der Steckbrief aus den Wikis ----------
+
+   tools/fetch-facts.py holt die Infoboxen aus dem MCU-Wiki und aus der
+   Marvel Database und legt sie als Rohtext ab. tools/build-facts.py macht
+   daraus die kurzen deutschen Angaben und schreibt sie zwischen die
+   Marken @wiki:anfang und @wiki:ende in js/facts.js.
+
+   Beide Skripte arbeiten über Dateien, deshalb liegt hier ein eigener
+   Ordner: Die Rohdaten bleiben liegen und sind der Grund, warum ein
+   zweiter Lauf schnell ist. Wer eine einzelne Figur neu abruft, verliert
+   nur ihren Eintrag darin, alle anderen bleiben stehen.
+
+   Ein Punkt verlangt Umsicht. build-facts.py schreibt den Block immer als
+   Ganzes und kennt nur, was in seiner Namensliste steht: Ein Lauf über
+   eine Figur ließe von zweihundertachtzig Einträgen einen übrig. Deshalb
+   baut das Studio nicht in js/facts.js, sondern in eine Kopie daneben und
+   holt aus ihr genau die Einträge heraus, die eben geholt wurden. Der
+   echte Block bekommt sie einzeln gesetzt, alles andere bleibt Zeichen
+   für Zeichen stehen. So ist auch der erste Lauf kurz: Er holt die
+   Figuren, die noch fehlen, und nicht alle. */
+const WIKI_ORDNER = path.join(HIER, '.wiki');
+const WIKI_ROH = path.join(WIKI_ORDNER, 'roh.json');
+const WIKI_HOLEN = path.join(REPO, 'tools', 'fetch-facts.py');
+const WIKI_BAUEN = path.join(REPO, 'tools', 'build-facts.py');
+
+/* Die Reihenfolge, in der die Figuren im erzeugten Block stehen: erst so,
+   wie sie schon dort stehen, damit ein Lauf die Datei nicht umsortiert,
+   und was fehlt, an der Stelle seines ersten Auftritts. */
+function wikiOrdnung(D) {
+  const block = blockVon(fs.readFileSync(FACTS, 'utf8'), 'CHAR_FACTS', 'js/facts.js');
+  const raus = [...eintraege(block.zeilen).keys()];
+  const platz = new Map(reihenfolge(D).map((slug, i) => [slug, i]));
+  for (const [slug, i] of platz) {
+    if (raus.includes(slug)) continue;
+    let stelle = raus.length;
+    for (let k = 0; k < raus.length; k++) {
+      const p = platz.get(raus[k]);
+      if (p !== undefined && p > i) { stelle = k; break; }
+    }
+    raus.splice(stelle, 0, slug);
+  }
+  return raus;
+}
+
+/* Welche Figuren im erzeugten Block noch fehlen. Das ist die Liste, die
+   der Knopf „Fehlende nachziehen“ abarbeitet. */
+function wikiOffen() {
+  const D = ladeDaten();
+  /* Gefragt sind die Figuren, nicht ihre Bilder: reihenfolge() liest sie
+     aus den Besetzungslisten, ohne die Bildordner abzusuchen. */
+  return reihenfolge(D).filter((slug) => !D.CHAR_FACTS[slug]);
+}
+
+/* Ein Skript starten und seine Ausgabe zeilenweise weiterreichen. Beide
+   melden ihren Stand über stdout, und beide dürfen lange brauchen: Der
+   erste Lauf holt fast zweihundert Figuren aus zwei Wikis. */
+function wikiSkript(skript, args, aufZeile) {
+  return new Promise((fertig, scheitern) => {
+    if (!PYTHON) return scheitern(new Error(PYTHON_INFO.grund));
+    const kind = spawn(PYTHON, [skript, ...args],
+      { env: { ...process.env, PYTHONIOENCODING: 'utf-8' } });
+    let err = '';
+    let rest = '';
+    const uhr = setTimeout(() => kind.kill(), 45 * 60 * 1000);
+
+    kind.stdout.on('data', (teil) => {
+      const zeilen = (rest + teil.toString()).split('\n');
+      rest = zeilen.pop();
+      for (const zeile of zeilen) aufZeile(zeile.trimEnd());
+    });
+    kind.stderr.on('data', (teil) => { err += teil.toString(); });
+
+    kind.on('error', (fehler) => { clearTimeout(uhr); scheitern(fehler); });
+    kind.on('close', (code) => {
+      clearTimeout(uhr);
+      if (rest.trim()) aufZeile(rest.trimEnd());
+      if (code === 0) return fertig();
+      scheitern(new Error(`${path.basename(skript)} brach ab: `
+        + (err.trim().split('\n').pop() || 'Rückgabewert ' + code)));
+    });
+  });
+}
+
+/* „%3d/%d <slug> mcu:%d db:%d“, die Fortschrittszeile von fetch-facts.py. */
+const WIKI_ZEILE = /^(\d+)\/(\d+)\s+(\S+)\s+mcu:(\d+)\s+db:(\d+)$/;
+
+function wikiNamen(figuren, slugs) {
+  const nach = new Map(figuren.map((f) => [f.slug, f]));
+  return slugs.filter((s) => nach.has(s)).map((s) => ({
+    slug: s, real: nach.get(s).name, role: nach.get(s).rolle || '',
+  }));
+}
+
+/* Die Einträge der genannten Figuren aus dem erzeugten Block einer
+   Datei. Aus der Kopie geholt, in js/facts.js gesetzt. */
+function wikiEintraege(quelle, slugs) {
+  const block = blockVon(quelle, 'CHAR_FACTS', 'der gebauten Kopie');
+  const bereiche = eintraege(block.zeilen);
+  const raus = new Map();
+  for (const slug of slugs) {
+    const bereich = bereiche.get(slug);
+    if (bereich) raus.set(slug, block.zeilen.slice(bereich.von, bereich.bis + 1));
+  }
+  return raus;
+}
+
+/* Den Steckbrief der genannten Figuren aus den Wikis holen und in
+   js/facts.js setzen. Alles, was nicht genannt ist, bleibt unberührt. */
+async function wikiAbrufen(slugs, frisch) {
+  if (!PYTHON) throw new Error(PYTHON_INFO.grund);
+  for (const skript of [WIKI_HOLEN, WIKI_BAUEN]) {
+    if (!fs.existsSync(skript)) {
+      throw new Error(`${path.relative(REPO, skript)} liegt nicht vor.`);
+    }
+  }
+  const figuren = baueFiguren();
+  const holen = wikiNamen(figuren, slugs);
+  if (!holen.length) return { geaendert: false, geholt: 0 };
+
+  fs.mkdirSync(WIKI_ORDNER, { recursive: true });
+  /* Eine Figur, die ausdrücklich neu abgerufen wird, soll wirklich neu
+     kommen und nicht aus dem Zwischenlager: Ihr Rohtext fliegt vorher
+     heraus. */
+  if (frisch) {
+    let roh = {};
+    try { roh = JSON.parse(fs.readFileSync(WIKI_ROH, 'utf8')); } catch { /* noch keine */ }
+    let weg = 0;
+    for (const { slug } of holen) {
+      if (!(slug in roh)) continue;
+      delete roh[slug];
+      weg += 1;
+    }
+    if (weg) fs.writeFileSync(WIKI_ROH, JSON.stringify(roh, null, 1), 'utf8');
+  }
+  const namenPfad = path.join(WIKI_ORDNER, 'namen.json');
+  const kopiePfad = path.join(WIKI_ORDNER, 'facts-gebaut.js');
+  fs.writeFileSync(namenPfad, JSON.stringify(holen, null, 1), 'utf8');
+  fs.copyFileSync(FACTS, kopiePfad);
+
+  /* Das Holen wächst mit der Zahl der Figuren, der Bau läuft immer über
+     die ganze Datei und ist dadurch ein Posten für sich. */
+  const lauf = laufStarten('Steckbriefe aus den Wikis', [
+    { schluessel: 'wiki:holen', einheiten: holen.length, name: 'Infoboxen holen' },
+    { schluessel: 'wiki:bauen', einheiten: 1, name: 'Angaben bauen' },
+  ]);
+  let geholt = 0;
+  try {
+    await wikiSkript(WIKI_HOLEN, [namenPfad, WIKI_ROH], (zeile) => {
+      const treffer = WIKI_ZEILE.exec(zeile.trim());
+      if (!treffer) return;
+      geholt += 1;
+      const [, at, von, name] = treffer;
+      lauf.meldet(`${name} (${at}/${von})`);
+    });
+    /* Der Bau meldet nur drei Sätze und dazwischen nichts. Der Balken
+       läuft derweil mit der erwarteten Dauer weiter, während der zuletzt
+       gemeldete Satz danebensteht. */
+    lauf.weiter('Angaben bauen');
+    await wikiSkript(WIKI_BAUEN, [WIKI_ROH, namenPfad, kopiePfad], (zeile) => {
+      if (zeile.trim()) lauf.meldet(zeile.trim());
+    });
+    lauf.fertig();
+  } catch (fehler) {
+    lauf.abbrechen();
+    throw fehler;
+  }
+
+  /* Aus der Kopie in die Datei: Eintrag für Eintrag, an der Stelle, an
+     die die Figur nach ihrem ersten Auftritt gehört. */
+  const gebaut = wikiEintraege(fs.readFileSync(kopiePfad, 'utf8'), holen.map((h) => h.slug));
+  const ordnung = wikiOrdnung(ladeDaten());
+  const factsAlt = fs.readFileSync(FACTS, 'utf8');
+  let quelle = factsAlt;
+  const gesetzt = [];
+  for (const [slug, zeilen] of gebaut) {
+    const neu = setzeEintrag(quelle, 'CHAR_FACTS', 'js/facts.js', slug, zeilen, ordnung);
+    if (neu === null) continue;
+    quelle = neu;
+    gesetzt.push(slug);
+  }
+  const ohne = holen.map((h) => h.slug).filter((s) => !gebaut.has(s));
+  if (quelle === factsAlt) {
+    return { geaendert: false, geholt, gesetzt: 0, ohne: ohne.length };
+  }
+
+  /* Probe: laden und nachsehen, ob die Einträge wirklich dastehen. */
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext([quelle, ';globalThis.PROBE = CHAR_FACTS;'].join('\n'), ctx,
+    { filename: 'facts-probe.js' });
+  for (const slug of gesetzt) {
+    if (!ctx.PROBE[slug]) {
+      throw new Error(`Der neue Block trägt ${slug} nicht. Es wurde nichts geschrieben.`);
+    }
+  }
+
+  sichereQuelle(FACTS, stempelJetzt());
+  fs.writeFileSync(FACTS, quelle, 'utf8');
+  return { geaendert: true, geholt, gesetzt: gesetzt.length, ohne: ohne.length };
+}
+
 /* ---------- Verlauf: rückgängig und wiederholen ----------
 
    Jeder Eingriff wird eingerahmt: Vorher und nachher wird gesichert, was
@@ -1344,6 +1954,26 @@ function mitVerlauf(titel, quellen, praefixe, tun) {
   return ergebnis;
 }
 
+/* Dasselbe für eine Änderung, die auf ein Programm wartet. Der Rahmen
+   bleibt so lange offen, wie sie dauert: Der Wiki-Abruf holt einige
+   Minuten lang Seiten, bevor auch nur eine Zeile geschrieben wird. */
+async function mitVerlaufAsync(titel, quellen, praefixe, tun) {
+  const rahmen = verlaufVorher(quellen, praefixe);
+  let ergebnis;
+  try {
+    ergebnis = await tun();
+  } catch (fehler) {
+    verwerfe(rahmen.n);
+    throw fehler;
+  }
+  if (ergebnis && ergebnis.geaendert === false) {
+    verwerfe(rahmen.n);
+    return ergebnis;
+  }
+  verlaufAnhaengen(titel, rahmen);
+  return ergebnis;
+}
+
 function verlaufStand() {
   const zurueck = verlauf.stelle > 0 ? verlauf.schritte[verlauf.stelle - 1] : null;
   const vor = verlauf.stelle < verlauf.schritte.length
@@ -1384,82 +2014,205 @@ function verlaufGehen(richtung) {
    der Nutzer bei einer Minute Rechnen vor einem Knopf, der scheinbar
    nichts tut.
 
-   Der Stand ist immer ein Anteil zwischen 0 und 1, nie unbestimmt. Wo
-   ein Programm von sich aus Prozente meldet, werden seine genommen, sonst
-   zählen die Arbeitsschritte. Eine Arbeit aus mehreren Abschnitten legt
-   deren Anteile gewichtet aneinander, damit der Balken einmal
-   durchläuft, statt je Abschnitt neu zu beginnen.
+   Die Zahl macht die Uhr: Der Server schickt, wie lange die Arbeit
+   voraussichtlich dauert und wie viel davon verstrichen ist, und der
+   Browser rechnet daraus Bild für Bild seinen Balken, siehe
+   zeigeFortschritt in studio.js. Die Zwischenstände der Skripte tragen
+   nur noch ihren Text bei. Vorher zählten Arbeitsschritte, und weil ein
+   Schritt mal drei Sekunden und mal zwei Minuten dauert, sprang der
+   Balken in Stufen, deren Größe mit dem Rest der Arbeit nichts zu tun
+   hatte.
 
    Der Strom kennt keinen Zustand: Wer sich anhängt, bekommt sofort den
    aktuellen Stand geschickt. Ein Neuladen mitten im Lauf verliert also
    nichts. */
 const zuhoerer = new Set();
-const laeufe = new Map();       // id -> { titel, schritt, anteil, seit }
+const laeufe = new Map();       // id -> { titel, schritt, seit, erwartet, fertig }
 let laufZaehler = 0;
 
 function fortschrittStand() {
-  /* Der jüngste Lauf ist der, den der Nutzer gerade ausgelöst hat. */
-  const alle = [...laeufe.entries()].map(([id, l]) => ({ id, ...l }));
-  return { laeufe: alle.sort((a, b) => b.seit - a.seit) };
+  /* Der jüngste Lauf ist der, den der Nutzer gerade ausgelöst hat. Die
+     verstrichene Zeit geht als Spanne hinaus, nicht als Uhrzeit: Der
+     Browser hat seine eigene Uhr und sie geht anders. */
+  const jetzt = Date.now();
+  const alle = [...laeufe.entries()]
+    .sort(([, a], [, b]) => b.seit - a.seit)
+    .map(([id, l]) => ({
+      id,
+      titel: l.titel,
+      schritt: l.schritt,
+      erwartet: l.erwartet,
+      verstrichen: jetzt - l.seit,
+      fertig: l.fertig,
+    }));
+  return { laeufe: alle };
 }
 
 function sendeStand() {
-  const zeile = `data: ${JSON.stringify(fortschrittStand())}\n\n`;
+  sendeAnAlle(`data: ${JSON.stringify(fortschrittStand())}\n\n`);
+}
+
+/* Der Stand der Dateien geht unter eigenem Ereignisnamen hinaus, damit
+   die Oberfläche ihn nicht aus jeder Fortschrittsmeldung heraussuchen
+   muss. Er kommt selten, der Fortschritt kommt im Sekundentakt.
+
+   Ein einziges Speichern meldet Windows gern mehrfach, und zwar weiter
+   auseinander, als eine Sammelpause abfangen könnte. Was zählt, ist
+   nicht die Meldung, sondern der Stand: Ist er derselbe wie eben, geht
+   nichts hinaus. */
+let letzterStand = '';
+
+function sendeStudioStand() {
+  const jetzt = JSON.stringify(standDesStudios());
+  if (jetzt === letzterStand) return;
+  letzterStand = jetzt;
+  sendeAnAlle(`event: stand\ndata: ${jetzt}\n\n`);
+}
+
+function sendeAnAlle(zeile) {
   for (const res of zuhoerer) {
     try { res.write(zeile); } catch { zuhoerer.delete(res); }
   }
 }
 
-/* Eine Arbeit anmelden. Die Abschnitte sind [Name, Gewicht]-Paare, ihre
-   Gewichte müssen sich nicht auf eins summieren, sie werden normiert. */
+/* ---------- Erwartete Dauer ----------
+
+   Damit die Uhr den Balken führen kann, braucht jede Arbeit eine
+   Schätzung, wie lange sie dauern wird. Geraten wird dafür nichts: Jeder
+   abgeschlossene Abschnitt schreibt seine gemessene Dauer fort, und nach
+   ein paar Läufen passt die Schätzung zu diesem Rechner statt zu dem, auf
+   dem der Quelltext entstanden ist. Die Zahlen unten sind nur die
+   Startwerte für den allerersten Lauf.
+
+   Gemessen wird je Einheit, und die Einheit ist das, womit die Dauer
+   wächst: beim Rechnen an Bildern ein Megapixel der Vorlage, beim Holen
+   aus den Wikis eine Figur, sonst der Lauf selbst. Erst dadurch ist eine
+   Messung auf das nächste, doppelt so große Bild übertragbar.
+
+   Der gleitende Mittelwert nimmt die ersten Läufe voll und später jeden
+   neuen zu einem Viertel. Ein Ausreißer, etwa ein Lauf bei ausgelasteter
+   Grafikkarte, verschiebt die Schätzung dann nicht mehr weit. */
+const DAUERN = path.join(HIER, '.durations.json');
+
+/* Millisekunden je Einheit, gemessen auf diesem Rechner und eher großzügig
+   gerundet: Ein Balken, der früher ankommt als angekündigt, ist besser als
+   einer, der lange bei neunundneunzig steht. Ein Schlüssel mit Doppelpunkt,
+   etwa „gesicht:gfpgan“, fällt auf den Teil davor zurück, solange für das
+   einzelne Modell noch nichts gemessen wurde. */
+const DAUER_VORGABE = {
+  hochrechnen: 130000,          // je Megapixel der Vorlage
+  gesicht: 70000,               // je Megapixel der Vorlage
+  freistellen: 700000,          // je Megapixel der Vorlage
+  zuschnitt: 2500,
+  analyse: 800,
+  rand: 800,
+  verlauf: 1500,
+  'wiki:holen': 1300,           // je Figur
+  'wiki:bauen': 26000,
+};
+
+let dauern = {};
+try { dauern = JSON.parse(fs.readFileSync(DAUERN, 'utf8')); } catch { /* erster Start */ }
+
+function jeEinheit(schluessel) {
+  const gemessen = dauern[schluessel];
+  if (gemessen && gemessen.ms > 0) return gemessen.ms;
+  return DAUER_VORGABE[schluessel]
+    || DAUER_VORGABE[schluessel.split(':')[0]]
+    || 5000;
+}
+
+function schaetzung(schluessel, einheiten) {
+  if (!schluessel) return 5000;
+  return jeEinheit(schluessel) * Math.max(0.05, Number(einheiten) || 1);
+}
+
+function merkeDauer(schluessel, einheiten, gemessen) {
+  if (!schluessel) return;
+  const je = gemessen / Math.max(0.05, Number(einheiten) || 1);
+  /* Nichts unter null und nichts über einer Stunde: Das eine ist keine
+     Messung, das andere ist etwas hängen geblieben. */
+  if (!(je > 0 && je <= 3600000)) return;
+  const alt = dauern[schluessel];
+  const laeufeBisher = alt && alt.laeufe > 0 ? alt.laeufe : 0;
+  const gewicht = Math.max(0.25, 1 / (laeufeBisher + 1));
+  const ms = laeufeBisher && alt.ms > 0 ? alt.ms + (je - alt.ms) * gewicht : je;
+  dauern[schluessel] = { ms: Math.round(ms), laeufe: Math.min(99, laeufeBisher + 1) };
+  try {
+    fs.writeFileSync(DAUERN, JSON.stringify(dauern, null, 1), 'utf8');
+  } catch { /* Dann hält die Schätzung nur bis zum Neustart. */ }
+}
+
+/* Eine Arbeit anmelden. Die Abschnitte sind { schluessel, einheiten, name }:
+   der Schlüssel für die Schätzung, die Einheiten als ihr Maß, der Name als
+   Zeile in der Anzeige. Ihre Schätzungen ergeben zusammen die erwartete
+   Dauer des Laufs, und mehr braucht der Balken nicht.
+
+   Die Abschnitte teilen den Balken nicht mehr auf, sie dienen nur noch der
+   Schätzung und der Messung. Ein Abschnitt, der gar nicht anfällt, gehört
+   deshalb nicht in die Liste, sonst liefe die Uhr für Arbeit, die niemand
+   tut. */
 function laufStarten(titel, abschnitte) {
   const id = ++laufZaehler;
-  const gesamt = abschnitte.reduce((s, [, g]) => s + g, 0) || 1;
-  let davor = 0;
-  const felder = abschnitte.map(([name, gewicht]) => {
-    const eintrag = { name, von: davor / gesamt, breite: gewicht / gesamt };
-    davor += gewicht;
-    return eintrag;
+  const teile = abschnitte.map((a) => ({
+    ...a, erwartet: schaetzung(a.schluessel, a.einheiten),
+  }));
+  const seit = Date.now();
+  laeufe.set(id, {
+    titel,
+    schritt: teile[0] ? teile[0].name : titel,
+    seit,
+    erwartet: Math.max(500, teile.reduce((summe, t) => summe + t.erwartet, 0)),
+    fertig: false,
   });
-  laeufe.set(id, { titel, schritt: felder[0] ? felder[0].name : titel, anteil: 0, seit: Date.now() });
   sendeStand();
 
   let stelle = 0;
+  let abschnittSeit = seit;
+
+  /* Was der Abschnitt gebraucht hat, geht in seine Schätzung ein, aber nur
+     einmal: Ein zweiter Aufruf am selben Abschnitt, etwa weiter() dicht
+     gefolgt von fertig(), maße sonst die Nullzeit dazwischen. */
+  const messen = () => {
+    const teil = teile[stelle];
+    if (teil && !teil.gemessen) {
+      teil.gemessen = true;
+      merkeDauer(teil.schluessel, teil.einheiten, Date.now() - abschnittSeit);
+    }
+    abschnittSeit = Date.now();
+  };
+
   return {
-    /* Innerhalb des laufenden Abschnitts, 0 bis 1. */
-    setz(anteilImAbschnitt, schritt) {
+    /* Nur die Zeile unter dem Balken. Was ein Skript an Prozenten meldet,
+       bleibt hier liegen: Die Zahl macht die Uhr. Gleicher Text heißt
+       nichts Neues und geht auch nicht hinaus, sonst schickte allein die
+       Engine ein paar hundert Meldungen je Lauf. */
+    meldet(schritt) {
       const l = laeufe.get(id);
-      if (!l) return;
-      const a = felder[stelle] || { von: 0, breite: 1 };
-      const roh = a.von + Math.min(1, Math.max(0, anteilImAbschnitt)) * a.breite;
-      /* Nie rückwärts: Ein springender Balken wirkt kaputt. */
-      l.anteil = Math.max(l.anteil, Math.min(1, roh));
-      if (schritt) l.schritt = schritt;
+      if (!l || !schritt || schritt === l.schritt) return;
+      l.schritt = schritt;
       sendeStand();
     },
     /* Zum nächsten Abschnitt weiterrücken. */
     weiter(schritt) {
       const l = laeufe.get(id);
       if (!l) return;
-      const a = felder[stelle];
-      if (a) l.anteil = Math.max(l.anteil, a.von + a.breite);
-      stelle = Math.min(stelle + 1, felder.length - 1);
-      l.schritt = schritt || (felder[stelle] ? felder[stelle].name : l.schritt);
+      messen();
+      stelle = Math.min(stelle + 1, teile.length - 1);
+      l.schritt = schritt || (teile[stelle] ? teile[stelle].name : l.schritt);
       sendeStand();
-    },
-    /* Einen Abschnitt überspringen, ohne seine Zeit zu verbrauchen: Was
-       aus dem Speicher kommt, ist sofort fertig. */
-    ueberspringe(schritt) {
-      this.weiter(schritt);
     },
     fertig() {
       const l = laeufe.get(id);
-      if (l) l.anteil = 1;
+      if (!l) return;
+      messen();
+      l.fertig = true;
       sendeStand();
-      /* Die volle Länge muss stehen bleiben, bis sie auch angekommen ist.
-         Der Balken wandert im Browser über eine knappe Drittelsekunde
-         dorthin, alles darunter sähe der Nutzer nie. */
-      setTimeout(() => { laeufe.delete(id); sendeStand(); }, 600);
+      /* Der Lauf bleibt noch stehen, solange der Browser seine vollen
+         hundert Prozent zeigt, siehe ABSCHLUSS_STEHT in studio.js. Wer in
+         diesem Moment neu lädt, sieht dann den fertigen Balken statt gar
+         nichts. */
+      setTimeout(() => { laeufe.delete(id); sendeStand(); }, 1200);
     },
     abbrechen() {
       laeufe.delete(id);
@@ -1468,27 +2221,21 @@ function laufStarten(titel, abschnitte) {
   };
 }
 
-/* Eine Arbeit umhüllen, die keine eigenen Zwischenstände meldet. Der
-   Balken läuft dann mit der erwarteten Dauer mit und bleibt kurz vor dem
-   Ende stehen, bis die Arbeit wirklich fertig ist. So geht er nie
-   rückwärts und behauptet nie, fertig zu sein, bevor er es ist. */
-async function mitFortschritt(titel, erwarteteSekunden, arbeit) {
-  const lauf = laufStarten(titel, [[titel, 1]]);
-  const beginn = Date.now();
-  const takt = setInterval(() => {
-    const anteil = (Date.now() - beginn) / 1000 / erwarteteSekunden;
-    /* Asymptotisch gegen 0.95: erst zügig, dann immer langsamer. */
-    lauf.setz(0.95 * (1 - Math.exp(-2.2 * anteil)));
-  }, 200);
+/* Eine Arbeit umhüllen, die keine eigenen Zwischenstände meldet. Sie
+   bekommt einen einzigen Abschnitt, der Balken läuft mit dessen Schätzung
+   mit und bleibt kurz vor dem Ende stehen, bis die Arbeit wirklich fertig
+   ist. So behauptet er nie, fertig zu sein, bevor er es ist. */
+async function mitFortschritt(titel, schluessel, arbeit) {
+  const lauf = laufStarten(titel, [{ schluessel, einheiten: 1, name: titel }]);
   try {
     const ergebnis = await arbeit(lauf);
-    clearInterval(takt);
     lauf.fertig();
     return ergebnis;
   } catch (fehler) {
     /* Bei einem Fehler verschwindet der Balken sofort, statt vorher noch
-       auf hundert zu springen. Was schiefging, sagt die Meldung. */
-    clearInterval(takt);
+       auf hundert zu springen. Was schiefging, sagt die Meldung. Gemessen
+       wird ein Abbruch nicht, seine Dauer sagt nichts über die eines
+       gelungenen Laufs. */
     lauf.abbrechen();
     throw fehler;
   }
@@ -1501,8 +2248,8 @@ async function mitFortschritt(titel, erwarteteSekunden, arbeit) {
    kleinen Vorlagen, deren Ausschnitt sonst unter 240 Pixel fiele.
 
    Gesucht wird die Engine wie Python: erst eine eigene Angabe über die
-   Umgebungsvariable REALESRGAN_PFAD, dann tools/realesrgan im Repo, dann
-   der entpackte Download. Das Ergebnis landet als PNG bei den
+   Umgebungsvariable REALESRGAN_PFAD, dann vendor/realesrgan neben dieser
+   Datei, dann der entpackte Download. Das Ergebnis landet als PNG bei den
    hochgeladenen Bildern und geht denselben Weg wie ein eigenes Bild.
 
    Die Kachelgröße ist fest auf 128 gesetzt: Mit der automatischen Wahl
@@ -1512,7 +2259,7 @@ async function mitFortschritt(titel, erwarteteSekunden, arbeit) {
 const ENGINE_MODELL = process.env.REALESRGAN_MODELL || 'realesrgan-x4plus';
 const ENGINE_KANDIDATEN = [
   process.env.REALESRGAN_PFAD,
-  path.join(REPO, 'tools', 'realesrgan', 'realesrgan-ncnn-vulkan.exe'),
+  path.join(HIER, 'vendor', 'realesrgan', 'realesrgan-ncnn-vulkan.exe'),
   path.join(os.homedir(), 'Downloads', 'realesrgan-ncnn-vulkan-20220424-windows',
     'realesrgan-ncnn-vulkan.exe'),
 ].filter(Boolean);
@@ -1523,16 +2270,15 @@ const ENGINE_INFO = ENGINE
   : {
     ok: false,
     grund: 'Real-ESRGAN wurde nicht gefunden. Die Engine gehört als '
-      + 'realesrgan-ncnn-vulkan.exe nach tools/realesrgan oder in den '
-      + 'Downloads-Ordner, oder ihr Pfad steht in der Umgebungsvariable '
-      + 'REALESRGAN_PFAD.',
+      + 'realesrgan-ncnn-vulkan.exe nach tools/portrait-studio/vendor/realesrgan '
+      + 'oder in den Downloads-Ordner, oder ihr Pfad steht in der '
+      + 'Umgebungsvariable REALESRGAN_PFAD.',
   };
 
-/* Die Engine schreibt ihren Stand fortlaufend nach stderr, als Zeilen wie
-   „86,67%“ mit dem Komma der deutschen Windows-Ausgabe. Deshalb spawn
-   statt execFile: Nur so lässt sich mitlesen, während sie rechnet, statt
-   erst am Ende alles auf einmal zu bekommen. */
-function engineLauf(quelle, ziel, kachel, melde) {
+/* spawn statt execFile, damit stderr mitläuft: Bei einem Vulkan-Absturz
+   steht der Fehler nur dort, und zwar noch während die Engine rechnet.
+   Ihre Prozentzeilen bleiben ungelesen, den Balken führt die Uhr. */
+function engineLauf(quelle, ziel, kachel) {
   return new Promise((fertig, scheitern) => {
     /* cwd ist der Ordner der Engine, dort liegt ihr models-Verzeichnis. */
     const kind = spawn(ENGINE,
@@ -1549,8 +2295,6 @@ function engineLauf(quelle, ziel, kachel, melde) {
       /* Bei einem Vulkan-Absturz schreibt die Engine trotzdem eine Datei
          und beendet sich mit 0. Der Fehler steht nur hier im Text. */
       if (/failed/i.test(text)) abbruch = text.split('\n').find((z) => /failed/i.test(z)).trim();
-      const treffer = [...text.matchAll(/(\d+[.,]\d+)\s*%/g)].pop();
-      if (treffer && melde) melde(parseFloat(treffer[1].replace(',', '.')) / 100);
     });
 
     kind.on('error', (fehler) => { clearTimeout(uhr); scheitern(fehler); });
@@ -1565,7 +2309,77 @@ function engineLauf(quelle, ziel, kachel, melde) {
   });
 }
 
-/* Breite und Höhe aus dem PNG-Kopf. null heißt: keine brauchbare Datei. */
+/* Breite und Höhe aus dem Dateikopf, für PNG, WebP und JPEG. Gebraucht
+   wird das für die Schätzung: Real-ESRGAN und die Gesichtsmodelle rechnen
+   Pixel ab, ein doppelt so großes Bild dauert doppelt so lang. null heißt
+   unbekannt, dann rechnet die Schätzung mit einem Megapixel.
+
+   Die 64 Kilobyte reichen für die Köpfe aller drei Formate. Bei JPEG
+   liegt das Maß hinter den Segmenten, deren Länge im Kopf steht, deshalb
+   der Sprung von Marke zu Marke. */
+function bildMass(pfad) {
+  let fd;
+  try {
+    fd = fs.openSync(pfad, 'r');
+    const kopf = Buffer.alloc(65536);
+    const gelesen = fs.readSync(fd, kopf, 0, kopf.length, 0);
+    if (gelesen < 32) return null;
+
+    if (kopf.readUInt32BE(0) === 0x89504e47) {
+      return { breite: kopf.readUInt32BE(16), hoehe: kopf.readUInt32BE(20) };
+    }
+
+    if (kopf.toString('ascii', 0, 4) === 'RIFF' && kopf.toString('ascii', 8, 12) === 'WEBP') {
+      /* Drei Fassungen: verlustbehaftet, verlustfrei und die erweiterte
+         mit Alphakanal. Jede schreibt ihr Maß woandershin. */
+      const art = kopf.toString('ascii', 12, 16);
+      if (art === 'VP8X') {
+        return { breite: kopf.readUIntLE(24, 3) + 1, hoehe: kopf.readUIntLE(27, 3) + 1 };
+      }
+      if (art === 'VP8L') {
+        const bits = kopf.readUInt32LE(21);
+        return { breite: (bits & 0x3fff) + 1, hoehe: ((bits >>> 14) & 0x3fff) + 1 };
+      }
+      if (art === 'VP8 ') {
+        return { breite: kopf.readUInt16LE(26) & 0x3fff, hoehe: kopf.readUInt16LE(28) & 0x3fff };
+      }
+      return null;
+    }
+
+    if (kopf[0] === 0xff && kopf[1] === 0xd8) {
+      let i = 2;
+      while (i + 9 < gelesen) {
+        if (kopf[i] !== 0xff) { i += 1; continue; }
+        const marke = kopf[i + 1];
+        /* Füllbytes und die Marken ohne Rumpf haben keine Länge. */
+        if (marke === 0xff || marke === 0xd8 || marke === 0x01
+          || (marke >= 0xd0 && marke <= 0xd7)) { i += 2; continue; }
+        /* Die Rahmenköpfe SOF0 bis SOF15 tragen das Maß. Die drei Marken
+           dazwischen bedeuten etwas anderes, sie sind Tabellen. */
+        if (marke >= 0xc0 && marke <= 0xcf
+          && marke !== 0xc4 && marke !== 0xc8 && marke !== 0xcc) {
+          return { hoehe: kopf.readUInt16BE(i + 5), breite: kopf.readUInt16BE(i + 7) };
+        }
+        i += 2 + kopf.readUInt16BE(i + 2);
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+}
+
+function megapixel(pfad) {
+  const mass = bildMass(pfad);
+  if (!mass || !mass.breite || !mass.hoehe) return 1;
+  return Math.max(0.05, (mass.breite * mass.hoehe) / 1000000);
+}
+
+/* Breite und Höhe aus dem PNG-Kopf. null heißt: keine brauchbare Datei.
+   Anders als bildMass ist das zugleich die Prüfung, ob überhaupt ein PNG
+   herausgekommen ist. */
 function pngMass(pfad) {
   let fd;
   try {
@@ -1586,13 +2400,13 @@ function pngMass(pfad) {
    Real-ESRGAN schärft Kanten, es kann aber keine Hautporen, Wimpern oder
    Iris erfinden. Gesichter geraten dadurch glatt und wächsern. GFPGAN und
    CodeFormer schneiden das Gesicht heraus und bauen es aus einem
-   gelernten Gesichtsmodell neu auf, siehe tools/gesicht/gesicht.py.
+   gelernten Gesichtsmodell neu auf, siehe services/facial-recognition/enhance-face.py.
 
    Das ist ein zweiter Schritt nach dem Hochskalieren und ein eigenes
    Python: Die Modelle brauchen PyTorch, das in der schlanken Umgebung des
    Porträt-Skills nichts zu suchen hat. Fehlt die Umgebung, bleiben die
    Modelle in der Oberfläche gesperrt und das Hochskalieren geht ohne. */
-const GESICHT_SKRIPT = path.join(REPO, 'tools', 'gesicht', 'gesicht.py');
+const GESICHT_SKRIPT = path.join(HIER, 'services', 'facial-recognition', 'enhance-face.py');
 const GESICHT_KANDIDATEN = [
   process.env.GESICHT_PYTHON,
   path.join(os.homedir(), 'AppData', 'Local', 'gesicht', 'Scripts', 'python.exe'),
@@ -1610,7 +2424,8 @@ function gesichtSuchen() {
           ok: false,
           modelle: [],
           grund: 'Die Gesichtsveredelung steht nicht bereit. Einrichten mit '
-            + 'tools/gesicht/einrichten.py, siehe den Kopf dieser Datei.',
+            + 'services/facial-recognition/install-models.py im Studioordner, '
+            + 'siehe den Kopf dieser Datei.',
         };
         return fertig();
       }
@@ -1633,7 +2448,7 @@ function gesichtSuchen() {
   });
 }
 
-/* gesicht.py meldet seinen Stand als Zeilen „FORTSCHRITT <0..1> <Text>“
+/* enhance-face.py meldet seinen Stand als Zeilen „FORTSCHRITT <0..1> <Text>“
    auf stderr, das Ergebnis wie gehabt als JSON auf stdout. */
 const FORTSCHRITT_ZEILE = /^FORTSCHRITT\s+([0-9.]+)\s*(.*)$/;
 
@@ -1670,7 +2485,7 @@ function gesichtLauf(quelle, ziel, modell, treue, melde) {
       try { daten = JSON.parse(zeile); } catch { /* gleich unten */ }
       if (daten && daten.fehler) return scheitern(new Error(daten.fehler));
       if (!daten) {
-        return scheitern(new Error('Unlesbare Antwort von gesicht.py: '
+        return scheitern(new Error('Unlesbare Antwort von enhance-face.py: '
           + (err.trim().split('\n').pop() || zeile)));
       }
       fertigStellen(daten);
@@ -1695,21 +2510,29 @@ function neueId() {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 }
 
+/* Liegt das hochgerechnete Bild schon bereit? Das entscheidet vor dem
+   Start, ob der Abschnitt überhaupt in die erwartete Dauer gehört. */
+function esrganBekannt(pfad) {
+  const bekannt = skaliert.get(pfad + '|' + fs.statSync(pfad).mtimeMs);
+  return !!(bekannt && fs.existsSync(bekannt));
+}
+
 async function esrganSchritt(pfad, lauf) {
   const schluessel = pfad + '|' + fs.statSync(pfad).mtimeMs;
   const bekannt = skaliert.get(schluessel);
   if (bekannt && fs.existsSync(bekannt)) {
-    if (lauf) lauf.ueberspringe('Aus dem Speicher übernommen');
+    /* Kein weiter() und keine Meldung: Der Abschnitt steht gar nicht in
+       der Liste, der Lauf ist schon beim Gesicht, und dessen Name steht
+       auch schon da. */
     return { pfad: bekannt, wiederverwendet: true };
   }
 
   fs.mkdirSync(UPLOADS, { recursive: true });
   const ziel = path.join(UPLOADS, neueId() + '.png');
-  const melde = lauf ? (anteil) => lauf.setz(anteil, 'Bild wird hochgerechnet') : null;
   try {
-    await engineLauf(pfad, ziel, 128, melde);
+    await engineLauf(pfad, ziel, 128);
   } catch {
-    await engineLauf(pfad, ziel, 64, melde);
+    await engineLauf(pfad, ziel, 64);
   }
   if (!pngMass(ziel)) throw new Error('Die Engine hat keine lesbare Datei geschrieben.');
   skaliert.set(schluessel, ziel);
@@ -1732,23 +2555,37 @@ async function hochskalieren(quelle, modell, treue) {
   engineLaeuft = true;
   const beginn = Date.now();
 
-  /* Das Hochrechnen dauert etwa dreimal so lange wie das Gesicht. Mit
-     diesen Gewichten läuft der Balken einmal durch, statt bei jedem
-     Abschnitt neu anzusetzen. */
-  const lauf = laufStarten('Upscale',
-    modell === 'ohne' ? [['Bild wird hochgerechnet', 1]]
-      : [['Bild wird hochgerechnet', 3], ['Gesichter werden neu aufgebaut', 1]]);
+  /* Beide Schritte rechnen an Pixeln, also ist das Megapixel der Vorlage
+     ihr Maß. Was schon im Speicher liegt, bleibt draußen: Wer nach GFPGAN
+     noch CodeFormer sehen will, wartet nur auf das Gesicht. */
+  const vorlageMass = megapixel(pfad);
+  const abschnitte = [];
+  if (!esrganBekannt(pfad)) {
+    abschnitte.push({
+      schluessel: 'hochrechnen', einheiten: vorlageMass, name: 'Bild wird hochgerechnet',
+    });
+  }
+  if (modell !== 'ohne') {
+    abschnitte.push({
+      schluessel: 'gesicht:' + modell, einheiten: vorlageMass,
+      name: 'Gesichter werden neu aufgebaut',
+    });
+  }
+  if (!abschnitte.length) {
+    abschnitte.push({ schluessel: null, einheiten: 1, name: 'Aus dem Speicher übernommen' });
+  }
+  const lauf = laufStarten('Upscale', abschnitte);
 
   try {
-    const gross = await esrganSchritt(pfad, lauf);
-    let ergebnisPfad = gross.pfad;
+    const grossesBild = await esrganSchritt(pfad, lauf);
+    let ergebnisPfad = grossesBild.pfad;
     let gesichter = null;
     let hinweis = null;
 
     if (modell !== 'ohne') {
       const ziel = path.join(UPLOADS, neueId() + '.png');
-      const bericht = await gesichtLauf(gross.pfad, ziel, modell, treue,
-        (anteil, text) => lauf.setz(anteil, text));
+      const bericht = await gesichtLauf(grossesBild.pfad, ziel, modell, treue,
+        (anteil, text) => lauf.meldet(text));
       if (bericht.gesichter) {
         ergebnisPfad = ziel;
         gesichter = bericht.gesichter;
@@ -1781,6 +2618,171 @@ async function hochskalieren(quelle, modell, treue) {
   }
 }
 
+/* ---------- Freistellen ----------
+
+   Den Hintergrund einer deckenden Vorlage entfernen, damit sie mit
+   Alphakanal auf die Bühne kommt. Das ist mehr als Bequemlichkeit: Ohne
+   Alpha schätzt der Vorschlag den Kopf allein aus der Gesichtsbox, und
+   der Rahmen der Charakterseite bekommt beim Ganzkörperbild einen Kasten
+   statt einer freistehenden Figur.
+
+   Gerechnet wird örtlich mit rembg und einem ONNX-Modell aus ~/.u2net,
+   ohne jede Verbindung nach draußen. Was die Wege taugen und warum sie
+   so gewählt sind, steht im Kopf von remove-background.py.
+
+   Wieder ein eigenes Python, aus demselben Grund wie bei den
+   Gesichtsmodellen: rembg und onnxruntime wiegen zusammen ein Vielfaches
+   der schlanken Umgebung, mit der crop-image.py zuschneidet. Fehlt es, bleibt
+   der Knopf gesperrt und sagt beim Zeigen, was zu tun ist. */
+const FREI_SKRIPT = path.join(HIER, 'services', 'remove-background.py');
+const FREI_KANDIDATEN = [
+  process.env.FREISTELLEN_PYTHON,
+  path.join(os.homedir(), 'AppData', 'Local', 'mvp', 'Scripts', 'python.exe'),
+  'python',
+  'py',
+].filter(Boolean);
+
+let FREI = null;
+let FREI_INFO = { ok: false, modelle: [], grund: 'noch nicht geprüft' };
+
+function freiSuchen() {
+  return new Promise((fertig) => {
+    let i = 0;
+    let letzterGrund = null;
+    const naechster = () => {
+      if (i >= FREI_KANDIDATEN.length) {
+        FREI_INFO = {
+          ok: false,
+          modelle: [],
+          grund: letzterGrund || 'Das Freistellen steht nicht bereit. Es braucht '
+            + 'eine Python-Umgebung mit rembg, onnxruntime und OpenCV, dazu '
+            + 'mindestens ein Modell in ~/.u2net. Siehe den Kopf von '
+            + 'tools/portrait-studio/services/remove-background.py.',
+        };
+        return fertig();
+      }
+      const kandidat = FREI_KANDIDATEN[i++];
+      execFile(kandidat, [FREI_SKRIPT, 'pruefen'], { timeout: 120000 },
+        (fehler, aus) => {
+          if (fehler) return naechster();
+          try {
+            const info = JSON.parse(aus.trim().split('\n').pop());
+            /* Ein Python mit rembg, aber ohne Modell ist kein Treffer. Sein
+               Grund ist aber der hilfreichste, den es zu melden gibt: Er
+               nennt den Ordner, in den das Modell gehört. */
+            if (!info.ok) {
+              if (info.grund) letzterGrund = info.grund;
+              return naechster();
+            }
+            FREI = kandidat;
+            FREI_INFO = { ok: true, ...info, pfad: kandidat };
+            return fertig();
+          } catch {
+            return naechster();
+          }
+        });
+    };
+    naechster();
+  });
+}
+
+/* Wie gesichtLauf: Zwischenstände als „FORTSCHRITT“ auf stderr, das
+   Ergebnis als JSON auf stdout. */
+function freiLauf(quelle, ziel, modell, feinschliff, saum, melde) {
+  return new Promise((fertigStellen, scheitern) => {
+    const kind = spawn(FREI, [FREI_SKRIPT, 'frei', '--bild', quelle,
+      '--ziel', ziel, '--modell', modell,
+      '--feinschliff', feinschliff ? '1' : '0', '--saum', String(saum)]);
+
+    let aus = '';
+    let err = '';
+    let rest = '';
+    const uhr = setTimeout(() => kind.kill(), 900000);
+
+    kind.stdout.on('data', (teil) => { aus += teil.toString(); });
+    kind.stderr.on('data', (teil) => {
+      const text = rest + teil.toString();
+      const zeilen = text.split('\n');
+      rest = zeilen.pop();
+      for (const zeile of zeilen) {
+        const treffer = FORTSCHRITT_ZEILE.exec(zeile.trim());
+        if (treffer) {
+          if (melde) melde(parseFloat(treffer[1]), treffer[2].trim() || null);
+        } else {
+          err += zeile + '\n';
+        }
+      }
+    });
+
+    kind.on('error', (fehler) => { clearTimeout(uhr); scheitern(fehler); });
+    kind.on('close', () => {
+      clearTimeout(uhr);
+      const zeile = aus.trim().split('\n').pop();
+      let daten = null;
+      try { daten = JSON.parse(zeile); } catch { /* gleich unten */ }
+      if (daten && daten.fehler) return scheitern(new Error(daten.fehler));
+      if (!daten) {
+        return scheitern(new Error('Unlesbare Antwort von remove-background.py: '
+          + (err.trim().split('\n').pop() || zeile)));
+      }
+      fertigStellen(daten);
+    });
+  });
+}
+
+/* Derselbe Speicher wie beim Hochskalieren: Wer nach BiRefNet noch ISNet
+   sehen will, soll den ersten Lauf nicht verlieren, und wer zweimal
+   dasselbe drückt, bekommt es sofort. */
+const freigestellt = new Map();  // Vorlage + Einstellungen -> Ergebnis
+let freiLaeuft = false;
+
+async function freistellen(quelle, modell, feinschliff, saum) {
+  const { pfad, vorlage } = quellePfad(quelle);
+  const stamm = vorlage.replace(/\.[^.]+$/, '');
+  const schluessel = [pfad, fs.statSync(pfad).mtimeMs, modell,
+    feinschliff ? 1 : 0, saum].join('|');
+
+  const fertig = freigestellt.get(schluessel);
+  const bekannt = fertig && hochgeladen.get(fertig.id);
+  if (bekannt && fs.existsSync(bekannt.pfad)) return { ...fertig, wiederverwendet: true };
+
+  if (freiLaeuft) throw new Error('Es läuft schon ein Freistellen, kurz warten.');
+  freiLaeuft = true;
+  const beginn = Date.now();
+
+  /* Ein Abschnitt. Der Feinschliff steht im Schlüssel, denn er ist ein
+     zweiter Durchgang am Ausschnitt und verdoppelt die Dauer fast. */
+  const lauf = laufStarten('Freistellen', [{
+    schluessel: `freistellen:${modell}${feinschliff ? ':fein' : ''}`,
+    einheiten: megapixel(pfad),
+    name: 'Hintergrund wird entfernt',
+  }]);
+
+  try {
+    fs.mkdirSync(UPLOADS, { recursive: true });
+    const ziel = path.join(UPLOADS, neueId() + '.png');
+    const bericht = await freiLauf(pfad, ziel, modell, feinschliff, saum,
+      (anteil, text) => lauf.meldet(text));
+
+    const id = neueId();
+    const name = `${stamm}-frei.png`;
+    hochgeladen.set(id, { pfad: ziel, name });
+    const ergebnis = {
+      id, name, breite: bericht.breite, hoehe: bericht.hoehe,
+      modell: bericht.modell, anteil: bericht.anteil, kante: bericht.kante,
+      feinschliff: bericht.feinschliff, saum: bericht.saum,
+    };
+    freigestellt.set(schluessel, ergebnis);
+    lauf.fertig();
+    return { ...ergebnis, dauer: Math.round((Date.now() - beginn) / 1000) };
+  } catch (fehler) {
+    lauf.abbrechen();
+    throw fehler;
+  } finally {
+    freiLaeuft = false;
+  }
+}
+
 /* ---------- Hochgeladene Bilder ---------- */
 
 const hochgeladen = new Map();   // id -> { pfad, name }
@@ -1797,15 +2799,24 @@ function uploadAblegen(daten, name) {
 
 /* ---------- Quelle auflösen ----------
 
-   Nur Dateien aus dem Ganzkörperordner und frisch hochgeladene Bilder
+   Nur Dateien aus den beiden Bildordnern und frisch hochgeladene Bilder
    sind erlaubt. Damit kann über die Schnittstelle nichts Beliebiges vom
-   Rechner gelesen werden. */
+   Rechner gelesen werden.
+
+   „portrait“ ist das bestehende Porträt als Vorlage: Es lässt sich damit
+   neu beschneiden, hochrechnen und freistellen, statt nur danebenzuliegen.
+   Beim Speichern ist die Zieldatei dann dieselbe Datei. Das geht, weil
+   crop-image.py die Vorlage vollständig einliest, bevor es schreibt, und
+   der Server vorher ohnehin eine Sicherung zieht. */
 function quellePfad(quelle) {
   if (!quelle || typeof quelle !== 'object') throw new Error('Quelle fehlt.');
-  if (quelle.typ === 'fullsize') {
+  if (quelle.typ === 'fullsize' || quelle.typ === 'portrait') {
     if (!/^[a-z0-9-]+$/.test(quelle.name || '')) throw new Error('Ungültige Quelle.');
-    const pfad = path.join(FULLSIZE, quelle.name + '.webp');
-    if (!fs.existsSync(pfad)) throw new Error('Ganzkörperbild fehlt: ' + quelle.name);
+    const gk = quelle.typ === 'fullsize';
+    const pfad = path.join(gk ? FULLSIZE : PORTRAITS, quelle.name + '.webp');
+    if (!fs.existsSync(pfad)) {
+      throw new Error((gk ? 'Ganzkörperbild fehlt: ' : 'Porträt fehlt: ') + quelle.name);
+    }
     return { pfad, vorlage: quelle.name + '.webp' };
   }
   if (quelle.typ === 'upload') {
@@ -1838,6 +2849,199 @@ function sichern(datei, gk) {
   return path.relative(REPO, ziel).replace(/\\/g, '/');
 }
 
+/* ---------- Der Sicherungsordner ----------
+
+   Vor jedem Eingriff legt das Studio eine Kopie der Datei nach
+   .sicherung, mit dem Zeitpunkt im Namen. Das ist die Rückfallebene für
+   den Fall, dass etwas schiefging und der Verlauf nicht mehr hilft: Er
+   gilt nur für die laufende Sitzung, die Sicherung überlebt den Neustart.
+
+   Dafür wächst sie unbegrenzt, und was einmal drin liegt, kam bisher nur
+   von Hand wieder heraus. Die Funktionen hier machen den Ordner von der
+   Oberfläche aus lesbar: auflisten, eine Fassung zurückholen, aufräumen.
+
+   Zwei Namensformen sind über die Zeit entstanden, beide stehen noch im
+   Ordner. Die ältere hängt den Zeitpunkt hinten an den ganzen Dateinamen
+   (chars.js-2026-08-04T10-57-05), die jüngere setzt ihn vor die Endung
+   (chars-2026-08-04T10-57-05.js). Gelesen werden beide, geschrieben nur
+   noch die jüngere. */
+
+/* Welche Quelldatei hinter einem Rumpf steckt. Bilder brauchen das nicht,
+   ihr Ordner steht am gk-Präfix. */
+const SICHERUNG_QUELLEN = {
+  chars: 'js/chars.js',
+  'chars.js': 'js/chars.js',
+  'data.js': 'js/data.js',
+  'profiles.js': 'js/profiles.js',
+  'facts.js': 'js/facts.js',
+  'CREDITS.md': 'assets/characters/fullsize/CREDITS.md',
+};
+
+const SICHERUNG_MUSTER = /^(.+)-(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2})(\.webp|\.js)?$/;
+
+/* Aus dem Zeitstempel im Namen wieder ein Datum machen. Er ist eine ISO-
+   Zeit in Ortszeit-Schreibweise, bei der Doppelpunkte zu Bindestrichen
+   wurden, siehe stempelJetzt(). */
+function stempelLesen(stempel) {
+  const [tag, zeit] = stempel.split('T');
+  return new Date(`${tag}T${zeit.replace(/-/g, ':')}`);
+}
+
+/* Einen Dateinamen aus .sicherung auseinandernehmen. Gibt null zurück,
+   wenn er nicht dem Muster folgt: Was da von Hand hineingelegt wurde,
+   soll die Oberfläche nicht anfassen. */
+function sicherungDeuten(name) {
+  const treffer = SICHERUNG_MUSTER.exec(name);
+  if (!treffer) return null;
+  const [, rumpf, stempel, endung] = treffer;
+  const zeit = stempelLesen(stempel);
+  if (Number.isNaN(zeit.getTime())) return null;
+
+  if (endung === '.webp') {
+    const gk = rumpf.startsWith('gk-');
+    const datei = gk ? rumpf.slice(3) : rumpf;
+    return {
+      name,
+      art: gk ? 'ganzkoerper' : 'portrait',
+      datei,
+      ziel: `assets/characters/${gk ? 'fullsize' : 'portraits'}/${datei}.webp`,
+      zeit: zeit.getTime(),
+    };
+  }
+
+  const quelle = SICHERUNG_QUELLEN[endung ? rumpf + endung : rumpf]
+    || SICHERUNG_QUELLEN[rumpf];
+  if (!quelle) return null;
+  return { name, art: 'quelle', datei: path.basename(quelle), ziel: quelle, zeit: zeit.getTime() };
+}
+
+/* Der Ordnerinhalt, gedeutet und mit der jüngsten Sicherung zuerst. Was
+   dem Muster nicht folgt, wird nur gezählt: Von Hand Hineingelegtes soll
+   die Oberfläche weder anzeigen noch löschen. */
+function sicherungRoh() {
+  let namen = [];
+  try { namen = fs.readdirSync(SICHERUNG); } catch { return { eintraege: [], bytes: 0, fremd: 0 }; }
+
+  const eintraege = [];
+  let bytes = 0;
+  let fremd = 0;
+  for (const name of namen) {
+    const eintrag = sicherungDeuten(name);
+    let stat;
+    try { stat = fs.statSync(path.join(SICHERUNG, name)); } catch { continue; }
+    if (!stat.isFile()) continue;
+    if (!eintrag) { fremd += 1; continue; }
+    bytes += stat.size;
+    eintraege.push({ ...eintrag, bytes: stat.size });
+  }
+  eintraege.sort((a, b) => b.zeit - a.zeit || a.name.localeCompare(b.name, 'de'));
+  return { eintraege, bytes, fremd };
+}
+
+/* Dasselbe für die Oberfläche: mit dem Namen der Figur zu jedem Bild,
+   sonst stünde in der Liste nur ein Dateiname. Das kostet einen Durchlauf
+   durch data.js, deshalb steht es nicht schon in sicherungRoh(). */
+function sicherungListe() {
+  const roh = sicherungRoh();
+
+  /* Der Figurenname zur Datei, bei abweichenden Fassungen mit deren
+     Beschriftung dahinter. „Standard“ sagt nichts und bleibt weg. */
+  const titel = new Map();
+  const merkeTitel = (art, figur, ziel) => {
+    titel.set(art + '/' + ziel.datei,
+      ziel.label && ziel.label !== 'Standard' ? `${figur.name} · ${ziel.label}` : figur.name);
+  };
+  try {
+    for (const figur of baueFiguren()) {
+      for (const ziel of figur.ziele) merkeTitel('portrait', figur, ziel);
+      for (const ziel of figur.ganzkoerper) merkeTitel('ganzkoerper', figur, ziel);
+    }
+  } catch { /* ohne Namen eben nur die Dateinamen */ }
+
+  roh.eintraege = roh.eintraege.map((e) => ({
+    ...e,
+    titel: titel.get(e.art + '/' + e.datei) || null,
+    /* Steht das Ziel überhaupt noch da? Fehlt es, ist die Sicherung das
+       Einzige, was von der Datei geblieben ist. */
+    vorhanden: fs.existsSync(path.join(REPO, e.ziel)),
+  }));
+  return roh;
+}
+
+/* Eine Sicherung annehmen, aber nur eine, die auch wirklich eine ist.
+   Der Name kommt von außen, deshalb wird er nicht zusammengesetzt,
+   sondern gegen den Ordnerinhalt geprüft. */
+function sicherungPfad(name) {
+  if (typeof name !== 'string' || path.basename(name) !== name || !sicherungDeuten(name)) {
+    throw new Error('Das ist kein Name aus dem Sicherungsordner.');
+  }
+  const pfad = path.join(SICHERUNG, name);
+  if (!fs.existsSync(pfad)) throw new Error(`${name} liegt nicht mehr in der Sicherung.`);
+  return pfad;
+}
+
+/* Eine Fassung zurückholen. Was gerade an der Stelle steht, wird vorher
+   selbst gesichert, sonst tauschte ein Griff in die Rückfallebene genau
+   das weg, wovor sie schützen soll. Der Schritt geht in den Verlauf, ein
+   Strg+Z nimmt ihn also zurück. */
+function sicherungZurueck(name) {
+  const quelle = sicherungPfad(name);
+  const eintrag = sicherungDeuten(name);
+  const ziel = path.join(REPO, eintrag.ziel);
+  const stempel = stempelJetzt();
+
+  return mitVerlauf(
+    `Zurückgeholt: ${eintrag.ziel}`,
+    eintrag.art === 'quelle' ? [eintrag.ziel] : [],
+    eintrag.art === 'quelle' ? [] : [eintrag.datei],
+    () => {
+      fs.mkdirSync(SICHERUNG, { recursive: true });
+      if (fs.existsSync(ziel)) {
+        if (eintrag.art === 'quelle') sichereQuelle(ziel, stempel);
+        else sichern(eintrag.datei, eintrag.art === 'ganzkoerper');
+      }
+      fs.mkdirSync(path.dirname(ziel), { recursive: true });
+      fs.copyFileSync(quelle, ziel);
+      return { geaendert: true, ziel: eintrag.ziel };
+    },
+  );
+}
+
+/* Aufräumen. Ohne Angabe fliegt alles heraus, sonst die genannten Namen.
+   „veraltet“ behält je Ziel die jüngste Fassung und wirft die älteren
+   weg: Das ist der Griff, der den Ordner klein hält, ohne die letzte
+   Rückfallebene zu nehmen. */
+function sicherungLoeschen({ namen, alle, veraltet }) {
+  const { eintraege } = sicherungRoh();
+  let weg = [];
+
+  if (alle) {
+    weg = eintraege.map((e) => e.name);
+  } else if (veraltet) {
+    const gesehen = new Set();
+    for (const e of eintraege) {            // schon jüngste zuerst sortiert
+      const schluessel = e.art + '/' + e.ziel;
+      if (gesehen.has(schluessel)) weg.push(e.name);
+      else gesehen.add(schluessel);
+    }
+  } else {
+    const bekannt = new Set(eintraege.map((e) => e.name));
+    weg = (Array.isArray(namen) ? namen : []).filter((n) => bekannt.has(n));
+  }
+
+  /* „frei“ und nicht „bytes“: Die Antwort trägt daneben den neuen Stand
+     des Ordners, und dort heißt die Summe schon bytes. */
+  let frei = 0;
+  for (const name of weg) {
+    const pfad = path.join(SICHERUNG, name);
+    try {
+      frei += fs.statSync(pfad).size;
+      fs.unlinkSync(pfad);
+    } catch { /* schon weg, auch recht */ }
+  }
+  return { geloescht: weg.length, frei };
+}
+
 /* Die Liste der offenen Porträts neu schreiben. Der Nutzer erwartet sie
    nach jedem Austausch aktuell, siehe tools/portraits-offen.js. */
 function listeErneuern() {
@@ -1852,17 +3056,33 @@ function listeErneuern() {
 /* ---------- Läuft hier noch die Fassung von vorhin? ----------
 
    Am Studio wird gearbeitet, während es läuft. Node lädt dabei nichts
-   nach: server.js und bild.py bleiben auf dem Stand des Starts. Wer eine
+   nach: server.js und crop-image.py bleiben auf dem Stand des Starts. Wer eine
    Änderung erwartet und sie nicht bekommt, sucht den Fehler sonst in
    seinem Bild statt im laufenden Prozess, und das kann dauern.
 
    Die Seite bekommt ihre Dateien bei jedem Laden frisch, siehe no-store
    in sende(). Ein Tab, der schon länger offen ist, kann trotzdem alt
    sein, deshalb geht der jüngste Zeitstempel mit an die Oberfläche: Sie
-   vergleicht ihn mit dem, den sie beim Laden gesehen hat. */
+   vergleicht ihn mit dem, den sie beim Laden gesehen hat.
+
+   Warten muss sie darauf nicht. Ein Wächter über dem Studioordner meldet
+   jede Änderung sofort über den Ereignisstrom, und die Oberfläche zieht
+   daraus ihren Schluss, siehe pruefeStand in studio.js. Das Stilblatt
+   steht dabei für sich allein: Es lässt sich im laufenden Betrieb
+   austauschen, während jede andere Datei ein Neuladen braucht. Genau
+   deshalb zählt es nicht zu den Seitendateien.
+
+   START geht ebenfalls mit. Daran erkennt die Oberfläche einen Neustart
+   des Servers, auch einen, den sie nicht ausgelöst hat: Läuft node mit
+   --watch, ist der Neustart nach einer Änderung an server.js das
+   Übliche, und die Oberfläche holt sich die neue Fassung von selbst. */
 const START = Date.now();
-const SERVERDATEIEN = ['server.js', 'bild.py'];
-const SEITENDATEIEN = ['index.html', 'studio.js', 'studio.css', 'hintergrund.js'];
+const SERVERDATEIEN = ['server.js', 'services/crop-image.py', 'services/remove-background.py',
+  'services/facial-recognition/enhance-face.py'];
+const STILDATEI = 'styles/studio.css';
+const SEITENDATEIEN = ['index.html', 'studio.js', 'components/hintergrund.js',
+  'components/elektrorand.js', 'components/partikelschrift.js',
+  'components/zaehlwerk.js', 'components/farbschema.js', 'components/icons.js'];
 
 function mtime(name) {
   try { return fs.statSync(path.join(HIER, name)).mtimeMs; } catch { return 0; }
@@ -1870,9 +3090,44 @@ function mtime(name) {
 
 function standDesStudios() {
   return {
+    start: START,
     serverAlt: SERVERDATEIEN.filter((name) => mtime(name) > START),
     seite: Math.max(...SEITENDATEIEN.map(mtime)),
+    stil: mtime(STILDATEI),
   };
+}
+
+/* Der Wächter sieht nur die Ordner mit den Studiodateien, nicht
+   .sicherung, .verlauf und vendor. Das ist keine Sparsamkeit, sondern nötig: Dort
+   legt der Server bei jedem Speichern etwas ab, und ein Neuladen mitten
+   im eigenen Speichern wäre das Gegenteil von hilfreich. Ein rekursiver
+   Wächter über dem Studioordner müsste die beiden wieder aussieben,
+   deshalb steht lieber über jedem beobachteten Ordner ein eigener.
+
+   Ein Editor schreibt eine Datei gern in mehreren Schritten, außerdem
+   kommen bei einer Änderung oft mehrere Dateien zusammen. Die kurze
+   Sammelpause macht daraus eine einzige Meldung. */
+const AUSGELIEFERT = new Set([...SEITENDATEIEN, STILDATEI]);
+const BEOBACHTET = new Set([...SEITENDATEIEN, STILDATEI, ...SERVERDATEIEN]
+  .map((name) => path.basename(name)));
+const WACHORDNER = ['.', 'components', 'styles', 'services', 'services/facial-recognition']
+  .map((name) => path.join(HIER, name));
+let wachePause = null;
+
+function wacheStarten() {
+  for (const ordner of WACHORDNER) {
+    try {
+      fs.watch(ordner, { persistent: false }, (art, name) => {
+        if (!name || !BEOBACHTET.has(path.basename(name))) return;
+        clearTimeout(wachePause);
+        wachePause = setTimeout(sendeStudioStand, 120);
+      });
+    } catch (fehler) {
+      console.log('  Kein Wächter über ' + (path.relative(HIER, ordner) || '.')
+        + ': ' + fehler.message);
+      console.log('  Änderungen kommen dann erst beim Neuladen von Hand an.');
+    }
+  }
 }
 
 /* ---------- HTTP ---------- */
@@ -1926,11 +3181,15 @@ const server = http.createServer(async (req, res) => {
   const weg = decodeURIComponent(url.pathname);
 
   try {
-    /* --- Oberfläche --- */
+    /* --- Oberfläche ---
+
+       Ausgeliefert wird nur, was in SEITENDATEIEN oder STILDATEI steht,
+       und zwar unter genau dem Weg, unter dem es auch auf der Platte
+       liegt: /components/zaehlwerk.js ist components/zaehlwerk.js. Damit
+       gibt es eine einzige Liste für Wächter, Standmeldung und
+       Auslieferung, und der Ordner ist nicht offen für alles. */
     if (weg === '/' || weg === '/index.html') return datei(res, path.join(HIER, 'index.html'));
-    if (['/studio.css', '/studio.js', '/hintergrund.js'].includes(weg)) {
-      return datei(res, path.join(HIER, weg.slice(1)));
-    }
+    if (AUSGELIEFERT.has(weg.slice(1))) return datei(res, path.join(HIER, weg.slice(1)));
 
     /* --- Bilder aus dem Repo, nur lesend --- */
     if (weg.startsWith('/datei/')) {
@@ -1950,6 +3209,10 @@ const server = http.createServer(async (req, res) => {
         Connection: 'keep-alive',
       });
       res.write(`data: ${JSON.stringify(fortschrittStand())}\n\n`);
+      /* Der Stand der Dateien gleich mit. Nach einem Neustart des Servers
+         hängt sich der Browser von allein wieder an, und das hier ist
+         das Erste, was er dann hört. */
+      res.write(`event: stand\ndata: ${JSON.stringify(standDesStudios())}\n\n`);
       zuhoerer.add(res);
       /* Ein Lebenszeichen alle 25 Sekunden, sonst schließen Zwischenstücke
          die stille Verbindung. */
@@ -1972,8 +3235,11 @@ const server = http.createServer(async (req, res) => {
       const figuren = baueFiguren();
       return sende(res, 200, {
         figuren, zaehler: zaehlen(figuren), python: PYTHON_INFO,
-        engine: ENGINE_INFO, gesicht: GESICHT_INFO, verlauf: verlaufStand(),
-        stand: standDesStudios(),
+        engine: ENGINE_INFO, gesicht: GESICHT_INFO, frei: FREI_INFO,
+        /* Wie viele Figuren im erzeugten Steckbrief-Block noch fehlen.
+           Der Knopf im Reiter Biografie trägt die Zahl. */
+        wikiOffen: wikiOffen().length,
+        verlauf: verlaufStand(), stand: standDesStudios(),
       });
     }
 
@@ -1996,14 +3262,30 @@ const server = http.createServer(async (req, res) => {
         Number.isFinite(treue) ? treue : 0.8));
     }
 
+    /* --- Hintergrund entfernen --- */
+    if (weg === '/api/freistellen' && req.method === 'POST') {
+      if (!FREI) return sende(res, 500, { fehler: FREI_INFO.grund });
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const bekannt = FREI_INFO.modelle.map((m) => m.name);
+      const modell = bekannt.includes(auftrag.modell) ? auftrag.modell : bekannt[0];
+      const saum = Math.min(1, Math.max(0, Number(auftrag.saum)));
+      return sende(res, 200, await freistellen(auftrag.quelle, modell,
+        auftrag.feinschliff !== false, Number.isFinite(saum) ? saum : 1));
+    }
+
     /* --- Vorschlag: Kopf beim Porträt, Rand beim Ganzkörperbild --- */
     if (weg === '/api/auto') {
       const quelle = { typ: url.searchParams.get('typ'), name: url.searchParams.get('name'), id: url.searchParams.get('id') };
       const { pfad } = quellePfad(quelle);
       const gk = url.searchParams.get('bereich') === 'ganzkoerper';
       const befehl = gk ? 'rand' : 'analyse';
+      /* Steht die Vorlage auf der Bühne gedreht, wird hier genauso
+         gedreht: Der Vorschlag soll in denselben Pixeln liegen wie der
+         Ausschnitt, den er ersetzt. */
+      const winkel = grad(url.searchParams.get('winkel'));
       return sende(res, 200, await mitFortschritt(
-        gk ? 'Rand suchen' : 'Gesicht suchen', 2, () => python([befehl, '--bild', pfad])));
+        gk ? 'Rand suchen' : 'Gesicht suchen', gk ? 'rand' : 'analyse',
+        () => python([befehl, '--bild', pfad, '--winkel', String(winkel)])));
     }
 
     /* --- Von Hand auf „noch offen“ stellen --- */
@@ -2032,11 +3314,44 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    /* --- Sicherung: was in .sicherung liegt --- */
+    if (weg === '/api/sicherung' && req.method === 'GET') {
+      return sende(res, 200, sicherungListe());
+    }
+
+    if (weg === '/api/sicherung/zurueck' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = sicherungZurueck(auftrag.name);
+      const liste = await listeErneuern();
+      return sende(res, 200, {
+        ok: true, ziel: ergebnis.ziel, liste,
+        verlauf: verlaufStand(), zaehler: zaehlen(baueFiguren()),
+        ...sicherungListe(),
+      });
+    }
+
+    if (weg === '/api/sicherung/loeschen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = sicherungLoeschen(auftrag);
+      return sende(res, 200, { ok: true, ...ergebnis, ...sicherungListe() });
+    }
+
+    /* Eine gesicherte Fassung ansehen, nur lesend. Ausgeliefert wird
+       ausschließlich, was sicherungPfad() als Sicherung durchgehen
+       lässt, und nur Bilder: Quelltext gehört in den Editor. */
+    if (weg.startsWith('/sicherung/')) {
+      const name = weg.slice(11);
+      if (!name.endsWith('.webp')) return sende(res, 403, { fehler: 'Nur Bilder' });
+      try { return datei(res, sicherungPfad(name)); } catch (fehler) {
+        return sende(res, 404, { fehler: fehler.message });
+      }
+    }
+
     /* --- Verlauf --- */
     if (weg === '/api/verlauf' && req.method === 'POST') {
       const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
       const titel = await mitFortschritt(
-        auftrag.richtung === 'vor' ? 'Wiederholen' : 'Rückgängig', 2,
+        auftrag.richtung === 'vor' ? 'Wiederholen' : 'Rückgängig', 'verlauf',
         async () => verlaufGehen(auftrag.richtung === 'vor' ? 'vor' : 'zurueck'));
       const liste = await listeErneuern();
       return sende(res, 200, {
@@ -2121,6 +3436,71 @@ const server = http.createServer(async (req, res) => {
       return sende(res, 200, { ok: true, ...ergebnis });
     }
 
+    /* --- Texte einer Figur lesen ---
+
+       Geprüft wird gegen die Besetzungslisten und nicht gegen
+       baueFiguren(): Für einen Text ist gleichgültig, welche Bilder es
+       gibt, und das Absuchen der beiden Bildordner kostet mehr als die
+       ganze Antwort. */
+    if (weg === '/api/texte' && req.method === 'GET') {
+      const slug = url.searchParams.get('slug');
+      if (!reihenfolge(ladeDaten()).includes(slug)) {
+        return sende(res, 400, { fehler: 'Unbekannte Figur: ' + slug });
+      }
+      return sende(res, 200, { ...texteLesen(slug), offen: wikiOffen().length });
+    }
+
+    /* --- Texte einer Figur schreiben ---
+
+       Alle drei Dateien in einem Schritt, und damit auch ein Schritt im
+       Verlauf: Rückgängig nimmt die ganze Figur zurück, nicht die
+       Biografie ohne den Steckbrief. */
+    if (weg === '/api/texte' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const figur = baueFiguren().find((f) => f.slug === auftrag.slug);
+      if (!figur) return sende(res, 400, { fehler: 'Unbekannte Figur: ' + auftrag.slug });
+      const ergebnis = mitVerlauf(`Texte gespeichert: ${figur.name}`,
+        ['js/data.js', 'js/profiles.js', 'js/facts.js'], [],
+        () => texteSchreiben(auftrag));
+      const figuren = baueFiguren();
+      return sende(res, 200, {
+        ok: true,
+        ...ergebnis,
+        texte: (figuren.find((f) => f.slug === auftrag.slug) || {}).texte || null,
+        zaehler: zaehlen(figuren),
+        verlauf: verlaufStand(),
+      });
+    }
+
+    /* --- Steckbriefe aus den Wikis nachziehen --- */
+    if (weg === '/api/wiki' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const einzeln = !!auftrag.slug;
+      if (einzeln && !baueFiguren().some((f) => f.slug === auftrag.slug)) {
+        return sende(res, 400, { fehler: 'Unbekannte Figur: ' + auftrag.slug });
+      }
+      const slugs = einzeln ? [auftrag.slug] : wikiOffen();
+      if (!slugs.length) {
+        return sende(res, 200, { ok: true, geaendert: false, geholt: 0, offen: 0 });
+      }
+      const ergebnis = await mitVerlaufAsync(
+        einzeln ? `Steckbrief geholt: ${auftrag.slug}`
+          : `Steckbriefe geholt: ${slugs.length} Figuren`,
+        ['js/facts.js'], [],
+        () => wikiAbrufen(slugs, einzeln));
+      const figuren = baueFiguren();
+      return sende(res, 200, {
+        ok: true,
+        ...ergebnis,
+        texte: einzeln
+          ? (figuren.find((f) => f.slug === auftrag.slug) || {}).texte || null : null,
+        wiki: einzeln ? texteLesen(auftrag.slug).wiki : null,
+        offen: wikiOffen().length,
+        zaehler: zaehlen(figuren),
+        verlauf: verlaufStand(),
+      });
+    }
+
     /* --- Fassungen anlegen, umbenennen, verschieben, löschen --- */
     if (weg === '/api/fassung' && req.method === 'POST') {
       const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
@@ -2185,6 +3565,9 @@ const server = http.createServer(async (req, res) => {
       }
       const { pfad, vorlage } = quellePfad(auftrag.quelle);
       const zieldatei = path.join(gk ? FULLSIZE : PORTRAITS, auftrag.ziel + '.webp');
+      /* Die Bühne misst ihren Ausschnitt in der gedrehten Fläche, also
+         wird hier erst gedreht und dann geschnitten. */
+      const winkel = grad(auftrag.winkel);
       const args = gk
         ? ['frei', '--bild', pfad, '--ziel', zieldatei,
           '--x', String(auftrag.x), '--y', String(auftrag.y),
@@ -2192,7 +3575,15 @@ const server = http.createServer(async (req, res) => {
         : ['schneiden', '--bild', pfad, '--ziel', zieldatei,
           '--x', String(auftrag.x), '--y', String(auftrag.y),
           '--seite', String(auftrag.breite)];
-      if (!gk && auftrag.merken) args.push('--merken', vorlage);
+      args.push('--winkel', String(winkel));
+      /* Der Skill dreht beim nächsten Lauf nicht mit: Ein gemerkter
+         Zuschnitt aus einer gedrehten Fläche träfe dort daneben. Aus dem
+         Porträt selbst gibt es ebenfalls nichts zu merken: manuell.json
+         führt seine Werte je Vorlagenname, und der ist im Porträtordner
+         derselbe wie im Ganzkörperordner. Der Eintrag dort gehört zum
+         Ganzkörperbild und würde sonst mit fremden Zahlen überschrieben. */
+      const ausPortrait = auftrag.quelle && auftrag.quelle.typ === 'portrait';
+      if (!gk && auftrag.merken && !winkel && !ausPortrait) args.push('--merken', vorlage);
       const sicherungspfad = sichern(auftrag.ziel, gk);
 
       /* Beim Ganzkörperbild gehören Körpergröße und Bildkorrektur zum
@@ -2227,7 +3618,8 @@ const server = http.createServer(async (req, res) => {
           : ['tools/portrait-studio/offen.json'],
         [auftrag.ziel]);
       const ergebnis = await mitFortschritt(
-        gk ? 'Ganzkörperbild speichern' : 'Porträt speichern', 3, () => python(args));
+        gk ? 'Ganzkörperbild speichern' : 'Porträt speichern',
+        gk ? 'zuschnitt:ganzkoerper' : 'zuschnitt:portrait', () => python(args));
       /* Neu geschnitten heißt erledigt: Eine Markierung von Hand hat sich
          damit erübrigt und fällt weg. */
       const menge = ladeMarkiert(auftrag.bereich);
@@ -2244,7 +3636,7 @@ const server = http.createServer(async (req, res) => {
         zustand: gk ? zustandGk(auftrag.ziel) : zustand(auftrag.ziel),
         warMarkiert,
         /* Nicht „groesse“: Das ist beim Porträt schon die Kantenlänge,
-           die bild.py meldet. */
+           die crop-image.py meldet. */
         groessenwerte: setztGroesse ? { ...groesse, geaendert: gesetzt } : null,
         groessenfehler: groesseFehler,
         zaehler: zaehlen(baueFiguren()),
@@ -2264,11 +3656,30 @@ function charSlugRoh(text) {
   return alsSlug(text);
 }
 
+/* Läuft node mit --watch, startet es den Server nach jeder Änderung an
+   server.js neu. Der Vorgänger gibt den Port dabei nicht immer schon
+   frei, bevor der Nachfolger ihn haben will. Ein paar Anläufe im Abstand
+   von einer Viertelsekunde überbrücken das. Bleibt er belegt, hält ihn
+   etwas anderes, und dann hilft nur eine andere Nummer. */
+let anlaeufe = 0;
+
+server.on('error', (fehler) => {
+  if (fehler.code !== 'EADDRINUSE') throw fehler;
+  if (anlaeufe >= 8) {
+    console.error(`Port ${PORT} bleibt belegt. Mit --port eine andere Nummer wählen.`);
+    process.exit(1);
+  }
+  anlaeufe += 1;
+  setTimeout(() => server.listen(PORT, '127.0.0.1'), 250);
+});
+
 (async () => {
   /* Der Verlauf gilt für die laufende Sitzung, siehe oben. */
   fs.rmSync(VERLAUF, { recursive: true, force: true });
   await pythonSuchen();
   await gesichtSuchen();
+  await freiSuchen();
+  wacheStarten();
   server.listen(PORT, '127.0.0.1', () => {
     const adresse = `http://127.0.0.1:${PORT}`;
     const figuren = baueFiguren();
@@ -2286,7 +3697,12 @@ function charSlugRoh(text) {
       : '  Real-ESRGAN fehlt, der Knopf „4× hochskalieren“ meldet das beim Klick.');
     console.log(GESICHT_INFO.ok
       ? `  Gesichtsmodelle: ${GESICHT_INFO.modelle.join(', ')} (Torch ${GESICHT_INFO.torch})`
-      : '  Gesichtsmodelle fehlen, einzurichten mit tools/gesicht/einrichten.py');
+      : '  Gesichtsmodelle fehlen, einzurichten mit '
+        + 'services/facial-recognition/install-models.py');
+    console.log(FREI_INFO.ok
+      ? `  Freistellen: ${FREI_INFO.modelle.map((m) => m.name).join(', ')} `
+        + `(rembg ${FREI_INFO.rembg}, aus ${FREI_INFO.heim})`
+      : '  Freistellen fehlt, der Knopf „Freistellen“ meldet das beim Zeigen.');
     console.log(`  ${adresse}   (beenden mit Strg+C)`);
     if (OEFFNEN && process.platform === 'win32') {
       spawn('cmd', ['/c', 'start', '', adresse], { detached: true, stdio: 'ignore' }).unref();

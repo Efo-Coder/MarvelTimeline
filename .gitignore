@@ -11,13 +11,13 @@ desktop.ini
 assets/ersetzen/
 vorschau/
 
-# Real-ESRGAN für das Porträt-Studio: rund 50 MB Binärdateien und
-# Modelle, die nicht in die Versionsverwaltung gehören. Der Server sucht
-# die Engine an dieser Stelle, siehe tools/portrait-studio/server.js.
-tools/realesrgan/
+# Real-ESRGAN für das Bild-Studio: rund 50 MB Binärdateien und Modelle,
+# die nicht in die Versionsverwaltung gehören. Der Server sucht die
+# Engine an dieser Stelle, siehe tools/portrait-studio/server.js.
+tools/portrait-studio/vendor/
 
 # Gesichtsmodelle: Fremdcode und Modellgewichte, zusammen rund 800 MB.
-# Beides holt tools/gesicht/einrichten.py wieder her, die eigenen
-# Skripte daneben bleiben im Repo.
-tools/gesicht/fremd/
-tools/gesicht/modelle/
+# Beides holt services/facial-recognition/install-models.py wieder her,
+# die eigenen Skripte daneben bleiben im Repo.
+tools/portrait-studio/services/facial-recognition/vendor/
+tools/portrait-studio/services/facial-recognition/models/

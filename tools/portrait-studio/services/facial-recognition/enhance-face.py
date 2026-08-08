@@ -2,11 +2,11 @@
 
 Alle Antworten gehen als eine Zeile JSON auf stdout, Fehler als
 {"fehler": "..."} mit Rückgabewert 1. Derselbe Umgang wie in
-tools/portrait-studio/bild.py, der Server ruft das Skript pro Aufgabe
-einmal auf.
+crop-image.py eine Ebene höher, der Server ruft das Skript pro Aufgabe einmal
+auf.
 
-    gesicht.py pruefen
-    gesicht.py veredeln --bild <pfad> --ziel <pfad> --modell gfpgan|codeformer
+    enhance-face.py pruefen
+    enhance-face.py veredeln --bild <pfad> --ziel <pfad> --modell gfpgan|codeformer
                         [--treue 0.7]
 
 Warum das nötig ist
@@ -54,17 +54,17 @@ from PIL import Image
 from torchvision.transforms.functional import normalize
 
 HIER = os.path.dirname(os.path.abspath(__file__))
-FREMD = os.path.join(HIER, "fremd")
-MODELLE = os.path.join(HIER, "modelle")
+VENDOR = os.path.join(HIER, "vendor")
+MODELS = os.path.join(HIER, "models")
 
-# Die Fremdarchitekturen liegen unter fremd/ und führen ihre eigenen
-# Importe, siehe einrichten.py.
-if FREMD not in sys.path:
-    sys.path.insert(0, FREMD)
+# Die Fremdarchitekturen liegen unter vendor/ und führen ihre eigenen
+# Importe, siehe install-models.py.
+if VENDOR not in sys.path:
+    sys.path.insert(0, VENDOR)
 
 GEWICHT = {
-    "gfpgan": os.path.join(MODELLE, "GFPGANv1.4.pth"),
-    "codeformer": os.path.join(MODELLE, "codeformer.pth"),
+    "gfpgan": os.path.join(MODELS, "GFPGANv1.4.pth"),
+    "codeformer": os.path.join(MODELS, "codeformer.pth"),
 }
 
 # Ein Gesicht wird auf dieser Kantenlänge aufgebaut, so sind beide

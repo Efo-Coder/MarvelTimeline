@@ -35,27 +35,56 @@
 :root {
   /* ---------- Farben ----------
 
-     Ein einziger Akzent trägt die ganze Oberfläche, das helle Blau der
-     Anzeigen. Alles Zustandhafte hat daneben seine eigene Farbe und nur
-     diese: Grün ist fertig, Bernstein ist alt, Gelb ist von Hand
-     markiert, Rot fehlt. Wer eine Farbe ändert, ändert sie hier. */
-  --accent: #45d6f5;
+     Ein einziger Akzent trägt die ganze Oberfläche. Alles Zustandhafte
+     hat daneben seine eigene Farbe und nur diese: Grün ist fertig,
+     Bernstein ist alt, Gelb ist von Hand markiert, Rot fehlt.
+
+     Was hier steht, ist das Schema J.A.R.V.I.S. und gilt, solange am
+     <html> kein data-schema hängt. Die beiden anderen Schemata weiter
+     unten setzen nur diesen einen Block neu, alles Weitere im Studio
+     rechnet sich daraus. Wer eine Farbe ändert, ändert sie hier.
+
+     Akzent, Text und Grund stehen als Zahlentripel, nicht als Hex: Aus
+     ihnen entstehen weiter unten die halbdurchsichtigen Fassungen, und
+     studio.js liest einige davon für die Bühne ab. Dort muss eine
+     fertige Farbe herauskommen, mit der eine Leinwand etwas anfangen
+     kann, deshalb rgba() und nicht color-mix(). */
+  --accent-rgb: 69, 214, 245;
   --accent-hell: #a6efff;
+  --text-rgb: 219, 236, 246;
+  --muted: #7c95a9;
+  --bg-rgb: 3, 8, 17;
+  --flaeche: #071120;
+  --flaeche-hoch: #0b1a2c;
+  /* Der tiefste Grund: Bühne und Vorschaukasten, dort liegen die Bilder
+     drauf und nichts soll von der Farbe des Studios darin stehen. */
+  --tief: #040a14;
+  /* Der Rahmen der Charakterseite über der Bühne. In seiner eigenen
+     Farbe, dem Rot der Seite, außer das Schema ist selbst rot. */
+  --rahmen-rgb: 236, 29, 36;
+  --gefahr: #ff5470;
+  /* Die drei Töne der treibenden Linien, von tief nach hell. Gelesen
+     werden sie von hintergrund.js. */
+  --hg-a: #0b4a63;
+  --hg-b: #45d6f5;
+  --hg-c: #a6efff;
+
+  /* Was in jedem Schema gleich bleibt: die Zustandsfarben und das
+     Marvel-Rot des Schriftzugs. */
   --warn: #ffb454;
   --gut: #4ade80;
   --merk: #ffd166;
-  --gefahr: #ff5470;
   --marvel: #ec1d24;
 
-  --bg: #030811;
-  --flaeche: #071120;
-  --flaeche-hoch: #0b1a2c;
+  /* ---------- Daraus gerechnet ---------- */
+
+  --accent: rgb(var(--accent-rgb));
+  --text: rgb(var(--text-rgb));
+  --bg: rgb(var(--bg-rgb));
   /* Die Linien tragen einen Hauch des Akzents, sonst wirkt das Gerüst
      grau und liegt neben dem Rest der Oberfläche statt darin. */
-  --linie: rgba(69, 214, 245, 0.14);
-  --linie-hell: rgba(69, 214, 245, 0.34);
-  --text: #dbecf6;
-  --muted: #7c95a9;
+  --linie: rgba(var(--accent-rgb), 0.14);
+  --linie-hell: rgba(var(--accent-rgb), 0.34);
 
   /* Das Studio bindet kein Google Fonts ein, alles kommt lokal aus dem
      Repo. Deshalb steht hier Dharma statt Bebas Neue: Die gäbe es ohne
@@ -87,19 +116,18 @@
      Die beiden Führungsfarben sind nur Zahlentripel, weil die
      Durchsichtigkeit beim Zeichnen wechselt: Eine Linie, an der der
      Ausschnitt gerade einrastet, leuchtet stärker. */
-  --buehne-bildrand: rgba(219, 236, 246, 0.16);
-  --buehne-aussen: rgba(3, 8, 17, 0.78);
-  --buehne-ecken: rgba(3, 8, 17, 0.45);
-  --buehne-hilfslinie: rgba(69, 214, 245, 0.5);
-  --buehne-beschriftung: rgba(219, 236, 246, 0.72);
-  --buehne-quadrat: rgba(219, 236, 246, 0.34);
-  --buehne-kreis: #45d6f5;
-  /* Der Rahmen der Charakterseite über der Bühne, in seiner Farbe */
-  --buehne-rahmen: rgba(236, 29, 36, 0.75);
-  --buehne-rahmen-schwach: rgba(236, 29, 36, 0.3);
+  --buehne-bildrand: rgba(var(--text-rgb), 0.16);
+  --buehne-aussen: rgba(var(--bg-rgb), 0.78);
+  --buehne-ecken: rgba(var(--bg-rgb), 0.45);
+  --buehne-hilfslinie: rgba(var(--accent-rgb), 0.5);
+  --buehne-beschriftung: rgba(var(--text-rgb), 0.72);
+  --buehne-quadrat: rgba(var(--text-rgb), 0.34);
+  --buehne-kreis: rgb(var(--accent-rgb));
+  --buehne-rahmen: rgba(var(--rahmen-rgb), 0.75);
+  --buehne-rahmen-schwach: rgba(var(--rahmen-rgb), 0.3);
   /* Die Kopflinie der Referenz, deutlich neben Rahmen und Führungen */
   --buehne-referenz: rgba(255, 209, 102, 0.9);
-  --buehne-griff: #45d6f5;
+  --buehne-griff: rgb(var(--accent-rgb));
   /* Auch die Beschriftung auf der Leinwand läuft in der Festbreitenschrift,
      wie jede andere Ablesung im Studio. */
   --buehne-schrift: 10px ui-monospace, Consolas, monospace;
@@ -111,6 +139,175 @@
   --vorschau-hell: #e4eef5;
   --karo-hell: #24334a;
   --karo-dunkel: #16202f;
+}
+
+/* ===== Die anderen Schemata ===========================================
+
+   Umgeschaltet wird über den Knopf im Kopf, siehe farbschema.js. Jedes
+   Schema setzt genau die Werte aus dem oberen Teil der Tafel neu, sonst
+   nichts.
+
+   Die vier Zustandsfarben bleiben überall gleich: Grün ist fertig,
+   Bernstein ist alt, Gelb ist markiert, Rot fehlt. Sie bedeuten etwas
+   und dürfen nicht mit dem Ton wandern, denn erkannt werden sie
+   aneinander und nicht am Akzent. Ausgetauscht wird eine von ihnen nur,
+   wenn der Akzent ihr so nahe kommt, dass sie ihre Aussage verliert.
+   Wo das der Fall ist, steht der Grund über dem Schema.
+   ====================================================================== */
+
+/* Ultron: das Rot seiner Augen. Der Grund geht ins Warme, damit das Rot
+   nicht auf kaltem Blau liegt.
+
+   Zwei Farben müssen hier ausweichen, weil sie sonst im Akzent
+   verschwinden. Die Gefahr wird zu einem Magenta, sonst hieße Rot
+   zugleich „Oberfläche“ und „Achtung“. Der Rahmen der Charakterseite
+   wird zu Cyan, denn seine Aufgabe ist, sich von allem abzuheben. */
+:root[data-schema="ultron"] {
+  --accent-rgb: 255, 74, 68;
+  --accent-hell: #ffc4c0;
+  --text-rgb: 246, 224, 222;
+  --muted: #b08287;
+  --bg-rgb: 12, 4, 6;
+  --flaeche: #1a080a;
+  --flaeche-hoch: #250d10;
+  --tief: #150609;
+  --rahmen-rgb: 96, 226, 255;
+  --gefahr: #ff2f86;
+  --hg-a: #5c1013;
+  --hg-b: #ff4a44;
+  --hg-c: #ffd0a8;
+
+  --fuehrung-schwach: 176, 130, 135;
+  --vorschau-dunkel: #120508;
+  --karo-hell: #3d1d22;
+  --karo-dunkel: #2a1216;
+}
+
+/* E.D.I.T.H.: das kühle Blau der Brille. Es ist zugleich der Ton, in dem
+   das Studio angefangen hat, bevor es auf Cyan umgestellt wurde. */
+:root[data-schema="edith"] {
+  --accent-rgb: 77, 140, 255;
+  --accent-hell: #c6d9ff;
+  --text-rgb: 233, 237, 248;
+  --muted: #9aa4c0;
+  --bg-rgb: 4, 6, 15;
+  --flaeche: #0b1020;
+  --flaeche-hoch: #141a2e;
+  --tief: #060a18;
+  --rahmen-rgb: 236, 29, 36;
+  --gefahr: #ff5470;
+  --hg-a: #16306e;
+  --hg-b: #4d8cff;
+  --hg-c: #cfe0ff;
+
+  --fuehrung-schwach: 154, 164, 192;
+  --vorschau-dunkel: #070b18;
+  --karo-hell: #2a3350;
+  --karo-dunkel: #1b2136;
+}
+
+/* Miss Minutes: das Orange der TVA, auf dem Braun ihrer Akten. Der Akzent
+   liegt bewusst tief im Orange, damit das Bernstein der alten Bilder
+   darüber noch als eigene Farbe steht. */
+:root[data-schema="minutes"] {
+  --accent-rgb: 255, 138, 31;
+  --accent-hell: #ffd9a8;
+  --text-rgb: 247, 233, 214;
+  --muted: #b09a78;
+  --bg-rgb: 13, 9, 5;
+  --flaeche: #1b1208;
+  --flaeche-hoch: #26190b;
+  --tief: #150e06;
+  --rahmen-rgb: 96, 226, 255;
+  --gefahr: #ff4368;
+  --hg-a: #6b3606;
+  --hg-b: #ff8a1f;
+  --hg-c: #ffe0a8;
+
+  --fuehrung-schwach: 176, 154, 120;
+  --vorschau-dunkel: #120c06;
+  --karo-hell: #3b2a17;
+  --karo-dunkel: #291d10;
+}
+
+/* Die Oberste Intelligenz: das Grün ihrer Kammer, kühl und ohne Wärme.
+
+   Hier weicht das Grün der fertigen Bilder auf ein Limonengrün aus. Der
+   Akzent ist ein Smaragd, die beiden lägen sonst so dicht beieinander,
+   dass ein fertiges Bild nicht mehr vom Gerüst zu unterscheiden wäre. */
+:root[data-schema="intelligenz"] {
+  --accent-rgb: 47, 224, 160;
+  --accent-hell: #b6ffe4;
+  --text-rgb: 220, 245, 236;
+  --muted: #7ba598;
+  --bg-rgb: 3, 13, 11;
+  --flaeche: #071a16;
+  --flaeche-hoch: #0b2620;
+  --tief: #041310;
+  --rahmen-rgb: 236, 29, 36;
+  --gut: #b6f24a;
+  --hg-a: #0a5c44;
+  --hg-b: #2fe0a0;
+  --hg-c: #c8fff0;
+
+  --fuehrung-schwach: 123, 165, 152;
+  --vorschau-dunkel: #04120f;
+  --karo-hell: #1e3d35;
+  --karo-dunkel: #142a24;
+}
+
+/* Griot: das Gold Wakandas auf schwarzem Grund.
+
+   Das Gelb der markierten Bilder weicht hier auf das Violett des
+   Vibraniums aus. Gold, Bernstein und Gelb nebeneinander wären im Kopf
+   drei Zahlen in derselben Farbe. */
+:root[data-schema="griot"] {
+  --accent-rgb: 242, 177, 52;
+  --accent-hell: #ffe9b8;
+  --text-rgb: 246, 236, 216;
+  --muted: #ac9b7c;
+  --bg-rgb: 10, 8, 5;
+  --flaeche: #171107;
+  --flaeche-hoch: #221a0b;
+  --tief: #120d06;
+  --rahmen-rgb: 96, 226, 255;
+  --merk: #b57bff;
+  --hg-a: #5e400a;
+  --hg-b: #f2b134;
+  --hg-c: #fff0c8;
+
+  --fuehrung-schwach: 172, 155, 124;
+  --vorschau-dunkel: #100c05;
+  --karo-hell: #382d15;
+  --karo-dunkel: #26200f;
+}
+
+/* K.E.V.I.N.: kein Ton, nur Helligkeit. Der Akzent ist Weiß, der Grund
+   ist Schwarz, dazwischen liegt Grau.
+
+   Farbig bleibt allein, was auf der Bühne eine Aussage trägt: die vier
+   Zustände, der rote Rahmen der Charakterseite, die gelbe Kopflinie der
+   Referenz und die grünen Führungslinien. Ohne sie wäre das Schema
+   hübsch und das Werkzeug blind. */
+:root[data-schema="kevin"] {
+  --accent-rgb: 232, 238, 242;
+  --accent-hell: #ffffff;
+  --text-rgb: 242, 242, 242;
+  --muted: #8c8c8c;
+  --bg-rgb: 5, 5, 6;
+  --flaeche: #111113;
+  --flaeche-hoch: #1b1b1e;
+  --tief: #0a0a0b;
+  --rahmen-rgb: 236, 29, 36;
+  --gefahr: #ff5470;
+  --hg-a: #2b2b2e;
+  --hg-b: #b9bfc4;
+  --hg-c: #ffffff;
+
+  --fuehrung-schwach: 140, 140, 140;
+  --vorschau-dunkel: #0a0a0b;
+  --karo-hell: #33333a;
+  --karo-dunkel: #212126;
 }
 
 * { box-sizing: border-box; }
@@ -135,11 +332,11 @@ html, body {
    Netz bleibt also stehen. */
 body {
   background:
-    radial-gradient(1100px 640px at 12% -12%, rgba(69, 214, 245, 0.1), transparent 62%),
+    radial-gradient(1100px 640px at 12% -12%, rgba(var(--accent-rgb), 0.1), transparent 62%),
     repeating-linear-gradient(0deg,
-      rgba(69, 214, 245, 0.022) 0 1px, transparent 1px 3px),
+      rgba(var(--accent-rgb), 0.022) 0 1px, transparent 1px 3px),
     repeating-linear-gradient(90deg,
-      rgba(69, 214, 245, 0.02) 0 1px, transparent 1px 64px),
+      rgba(var(--accent-rgb), 0.02) 0 1px, transparent 1px 64px),
     var(--bg);
   color: var(--text);
   font-family: var(--font-body);
@@ -286,6 +483,31 @@ h1, h2 {
 /* Was rechts in der Aufschrift steht, rückt an den Rand. */
 .panel-kopf > :nth-child(2) { margin-left: auto; }
 
+/* Das Kreuz, das eine Tafel zuklappt. Es sitzt am rechten Ende ihrer
+   Aufschrift und bleibt still, bis der Zeiger darüber steht. Quadratisch
+   und kantig wie der Schalter im Kopf, nur eine Spur kleiner, damit es
+   in der Zeile nicht lauter ist als die Aufschrift selbst. */
+.panel-schliessen {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.panel-schliessen:hover {
+  color: var(--accent-hell);
+  border-color: var(--linie-hell);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 /* ---------- Fuß einer Tafel ---------- */
 
 .tafel-fuss {
@@ -425,20 +647,82 @@ h1, h2 {
 .referenz-feld select {
   border: 1px solid var(--linie);
   border-radius: 0;
-  background: rgba(3, 8, 17, 0.6);
+  background: rgba(var(--bg-rgb), 0.6);
   color: var(--text);
   font: inherit;
 }
 
-.suchfeld input:focus,
-.dialog-feld input:focus,
-.namenszeile input:focus,
+/* Regler sind ausgenommen. Ein Regler ist auch ein input und bekäme sonst
+   den Fokusrahmen der Textfelder, und der ist ein Rechteck um das ganze
+   Feld. Um eine Bahn mit einem Griff darauf sieht das aus wie ein Fehler.
+   Wie der Regler seinen Fokus stattdessen zeigt, steht weiter unten. */
+.suchfeld input:not([type=range]):focus,
+.dialog-feld input:not([type=range]):focus,
+.namenszeile input:not([type=range]):focus,
 .dialog-feld select:focus,
 .referenz-feld select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
               inset 0 0 12px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* ---------- Elektrischer Rand ----------
+
+   Der Fokus ist mehr als ein heller Rahmen: Um das Feld läuft eine
+   zappelnde Linie, wie eine Entladung an der Kante. Gerechnet wird sie
+   in elektrorand.js, hier steht nur, wo die Hülle liegt und wie die drei
+   Scheine darin aussehen.
+
+   Die Hülle liegt genau auf dem Feld und ist fest am Fenster verankert,
+   die Leinwand darin greift nach allen Seiten über den Rand hinaus. So
+   weit, wie die Linie höchstens ausschlagen kann. */
+
+.elektrorand {
+  position: fixed;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.elektrorand.an { opacity: 1; }
+
+.elektrorand-strich {
+  position: absolute;
+  inset: calc(var(--elektro-luft, 24px) * -1);
+  display: block;
+}
+
+.elektrorand-schein,
+.elektrorand-grund {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+}
+
+/* Zwei weiche Ränder übereinander: der untere trägt die Farbe, der
+   obere das Licht. Zusammen sieht die Kante glühend aus, nicht bloß
+   hell umrandet. */
+.elektrorand-schein {
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  filter: blur(1px);
+}
+
+.elektrorand-schein.hell {
+  border: 1px solid var(--accent-hell);
+  filter: blur(4px);
+}
+
+/* Der Schimmer dahinter. Er liegt hinter dem Feld, deshalb ist er
+   schwach: Das Feld selbst soll lesbar bleiben. */
+.elektrorand-grund {
+  z-index: -1;
+  transform: scale(1.08);
+  filter: blur(24px);
+  opacity: 0.3;
+  background: linear-gradient(-30deg,
+    var(--accent-hell), transparent, var(--accent));
 }
 
 /* Regler und Kästchen tragen überall den Akzent. */
@@ -449,6 +733,16 @@ input[type=checkbox] { accent-color: var(--accent); }
 :focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Nur die Regler nicht. Ein Kasten um eine Linie mit einem Griff darauf
+   sieht aus wie ein Fehler, und der Regler zeigt ohnehin selbst an, wo
+   er steht. Statt des Kastens glüht die Bahn: Der Schein legt sich um
+   die Form des Reglers, nicht um sein Rechteck, und bleibt damit für die
+   Tastatur trotzdem sichtbar. */
+input[type=range]:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 75%, transparent));
 }
 
 .warnung {
@@ -473,7 +767,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   height: 52px;
   padding: 0 1rem;
   border-bottom: 1px solid var(--linie-hell);
-  background: linear-gradient(180deg, rgba(7, 17, 32, 0.9), rgba(3, 8, 17, 0.7));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--flaeche) 90%, transparent), rgba(var(--bg-rgb), 0.7));
 }
 
 .kopf-titel { display: flex; align-items: center; gap: 0.85rem; }
@@ -551,11 +845,16 @@ input[type=checkbox] { accent-color: var(--accent); }
     var(--schriftzug-polster);
   /* Statt des Marvel-Rots der Akzent des Studios, von dunkel oben nach
      hell unten. Beide Enden hängen am Akzent, damit der Kasten mitgeht,
-     wenn der einmal wechselt. */
+     wenn der einmal wechselt.
+
+     Die Buchstaben stehen hell im Kasten, im selben Weiß wie das Wort
+     daneben, so wie im echten Schriftzug. Das obere Ende des Verlaufs
+     ist dafür kräftiger als das untere: Hell auf Hell trüge nicht, also
+     läuft der Kasten von hell oben nach dunkel unten statt umgekehrt. */
   background: linear-gradient(180deg,
-    color-mix(in srgb, var(--accent) 40%, #041826),
-    color-mix(in srgb, var(--accent) 88%, #041826));
-  color: #041018;
+    color-mix(in srgb, var(--accent) 62%, var(--bg)),
+    color-mix(in srgb, var(--accent) 24%, var(--bg)));
+  color: var(--text);
   font-family: var(--font-impact);
   font-size: var(--schriftzug-h);
   font-weight: 900;
@@ -638,6 +937,10 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 .stat:first-child { border-left: none; }
 
+/* Die Zahl läuft auf ihren Wert (zaehlwerk.js). Tabellenziffern halten
+   jede Stelle gleich breit, den Platz für die größte vorkommende Zahl
+   reserviert das Zählwerk als minWidth. Rechtsbündig, damit die Einer
+   dabei stehen bleiben und nur nach links Stellen dazukommen. */
 .stat b {
   font-family: var(--font-hud);
   font-size: 0.95rem;
@@ -645,6 +948,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   line-height: 1;
   color: var(--text);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 .stat i {
@@ -659,6 +963,143 @@ input[type=checkbox] { accent-color: var(--accent); }
 .stat b.warn { color: var(--warn); }
 .stat b.merk { color: var(--merk); }
 .stat b.fehlt { color: var(--gefahr); }
+
+/* ---------- Farbschema ----------
+
+   Ganz rechts im Kopf, hinter dem Stand: ein Knopf mit dem Namen des
+   gültigen Schemas, darunter das Feld mit den dreien. Die Punkte tragen
+   ihre eigene Farbe und nicht die des Studios, sonst wären im Feld drei
+   gleiche Punkte zu sehen. Sie stehen deshalb als einzige Farbwerte
+   außerhalb der Schemata, gleich hier neben ihrer Beschriftung. */
+/* Ein Knopf im Kopf, der kein Farbschema ist: derselbe schmale Kasten wie
+   der daneben, damit die rechte Ecke eine Reihe bleibt und nicht zwei
+   verschiedene Knöpfe zeigt. */
+.kopf-werkzeug {
+  flex: none;
+  margin-left: 0.9rem;
+  height: 28px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--linie);
+  background: color-mix(in srgb, var(--flaeche) 80%, transparent);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.kopf-werkzeug:hover {
+  color: var(--accent-hell);
+  border-color: var(--linie-hell);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.schema {
+  position: relative;
+  flex: none;
+  margin-left: 0.9rem;
+}
+
+.schema-knopf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 28px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--linie);
+  background: color-mix(in srgb, var(--flaeche) 80%, transparent);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.schema-knopf:hover,
+.schema-knopf[aria-expanded="true"] {
+  color: var(--accent-hell);
+  border-color: var(--linie-hell);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.schema-punkt {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  background: var(--akzent-punkt, var(--accent));
+  box-shadow: 0 0 8px var(--akzent-punkt, var(--accent));
+}
+
+.schema-feld {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  /* Breit genug für den längsten Namen samt Ton daneben, ohne dass eines
+     von beiden umbricht. */
+  min-width: 258px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--linie-hell);
+  background: var(--flaeche-hoch);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6),
+              0 0 26px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.schema-feld button {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.schema-feld button + button { border-top: 1px solid var(--linie); }
+.schema-feld button:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+.schema-feld b {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.schema-feld i {
+  margin-left: auto;
+  padding-left: 0.8rem;
+  font-style: normal;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Das gewählte Schema trägt denselben leuchtenden Strich wie die
+   ausgewählte Figur in der Liste. */
+.schema-feld button[aria-checked="true"] {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.schema-feld [data-schema="jarvis"] { --akzent-punkt: #45d6f5; }
+.schema-feld [data-schema="ultron"] { --akzent-punkt: #ff4a44; }
+.schema-feld [data-schema="edith"] { --akzent-punkt: #4d8cff; }
+.schema-feld [data-schema="minutes"] { --akzent-punkt: #ff8a1f; }
+.schema-feld [data-schema="intelligenz"] { --akzent-punkt: #2fe0a0; }
+.schema-feld [data-schema="griot"] { --akzent-punkt: #f2b134; }
+.schema-feld [data-schema="kevin"] { --akzent-punkt: #e8eef2; }
 
 /* ---------- Hinweise ----------
 
@@ -709,6 +1150,9 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   .raster { transition: none; }
+  /* Die Einträge fahren dann gar nicht erst herein, studio.js lässt die
+     Klasse „belebt“ weg. Die Schleier bleiben, sie springen nur. */
+  .listen-schleier { transition: none; }
 }
 
 /* ===== Figurenliste =================================================== */
@@ -725,7 +1169,7 @@ input[type=checkbox] { accent-color: var(--accent); }
      Breite der Spalte ab, dann wäre der Inhalt einen Pixel breiter als
      der Platz und die rechte Kante des Suchfelds abgeschnitten. */
   box-shadow: inset -1px 0 0 var(--linie-hell);
-  background: rgba(5, 12, 23, 0.74);
+  background: rgba(var(--bg-rgb), 0.74);
 }
 
 /* Der Inhalt behält seine Breite, während die Spalte schmaler wird. Sonst
@@ -760,13 +1204,54 @@ input[type=checkbox] { accent-color: var(--accent); }
   font-size: 0.66rem;
 }
 
+/* Das Feld hält nur den Platz. Es ist der Bezugsrahmen der beiden
+   Schleier, die Liste darin scrollt wie zuvor. */
+.listen-feld {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .liste {
+  /* Positioniert, damit offsetTop eines Eintrags gegen dieselbe Kante
+     misst wie scrollTop. Danach rechnet das Rollen zur Vorwahl richtig. */
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   list-style: none;
   margin: 0;
   padding: 0 0.35rem 0.6rem;
+}
+
+/* ---------- Schleier über den Kanten ----------
+
+   Oben und unten liegt ein Verlauf in der Farbe der Spalte. Er wird
+   genau so stark, wie weit die Liste in diese Richtung noch reicht: Am
+   Anfang ist der obere fort, am Ende der untere. Damit hat die Liste
+   keine harte Kante mehr, sondern zwei, die etwas verschweigen.
+
+   Die Stärke setzt studio.js beim Rollen, hier steht nur der Weg. */
+.listen-schleier {
+  position: absolute;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.listen-schleier.oben {
+  top: 0;
+  height: 46px;
+  background: linear-gradient(to bottom, rgba(var(--bg-rgb), 0.94), transparent);
+}
+
+.listen-schleier.unten {
+  bottom: 0;
+  height: 82px;
+  background: linear-gradient(to top, rgba(var(--bg-rgb), 0.94), transparent);
 }
 
 /* Ein Eintrag ist eine Zeile ohne eigene Fläche. Erst die Auswahl gibt
@@ -787,7 +1272,38 @@ input[type=checkbox] { accent-color: var(--accent); }
   cursor: pointer;
 }
 
-.eintrag:hover { background: rgba(69, 214, 245, 0.06); }
+/* ---------- Hereinfahren ----------
+
+   Ein Eintrag ist erst da, wenn man ihn sieht. Läuft er über eine Kante
+   des Feldes hinaus, fährt er zusammen und verschwindet, kommt er wieder
+   herein, wächst er zurück. Den Zustand setzt ein Beobachter in
+   studio.js, er hängt die Klasse „sichtbar“ an.
+
+   Die Klasse „belebt“ trägt die Liste selbst, und zwar erst, wenn das
+   Skript den Beobachter wirklich aufgestellt hat. Ohne sie steht jeder
+   Eintrag ganz normal da: Fällt das Skript aus, fehlt die Bewegung und
+   nicht die Liste. */
+.liste.belebt .eintrag {
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.2s ease 0.1s, transform 0.2s ease 0.1s;
+}
+
+.liste.belebt .eintrag.sichtbar {
+  opacity: 1;
+  transform: none;
+}
+
+.eintrag:hover { background: rgba(var(--accent-rgb), 0.06); }
+
+/* Die Vorwahl ist der Zeiger der Tastatur: der Eintrag, den Enter
+   aufschlüge. Die Maus setzt ihn beim Überfahren mit, damit beide Wege
+   denselben Zeiger bewegen. Er bleibt blasser als die offene Figur,
+   sonst sähen zwei Einträge gleich gewählt aus. */
+.eintrag.vorwahl:not(.an) {
+  background: rgba(var(--accent-rgb), 0.06);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+}
 
 .eintrag.an {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -812,7 +1328,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   border-radius: 50%;
   object-fit: cover;
   object-position: center top;
-  background: rgba(69, 214, 245, 0.07);
+  background: rgba(var(--accent-rgb), 0.07);
   border: 1px solid var(--linie);
 }
 
@@ -822,7 +1338,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   border-radius: 0;
   object-fit: contain;
   object-position: center bottom;
-  background: rgba(69, 214, 245, 0.04);
+  background: rgba(var(--accent-rgb), 0.04);
 }
 
 .eintrag-text { min-width: 0; flex: 1; }
@@ -909,7 +1425,15 @@ input[type=checkbox] { accent-color: var(--accent); }
   border-bottom: 1px solid var(--linie);
 }
 
+/* Die Zeile ist eine eigene Ebene. Die Leinwand der Partikelschrift
+   steht siebzig Pixel über die Überschrift hinaus und ragt damit weit
+   in die Konsole darunter. Ohne "isolate" läge sie als aufgestelltes
+   Element über deren Chips, und was der Schwarm beim Zusammenfliegen
+   dort abstreift, stünde auf fremdem Grund. So bleibt ihr z-index eine
+   Sache dieser Zeile. */
 .arbeit-titel {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: baseline;
   gap: 0.8rem;
@@ -920,6 +1444,32 @@ input[type=checkbox] { accent-color: var(--accent); }
   font-size: 1.8rem;
   line-height: 1;
   white-space: nowrap;
+}
+
+/* ---------- Der Name als Partikelschrift ----------
+
+   Gezeichnet wird er in partikelschrift.js, hier steht nur, wo die
+   Leinwand liegt. Die Überschrift selbst behält ihren Platz in der
+   Zeile und wird durchsichtig: Sie trägt weiter die Zeile, gibt der
+   Vorlesehilfe den Namen und ist ohne das Skript ganz normal zu lesen.
+   Die Klasse setzt das Skript, nicht die Auszeichnung.
+
+   Die Leinwand steht ringsum über die Überschrift hinaus, dort fliegen
+   die Teilchen her. Sie nimmt keine Zeiger an, sonst lägen die Knöpfe
+   daneben unter ihr. Der Schein liegt als Filter über der ganzen
+   Leinwand, das rechnet die Grafikkarte in einem Zug.
+
+   Hat eine Figur keinen Heldennamen, fällt die Rolle weg und die Knöpfe
+   rücken bis auf einen Daumenbreit an die Überschrift. Die Leinwand
+   liegt dann mitten auf "Namen …". Deshalb stehen die Knöpfe eine Stufe
+   höher: Der Schwarm zieht hinter ihnen durch, nicht über sie. */
+.arbeit-kopf h2.partikel { color: transparent; }
+
+.partikelschrift {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 40%, transparent));
 }
 
 .rolle {
@@ -936,10 +1486,27 @@ input[type=checkbox] { accent-color: var(--accent); }
    eine Lücke zwischen dem Namen und den Knöpfen stehen. */
 .rolle:empty { display: none; }
 
-.figur-knoepfe { display: flex; gap: 0.3rem; }
+/* Name und Rolle stehen auf einer gemeinsamen Schriftlinie, die Knöpfe
+   nicht. Sie sind Bedienung und kein Text, auf der Grundlinie der großen
+   Überschrift hingen sie an deren Unterkante. Zentriert stehen sie auf
+   halber Höhe des Namens. */
+.figur-knoepfe {
+  display: flex;
+  align-self: center;
+  gap: 0.3rem;
+  position: relative;
+  z-index: 3;
+}
 .figur-knoepfe .knopf { padding: 0.25rem 0.55rem; font-size: 0.64rem; }
 
+/* Steht ganz rechts in der Kopfzeile und damit ebenfalls in Reichweite
+   der Leinwand, sobald ein Name lang und das Fenster schmal ist. Auf
+   halber Höhe, denn die Zeile gehört nicht zum Namen, sie steht neben
+   ihm. */
 .filme {
+  position: relative;
+  z-index: 1;
+  align-self: center;
   margin: 0 0 0 auto;
   color: var(--muted);
   font-size: 0.72rem;
@@ -954,7 +1521,13 @@ input[type=checkbox] { accent-color: var(--accent); }
 
    Ziel und Vorlage nebeneinander, getrennt durch eine senkrechte Linie.
    Beide Blöcke tragen oben ihre Aufschrift, darunter ihre Chips. */
+/* Eine Stufe über der Titelzeile. Die Leinwand der Partikelschrift ragt
+   siebzig Pixel unter die Überschrift und damit bis hierher; ohne den
+   z-index läge sie über den Chips, denn ein aufgestelltes Element malt
+   über allem, was im Fluss steht. */
 .konsole {
+  position: relative;
+  z-index: 1;
   flex: none;
   display: flex;
   align-items: stretch;
@@ -1008,7 +1581,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   gap: 0.4rem;
   padding: 0.26rem 0.55rem;
   border: 1px solid var(--linie);
-  background: rgba(3, 8, 17, 0.5);
+  background: rgba(var(--bg-rgb), 0.5);
   color: var(--muted);
   font: inherit;
   font-size: 0.74rem;
@@ -1030,7 +1603,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   width: 18px;
   height: 18px;
   object-fit: contain;
-  background: rgba(69, 214, 245, 0.06);
+  background: rgba(var(--accent-rgb), 0.06);
 }
 
 .chip .punkt { width: 6px; height: 6px; }
@@ -1102,9 +1675,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   height: 22px;
   display: grid;
   place-items: center;
-  /* Die Pfeilzeichen tragen ihre Tinte oberhalb der Grundlinie, das
-     Polster oben drückt sie um den Rest in die Mitte. */
-  padding: 3px 0 0;
+  padding: 0;
   border: 1px solid var(--linie);
   background: transparent;
   color: var(--muted);
@@ -1154,8 +1725,8 @@ input[type=checkbox] { accent-color: var(--accent); }
   flex: 1;
   min-height: 0;
   background:
-    radial-gradient(680px 380px at 50% 0%, rgba(69, 214, 245, 0.09), transparent 72%),
-    #040a14;
+    radial-gradient(680px 380px at 50% 0%, rgba(var(--accent-rgb), 0.09), transparent 72%),
+    var(--tief);
   overflow: hidden;
 }
 
@@ -1196,7 +1767,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   gap: 0.1rem;
   padding: 0.15rem;
   border: 1px solid var(--linie);
-  background: rgba(4, 10, 20, 0.85);
+  background: rgba(var(--bg-rgb), 0.85);
   backdrop-filter: blur(4px);
 }
 
@@ -1238,7 +1809,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--accent-hell);
-  background: rgba(69, 214, 245, 0.16);
+  background: rgba(var(--accent-rgb), 0.16);
   border: 1px dashed var(--accent);
 }
 
@@ -1272,6 +1843,59 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 .schalter { letter-spacing: 0.04em; }
 .regler input[type=range] { width: 150px; }
+
+/* ---------- Ausrichten ----------
+
+   Die Gruppe steht als eigener Kasten in der Werkzeugreihe. Sie sieht den
+   Schaltern daneben ähnlich, ist aber keiner: Was hier eingestellt wird,
+   landet in der Datei. Der Rahmen sagt das, ohne es aufzuschreiben. */
+.drehung {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--linie);
+  background: rgba(var(--accent-rgb), 0.04);
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.drehung input[type=range] { width: 108px; }
+.drehung input[type=range]:disabled { opacity: 0.3; }
+
+.drehung button {
+  min-width: 24px;
+  height: 20px;
+  padding: 0 0.35rem;
+  border: 1px solid var(--linie);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.62rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+
+.drehung button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent-hell);
+}
+
+.drehung button:disabled { opacity: 0.35; cursor: default; }
+
+.drehung b {
+  min-width: 4.2em;
+  text-align: right;
+  color: var(--accent-hell);
+  font-family: var(--font-hud);
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
 
 /* Die Herkunft des Vorschlags, als Ablesung mit vorangestelltem Zeichen.
    Die Mindesthöhe hält die Zeile auch leer offen, sonst spränge die
@@ -1316,10 +1940,10 @@ input[type=checkbox] { accent-color: var(--accent); }
 }
 
 /* Der große Kreis in seinem Kasten, die Stelle, auf die beim Zuschneiden
-   alles zuläuft. Um ihn liegt eine Skala aus kurzen Strichen, wie um ein
-   Fadenkreuz. Sie sagt nichts aus, sie zeigt nur, wo das Auge hin soll.
-   Der Durchmesser steht als Maß in --pv, damit Kreis, Ring und Skala im
-   engen Fenster zusammen kleiner werden. */
+   alles zuläuft. Um ihn liegt nichts weiter, kein Ring und keine Skala,
+   damit der Blick beim Zuschnitt bleibt und die Kante des Bildes zu sehen
+   ist. Der Durchmesser steht als Maß in --pv, damit der Kreis im engen
+   Fenster mitschrumpft. */
 .vorschau-gross {
   --pv: 190px;
   position: relative;
@@ -1328,39 +1952,34 @@ input[type=checkbox] { accent-color: var(--accent); }
   padding: 0.7rem;
   border: 1px solid var(--linie);
   background:
-    radial-gradient(120% 120% at 50% 0%, rgba(69, 214, 245, 0.07), transparent 70%),
-    #040a14;
+    radial-gradient(120% 120% at 50% 0%, rgba(var(--accent-rgb), 0.07), transparent 70%),
+    var(--tief);
 }
 
-.vorschau-gross::before {
-  content: "";
-  position: absolute;
-  width: calc(var(--pv) + 28px);
-  height: calc(var(--pv) + 28px);
-  border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg,
-    var(--accent) 0deg 1.2deg, transparent 1.2deg 15deg);
-  -webkit-mask: radial-gradient(circle,
-    transparent 0 calc(var(--pv) / 2 + 8px),
-    #000 calc(var(--pv) / 2 + 8px) calc(var(--pv) / 2 + 14px),
-    transparent calc(var(--pv) / 2 + 14px));
-  mask: radial-gradient(circle,
-    transparent 0 calc(var(--pv) / 2 + 8px),
-    #000 calc(var(--pv) / 2 + 8px) calc(var(--pv) / 2 + 14px),
-    transparent calc(var(--pv) / 2 + 14px));
-  opacity: 0.45;
-  pointer-events: none;
-}
-
+/* Nur eine Haarlinie an der Kante, damit der Kreis auch auf hellem Grund
+   endet, und ein weicher Schein nach außen. Beides liegt an der Rundung,
+   nichts davon legt sich als Rahmen über das Bild. */
 #pv-gross {
   width: var(--pv);
   height: var(--pv);
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
-  box-shadow:
-    0 0 0 4px rgba(69, 214, 245, 0.06),
-    0 0 0 5px color-mix(in srgb, var(--accent) 20%, transparent),
-    0 0 26px color-mix(in srgb, var(--accent) 22%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* Wie viele Pixel die Datei am Ende hat, gleich unter dem Kreis. Die
+   Schrift ist dieselbe wie bei den Bildunterschriften der kleinen
+   Vorschauen, damit die vier Angaben eine Reihe bilden. Die Mindesthöhe
+   hält die Zeile auch leer offen, sonst rutschte der Kreis beim ersten
+   Bild nach oben. */
+.pv-mass {
+  margin: 0.55rem 0 0;
+  min-height: 1.4em;
+  min-height: 1lh;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 /* Der große Kreis und die kleinen darunter sind zwei Aussagen: einmal
@@ -1386,7 +2005,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   border-radius: 50%;
   object-fit: cover;
   object-position: center top;
-  background: rgba(69, 214, 245, 0.05);
+  background: rgba(var(--accent-rgb), 0.05);
   border: 1px solid var(--linie);
 }
 
@@ -1410,7 +2029,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   aspect-ratio: 1381 / 578;
   padding: 1.16%;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(219, 236, 246, 0.14));
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(var(--text-rgb), 0.14));
   /* Auf der Seite ist der enge Lichtkegel 26rem breit, das sind 30
      Prozent der Rahmenbreite. Hier steht der Anteil, damit er beim
      Verkleinern nicht die ganze Fläche einnimmt. */
@@ -1419,7 +2038,7 @@ input[type=checkbox] { accent-color: var(--accent); }
       color-mix(in srgb, var(--accent) 30%, transparent), transparent 70%),
     radial-gradient(75% 110% at 50% 100%,
       color-mix(in srgb, var(--accent) 10%, transparent), transparent 72%)
-    rgba(4, 9, 18, 0.6);
+    rgba(var(--bg-rgb), 0.6);
 }
 
 /* Vignette und Bodenlinie wie auf der Seite */
@@ -1428,7 +2047,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   position: absolute;
   inset: 0;
   background: radial-gradient(115% 92% at 50% 62%,
-    transparent 22%, rgba(3, 5, 12, 0.62) 100%);
+    transparent 22%, rgba(var(--bg-rgb), 0.62) 100%);
 }
 
 .gk-rahmen::after {
@@ -1575,7 +2194,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 .schalter.merker {
   padding: 0.4rem 0.5rem;
   border: 1px solid var(--linie);
-  background: rgba(69, 214, 245, 0.04);
+  background: rgba(var(--accent-rgb), 0.04);
 }
 
 .schalter.merker.an {
@@ -1678,7 +2297,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 .dialog.breit { width: min(640px, 94vw); }
 
 .dialog::backdrop {
-  background: rgba(2, 5, 11, 0.72);
+  background: rgba(var(--bg-rgb), 0.72);
   backdrop-filter: blur(2px);
 }
 
@@ -1779,7 +2398,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   align-items: center;
   padding: 0 0.5rem;
   border: 1px solid var(--linie);
-  background: rgba(3, 8, 17, 0.6);
+  background: rgba(var(--bg-rgb), 0.6);
 }
 
 .dateiname b { color: var(--muted); font-weight: 400; }
@@ -1793,7 +2412,9 @@ input[type=checkbox] { accent-color: var(--accent); }
   min-width: 0;
 }
 
-.dateiname input:focus { outline: none; box-shadow: none; }
+/* Über den Elternselektor, sonst gewinnt die Fokusregel der Textfelder mit
+   ihrem :not() und der Rahmen läge um das Feld statt um die ganze Zeile. */
+.dialog-feld .dateiname input:focus { outline: none; box-shadow: none; }
 .dateiname:focus-within { border-color: var(--accent); }
 
 .dialog-hinweis {
@@ -1848,7 +2469,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   max-height: 46vh;
   overflow-y: auto;
   border: 1px solid var(--linie);
-  background: rgba(3, 8, 17, 0.5);
+  background: rgba(var(--bg-rgb), 0.5);
   padding: 0.3rem;
   margin-bottom: 0.7rem;
 }
@@ -1862,7 +2483,7 @@ input[type=checkbox] { accent-color: var(--accent); }
   cursor: pointer;
 }
 
-.filmzeile:hover { background: rgba(69, 214, 245, 0.07); }
+.filmzeile:hover { background: rgba(var(--accent-rgb), 0.07); }
 .filmzeile input { flex: none; }
 .filmzeile.dabei { color: var(--text); }
 .filmzeile:not(.dabei) { color: var(--muted); }
@@ -1916,7 +2537,8 @@ input[type=checkbox] { accent-color: var(--accent); }
   background: transparent;
 }
 
-#d-treue {
+#d-treue,
+#d-saum {
   color: var(--accent-hell);
   font-family: var(--font-hud);
   font-variant-numeric: tabular-nums;
@@ -1926,13 +2548,259 @@ input[type=checkbox] { accent-color: var(--accent); }
    seinem display: block und die beiden Enden stünden nebeneinander. Das
    :not() dort zählt für die Spezifität mit, ein Elternselektor allein
    reicht deshalb nicht. */
-#treue-feld > .reglerskala {
+#treue-feld > .reglerskala,
+#saum-feld > .reglerskala {
   display: flex;
   justify-content: space-between;
   margin: 0.15rem 0 0;
   font-size: 0.66rem;
   letter-spacing: 0.06em;
   color: var(--muted);
+}
+
+/* Ein Schalter im Dialog, mit erklärendem Satz unter der Beschriftung.
+   Anders als die Schalter in der Werkzeugreihe steht er über die volle
+   Breite und trägt seinen eigenen Rahmen, denn er ist hier eine
+   Entscheidung und keine Ablesung. Kantig wie alles andere, der Akzent
+   kommt allein vom Kästchen. */
+.dialog-schalter {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-bottom: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--linie);
+  background: rgba(var(--accent-rgb), 0.04);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.dialog-schalter:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--linie)); }
+
+/* Das Kästchen sitzt auf der Höhe der ersten Zeile, nicht mittig im
+   ganzen Block: Bei drei Zeilen Erklärung stünde es sonst irgendwo
+   daneben statt vor seiner Beschriftung. */
+.dialog-schalter input {
+  flex: none;
+  width: auto;
+  margin-top: 0.15rem;
+  padding: 0;
+}
+
+.dialog-schalter b {
+  display: block;
+  margin-top: 0.25rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--muted) 80%, transparent);
+}
+
+/* ---------- Sicherung ----------
+
+   Der Blick in .sicherung. Der Dialog ist breiter als die anderen, denn
+   jede Zeile trägt fünf Dinge nebeneinander: die Vorschau, wohin die
+   Fassung gehört, wann sie entstand, wie groß sie ist und was mit ihr
+   geschehen soll.
+
+   Die Liste ist die einzige Stelle im Studio, an der eine Datei endgültig
+   verschwindet. Deshalb steht das Löschen nirgends allein: Ein Klick auf
+   das Kreuz trifft genau eine Zeile, alles Weitergehende geht über die
+   Knöpfe im Fuß und fragt vorher nach. */
+/* Zwei Klassen, damit die Breite die von .dialog.breit schlägt: Der
+   Dialog braucht mehr Platz als die anderen, seine Zeile trägt fünf
+   Dinge nebeneinander. */
+.dialog.sicherung-dialog { width: min(820px, 96vw); }
+
+.sicherung-leiste {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Der Segmentschalter kommt aus der Figurenliste und bringt von dort
+   Rand und feste Breite mit. Beides gilt hier nicht. */
+.sicherung-leiste .filter {
+  margin: 0;
+  width: auto;
+}
+
+.sicherung-leiste .filter button {
+  flex: none;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.64rem;
+}
+
+.sicherung-summe {
+  margin: 0 0 0 auto;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sicherung-summe b { color: var(--accent-hell); font-weight: 600; }
+
+.sicherung-liste {
+  max-height: 52vh;
+  overflow-y: auto;
+  border: 1px solid var(--linie);
+  background: rgba(var(--bg-rgb), 0.5);
+  margin-bottom: 0.7rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent) transparent;
+}
+
+.sicherung-liste::-webkit-scrollbar { width: 8px; }
+
+.sicherung-liste::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.sicherung-zeile {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.sicherung-zeile + .sicherung-zeile { border-top: 1px solid var(--linie); }
+.sicherung-zeile:hover { background: rgba(var(--accent-rgb), 0.07); }
+.sicherung-zeile.gewaehlt { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.sicherung-zeile input[type=checkbox] { flex: none; }
+
+/* Die Vorschau: das gesicherte Bild in klein, auf dem Karo, damit
+   Freistellung und deckender Grund auf einen Blick auseinandergehen. Bei
+   den Quelldateien steht an derselben Stelle ihre Endung. */
+.sicherung-bild,
+.sicherung-kuerzel {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--linie);
+}
+
+.sicherung-bild {
+  object-fit: contain;
+  background-color: var(--karo-dunkel);
+  background-image:
+    linear-gradient(45deg, var(--karo-hell) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--karo-hell) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--karo-hell) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--karo-hell) 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+
+.sicherung-kuerzel {
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent-hell);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.sicherung-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+
+.sicherung-name b {
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sicherung-name i {
+  font-style: normal;
+  font-size: 0.68rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Das Ziel steht nicht mehr da: Dann ist diese Kopie alles, was von der
+   Datei geblieben ist, und das Löschen wäre endgültig. */
+.sicherung-name i.fehlt { color: var(--warn); }
+
+.sicherung-zeit,
+.sicherung-mass {
+  flex: none;
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sicherung-zeit { width: 10.5ch; text-align: right; }
+.sicherung-mass { width: 7ch; text-align: right; }
+
+.sicherung-tasten {
+  flex: none;
+  display: flex;
+  gap: 0.3rem;
+}
+
+.sicherung-tasten button {
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--linie);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sicherung-tasten button:hover:not(:disabled) {
+  color: var(--accent-hell);
+  border-color: var(--linie-hell);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.sicherung-tasten button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.sicherung-tasten button.weg:hover {
+  color: var(--gefahr);
+  border-color: color-mix(in srgb, var(--gefahr) 55%, transparent);
+  background: color-mix(in srgb, var(--gefahr) 10%, transparent);
+}
+
+.sicherung-leer {
+  margin: 0;
+  padding: 2.2rem 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Aufräumen und Leeren stehen links, weg vom Schließen: Der Daumen soll
+   nicht auf dem Weg zum harmlosen Knopf über den gefährlichen kommen. */
+.sicherung-knoepfe { justify-content: flex-start; }
+.sicherung-knoepfe [type=submit] { margin-left: auto; }
+
+.knopf.gefahr:hover:not(:disabled) {
+  color: var(--gefahr);
+  border-color: color-mix(in srgb, var(--gefahr) 55%, transparent);
+  background: color-mix(in srgb, var(--gefahr) 10%, transparent);
+  box-shadow: none;
 }
 
 /* ===== Meldung und Fortschritt ======================================== */
@@ -1998,7 +2866,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 
 .fortschritt-schiene {
   height: 5px;
-  background: rgba(69, 214, 245, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   border: 1px solid var(--linie);
   overflow: hidden;
 }
@@ -2019,9 +2887,13 @@ input[type=checkbox] { accent-color: var(--accent); }
       var(--accent));
   background-size: 52px 100%, 100% 100%;
   box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 60%, transparent);
-  transition: width 0.28s ease-out;
   animation: fortschritt-streifen 0.9s linear infinite;
 }
+
+/* Die Breite setzt studio.js Bild für Bild aus der verstrichenen Zeit, ein
+   Übergang würde sie nur hinterherziehen. Geführt wird allein der letzte
+   Sprung auf die volle Länge, den setzt die Meldung „fertig“. */
+.fortschritt-balken.abschluss { transition: width 0.28s ease-out; }
 
 @keyframes fortschritt-streifen {
   from { background-position: 0 0, 0 0; }
@@ -2039,14 +2911,358 @@ input[type=checkbox] { accent-color: var(--accent); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fortschritt-balken { animation: none; transition: none; }
+  .fortschritt-balken,
+  .fortschritt-balken.abschluss { animation: none; transition: none; }
+  .elektrorand { transition: none; }
 }
+
+/* ===== Biografie ======================================================
+
+   Derselbe Aufbau wie die Werkbank: links die lange Arbeit, rechts die
+   kurzen Angaben und der Knopf, der alles schreibt. Nur sind es hier
+   Texte und keine Pixel, deshalb ist die linke Tafel eine Liste von
+   Feldern und keine Leinwand.
+   ====================================================================== */
+
+.biografie-bank {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 0.8rem;
+}
+
+/* ---------- Felder ----------
+
+   Eingabefelder gibt es sonst nur in Dialogen. Hier stehen sie als
+   Arbeitsfläche, deshalb ihre eigene Fassung: derselbe Rand, dieselbe
+   dunkle Füllung, aber Fließtext statt gesperrter Aufschrift. */
+.biografie-bank input[type="text"],
+.biografie-bank textarea,
+.biografie-bank select {
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--linie);
+  border-radius: 0;
+  background: rgba(var(--bg-rgb), 0.6);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.biografie-bank textarea {
+  display: block;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.biografie-bank input[type="text"]:focus,
+.biografie-bank textarea:focus,
+.biografie-bank select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+              inset 0 0 12px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Der blasse Text im leeren Feld sagt hier mehr als sonst: Bei den
+   Angaben steht dort, was das Wiki gefunden hat. Er darf deshalb lesbar
+   sein, nur eben deutlich leiser als eine eigene Eingabe. */
+.biografie-bank ::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, transparent);
+  opacity: 1;
+}
+
+/* ---------- Die Abschnitte ---------- */
+
+.bio-stand {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-family: var(--font-hud);
+}
+
+.bio-liste {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent) transparent;
+}
+
+.bio-liste::-webkit-scrollbar { width: 8px; }
+
+.bio-liste::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.bio-abschnitt {
+  border: 1px solid var(--linie);
+  background: color-mix(in srgb, var(--flaeche) 60%, transparent);
+  padding: 0.5rem 0.55rem 0.55rem;
+}
+
+/* Die Nummer, die Überschrift und die drei Tasten in einer Zeile. Die
+   Nummer ist die Reihenfolge der Handlung und damit die eigentliche
+   Ordnung der Biografie, deshalb steht sie vorn und im Akzent. */
+.bio-kopf {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
+}
+
+.bio-nummer {
+  flex: none;
+  width: 1.7rem;
+  text-align: right;
+  font-family: var(--font-hud);
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.bio-kopf input {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.bio-tasten { display: flex; flex: none; gap: 0.2rem; }
+
+.bio-tasten button {
+  width: 24px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--linie);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bio-tasten button:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.bio-tasten button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.bio-tasten button.gefahr:hover {
+  color: var(--gefahr);
+  border-color: var(--gefahr);
+  background: color-mix(in srgb, var(--gefahr) 12%, transparent);
+}
+
+/* Ohne einen einzigen Abschnitt bliebe die Tafel leer und sagte nicht,
+   dass hier etwas fehlt. */
+.bio-leer {
+  margin: auto;
+  max-width: 46ch;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+/* ---------- Die rechte Spalte ---------- */
+
+.steck-feld {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.7rem;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent) transparent;
+}
+
+.steck-feld::-webkit-scrollbar { width: 8px; }
+
+.steck-feld::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.text-block + .text-block {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--linie);
+}
+
+.feld-hinweis {
+  margin: 0 0 0.5rem;
+  color: var(--muted);
+  font-size: 0.71rem;
+  line-height: 1.45;
+}
+
+/* Beschriftung links, Feld rechts, dahinter die Taste, die das Feld
+   leert. Die feste Breite der Beschriftung hält alle Felder auf einer
+   Linie, auch wenn „Herkunft“ und „Status“ verschieden lang sind. */
+.steck-zeile {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.steck-zeile > label {
+  flex: none;
+  width: 5.2rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.steck-zeile input,
+.steck-zeile select { flex: 1; min-width: 0; }
+
+.feld-zurueck {
+  flex: none;
+  width: 24px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--linie);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.feld-zurueck:hover:not(:disabled) {
+  color: var(--text);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+/* Ein leeres Feld gibt es nicht zurückzusetzen. Die Taste bleibt stehen,
+   damit die Zeile nicht springt, wird aber unscheinbar. */
+.feld-zurueck:disabled { opacity: 0.25; cursor: default; }
+
+.steck-liste { margin-top: 0.6rem; }
+
+.steck-liste > label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Der Zusatz hinter der Beschriftung sagt, wie das Feld gelesen wird. Er
+   gehört zur Beschriftung und soll sie trotzdem nicht überschreien. */
+.steck-liste > label i {
+  font-style: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.72;
+}
+
+/* ---------- Beziehungen ---------- */
+
+.bond-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.bond-zeile { display: flex; align-items: center; gap: 0.3rem; }
+
+/* Die Bezeichnung ist kurz, das Ziel ist ein Name: „Bester Freund“ neben
+   „Bucky Barnes“. Das Verhältnis der Breiten folgt dem. */
+.bond-zeile input { flex: 4; min-width: 0; }
+.bond-zeile select { flex: 5; min-width: 0; }
+
+/* ===== Symbole ========================================================
+
+   Die Zeichen an den Knöpfen, gesetzt von components/icons.js. Sie sind
+   Strichzeichnungen aus react-icons und tragen keine eigene Farbe: Der
+   Strich ist die Textfarbe des Knopfes, also wird das Symbol mit ihm
+   zusammen hell, blass oder rot, ohne dass hier eine einzige Regel dazu
+   steht.
+
+   Der Abschnitt steht mit Absicht am Ende. Seine Regeln greifen quer
+   durch alle Bauteile und müssen die Knopfregeln weiter oben überholen,
+   und bei gleichem Gewicht entscheidet darüber die Reihenfolge.
+   ====================================================================== */
+
+/* Ein Knopf mit Symbol wird zur Zeile: erst das Zeichen, dann die
+   Aufschrift. Die Maße bleiben, wie sein Bauteil sie gesetzt hat, nur
+   das Nebeneinander kommt von hier. Knöpfe, die nur das Zeichen tragen,
+   stellen es damit ebenso mittig wie vorher ihr place-items. */
+button.mit-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.symbol {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  /* Feiner als die Vorlage. Lucide zeichnet mit 2, das steht neben den
+     haarfeinen Linien der Tafeln zu fett im Bild. */
+  stroke-width: 1.6;
+  /* Kantig wie alles hier: gerade abgeschnittene Enden, spitze Ecken. */
+  stroke-linecap: butt;
+  stroke-linejoin: miter;
+}
+
+/* Das Speichern trägt die Anzeigeschrift, dazu gehört ein größeres
+   Zeichen mit einem noch feineren Strich. */
+.knopf.gross .symbol {
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.4;
+}
+
+.kopf-schalter .symbol { width: 16px; height: 16px; }
+
+.verlauf .symbol,
+.ansicht .symbol,
+.kopf-werkzeug .symbol,
+.sicherung-tasten .symbol { width: 14px; height: 14px; }
+
+/* Die kleinen Tasten: eine Reihe von Zeichen ohne Aufschrift, die neben
+   einem Eingabefeld oder unter den Chips steht. Dort zählt jeder Pixel,
+   und der Strich darf dafür etwas kräftiger sein. */
+.fassung-leiste .symbol,
+.drehung .symbol,
+.bio-tasten .symbol,
+.feld-zurueck .symbol,
+.panel-schliessen .symbol,
+.chip .symbol {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.75;
+}
+
+/* Die Aufschrift der kleinen Tasten steht dichter am Zeichen, sonst
+   fällt die Reihe unter den Chips auseinander. */
+.fassung-leiste button.mit-symbol,
+.drehung button.mit-symbol { gap: 0.25rem; }
 
 /* ===== Enge Fenster =================================================== */
 
 @media (max-width: 1240px) {
   .werkbank { grid-template-columns: minmax(0, 1fr) 262px; }
   .werkbank.gk { grid-template-columns: minmax(0, 1fr) 380px; }
+  .biografie-bank { grid-template-columns: minmax(0, 1fr) 330px; }
   .vorschau-gross { --pv: 155px; }
   .filme { max-width: 28ch; }
 }
@@ -2054,4 +3270,7 @@ input[type=checkbox] { accent-color: var(--accent); }
 @media (max-width: 1040px) {
   .stat { padding: 0 0.55rem; }
   .stat i { display: none; }
+  /* Der Weg in die Sicherung bleibt stehen, er rückt nur zusammen: Ein
+     Knopf, den es im engen Fenster nicht gibt, wäre der falsche Weg. */
+  .kopf-werkzeug { margin-left: 0.5rem; padding: 0 0.45rem; letter-spacing: 0.06em; }
 }

@@ -4,12 +4,13 @@ Alle Antworten gehen als eine Zeile JSON auf stdout, Fehler als
 {"fehler": "..."} mit Rückgabewert 1. Der Server ruft das Skript pro
 Aufgabe einmal auf, es hält keinen Zustand.
 
-    bild.py pruefen
-    bild.py analyse --bild <pfad>
-    bild.py schneiden --bild <pfad> --ziel <pfad> --x <px> --y <px> --seite <px>
-                      [--merken <vorlagenname>]
-    bild.py rand --bild <pfad>
-    bild.py frei --bild <pfad> --ziel <pfad> --x --y --breite --hoehe
+    crop-image.py pruefen
+    crop-image.py analyse --bild <pfad> [--winkel <grad>]
+    crop-image.py schneiden --bild <pfad> --ziel <pfad> --x <px> --y <px> --seite <px>
+                      [--winkel <grad>] [--merken <vorlagenname>]
+    crop-image.py rand --bild <pfad> [--winkel <grad>]
+    crop-image.py frei --bild <pfad> --ziel <pfad> --x --y --breite --hoehe
+                      [--winkel <grad>]
 
 Die ersten drei Befehle gehören zu den runden Porträts, die letzten beiden
 zu den Ganzkörperbildern. Dort ist der Ausschnitt ein freies Rechteck, und
@@ -17,6 +18,14 @@ der Vorschlag ist kein Kopf, sondern die Hülle des sichtbaren Inhalts:
 Ganzkörperbilder gehören randlos zugeschnitten, sonst steht die Figur auf
 der Charakterseite zu klein im Rahmen und schwebt über der Bodenlinie.
 Dieselbe Regel wie in tools/crop-fullsize.py.
+
+--winkel richtet eine schief stehende Vorlage aus. Gedreht wird um ihren
+Mittelpunkt, die Fläche wächst dabei auf die Hülle des gedrehten Bildes.
+Alle Angaben zum Ausschnitt zählen danach in dieser Fläche, denn genau so
+misst die Bühne des Studios. Die Maße der Fläche stehen deshalb hier und
+in studio.js wortgleich, bis hin zum Aufrunden: Ein Pixel Unterschied
+verschöbe den Ausschnitt. Zusammen mit --merken ergibt eine Drehung keinen
+Sinn, der Skill dreht beim nächsten Lauf nicht mit.
 
 Der Vorschlag aus "analyse" ist genau der Ausschnitt, den der Skill
 portraits von sich aus wählen würde. Dafür wird dessen zuschnitt.py
@@ -33,13 +42,15 @@ und der Kopf allein aus der Gesichtsbox geschätzt. Das steht als
 
 import argparse
 import json
+import math
 import os
 import sys
 
 import numpy as np
 from PIL import Image
 
-REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Drei Ebenen hoch: services, portrait-studio, tools.
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 SKILL = os.path.join(REPO, ".claude", "skills", "portraits", "scripts")
 
 # Dieselben Werte wie in zuschnitt.py, hier für den Fall gespiegelt, dass
@@ -76,9 +87,55 @@ def skill():
         return None
 
 
+# ---------- Ausrichten ----------
+
+def dreh_masse(w, h, winkel):
+    """Die Fläche, die das gedrehte Bild braucht.
+
+    Wortgleich zu drehMasse() in studio.js, samt Aufrunden: Python rundet
+    die halbe Zahl von sich aus zur geraden, JavaScript nach oben, deshalb
+    das ausgeschriebene floor(x + 0.5).
+    """
+    rad = math.radians(winkel)
+    c, s = abs(math.cos(rad)), abs(math.sin(rad))
+    return (max(1, int(math.floor(w * c + h * s + 0.5))),
+            max(1, int(math.floor(w * s + h * c + 0.5))))
+
+
+def drehen(rgba, winkel):
+    """Die Vorlage um ihren Mittelpunkt drehen, die Fläche wächst mit.
+
+    Die Matrix führt vom Ziel zurück in die Vorlage, so will es
+    Image.transform. Sie ist die Umkehrung dessen, was die Bühne mit
+    ctx.rotate() tut, positive Winkel drehen also auch hier im
+    Uhrzeigersinn.
+    """
+    if not winkel:
+        return rgba
+    h, w = rgba.shape[:2]
+    nw, nh = dreh_masse(w, h, winkel)
+    rad = math.radians(winkel)
+    c, s = math.cos(rad), math.sin(rad)
+    matrix = (c, s, -c * nw / 2.0 - s * nh / 2.0 + w / 2.0,
+              -s, c, s * nw / 2.0 - c * nh / 2.0 + h / 2.0)
+
+    # Vor dem Drehen mit Alpha multiplizieren, sonst blutet Schwarz aus
+    # den durchsichtigen Pixeln in die neue Kante. Dieselbe Vorsicht wie
+    # beim Verkleinern weiter unten.
+    a = rgba[..., 3:4] / 255.0
+    vor = np.concatenate([rgba[..., :3] * a, rgba[..., 3:4]], axis=2)
+    im = Image.fromarray(np.clip(vor, 0, 255).astype(np.uint8), "RGBA")
+    im = im.transform((nw, nh), Image.AFFINE, matrix,
+                      resample=Image.BICUBIC, fillcolor=(0, 0, 0, 0))
+    arr = np.asarray(im).astype(np.float32)
+    a2 = arr[..., 3:4] / 255.0
+    rgb = np.clip(arr[..., :3] / np.maximum(a2, 1e-3), 0, 255)
+    return np.concatenate([rgb, arr[..., 3:4]], axis=2)
+
+
 # ---------- Vorlage laden ----------
 
-def laden(pfad):
+def laden(pfad, winkel=0.0):
     """RGBA der Vorlage, dazu eine auf Weiß gelegte Fassung für die
     Erkennung und die Auskunft, ob überhaupt Alpha mit Inhalt da ist."""
     im = Image.open(pfad)
@@ -86,6 +143,9 @@ def laden(pfad):
     hat_alpha = im.mode in ("RGBA", "LA") or "transparency" in im.info
     if hat_alpha and float((arr[..., 3] < 250).mean()) < 0.02:
         hat_alpha = False          # Alphakanal vorhanden, aber ohne Inhalt
+    # Erst nach dieser Frage drehen: Eine Drehung legt durchsichtige Ecken
+    # an, und die machten aus jeder deckenden Vorlage eine freigestellte.
+    arr = drehen(arr, winkel)
     a = arr[..., 3:4] / 255.0
     flach = arr[..., :3] * a + 255.0 * (1.0 - a)
     return flach, arr, hat_alpha
@@ -105,8 +165,8 @@ def aus_gesicht(fx, fy, fw, fh):
     return fx + fw / 2.0, kopf_oben, kopf_h
 
 
-def analyse(pfad):
-    flach, rgba, hat_alpha = laden(pfad)
+def analyse(pfad, winkel=0.0):
+    flach, rgba, hat_alpha = laden(pfad, winkel)
     h, w = rgba.shape[:2]
     z = skill()
 
@@ -163,13 +223,16 @@ def schneiden(rgba, links, oben, seite, groesse):
     return Image.fromarray(np.concatenate([rgb, arr[..., 3:4]], axis=2).astype(np.uint8), "RGBA")
 
 
-def rand(pfad):
+def rand(pfad, winkel=0.0):
     """Hülle des sichtbaren Inhalts, der randlose Zuschnitt eines
     Ganzkörperbildes. Ohne Alphakanal gibt es nichts zu finden, dann ist
     die Hülle das ganze Bild."""
     im = Image.open(pfad)
     hat_alpha = im.mode in ("RGBA", "LA") or "transparency" in im.info
     im = im.convert("RGBA")
+    if winkel:
+        arr = drehen(np.asarray(im).astype(np.float32), winkel)
+        im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
     w, h = im.size
     kasten = None
     if hat_alpha:
@@ -186,7 +249,7 @@ def rand(pfad):
                 art="rand" if hat_alpha else "ganzes-bild", alpha=hat_alpha)
 
 
-def frei(pfad, ziel, x, y, b, h):
+def frei(pfad, ziel, x, y, b, h, winkel=0.0):
     """Freies Rechteck ausschneiden und als Ganzkörperbild ablegen.
 
     Sehr große Vorlagen werden auf das Maß des Bestandes gebracht,
@@ -194,7 +257,7 @@ def frei(pfad, ziel, x, y, b, h):
     Dateigröße."""
     im = Image.open(pfad)
     hat_alpha = im.mode in ("RGBA", "LA") or "transparency" in im.info
-    rgba = np.asarray(im.convert("RGBA")).astype(np.float32)
+    rgba = drehen(np.asarray(im.convert("RGBA")).astype(np.float32), winkel)
     bh, bw = rgba.shape[:2]
 
     sb, sh = max(1, int(round(b))), max(1, int(round(h)))
@@ -265,6 +328,8 @@ def main():
     p.add_argument("--seite", type=float)
     p.add_argument("--breite", type=float)
     p.add_argument("--hoehe", type=float)
+    p.add_argument("--winkel", type=float, default=0.0,
+                   help="Vorlage vor dem Schneiden um diesen Winkel drehen")
     p.add_argument("--merken", help="Vorlagenname für manuell.json des Skills")
     args = p.parse_args()
 
@@ -279,19 +344,19 @@ def main():
         return
 
     if args.befehl == "analyse":
-        print(json.dumps(analyse(args.bild)))
+        print(json.dumps(analyse(args.bild, args.winkel)))
         return
 
     if args.befehl == "rand":
-        print(json.dumps(rand(args.bild)))
+        print(json.dumps(rand(args.bild, args.winkel)))
         return
 
     if args.befehl == "frei":
         print(json.dumps(frei(args.bild, args.ziel, args.x, args.y,
-                              args.breite, args.hoehe)))
+                              args.breite, args.hoehe, args.winkel)))
         return
 
-    flach, rgba, hat_alpha = laden(args.bild)
+    flach, rgba, hat_alpha = laden(args.bild, args.winkel)
     h, w = rgba.shape[:2]
     # Kleine Ausschnitte nicht über 480 hochrechnen, große nicht darunter
     # zusammenstauchen. Genau die Regel des Skills.
@@ -300,8 +365,10 @@ def main():
     os.makedirs(os.path.dirname(args.ziel), exist_ok=True)
     bild.save(args.ziel, "WEBP", quality=88, method=6)
 
+    # Aus einer gedrehten Fläche gibt es nichts zu merken: Der Skill dreht
+    # beim nächsten Lauf nicht mit und träfe damit daneben.
     gemerkt = None
-    if args.merken:
+    if args.merken and not args.winkel:
         gemerkt = merken(args.merken, w, h, args.x, args.y, args.seite)
 
     print(json.dumps({"ok": True, "groesse": groesse, "alpha": hat_alpha,

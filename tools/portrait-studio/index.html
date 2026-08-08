@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bild-Studio – MCU Timeline</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23ec1d24'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%23fff' stroke-width='5'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css">
+<link rel="stylesheet" href="styles/studio.css">
+<script>
+/* Das gewählte Farbschema muss stehen, bevor der erste Pixel fällt.
+   Käme es erst mit farbschema.js am Ende des Körpers, blitzte bei jedem
+   Laden kurz das Standardschema auf. Geprüft wird der Wert dort, hier
+   soll nur nichts zwischen Stylesheet und Anzeige liegen. */
+try {
+  var gewaehlt = localStorage.getItem('studio-farbschema');
+  if (gewaehlt) document.documentElement.dataset.schema = gewaehlt;
+} catch (fehler) { /* ohne Speicher eben das Standardschema */ }
+</script>
 </head>
 <body>
 
@@ -16,9 +26,9 @@
 
 <header class="kopf">
   <div class="kopf-titel">
-    <button type="button" id="liste-schalter" class="kopf-schalter"
+    <button type="button" id="liste-schalter" class="kopf-schalter" data-symbol="liste-zu"
             title="Figurenliste ausblenden" aria-expanded="true"
-            aria-controls="spalte-liste">◀</button>
+            aria-controls="spalte-liste"></button>
     <h1 class="schriftzug">
       <span class="schriftzug-logo">Marvel</span>
       <span class="schriftzug-text">Bild&#8209;Studio</span>
@@ -27,8 +37,58 @@
   <div class="bereich" id="bereich">
     <button type="button" data-bereich="portrait" class="an">Porträts</button>
     <button type="button" data-bereich="ganzkoerper">Ganzkörper</button>
+    <button type="button" data-bereich="biografie">Biografie</button>
   </div>
   <p id="zaehler" class="zaehler">lädt …</p>
+
+  <!-- Der Weg in den Sicherungsordner. Er steht im Kopf und nicht bei den
+       Werkzeugen, denn er gehört zu keiner Figur: Was dort liegt, betrifft
+       das ganze Repo. -->
+  <button type="button" class="kopf-werkzeug" id="sicherung-knopf" data-symbol="sicherung"
+          title="Was das Studio vor seinen Eingriffen gesichert hat">
+    Sicherung
+  </button>
+
+  <!-- Das Farbschema. Der Knopf zeigt, welches gilt, das Feld darunter
+       die Auswahl. Gesetzt wird es in farbschema.js. -->
+  <div class="schema" id="schema">
+    <button type="button" class="schema-knopf" id="schema-knopf"
+            aria-haspopup="true" aria-expanded="false" aria-controls="schema-feld"
+            title="Farbschema wechseln">
+      <span class="schema-punkt" aria-hidden="true"></span>
+      <span id="schema-name">J.A.R.V.I.S.</span>
+    </button>
+    <div class="schema-feld" id="schema-feld" role="menu" hidden>
+      <button type="button" role="menuitemradio" data-schema="jarvis" aria-checked="true">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>J.A.R.V.I.S.</b><i>Cyan</i>
+      </button>
+      <button type="button" role="menuitemradio" data-schema="ultron" aria-checked="false">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>Ultron</b><i>Rot</i>
+      </button>
+      <button type="button" role="menuitemradio" data-schema="edith" aria-checked="false">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>E.D.I.T.H.</b><i>Blau</i>
+      </button>
+      <button type="button" role="menuitemradio" data-schema="minutes" aria-checked="false">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>Miss Minutes</b><i>Orange</i>
+      </button>
+      <button type="button" role="menuitemradio" data-schema="intelligenz" aria-checked="false">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>Die Oberste Intelligenz</b><i>Grün</i>
+      </button>
+      <button type="button" role="menuitemradio" data-schema="griot" aria-checked="false">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>Griot</b><i>Gold</i>
+      </button>
+      <button type="button" role="menuitemradio" data-schema="kevin" aria-checked="false">
+        <span class="schema-punkt" aria-hidden="true"></span>
+        <b>K.E.V.I.N.</b><i>Schwarz-weiß</i>
+      </button>
+    </div>
+  </div>
 </header>
 
 <!-- Die Hinweise stehen als eigenes Band unter dem Kopf. Im Kopf selbst
@@ -56,9 +116,16 @@
       <button type="button" data-filter="fertig">Fertig</button>
       <button type="button" data-filter="fehlt">Ohne Bild</button>
     </div>
-    <ul id="liste" class="liste"></ul>
+    <!-- Die Liste steht in einem eigenen Feld, damit die beiden Schleier
+         an seinen Kanten haften können. Sie liegen über den Einträgen und
+         verschlucken die, die gerade über den Rand hinauslaufen. -->
+    <div class="listen-feld">
+      <ul id="liste" class="liste"></ul>
+      <div class="listen-schleier oben" id="schleier-oben" aria-hidden="true"></div>
+      <div class="listen-schleier unten" id="schleier-unten" aria-hidden="true"></div>
+    </div>
     <div class="listenfuss">
-      <button type="button" id="figur-neu" class="knopf leise">＋ Neue Figur</button>
+      <button type="button" id="figur-neu" class="knopf leise" data-symbol="figur-neu">Neue Figur</button>
     </div>
   </aside>
 
@@ -70,9 +137,9 @@
         <h2 id="figur-name"></h2>
         <p id="figur-rolle" class="rolle"></p>
         <div class="figur-knoepfe">
-          <button type="button" id="figur-bearbeiten" class="knopf leise"
+          <button type="button" id="figur-bearbeiten" class="knopf leise" data-symbol="namen"
                   title="Namen und Schlüssel der Figur ändern">Namen …</button>
-          <button type="button" id="figur-auftritte" class="knopf leise"
+          <button type="button" id="figur-auftritte" class="knopf leise" data-symbol="auftritte"
                   title="In welchen Filmen die Figur auftritt">Auftritte …</button>
         </div>
       </div>
@@ -88,20 +155,27 @@
         <span class="wahl-titel" id="ziel-titel">Porträt</span>
         <div class="chips" id="ziele"></div>
         <div class="fassung-leiste" id="fassung-leiste" hidden>
-          <button type="button" data-tat="neu" data-hilfe="Neue Fassung anlegen">＋ Neu</button>
-          <button type="button" data-tat="umbenennen" data-hilfe="Beschriftung ändern">Umbenennen</button>
-          <button type="button" data-tat="hoch" data-hilfe="Eine Stelle nach vorn">▲</button>
-          <button type="button" data-tat="runter" data-hilfe="Eine Stelle nach hinten">▼</button>
-          <button type="button" data-tat="standard"
+          <button type="button" data-tat="neu" data-symbol="neu"
+                  data-hilfe="Neue Fassung anlegen">Neu</button>
+          <button type="button" data-tat="umbenennen" data-symbol="umbenennen"
+                  data-hilfe="Beschriftung ändern">Umbenennen</button>
+          <button type="button" data-tat="hoch" data-symbol="hoch"
+                  aria-label="Eine Stelle nach vorn"
+                  data-hilfe="Eine Stelle nach vorn"></button>
+          <button type="button" data-tat="runter" data-symbol="runter"
+                  aria-label="Eine Stelle nach hinten"
+                  data-hilfe="Eine Stelle nach hinten"></button>
+          <button type="button" data-tat="standard" data-symbol="standard"
                   data-hilfe="Diese Fassung wird die Standardansicht, die bisherige bleibt als Fassung erhalten">Zum Standard</button>
-          <button type="button" data-tat="loeschen" class="gefahr" data-hilfe="Fassung entfernen">Löschen</button>
+          <button type="button" data-tat="loeschen" class="gefahr" data-symbol="loeschen"
+                  data-hilfe="Fassung entfernen">Löschen</button>
         </div>
       </div>
 
       <div class="konsole-block quellen-block">
         <span class="wahl-titel" id="quell-titel">Vorlage</span>
         <div class="chips" id="quellen">
-          <button type="button" class="chip chip-upload" id="upload-knopf">
+          <button type="button" class="chip chip-upload" id="upload-knopf" data-symbol="hochladen">
             Eigenes Bild …
           </button>
         </div>
@@ -120,17 +194,18 @@
           <span class="panel-marke">Bühne</span>
 
           <div class="verlauf" id="verlauf">
-            <button type="button" data-richtung="zurueck" disabled
-                    title="Rückgängig (Strg+Z)">↶</button>
-            <button type="button" data-richtung="vor" disabled
-                    title="Wiederholen (Strg+Y)">↷</button>
+            <button type="button" data-richtung="zurueck" disabled data-symbol="rueckgaengig"
+                    title="Rückgängig (Strg+Z)"></button>
+            <button type="button" data-richtung="vor" disabled data-symbol="wiederholen"
+                    title="Wiederholen (Strg+Y)"></button>
           </div>
 
           <!-- Eine vorhandene Fassung als halb durchsichtige Schablone im
                Ausschnitt, nur zum Ausrichten. Sie lässt sich nicht anfassen
-               und wird nicht gespeichert. -->
+               und wird nicht gespeichert. Beim Porträt steht die Datei der
+               offenen Fassung von selbst darin, siehe vorgabeReferenz(). -->
           <div class="referenz-feld" id="referenz-feld"
-               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert.">
+               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Beim Porträt liegt die Datei der offenen Fassung von selbst darin, das bisherige Bild steht so neben dem neuen Ausschnitt. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert.">
             <label for="referenz">Referenz</label>
             <select id="referenz" disabled><option value="">Ohne</option></select>
             <input type="range" id="referenz-alpha" min="10" max="90" value="45" disabled
@@ -142,10 +217,13 @@
           <canvas id="buehne" tabindex="0"
                   aria-label="Bühne: im Kreis ziehen verschiebt den Ausschnitt, daneben ziehen verschiebt das Bild"></canvas>
           <div class="ansicht" id="ansicht">
-            <button type="button" id="ansicht-minus" title="Bild kleiner (Strg + Mausrad)">−</button>
+            <button type="button" id="ansicht-minus" data-symbol="kleiner"
+                    title="Bild kleiner (Strg + Mausrad)"></button>
             <span id="ansicht-wert">100 %</span>
-            <button type="button" id="ansicht-plus" title="Bild größer (Strg + Mausrad)">+</button>
-            <button type="button" id="ansicht-fit" title="Das ganze Bild zeigen">Einpassen</button>
+            <button type="button" id="ansicht-plus" data-symbol="groesser"
+                    title="Bild größer (Strg + Mausrad)"></button>
+            <button type="button" id="ansicht-fit" data-symbol="einpassen"
+                    title="Das ganze Bild zeigen">Einpassen</button>
           </div>
           <p id="buehne-leer" class="buehne-leer" hidden></p>
           <div id="ablage" class="ablage">Bild hier ablegen</div>
@@ -153,10 +231,31 @@
 
         <div class="tafel-fuss">
           <div class="werkzeuge">
-            <button type="button" id="auto" class="knopf">Automatisch zuschneiden</button>
-            <button type="button" id="zurueck" class="knopf leise">Zurücksetzen</button>
-            <button type="button" id="hochskalieren" class="knopf leise"
+            <button type="button" id="auto" class="knopf" data-symbol="zuschneiden">Automatisch zuschneiden</button>
+            <button type="button" id="zurueck" class="knopf leise" data-symbol="zuruecksetzen">Zurücksetzen</button>
+            <button type="button" id="hochskalieren" class="knopf leise" data-symbol="hochskalieren"
                     title="Rechnet die Vorlage hoch und baut auf Wunsch die Gesichter neu auf. Öffnet die Einstellungen dazu.">Upscale …</button>
+            <button type="button" id="freistellen" class="knopf leise" data-symbol="freistellen"
+                    title="Nimmt den Hintergrund aus der Vorlage und legt sie mit Alphakanal auf die Bühne. Rechnet örtlich, ohne Verbindung nach draußen. Öffnet die Einstellungen dazu.">Freistellen …</button>
+
+            <!-- Ausrichten: die Vorlage drehen, bis sie gerade steht. Der
+                 Ausschnitt bleibt liegen, wo er liegt, das Bild dreht sich
+                 darunter. Anders als die Schalter daneben ändert das die
+                 Datei, deshalb steht die Gruppe bei den Werkzeugen. -->
+            <div class="drehung" id="drehung"
+                 title="Dreht die Vorlage um ihren Mittelpunkt, damit ein schief stehendes Bild gerade wird. Der Ausschnitt bleibt dabei auf derselben Stelle der Figur. Der Winkel wird beim Speichern mitgeschnitten.">
+              <span>Ausrichten</span>
+              <button type="button" data-dreh="links" data-symbol="drehen-links"
+                      title="Eine Vierteldrehung nach links">−90°</button>
+              <input type="range" id="winkel" min="-45" max="45" step="0.1" value="0"
+                     aria-label="Feinwinkel in Grad">
+              <button type="button" data-dreh="rechts" data-symbol="drehen-rechts"
+                      title="Eine Vierteldrehung nach rechts">+90°</button>
+              <b id="d-winkel">0.0°</b>
+              <button type="button" data-dreh="null" class="zurueck" data-symbol="zuruecksetzen"
+                      title="Ausrichtung zurück auf 0°"></button>
+            </div>
+
             <label class="schalter" id="hilfslinien-feld"
                    title="Boden, Mitte und Ränder der Figur als Linien. Der Ausschnitt rastet daran ein, Alt beim Ziehen hält das an.">
               <input type="checkbox" id="hilfslinien" checked> Hilfslinien &amp; Einrasten
@@ -187,6 +286,7 @@
         <div id="vorschau-portrait">
           <div class="vorschau-gross" id="vorschau-gross">
             <canvas id="pv-gross" width="200" height="200"></canvas>
+            <p class="pv-mass" id="pv-mass"></p>
           </div>
 
           <div class="vorschau-reihe">
@@ -219,7 +319,8 @@
               <b id="d-skala">1</b>
             </label>
             <button type="button" id="skala-zurueck" class="knopf leise zurueck"
-                    title="Körpergröße zurück auf den Wert aus chars.js">↺</button>
+                    data-symbol="zuruecksetzen"
+                    title="Körpergröße zurück auf den Wert aus chars.js"></button>
           </div>
 
           <div class="skala-feld">
@@ -229,12 +330,14 @@
               <b id="d-korrektur">100 %</b>
             </label>
             <button type="button" id="korrektur-zurueck" class="knopf leise zurueck"
-                    title="Bildkorrektur zurück auf den Wert aus chars.js">↺</button>
+                    data-symbol="zuruecksetzen"
+                    title="Bildkorrektur zurück auf den Wert aus chars.js"></button>
           </div>
 
           <div class="skala-fuss">
             <p class="gk-hinweis" id="d-wirkung">Im Rahmen: <b>1.00</b></p>
-            <button type="button" id="skala-speichern" class="knopf leise" disabled>
+            <button type="button" id="skala-speichern" class="knopf leise" disabled
+                    data-symbol="schreiben">
               In chars.js schreiben
             </button>
           </div>
@@ -266,8 +369,140 @@
              Speichern ist der letzte Schritt jeder Figur und soll nie
              erst weggescrollt werden müssen. -->
         <div class="tafel-fuss vorschau-fuss">
-          <button type="button" id="speichern" class="knopf gross">Speichern</button>
+          <button type="button" id="speichern" class="knopf gross" data-symbol="speichern">Speichern</button>
           <p id="speicher-info" class="speicher-info"></p>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- ---------- Biografie ----------
+
+         Alles an einer Figur, was kein Bild ist. Links die ausführliche
+         Biografie aus js/profiles.js, rechts der Rest in einer Spalte:
+         Kurzfassung, Steckbrief, Beziehungen, Besetzung. Gespeichert wird
+         alles zusammen, denn es ist ein Gedanke und nicht vier. -->
+    <div class="biografie-bank" id="biografie-bank" hidden>
+
+      <section class="tafel bio-tafel">
+        <div class="panel-kopf">
+          <span class="panel-marke">Biografie</span>
+          <span class="bio-stand" id="bio-stand"></span>
+          <button type="button" id="bio-neu" class="knopf leise" data-symbol="neu"
+                  title="Einen Abschnitt am Ende anfügen">Abschnitt</button>
+        </div>
+
+        <div class="bio-liste" id="bio-liste"></div>
+
+        <div class="tafel-fuss">
+          <p class="werkzeug-info">
+            Benannte Abschnitte in Handlungsreihenfolge, wie ein Wiki-Artikel sie
+            gliedert. Der letzte fasst meist Wesen und Fähigkeiten zusammen.
+            Zeilenumbrüche werden beim Speichern zu Leerzeichen, jeder Abschnitt
+            steht in js/profiles.js in einer Zeile.
+          </p>
+        </div>
+      </section>
+
+      <aside class="tafel steck-tafel">
+        <div class="panel-kopf">
+          <span class="panel-marke">Steckbrief</span>
+          <button type="button" id="wiki-figur" class="knopf leise" data-symbol="wiki"
+                  title="Holt Spezies, Status, Zugehörigkeit, Größe und Geburtsort dieser Figur neu aus den beiden Marvel-Wikis und schreibt sie in den erzeugten Block von js/facts.js. Die Angaben von Hand darunter bleiben stehen.">Wiki neu</button>
+        </div>
+
+        <div class="steck-feld">
+
+          <div class="text-block">
+            <span class="feld-titel">Kurzbiografie</span>
+            <p class="feld-hinweis">
+              Ein bis drei Sätze für die Hover-Box und die Karte auf der Timeline.
+              Steht als BIOS in js/data.js.
+            </p>
+            <textarea id="t-bio" rows="4" spellcheck="true"
+                      placeholder="Wer die Figur ist und was sie in der Reihe tut."></textarea>
+          </div>
+
+          <div class="text-block">
+            <span class="feld-titel">Angaben</span>
+            <p class="feld-hinweis">
+              Leer heißt: Es gilt, was der Wiki-Abruf gefunden hat, blass daneben.
+              Was hier steht, liegt darüber und kommt nach CHAR_FACTS_EXTRA.
+            </p>
+
+            <div class="steck-zeile">
+              <label for="t-origin">Herkunft</label>
+              <input id="t-origin" type="text" data-feld="origin" autocomplete="off">
+              <button type="button" class="feld-zurueck" data-symbol="zuruecksetzen" data-leert="t-origin"
+                      title="Feld leeren, dann gilt wieder das Wiki"></button>
+            </div>
+            <div class="steck-zeile">
+              <label for="t-species">Spezies</label>
+              <input id="t-species" type="text" data-feld="species" autocomplete="off">
+              <button type="button" class="feld-zurueck" data-symbol="zuruecksetzen" data-leert="t-species"
+                      title="Feld leeren, dann gilt wieder das Wiki"></button>
+            </div>
+            <div class="steck-zeile">
+              <label for="t-height">Größe</label>
+              <input id="t-height" type="text" data-feld="height" autocomplete="off"
+                     placeholder="1,88 m">
+              <button type="button" class="feld-zurueck" data-symbol="zuruecksetzen" data-leert="t-height"
+                      title="Feld leeren, dann gilt wieder das Wiki"></button>
+            </div>
+            <div class="steck-zeile">
+              <label for="t-status">Status</label>
+              <select id="t-status" data-feld="status">
+                <option value="">Aus dem Wiki</option>
+                <option value="Am Leben">Am Leben</option>
+                <option value="Verstorben">Verstorben</option>
+              </select>
+              <button type="button" class="feld-zurueck" data-symbol="zuruecksetzen" data-leert="t-status"
+                      title="Zurück auf die Angabe des Wikis"></button>
+            </div>
+
+            <div class="steck-liste">
+              <label for="t-teams">Zugehörigkeit <i>eine je Zeile, die wichtigste zuerst</i></label>
+              <textarea id="t-teams" rows="4" data-feld="teams"></textarea>
+            </div>
+
+            <div class="steck-liste">
+              <label for="t-powers">Kräfte <i>eine je Zeile, Stichworte statt Sätze</i></label>
+              <textarea id="t-powers" rows="4" data-feld="powers"></textarea>
+            </div>
+          </div>
+
+          <div class="text-block">
+            <span class="feld-titel">Beziehungen</span>
+            <p class="feld-hinweis">
+              Nur was eine eigene Bezeichnung verdient. Die Richtung steht aus Sicht
+              dieser Figur. Alle weiteren Begegnungen entstehen von allein aus den
+              gemeinsamen Filmen.
+            </p>
+            <div class="bond-liste" id="bond-liste"></div>
+            <button type="button" id="bond-neu" class="knopf leise" data-symbol="neu">Beziehung</button>
+          </div>
+
+          <div class="text-block">
+            <span class="feld-titel">Besetzung</span>
+            <p class="feld-hinweis">
+              Wer die Figur spielt. Mehrere Darsteller in der Reihenfolge ihrer
+              Auftritte, eine je Zeile.
+            </p>
+            <textarea id="t-actors" rows="2" placeholder="Chris Evans"></textarea>
+          </div>
+
+          <div class="text-block">
+            <span class="feld-titel">Erzeugter Block</span>
+            <p class="feld-hinweis" id="wiki-lage">—</p>
+            <button type="button" id="wiki-alle" class="knopf leise" data-symbol="nachziehen">Fehlende nachziehen</button>
+          </div>
+
+        </div>
+
+        <div class="tafel-fuss vorschau-fuss">
+          <button type="button" id="texte-speichern" class="knopf gross" disabled
+                  data-symbol="speichern">Speichern</button>
+          <p id="texte-info" class="speicher-info"></p>
         </div>
       </aside>
 
@@ -275,8 +510,13 @@
   </section>
 
   <section class="spalte-arbeit leer" id="leerzustand">
-    <div class="tafel leer-tafel">
-      <div class="panel-kopf"><span class="panel-marke">Bedienung</span></div>
+    <div class="tafel leer-tafel" id="bedienung">
+      <div class="panel-kopf">
+        <span class="panel-marke">Bedienung</span>
+        <button type="button" id="bedienung-zu" class="panel-schliessen" data-symbol="schliessen"
+                title="Bedienung schließen" aria-label="Bedienung schließen"
+                aria-controls="bedienung"></button>
+      </div>
       <h2>Figur wählen</h2>
       <p>Links steht jede Figur aus der Datenbank. Ein Klick öffnet ihr Bild:
          bei <b>Porträts</b> das Ganzkörperbild mit dem Kreis, der daraus das
@@ -288,9 +528,26 @@
         <li><b>Ziehen daneben</b> verschiebt das Bild, <b>Strg&nbsp;+&nbsp;Mausrad</b> zoomt es.</li>
         <li>Der Ausschnitt <b>rastet</b> an Boden, Mitte und Rändern der Figur ein,
             <b>Alt</b> beim Ziehen hält das an.</li>
+        <li><b>Ausrichten</b> dreht eine schief stehende Vorlage gerade. Der Regler
+            geht bis 45 Grad, die beiden Knöpfe daneben drehen um eine Vierteldrehung,
+            der Rücksetzer am Ende stellt auf null zurück. Der Ausschnitt bleibt dabei
+            auf derselben Stelle der Figur, und der Winkel wird beim Speichern
+            mitgeschnitten.</li>
         <li><b>Automatisch zuschneiden</b> nimmt den Vorschlag des Porträt-Skills,
             im Ganzkörper-Betrieb schneidet <b>Randlos beschneiden</b> auf die Figur.</li>
         <li><b>Eigenes Bild</b> lädt eine Vorlage vom Rechner, Ablegen und Einfügen geht auch.</li>
+        <li><b>Aktuelles Bild</b> holt beim Porträt die bestehende Datei selbst auf die
+            Bühne. Sie ist dann Vorlage wie jede andere: nachziehen, hochrechnen,
+            freistellen, und Speichern schreibt sie an dieselbe Stelle zurück. Der
+            Ausschnitt beginnt dabei auf dem ganzen Bild und die Erkennung läuft
+            nicht von allein, „Automatisch zuschneiden“ holt sie bei Bedarf. Hat eine
+            Figur gar kein Ganzkörperbild, steht diese Vorlage von Anfang an.</li>
+        <li>Beim Porträt liegt das vorhandene Bild der Fassung als <b>Referenz</b>
+            von selbst halb durchsichtig im Ausschnitt. Der neue Zuschnitt steht
+            damit neben dem, was bisher auf der Seite steht. „Ohne“ nimmt sie weg,
+            und was von Hand gewählt ist, bleibt bis zur nächsten Figur stehen.
+            Liegt das Bild selbst auf der Bühne, tritt sie ab: Sie läge
+            deckungsgleich auf sich.</li>
         <li>Im Ganzkörper-Betrieb sagt <b>Körpergröße</b>, wie groß die Figur ist, und
             <b>Bildkorrektur</b>, wie weit dieses eine Bild davon abweicht. Beides
             zusammen ergibt, wie hoch sie im Rahmen steht.</li>
@@ -306,8 +563,30 @@
             bevor daraus geschnitten wird. Im Fenster dazu lässt sich ein
             <b>Gesichtsmodell</b> wählen, das die Gesichter danach neu aufbaut,
             sonst bleiben sie wächsern.</li>
+        <li>Im Reiter <b>Biografie</b> steht alles, was kein Bild ist: die
+            ausführliche Biografie, die Kurzfassung für die Timeline, der
+            Steckbrief, die Beziehungen und die Besetzung. Ein Speichern schreibt
+            js/profiles.js, js/facts.js und js/data.js in einem Schritt.</li>
+        <li><b>Wiki neu</b> holt Spezies, Status, Zugehörigkeit, Größe und
+            Geburtsort einer Figur aus den beiden Marvel-Wikis. Die Angaben von
+            Hand liegen darüber und bleiben davon unberührt.</li>
+        <li><b>Sicherung</b> oben rechts zeigt, was das Studio vor seinen
+            Eingriffen weggelegt hat. Jede Fassung lässt sich von dort
+            zurückholen, einzeln löschen oder in einem Zug aufräumen. Anders
+            als <b>Rückgängig</b>, das nur für die laufende Sitzung gilt,
+            überlebt sie den Neustart.</li>
+        <li><b>Freistellen</b> nimmt den Hintergrund aus einer deckenden Vorlage.
+            Erst hochrechnen, dann freistellen: Das Modell sieht so mehr Pixel.
+            Danach findet der Vorschlag den Kopf über die Umrissform, und im
+            Rahmen der Charakterseite steht die Figur frei statt in einem Kasten.</li>
       </ul>
     </div>
+
+    <!-- Bleibt übrig, wenn die Bedienung zugeklappt ist. Ohne ihn wäre die
+         Mitte leer und der Weg zurück zur Hilfe verschüttet. -->
+    <button type="button" id="bedienung-auf" class="knopf leise" hidden data-symbol="hilfe">
+      Bedienung zeigen
+    </button>
   </section>
 
 </main>
@@ -349,8 +628,10 @@
     <p class="dialog-warnung" id="neu-fehler" hidden></p>
 
     <menu class="dialog-knoepfe">
-      <button type="submit" value="abbrechen" class="knopf leise">Abbrechen</button>
-      <button type="submit" value="ok" class="knopf" id="neu-ok" disabled>Anlegen</button>
+      <button type="submit" value="abbrechen" class="knopf leise"
+              data-symbol="schliessen">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="neu-ok" disabled
+              data-symbol="uebernehmen">Anlegen</button>
     </menu>
   </form>
 </dialog>
@@ -374,14 +655,16 @@
       <div class="namenszeile">
         <input id="figur-alias" type="text" maxlength="60" autocomplete="off"
                placeholder="leer = der Name selbst">
-        <button type="button" class="knopf" id="alias-uebernehmen" disabled>Übernehmen</button>
+        <button type="button" class="knopf" id="alias-uebernehmen" disabled
+                data-symbol="uebernehmen">Übernehmen</button>
       </div>
     </div>
     <p class="dialog-hinweis" id="figur-slug"></p>
     <p class="dialog-warnung" id="figur-warnung" hidden></p>
 
     <menu class="dialog-knoepfe">
-      <button type="submit" value="zu" class="knopf leise">Schließen</button>
+      <button type="submit" value="zu" class="knopf leise"
+              data-symbol="schliessen">Schließen</button>
     </menu>
   </form>
 </dialog>
@@ -406,7 +689,8 @@
     <p class="dialog-warnung" id="auftritt-warnung" hidden></p>
 
     <menu class="dialog-knoepfe">
-      <button type="submit" value="zu" class="knopf leise">Schließen</button>
+      <button type="submit" value="zu" class="knopf leise"
+              data-symbol="schliessen">Schließen</button>
     </menu>
   </form>
 </dialog>
@@ -443,8 +727,58 @@
     <p class="dialog-warnung" id="upscale-warnung" hidden></p>
 
     <menu class="dialog-knoepfe">
-      <button type="submit" value="abbrechen" class="knopf leise">Abbrechen</button>
-      <button type="submit" value="ok" class="knopf" id="upscale-ok">Starten</button>
+      <button type="submit" value="abbrechen" class="knopf leise"
+              data-symbol="schliessen">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="upscale-ok"
+              data-symbol="starten">Starten</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Freistellen: Hintergrund weg, Alphakanal dran -->
+<dialog id="frei-dialog" class="dialog">
+  <form method="dialog">
+    <h2>Freistellen</h2>
+    <p class="dialog-text">
+      Nimmt den Hintergrund aus der Vorlage. Das Ergebnis erscheint als
+      eigenes Bild bei den Vorlagen, gespeichert wird dadurch noch nichts.
+      Gerechnet wird auf diesem Rechner, ohne Verbindung nach draußen.
+    </p>
+
+    <div class="dialog-feld">
+      <label for="frei-modell">Modell</label>
+      <select id="frei-modell"></select>
+    </div>
+
+    <label class="dialog-schalter" id="frei-feinschliff-feld">
+      <input type="checkbox" id="frei-feinschliff" checked>
+      <span>
+        Zweiter Durchgang am Ausschnitt
+        <b>Das Modell rechnet auf 1024 Pixel. Steht die Figur klein in der
+          Vorlage, wird sie dafür ausgeschnitten und noch einmal gerechnet,
+          was den Fehler an der Kante etwa halbiert und die Zeit noch einmal
+          kostet. Füllt die Figur die Vorlage schon, entfällt der Durchgang
+          von selbst.</b>
+      </span>
+    </label>
+
+    <div class="dialog-feld" id="saum-feld">
+      <label for="frei-saum">Farbsaum herausrechnen <b id="d-saum">1.00</b></label>
+      <input type="range" id="frei-saum" min="0" max="1" step="0.05" value="1">
+      <span class="reglerskala">
+        <span>Kante wie im Bild</span>
+        <span>Alter Grund heraus</span>
+      </span>
+    </div>
+
+    <p class="dialog-hinweis" id="frei-vorschau"></p>
+    <p class="dialog-warnung" id="frei-warnung" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="abbrechen" class="knopf leise"
+              data-symbol="schliessen">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="frei-ok"
+              data-symbol="starten">Starten</button>
     </menu>
   </form>
 </dialog>
@@ -464,8 +798,51 @@
     <p class="dialog-warnung" id="fassung-fehler" hidden></p>
 
     <menu class="dialog-knoepfe">
-      <button type="submit" value="abbrechen" class="knopf leise">Abbrechen</button>
-      <button type="submit" value="ok" class="knopf" id="fassung-ok">Anlegen</button>
+      <button type="submit" value="abbrechen" class="knopf leise"
+              data-symbol="schliessen">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf" id="fassung-ok"
+              data-symbol="uebernehmen">Anlegen</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Sicherung: was das Studio vor seinen Eingriffen weggelegt hat -->
+<dialog id="sicherung-dialog" class="dialog sicherung-dialog">
+  <form method="dialog">
+    <h2>Sicherung</h2>
+    <p class="dialog-text">
+      Vor jedem Eingriff legt das Studio eine Kopie der Datei nach
+      <b>tools/portrait-studio/.sicherung</b>, mit dem Zeitpunkt im Namen.
+      Anders als <b>Rückgängig</b> überlebt sie den Neustart, dafür wächst sie
+      unbegrenzt. <b>Zurückholen</b> schreibt eine Fassung an ihren Platz
+      zurück; was dort steht, wird vorher selbst gesichert.
+    </p>
+
+    <div class="sicherung-leiste">
+      <div class="filter" id="sicherung-filter">
+        <button type="button" data-art="alle" class="an">Alle</button>
+        <button type="button" data-art="portrait">Porträts</button>
+        <button type="button" data-art="ganzkoerper">Ganzkörper</button>
+        <button type="button" data-art="quelle">Daten</button>
+      </div>
+      <p class="sicherung-summe" id="sicherung-summe">lädt …</p>
+    </div>
+
+    <div class="sicherung-liste" id="sicherung-liste"></div>
+
+    <p class="dialog-warnung" id="sicherung-warnung" hidden></p>
+
+    <menu class="dialog-knoepfe sicherung-knoepfe">
+      <button type="button" class="knopf leise" id="sicherung-auswahl" disabled
+              data-symbol="loeschen"
+              title="Nur die angehakten Fassungen löschen">Auswahl löschen</button>
+      <button type="button" class="knopf leise" id="sicherung-veraltet"
+              data-symbol="aufraeumen"
+              title="Behält je Datei die jüngste Fassung und wirft die älteren weg">Ältere aufräumen</button>
+      <button type="button" class="knopf leise gefahr" id="sicherung-alles"
+              data-symbol="loeschen"
+              title="Den Sicherungsordner vollständig leeren">Alles löschen</button>
+      <button type="submit" value="zu" class="knopf" data-symbol="schliessen">Schließen</button>
     </menu>
   </form>
 </dialog>
@@ -485,7 +862,12 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="hintergrund.js"></script>
+<script src="components/icons.js"></script>
+<script src="components/farbschema.js"></script>
+<script src="components/hintergrund.js"></script>
+<script src="components/elektrorand.js"></script>
+<script src="components/partikelschrift.js"></script>
+<script src="components/zaehlwerk.js"></script>
 <script src="studio.js"></script>
 </body>
 </html>
