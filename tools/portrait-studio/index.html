@@ -202,10 +202,10 @@ try {
 
           <!-- Eine vorhandene Fassung als halb durchsichtige Schablone im
                Ausschnitt, nur zum Ausrichten. Sie lässt sich nicht anfassen
-               und wird nicht gespeichert. Beim Porträt steht die Datei der
-               offenen Fassung von selbst darin, siehe vorgabeReferenz(). -->
+               und wird nicht gespeichert. Von selbst liegt nichts darin,
+               die Wahl steht auf „Ohne“, siehe baueReferenzWahl(). -->
           <div class="referenz-feld" id="referenz-feld"
-               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Beim Porträt liegt die Datei der offenen Fassung von selbst darin, das bisherige Bild steht so neben dem neuen Ausschnitt. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert.">
+               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Sie steht auf „Ohne“, bis eine Fassung gewählt ist, und was von Hand gewählt ist, bleibt bis zur nächsten Figur stehen. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert.">
             <label for="referenz">Referenz</label>
             <select id="referenz" disabled><option value="">Ohne</option></select>
             <input type="range" id="referenz-alpha" min="10" max="90" value="45" disabled
@@ -536,18 +536,18 @@ try {
         <li><b>Automatisch zuschneiden</b> nimmt den Vorschlag des Porträt-Skills,
             im Ganzkörper-Betrieb schneidet <b>Randlos beschneiden</b> auf die Figur.</li>
         <li><b>Eigenes Bild</b> lädt eine Vorlage vom Rechner, Ablegen und Einfügen geht auch.</li>
-        <li><b>Aktuelles Bild</b> holt beim Porträt die bestehende Datei selbst auf die
-            Bühne. Sie ist dann Vorlage wie jede andere: nachziehen, hochrechnen,
-            freistellen, und Speichern schreibt sie an dieselbe Stelle zurück. Der
-            Ausschnitt beginnt dabei auf dem ganzen Bild und die Erkennung läuft
-            nicht von allein, „Automatisch zuschneiden“ holt sie bei Bedarf. Hat eine
-            Figur gar kein Ganzkörperbild, steht diese Vorlage von Anfang an.</li>
-        <li>Beim Porträt liegt das vorhandene Bild der Fassung als <b>Referenz</b>
-            von selbst halb durchsichtig im Ausschnitt. Der neue Zuschnitt steht
-            damit neben dem, was bisher auf der Seite steht. „Ohne“ nimmt sie weg,
-            und was von Hand gewählt ist, bleibt bis zur nächsten Figur stehen.
-            Liegt das Bild selbst auf der Bühne, tritt sie ab: Sie läge
-            deckungsgleich auf sich.</li>
+        <li><b>Aktuelles Bild</b> ist beim Porträt die Vorgabe: Die bestehende Datei
+            steht von Anfang an selbst auf der Bühne. Sie ist dort Vorlage wie jede
+            andere: nachziehen, hochrechnen, freistellen, und Speichern schreibt sie
+            an dieselbe Stelle zurück. Der Ausschnitt beginnt dabei auf dem ganzen
+            Bild und die Erkennung läuft nicht von allein, „Automatisch zuschneiden“
+            holt sie bei Bedarf. Ein Ganzkörperbild als Vorlage ist ein Klick auf
+            dessen Chip, und es steht von selbst da, wo es noch gar kein Porträt
+            gibt.</li>
+        <li>Die <b>Referenz</b> legt eine vorhandene Fassung halb durchsichtig in den
+            Ausschnitt, damit der neue Zuschnitt neben dem steht, was bisher auf der
+            Seite ist. Sie steht auf „Ohne“, bis eine Fassung gewählt ist, und was
+            von Hand gewählt ist, bleibt bis zur nächsten Figur stehen.</li>
         <li>Im Ganzkörper-Betrieb sagt <b>Körpergröße</b>, wie groß die Figur ist, und
             <b>Bildkorrektur</b>, wie weit dieses eine Bild davon abweicht. Beides
             zusammen ergibt, wie hoch sie im Rahmen steht.</li>
@@ -850,6 +850,9 @@ try {
 <!-- Fortschritt der laufenden Arbeit. Der Server schickt den Stand über
      einen Ereignisstrom, hier steht nur die Anzeige. -->
 <div id="fortschritt" class="fortschritt" hidden role="status" aria-live="polite">
+  <!-- Die Stränge hinter der Anzeige, gezeichnet in strands.js. Sie
+       laufen nur, solange der Kasten offen ist. -->
+  <canvas id="fortschritt-straenge" class="fortschritt-straenge" aria-hidden="true"></canvas>
   <div class="fortschritt-kopf">
     <span id="fortschritt-titel" class="fortschritt-titel"></span>
     <span id="fortschritt-zahl" class="fortschritt-zahl">0 %</span>
@@ -865,6 +868,7 @@ try {
 <script src="components/icons.js"></script>
 <script src="components/farbschema.js"></script>
 <script src="components/hintergrund.js"></script>
+<script src="components/strands.js"></script>
 <script src="components/elektrorand.js"></script>
 <script src="components/partikelschrift.js"></script>
 <script src="components/zaehlwerk.js"></script>

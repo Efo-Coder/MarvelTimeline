@@ -3082,7 +3082,8 @@ const SERVERDATEIEN = ['server.js', 'services/crop-image.py', 'services/remove-b
 const STILDATEI = 'styles/studio.css';
 const SEITENDATEIEN = ['index.html', 'studio.js', 'components/hintergrund.js',
   'components/elektrorand.js', 'components/partikelschrift.js',
-  'components/zaehlwerk.js', 'components/farbschema.js', 'components/icons.js'];
+  'components/zaehlwerk.js', 'components/farbschema.js', 'components/icons.js',
+  'components/strands.js'];
 
 function mtime(name) {
   try { return fs.statSync(path.join(HIER, name)).mtimeMs; } catch { return 0; }

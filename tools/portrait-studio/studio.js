@@ -655,6 +655,9 @@ function wechsleBereich(bereich) {
      Browser. Ein Wechsel im Vorbeigehen soll sie nicht verschlucken. */
   if (texte() && !texteFortlassen()) return;
   S.bereich = bereich;
+  /* Die Schablone gehört in ihren Bereich. Eine von Hand gewählte gilt
+     drüben nicht weiter, auch wenn gerade keine Figur offen ist. */
+  referenzVonHand = false;
   for (const b of $('bereich').children) b.classList.toggle('an', b.dataset.bereich === bereich);
   richteBereichEin();
   zeigeZaehler(true);
@@ -927,8 +930,13 @@ async function waehleFigur(slug) {
 
 /* Zu einem Ziel die passende Vorlage.
 
-   Beim Porträt ist das ein Ganzkörperbild: Trägt eines denselben Namen
-   wie das Ziel, ist es die richtige Fassung, sonst das Standardbild.
+   Beim Porträt ist das immer das bestehende Profilbild selbst. Es ist der
+   Stand der Seite, und es liegt dafür auf der Bühne und nicht als
+   Schablone daneben: Von dort lässt es sich nachziehen, hochrechnen und
+   freistellen, und Speichern schreibt es an dieselbe Stelle zurück. Erst
+   wenn die Figur in dieser Fassung noch gar kein Porträt hat, kommt ein
+   Ganzkörperbild als Vorlage, aus dem der Kopf geschnitten wird.
+
    Beim Ganzkörperbild ist die Vorlage das Bild selbst, es wird ja neu
    beschnitten. Fehlt es noch, gibt es nichts vorzuschlagen und der Nutzer
    lädt eines hoch. */
@@ -936,13 +944,13 @@ function passendeQuelle(ziel) {
   if (!ziel) return null;
   const eigen = S.figur.quellen.find((q) => q.datei === ziel.datei);
   if (!quadrat()) return eigen ? { typ: 'fullsize', name: eigen.datei } : null;
+  if (ziel.zustand !== 'fehlt') return { typ: 'portrait', name: ziel.datei };
+  /* Trägt ein Ganzkörperbild denselben Namen wie das Ziel, ist es die
+     richtige Fassung, sonst nimmt es das Standardbild. */
   if (S.figur.quellen.length) {
     return { typ: 'fullsize', name: (eigen || S.figur.quellen[0]).datei };
   }
-  /* Ohne Ganzkörperbild bleibt das bestehende Porträt. Eine leere Bühne
-     wäre die schlechtere Auskunft: Am Bild selbst lässt sich immer noch
-     der Ausschnitt nachziehen oder es hochrechnen. */
-  return ziel.zustand === 'fehlt' ? null : { typ: 'portrait', name: ziel.datei };
+  return null;
 }
 
 async function waehleZiel(ziel) {
@@ -962,12 +970,10 @@ async function waehleZiel(ziel) {
      sonst zeigte die Vorschau überall dasselbe. Sein Chip bleibt stehen,
      ein Klick holt es zurück. */
   const quelle = ziel ? passendeQuelle(ziel) : null;
-  /* Die Schablone hängt an der Fassung, nicht an der Figur: Jede Fassung
-     hat ihre eigene Datei, und die gehört beim Wechsel mit auf die Bühne.
-     Die kommende Vorlage steht dabei schon fest, denn sie entscheidet
-     mit: Liegt das Porträt selbst auf der Bühne, gibt es nichts
-     danebenzulegen. */
-  baueReferenzWahl(ziel, quelle);
+  /* Die Wahl der Schablone wird neu aufgebaut, weil jede Fassung ihre
+     eigenen Dateien anzubieten hat. Was von Hand gewählt war, bleibt
+     dabei stehen, sonst steht sie auf „Ohne“. */
+  baueReferenzWahl();
   if (!ziel) {
     zeigeLeer('Diese Figur hat in diesem Bereich kein Bild in der Datenbank.');
     frischeDaten();
@@ -1434,9 +1440,8 @@ async function waehleQuelle(quelle) {
   const meiner = ++lauf;
   S.quelle = quelle;
   zeichneChips();
-  /* Die Schablone hängt an der Vorlage: Ist das Porträt selbst die
-     Vorlage, läge sie deckungsgleich auf sich und zeigte nur Schleier. */
-  baueReferenzWahl(S.ziel);
+  /* Die Schablone bleibt, wie sie steht: Sie hängt an der Figur und ihren
+     Fassungen, nicht daran, welche Vorlage gerade auf der Bühne liegt. */
   $('buehne-leer').hidden = true;
   $('art').textContent = 'Vorlage wird geladen …';
 
@@ -1553,10 +1558,10 @@ async function holeVorschlag(merken) {
    reiner Anhalt und bewusst nicht anfassbar, kein Griff, kein Ziehen,
    kein Speichern.
 
-   Beim Porträt liegt die Datei der offenen Fassung von selbst darin,
-   siehe vorgabeReferenz(). Auf der Bühne steht dort ein Ganzkörperbild,
-   das bestehende Porträt bekäme man sonst gar nicht zu Gesicht, und
-   gerade es ist der Maßstab für den neuen Zuschnitt.
+   Von selbst liegt nichts darin: Die Wahl steht auf „Ohne“, bis der
+   Nutzer eine Fassung aussucht. Das bestehende Porträt steht beim
+   Porträt-Betrieb ohnehin schon auf der Bühne, es hier ein zweites Mal
+   darüberzulegen zeigte nur Schleier.
 
    Wie sie gezeichnet wird, hängt am Rahmen, und das sind zwei
    verschiedene Fragen:
@@ -1577,7 +1582,7 @@ let referenzLauf = 0;
 
 /* Hat der Nutzer die Wahl selbst getroffen, bleibt sie stehen. Erst der
    Wechsel zu einer anderen Figur oder in einen anderen Bereich gibt sie
-   wieder frei, dann greift die Vorgabe. */
+   wieder frei, dann steht sie wieder auf „Ohne“. */
 let referenzVonHand = false;
 
 /* Was liegen soll, mitsamt Bereich. Nicht dasselbe wie S.referenz: Die
@@ -1586,24 +1591,15 @@ let referenzVonHand = false;
    dasselbe Bild los. */
 let referenzWunsch = { datei: '', bereich: null };
 
-/* Beim Ganzkörperbild bleibt es bei „Ohne“: Dort ist die Datei schon
-   selbst die Vorlage, und eine Schablone von sich selbst zeigt nichts an.
-   Fehlt die Datei noch, gibt es ohnehin nichts aufzulegen. Dasselbe gilt
-   beim Porträt, sobald es selbst auf der Bühne liegt. */
-function vorgabeReferenz(ziel, quelle) {
-  if (!quadrat() || !ziel || ziel.zustand === 'fehlt') return '';
-  if (quelle && quelle.typ === 'portrait' && quelle.name === ziel.datei) return '';
-  return ziel.datei;
-}
-
-function baueReferenzWahl(ziel, quelle = S.quelle) {
+function baueReferenzWahl() {
   const wahl = $('referenz');
   /* Die Wahl gilt nur im eigenen Bereich. Porträt und Ganzkörperbild
      tragen denselben Dateinamen, der Name allein sagt also nicht, aus
      welchem Ordner das geladene Bild stammt. Ohne diese Prüfung bliebe
      nach dem Wechsel das Ganzkörperbild als Schablone über dem Porträt
      stehen. */
-  const vorher = referenzWunsch.bereich === S.bereich ? referenzWunsch.datei : '';
+  const eigenerBereich = referenzWunsch.bereich === S.bereich;
+  const vorher = eigenerBereich ? referenzWunsch.datei : '';
   wahl.textContent = '';
   wahl.append(new Option('Ohne', ''));
   const dateien = S.figur ? zieleVon(S.figur).filter((z) => z.zustand !== 'fehlt') : [];
@@ -1611,11 +1607,16 @@ function baueReferenzWahl(ziel, quelle = S.quelle) {
   wahl.disabled = !dateien.length;
   /* Eine von Hand gewählte Schablone hat Vorrang, solange es sie noch
      gibt: So übersteht sie das Speichern und den Sprung zu einer anderen
-     Fassung. Sonst steht die Vorgabe. */
+     Fassung. Sonst bleibt es bei „Ohne“. */
   const halten = referenzVonHand && !!vorher && dateien.some((z) => z.datei === vorher);
-  const jetzt = halten ? vorher : vorgabeReferenz(ziel, quelle);
+  const jetzt = halten ? vorher : '';
   wahl.value = jetzt;
-  if (jetzt !== vorher) setzeReferenz(jetzt || null);
+  /* Nach einem Bereichswechsel muss setzeReferenz() auf jeden Fall laufen,
+     auch wenn beide Namen leer sind: Die Wahl steht dann zwar auf „Ohne“,
+     das Bild des anderen Bereichs liegt aber noch in S.referenz und würde
+     weiter gezeichnet. Innerhalb eines Bereichs bleibt der Vergleich, sonst
+     liefe für eine noch ladende Datei ein zweiter Ladevorgang los. */
+  if (jetzt !== vorher || !eigenerBereich) setzeReferenz(jetzt || null);
 }
 
 async function setzeReferenz(datei) {

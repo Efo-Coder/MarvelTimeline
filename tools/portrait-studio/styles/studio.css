@@ -68,6 +68,13 @@
   --hg-a: #0b4a63;
   --hg-b: #45d6f5;
   --hg-c: #a6efff;
+  /* Die drei Töne der Stränge im Fortschrittskasten, gelesen von
+     strands.js. Sie stehen bewusst außerhalb der Schemata und bleiben in
+     allen dieselben. Wer sie mitwandern lassen will, setzt sie in den
+     Blöcken weiter unten neu, so wie --hg-a bis --hg-c. */
+  --strang-a: #f97316;
+  --strang-b: #7c3aed;
+  --strang-c: #06b6d4;
 
   /* Was in jedem Schema gleich bleibt: die Zustandsfarben und das
      Marvel-Rot des Schriftzugs. */
@@ -2836,6 +2843,31 @@ input[type=range]:focus-visible {
   box-shadow: 0 12px 44px rgba(0, 0, 0, 0.6),
               0 0 30px color-mix(in srgb, var(--accent) 10%, transparent);
   z-index: 21;
+  /* Die Stränge liegen als eigene Leinwand darin und dürfen an keiner
+     Kante hinausstehen. */
+  overflow: hidden;
+}
+
+/* Die Leinwand der Stränge füllt den Kasten und liegt zwischen seinem
+   Grund und der Anzeige. Sie leuchtet nur in der Mitte und läuft zu
+   beiden Rändern aus, siehe strands.js. */
+.fortschritt-straenge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Titel, Zahl, Schiene und Zeile stehen darüber. Ohne eigene Lage lägen
+   sie unter der Leinwand, denn die ist gestellt und sie sind es nicht. */
+.fortschritt-kopf,
+.fortschritt-schiene,
+.fortschritt-schritt {
+  position: relative;
+  z-index: 1;
 }
 
 /* Läuft etwas, rückt die Meldung darüber. */
@@ -2849,12 +2881,16 @@ input[type=range]:focus-visible {
   margin-bottom: 0.45rem;
 }
 
+/* Die Schatten an Titel, Zahl und Zeile stehen nicht des Aussehens
+   wegen da. Hinter der Schrift laufen die Stränge, und ohne einen dunklen
+   Saum liest sich eine helle Zeile über hellem Leuchten nicht mehr. */
 .fortschritt-titel {
   font-family: var(--font-display);
   font-size: 1.2rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent-hell);
+  text-shadow: 0 0 10px var(--tief), 0 0 3px var(--tief);
 }
 
 .fortschritt-zahl {
@@ -2862,11 +2898,17 @@ input[type=range]:focus-visible {
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
+  text-shadow: 0 0 10px var(--tief), 0 0 3px var(--tief);
 }
 
+/* Der eigene Grund ist nötig, seit die Stränge dahinterliegen: Durch die
+   fast durchsichtige Rinne von vorher schien das Leuchten hindurch und
+   der Balken verschwand darin. */
 .fortschritt-schiene {
   height: 5px;
-  background: rgba(var(--accent-rgb), 0.1);
+  background:
+    linear-gradient(rgba(var(--accent-rgb), 0.1), rgba(var(--accent-rgb), 0.1)),
+    var(--tief);
   border: 1px solid var(--linie);
   overflow: hidden;
 }
@@ -2905,6 +2947,7 @@ input[type=range]:focus-visible {
   font-size: 0.73rem;
   line-height: 1.4;
   color: var(--muted);
+  text-shadow: 0 0 8px var(--tief), 0 0 3px var(--tief);
   /* Zwei Zeilen Platz, damit der Kasten bei längeren Schritten nicht
      springt. */
   min-height: 2.1em;
