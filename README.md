@@ -1,5 +1,20 @@
 # MCU Timeline – Fanpage
 
+1. Tastenkombination: Strg+Umschalt+B
+
+Die Aufgabe ist jetzt als Standard-Buildaufgabe eingetragen, das ist der kürzeste Weg. Ein Druck, die Server laufen.
+
+2. Über die Befehlspalette
+
+Strg+Umschalt+P, dann Tasks: Run Task, dann „Server: Fanpage und Bild-Studio“ auswählen. Derselbe Effekt, nur mit Auswahlliste.
+
+3. Im Terminal
+
+Falls VS Code gar nicht mitspielt, ist der Befehl selbst nichts Besonderes:
+
+
+node start.js --beobachten --kein-browser
+
 Inoffizielle Fanpage: Alle Kinofilme und Disney+-Realserien des Marvel
 Cinematic Universe als horizontale Timeline, aufgeteilt in die offiziellen
 Phasen 1–6. Innerhalb jeder Phase ist alles **chronologisch nach der
@@ -200,7 +215,7 @@ Dateien, die die Oberfläche tragen. Darunter stehen drei Ordner:
 
 | Ordner | Was darin liegt |
 | --- | --- |
-| `components/` | Die eigenständigen Stücke der Oberfläche: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema und die Symbole an den Knöpfen. |
+| `components/` | Die eigenständigen Stücke der Oberfläche: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema, die Stränge im Fortschrittskasten und die Symbole an den Knöpfen. |
 | `styles/` | Das Stilblatt `studio.css`. |
 | `services/` | Was der Server aufruft. `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst. |
 | `vendor/` | Fremdes, hier nur Real-ESRGAN zum Hochrechnen. Rund 50 MB Binärdateien, die nicht im Repo liegen. |
@@ -397,8 +412,14 @@ und verschwindet aus der Datenbank.
 
 ### Porträts
 
-Ein Klick zeigt das Ganzkörperbild der Figur mit dem Kreis,
-der daraus das Porträt wird. Ziehen im Kreis verschiebt den Ausschnitt,
+Ein Klick legt das bestehende Profilbild der Figur auf die Bühne, mit dem
+Kreis darauf, der den Ausschnitt bestimmt. Es ist dort Vorlage wie jede
+andere: nachziehen, hochrechnen, freistellen, und Speichern schreibt es
+an dieselbe Stelle zurück. Wer stattdessen frisch aus dem Ganzkörperbild
+schneiden will, wählt dessen Chip unter den Vorlagen. Gibt es für die
+Fassung noch gar kein Porträt, steht das Ganzkörperbild von Anfang an da.
+
+Ziehen im Kreis verschiebt den Ausschnitt,
 das Mausrad ändert seine Größe, die Ecken lassen sich anfassen und die
 Pfeiltasten schieben pixelweise.
 
@@ -641,6 +662,12 @@ Was der Server gefunden hat, steht beim Start in seiner Ausgabe.
   Thaddeus Ross, geteilte Rollen wie Rocket). `BIOS` sind ein bis drei
   Sätze zur Figur. Fehlt ein Eintrag, bleibt der jeweilige Teil der Karte
   weg, die beiden Listen lassen sich also unabhängig voneinander pflegen.
+  Bei K.I.-Systemen und Robotern ohne Körper vor der Kamera heißt die
+  Zeile „gesprochen von“ statt „gespielt von“. Welche Figuren das sind,
+  steht in `CHAR_VOICE_ONLY` in [js/chars.js](js/chars.js). Künstliche
+  Wesen, die jemand wirklich spielt, gehören nicht hinein: Vision steht
+  als Paul Bettany im Bild, Ultron bewegt sich nach James Spaders
+  Aufnahmen.
 - **Ausführliche Biografie**: `PROFILES` in
   [js/profiles.js](js/profiles.js), pro Figur eine Liste aus
   `[Überschrift, Text]` in Handlungsreihenfolge. Die Vollbildansicht der
