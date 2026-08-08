@@ -1,0 +1,37 @@
+{
+  // Startet Fanpage und Bild-Studio, sobald dieser Ordner in VS Code
+  // aufgeht. Damit ersetzt die Aufgabe den Doppelklick auf start.cmd und
+  // den Knopf „Go Live“: kein eigenes Konsolenfenster, keine Browsertabs
+  // von selbst, und der Server läuft schon, bevor man ihn braucht.
+  //
+  // Beim ersten Öffnen fragt VS Code einmal nach, ob die Aufgabe laufen
+  // darf. Danach passiert es still. Ausschalten geht über die
+  // Befehlspalette mit „Tasks: Manage Automatic Tasks“.
+  //
+  // Von Hand geht sie über Strg+Umschalt+B, denn sie ist unten als
+  // Standardaufgabe eingetragen. Ohne den automatischen Start wäre das
+  // der übliche Weg, und er bleibt einer, falls der Start einmal
+  // ausfällt.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Server: Fanpage und Bild-Studio",
+      "detail": "Fanpage auf 4320, Studio auf 4321, beide beobachtet",
+      "type": "shell",
+      "command": "node",
+      "args": ["start.js", "--beobachten", "--kein-browser"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "runOptions": { "runOn": "folderOpen" },
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "group": "server",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

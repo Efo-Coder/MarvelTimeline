@@ -5,6 +5,7 @@
        node start.js
        node start.js --port 8080 --studio-port 5000 --kein-browser
        node start.js --ohne-studio
+       node start.js --beobachten --kein-browser
 
    Danach steht die Fanpage unter http://127.0.0.1:4320 und das Bild-Studio
    unter http://127.0.0.1:4321. Beide Server lauschen nur auf der
@@ -22,6 +23,15 @@
    Studio steht daneben unter einer festen Adresse. Den Statik-Teil macht
    diese Datei selbst, das Studio ist tools/portrait-studio/server.js und
    läuft als Kindprozess; seine Ausgabe steht eingerückt darunter.
+
+   Beim Arbeiten am Studio
+   -----------------------
+   Mit --beobachten läuft das Studio unter node --watch: Eine Änderung an
+   server.js startet es neu, ohne dass hier jemand etwas anklicken muss.
+   Der Browser merkt das von selbst und lädt nach, siehe pruefeStand in
+   tools/portrait-studio/studio.js. Zusammen mit --kein-browser ist das
+   die Fassung für einen Server, der den ganzen Tag nebenher läuft, und
+   genau so ruft ihn .vscode/tasks.json auf.
 */
 
 'use strict';
@@ -39,6 +49,7 @@ const PORT = Number(wert('--port') || 4320);
 const STUDIO_PORT = Number(wert('--studio-port') || 4321);
 const OEFFNEN = !argv.includes('--kein-browser');
 const MIT_STUDIO = !argv.includes('--ohne-studio');
+const BEOBACHTEN = argv.includes('--beobachten');
 
 function wert(flagge) {
   const i = argv.indexOf(flagge);
@@ -167,9 +178,15 @@ function studioStarten() {
     console.log(`  Studio nicht gefunden: ${STUDIO}`);
     return;
   }
-  /* process.execPath statt „node“: dasselbe Node, das hier schon läuft. */
+  /* process.execPath statt „node“: dasselbe Node, das hier schon läuft.
+
+     Mit --watch startet node den Server nach jeder Änderung an server.js
+     selbst neu. Der Kindprozess bleibt dabei derselbe, der exit-Zweig
+     unten geht also nicht los, und das ist richtig so: Ein Neustart ist
+     hier kein Absturz. */
   studio = spawn(process.execPath,
-    [STUDIO, '--port', String(STUDIO_PORT), '--kein-browser'],
+    [...(BEOBACHTEN ? ['--watch'] : []),
+      STUDIO, '--port', String(STUDIO_PORT), '--kein-browser'],
     { cwd: REPO, stdio: ['ignore', 'pipe', 'pipe'] });
 
   einruecken(studio.stdout);
@@ -260,6 +277,9 @@ function lauschen() {
     console.log(`  ${adresse}/characters.html   Charaktere`);
     if (MIT_STUDIO) {
       console.log(`  http://127.0.0.1:${STUDIO_PORT}            Bild-Studio`);
+    }
+    if (MIT_STUDIO && BEOBACHTEN) {
+      console.log('  Das Studio wird beobachtet: Änderungen kommen ohne Neustart an.');
     }
     console.log('  (beenden mit Strg+C)\n');
 

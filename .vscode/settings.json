@@ -1,0 +1,18 @@
+{
+  // Zwei Ordner legen die Python-Skripte des Studios erst zur Laufzeit auf
+  // sys.path, deshalb findet die Analyse ihre Importe von sich aus nicht:
+  //
+  //   zuschnitt, bogen, messen, raster   aus dem Porträt-Skill, geladen in
+  //                                      services/crop-image.py
+  //   gfpgan_archs, basicsr              die Fremdarchitekturen der
+  //                                      Gesichtsmodelle, geladen in
+  //                                      services/facial-recognition/enhance-face.py
+  //
+  // Beide hier einzutragen ändert nichts am Lauf, es sagt nur der Analyse,
+  // wo sie nachsehen soll. Sonst steht in jeder der beiden Dateien eine
+  // Warnung, die keine ist.
+  "python.analysis.extraPaths": [
+    ".claude/skills/portraits/scripts",
+    "tools/portrait-studio/services/facial-recognition/vendor"
+  ]
+}
