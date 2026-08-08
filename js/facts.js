@@ -1294,6 +1294,11 @@ const CHAR_FACTS = {
     species: 'Olympier',
     status: 'Am Leben',
   },
+  'love': {
+    origin: 'unbekannte Welt',
+    species: 'Kosmische Entität Hybrid',
+    status: 'Am Leben',
+  },
   'jennifer-walters-she-hulk': {
     origin: 'USA',
     species: 'Mensch',
@@ -2099,6 +2104,13 @@ const CHAR_FACTS_EXTRA = {
     height: '300 m',
     powers: ['Krone Twilight', 'Ragnarök', 'Flammenschwert'],
   },
+  'topaz': {
+    origin: 'Sakaar',
+    species: 'Außerirdische',
+    teams: ['Sakaaran Guards'],
+    status: 'Verstorben',
+    powers: ['Leibwächterin des Grandmasters', 'beste Pilotin von Sakaar', 'Schmelzstab'],
+  },
   'janet-van-dyne': {
     height: '1,70 m',
     powers: ['erste Wasp', 'dreißig Jahre Quantenreich', 'Energie aus dem Quantenreich'],
@@ -2235,6 +2247,13 @@ const CHAR_FACTS_EXTRA = {
   'ajak': {
     height: '1,70 m',
     powers: ['Heilung durch Berührung', 'Verbindung zu den Celestials', 'Anführerin der Eternals'],
+  },
+  'dane-whitman': {
+    origin: 'England',
+    species: 'Mensch',
+    teams: ['Natural History Museum'],
+    status: 'Am Leben',
+    powers: ['Historiker und Dozent', 'Erbe der Ebony Blade', 'liest Latein'],
   },
   'green-goblin': {
     height: '1,80 m',
@@ -2626,6 +2645,13 @@ const CHAR_FACTS_EXTRA = {
   'jessica-jones': {
     height: '1,75 m',
     powers: ['übermenschliche Kraft', 'Privatdetektivin', 'Sprünge über mehrere Stockwerke'],
+  },
+  'tarantula': {
+    origin: 'Delvadia, Südamerika',
+    species: 'Mensch, verstärkt durch ein Serum',
+    teams: ['Streitkräfte von Delvadia'],
+    status: 'Am Leben',
+    powers: ['übermenschliche Kraft aus einem Serum', 'vergiftete Stacheln an den Stiefeln', 'Kampfsport'],
   },
   'jocasta-angekuendigt': {
     origin: 'unbekannt',

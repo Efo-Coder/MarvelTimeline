@@ -39,6 +39,7 @@ const CHAR_ALIAS = {
   'Nezarr der Rechner': 'Nezarr',
   'Piotr Rasputin / Colossus': 'Colossus',
   'Algrim / Kurse': 'Kurse',
+  'Anton Miguel Rodriguez / Tarantula': 'Tarantula',
   'Antonia Dreykov / Taskmaster': 'Taskmaster',
   'Ava Starr / Ghost': 'Ava Starr',
   'Cain Marko / Juggernaut': 'Juggernaut',
@@ -56,6 +57,7 @@ const CHAR_ALIAS = {
   'Carol Danvers / Captain Marvel': 'Carol Danvers',
   'Clint Barton / Hawkeye': 'Clint Barton',
   'Curt Connors / Lizard': 'Curt Connors',
+  'Dane Whitman / Black Knight': 'Dane Whitman',
   'Darren Cross / Yellowjacket': 'Darren Cross',
   'Darren Cross / MODOK': 'Darren Cross',
   'Ezekiel Stane / Joe McGillicuddy': 'Ezekiel Stane',
@@ -163,20 +165,21 @@ function charLook(slug, movie) {
    Eintrag zeigen einfach ihr einzelnes Bild. */
 const FULLSIZE_LOOKS = {
   'tony-stark': [
-    ['Mark 50', 'tony-stark'],
-    ['Mark I', 'tony-stark-mark-1'],
-    ['Mark II', 'tony-stark-mark-2'],
-    ['Mark III', 'tony-stark-mark-3'],
-    ['Mark V', 'tony-stark-mark-5'],
-    ['Mark VI', 'tony-stark-mark-6'],
-    ['Mark VII', 'tony-stark-mark-7'],
-    ['Mark XIV', 'tony-stark-mark-14'],
-    ['Mark 24', 'tony-stark-mark-24'],
-    ['Mark 25', 'tony-stark-mark-25'],
+    ['Mark I (1)', 'tony-stark-mark-i-1'],
+    ['Mark II (2)', 'tony-stark-mark-ii-2'],
+    ['Mark III (3)', 'tony-stark-mark-iii-3'],
+    ['Mark V (5)', 'tony-stark-mark-v-5'],
+    ['Mark VI (6)', 'tony-stark-mark-vi-6'],
+    ['Mark VII (7)', 'tony-stark-mark-vii-7'],
+    ['Mark XIV (14)', 'tony-stark-mark-xiv-14'],
+    ['Mark XXIV - Tank (24)', 'tony-stark-mark-xxiv-tank-24'],
+    ['Mark XXV - Striker (25)', 'tony-stark-mark-xxv-striker-25'],
     ['Mark 26', 'tony-stark-mark-26'],
-    ['Mark 38 (Igor)', 'tony-stark-mark-38'],
-    ['Mark 85', 'tony-stark-mark-85'],
-    ['Hulkbuster', 'tony-stark-hulkbuster'],
+    ['Mark XXXVIII - Igor (38)', 'tony-stark-mark-xxxviii-igor-38'],
+    ['Mark XLV (45)', 'tony-stark-mark-xlv-45'],
+    ['Mark XLVIII - Hulkbuster 2.0 (48)', 'tony-stark-mark-xlviii-hulkbuster-2-0-48'],
+    ['Mark L (50)', 'tony-stark-mark-l-50'],
+    ['Mark LXXXV (85)', 'tony-stark-mark-lxxxv-85'],
     ['Zivil', 'tony-stark-civil'],
   ],
   'marc-spector-steven-grant-moon-knight': [
@@ -244,6 +247,7 @@ const FULLSIZE_LOOKS = {
     ['The Dark World', 'loki-dark-world'],
     ['Ragnarok', 'loki-ragnarok'],
     ['TVA', 'loki-tva'],
+    ['God of Stories', 'loki-god-of-stories'],
   ],
   'sam-wilson': [
     ['Captain America', 'sam-wilson'],
@@ -287,7 +291,7 @@ const FULLSIZE_LOOKS = {
     ['Mark III', 'riri-williams-mark-3'],
     ['Mark IV', 'riri-williams-mark-4'],
     ['Mark V', 'riri-williams-mark-5'],
-    ['Ironheart', 'riri-williams-ironheart'],
+    ['What If', 'riri-williams-what-if'],
   ],
   'matt-murdock-daredevil': [
     ['Daredevil', 'matt-murdock-daredevil'],
@@ -572,6 +576,7 @@ const FULLSIZE_LOOKS = {
   'cassie-lang': [
     ['Cassie Lang', 'cassie-lang'],
     ['Maskiert', 'cassie-lang-masked'],
+    ['Kind', 'cassie-lang-kind'],
   ],
   'agatha-harkness': [
     ['WandaVision', 'agatha-harkness'],
@@ -629,6 +634,7 @@ const FULLSIZE_LOOKS = {
   'hank-pym': [
     ['Standard', 'hank-pym'],
     ['Quantum Suit', 'hank-pym-quantum-suit'],
+    ['Quantumania', 'hank-pym-quantumania'],
   ],
   'okoye': [
     ['Standard', 'okoye'],
@@ -690,14 +696,14 @@ const FULLSIZE_SCALE = {
   'ebony-maw': 1.06,
   'volstagg': 1.06,
   'groot-teenager': 1.06,
-  'tony-stark-mark-1': 1.08,
-  'tony-stark-mark-38': 1.15,
+  'tony-stark-mark-i-1': 1.08,
   'groot-king': 1.15,
   'riri-williams-mark-1': 1.05,
   'hank-mccoy-beast': 1.08,
   'ivan-vanko-whiplash-mark-2': 1.1,
   'jennifer-walters-she-hulk': 1.1,
   'ben-grimm-the-thing': 1.12,
+  'tony-stark-mark-xxxviii-igor-38': 1.15,
   'colossus': 1.16,
   'juggernaut': 1.12,
   'hercules': 1.06,
@@ -723,13 +729,13 @@ const FULLSIZE_SCALE = {
   'thanos': 1.2,
   'thanos-armor': 1.2,
   'thanos-endgame': 1.2,
-  'tony-stark-hulkbuster': 1.22,
   'bruce-banner-smart-hulk': 1.2,
   'thaddeus-ross-red-hulk': 1.2,
   'happy-hogan-what-if': 1.2,
   'bruce-banner': 1.22,
   'emil-blonsky-abomination-green': 1.22,
   'emil-blonsky-abomination-2008': 1.22,
+  'tony-stark-mark-xlviii-hulkbuster-2-0-48': 1.22,
 
   // Jenseits jeder Skala, deshalb am oberen Anschlag
   'dormammu': 1.22,
@@ -763,6 +769,10 @@ const FULLSIZE_SCALE = {
    Auf der Seite zählt das Produkt aus beidem, und mehr als 1.22 kann es
    nicht werden: Da ist der Rahmen voll. */
 const FULLSIZE_FIT = {
+  'cassie-lang-kind': 0.77,
+  'jean-grey': 0.96,
+  'loki-god-of-stories': 1.18,
+  'love': 0.78,
   'skurge': 1.1,
 };
 
