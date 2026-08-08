@@ -29,7 +29,7 @@ Freistellers eine weiche Vignette.
 | alexei.webp | Alexi Shostakov/ Red Guardian (Black Widow) PNG6 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Alexi-Shostakov-Red-Guardian-Black-Widow-PNG6-841402799 |
 | america-chavez.webp | Multiverse of Madness America Chavez PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Multiverse-of-Madness-America-Chavez-PNG-906212595 |
 | arthur-harrow.webp | Arthur Harrow (Moon Knight) | KeyWatkins512 | https://www.deviantart.com/keywatkins512/art/Arthur-Harrow-Moon-Knight-950413516 |
-| ava-starr.webp | Ava Starr/Ghost: T*/The New Avengers PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Ava-Starr-Ghost-T-The-New-Avengers-PNG-1190300985 |
+| ava-starr-schwarzer-ghost-anzug-unmaskiert.webp | Ava Starr/Ghost: T*/The New Avengers PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Ava-Starr-Ghost-T-The-New-Avengers-PNG-1190300985 |
 | ben-grimm-the-thing.webp | The Thing - The Fantastic 4: First Steps PNG | GMG616 | https://www.deviantart.com/gmg616/art/The-Thing-The-Fantastic-4-First-Steps-PNG-1196365215 |
 | betty-ross.webp | The Incredible Hulk Betty Ross PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/The-Incredible-Hulk-Betty-Ross-PNG-892148678 |
 | billy-maximoff-wiccan.webp | Agatha All Along Wiccan PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Agatha-All-Along-Wiccan-PNG-1124914583 |
@@ -65,7 +65,7 @@ Freistellers eine weiche Vignette.
 | grandmaster.webp | Thor Ragnarok The Grandmaster PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Thor-Ragnarok-The-Grandmaster-PNG-710189719 |
 | gravik.webp | Gravik (Human/Skrull/Super): Secret Invasion PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Gravik-Human-Skrull-Super-Secret-Invasion-PNG-973920291 |
 | green-goblin.webp | No Way Home Green Goblin PNG (Willem Dafoe) | VegPNGs | https://www.deviantart.com/vegpngs/art/No-Way-Home-Green-Goblin-PNG-Willem-Dafoe-904206363 |
-| groot.webp | Groot - Transparent | Asthonx1 | https://www.deviantart.com/asthonx1/art/Groot-Transparent-603348362 |
+| groot-adult-groot.webp | Groot - Transparent | Asthonx1 | https://www.deviantart.com/asthonx1/art/Groot-Transparent-603348362 |
 | groot-baby.webp | Guardians of the Galaxy Vol 2 Baby Groot PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-Vol-2-Baby-Groot-PNG-679026112 |
 | hank-mccoy-beast.webp | Beast X-Men PNG Render | marcopolo157 | https://www.deviantart.com/marcopolo157/art/Beast-X-Men-PNG-Render-1047165665 |
 | hank-pym.webp | HANK PYM - Edit of first Ant-Man original | HawkeyeBR4ZIL | https://www.deviantart.com/hawkeyebr4zil/art/HANK-PYM-Edit-of-first-Ant-Man-original-1068751795 |
@@ -130,7 +130,7 @@ Freistellers eine weiche Vignette.
 | quentin-beck-mysterio.webp | Spider-Man Far from Home Mysterio PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Spider-Man-Far-from-Home-Mysterio-PNG-889968314 |
 | raven-darkhoelme-mystique.webp | Mystique Earth-2000 PNG  | HunterC-10 | https://www.deviantart.com/hunterc-10/art/Mystique-Earth-2000-PNG-1177016743 |
 | reed-richards-mister-fantastic.webp | Mister Fantastic Pedro Pascal PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/Mister-Fantastic-Pedro-Pascal-PNG-1155769340 |
-| remy-lebeau-gambit.webp | REQUEST Channing Tatum Gambit PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/REQUEST-Channing-Tatum-Gambit-PNG-1037385548 |
+| remy-lebeau-gambit-pose-1.webp | REQUEST Channing Tatum Gambit PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/REQUEST-Channing-Tatum-Gambit-PNG-1037385548 |
 | riri-williams.webp | Riri Williams/Ironheart: BPWF PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Riri-Williams-Ironheart-BPWF-PNG-890087080 |
 | riri-williams-what-if.webp | Riri Williams/Ironheart Mk II: BPWF PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Riri-Williams-Ironheart-Mk-II-BPWF-PNG-938693197 |
 | rocket.webp | Guardians of the Galaxy vol 3 Rocket PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-vol-3-Rocket-PNG-958078364 |
