@@ -72,6 +72,31 @@ derselben Konsole, Strg+C beendet beide. Die Ports lassen sich mit
 `--port` und `--studio-port` verschieben, `--kein-browser` lässt den
 Browser zu, `--ohne-studio` startet nur die Seite.
 
+### In VS Code
+
+Ein Doppelklick ist beim Arbeiten am Studio einer zu viel, deshalb macht
+[.vscode/tasks.json](.vscode/tasks.json) es von selbst: Beim Öffnen des
+Ordners laufen beide Server im eingebauten Terminal an, ohne eigenes
+Konsolenfenster und ohne Browsertabs. Beim ersten Mal fragt VS Code
+einmal nach, ob die Aufgabe laufen darf. Wieder loswerden lässt sie sich
+über die Befehlspalette mit „Tasks: Manage Automatic Tasks“.
+
+Der Aufruf dort lautet `node start.js --beobachten --kein-browser`.
+`--beobachten` heißt: Das Studio läuft unter `node --watch` und startet
+sich nach einer Änderung an `server.js` selbst neu, und der Server sieht
+seinen Dateien beim Arbeiten zu. Was daraus folgt, entscheidet die
+Oberfläche.
+
+| Geändert | Was passiert |
+| --- | --- |
+| `styles/studio.css` | Das Stilblatt wird im laufenden Betrieb getauscht. Die Seite lädt nicht neu, die angefangene Arbeit bleibt stehen. |
+| `index.html`, `studio.js` und die Skripte in `components/` | Die Seite lädt neu. Die Figur steht in der Adresse, man landet wieder bei ihr. |
+| `server.js` | Node startet den Server neu, die Seite wartet ab und lädt danach nach. |
+
+Der Live-Server-Knopf von VS Code hilft hier übrigens nicht: Er liefert
+nur Dateien aus, und das Studio ist zum größten Teil eine Schnittstelle.
+Ohne den Node-Server käme die Oberfläche hoch und könnte nichts.
+
 ## Film-Logos einfügen
 
 Solange kein Logo vorhanden ist, zeigt die Seite automatisch den stilisierten
@@ -166,18 +191,93 @@ Wer die Fanpage daneben laufen lassen will, nimmt stattdessen
 `node start.js` (siehe [Starten](#starten)).
 
 Es öffnet [http://127.0.0.1:4321](http://127.0.0.1:4321) und listet jede
-Figur aus `js/data.js`. Oben wird zwischen **Porträts** und
-**Ganzkörper** umgeschaltet, die Bedienung ist in beiden Bereichen
-dieselbe.
+Figur aus `js/data.js`. Oben wird zwischen drei Bereichen umgeschaltet:
+**Porträts** und **Ganzkörper** arbeiten am Bild und werden gleich
+bedient, **Biografie** arbeitet an allem, was Text ist.
+
+Unter `tools/portrait-studio/` liegen oben der Server und die beiden
+Dateien, die die Oberfläche tragen. Darunter stehen drei Ordner:
+
+| Ordner | Was darin liegt |
+| --- | --- |
+| `components/` | Die eigenständigen Stücke der Oberfläche: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema und die Symbole an den Knöpfen. |
+| `styles/` | Das Stilblatt `studio.css`. |
+| `services/` | Was der Server aufruft. `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst. |
+| `vendor/` | Fremdes, hier nur Real-ESRGAN zum Hochrechnen. Rund 50 MB Binärdateien, die nicht im Repo liegen. |
+
+Der Browser bekommt nur, was in `SEITENDATEIEN` und `STILDATEI` in
+`server.js` steht, und zwar unter demselben Weg wie auf der Platte. Die
+Skripte in `services/` liefert der Server nicht aus.
+
+Die Zeichen an den Knöpfen kommen aus `react-icons`, aus dem Satz Lucide
+darin. Das Studio hat keinen Bauschritt und läuft ohne Internet, deshalb
+liegt nicht das Paket im Repo, sondern nur die Pfaddaten der benutzten
+Symbole, in `components/icons.js`. Wer ein weiteres braucht, nimmt es dort
+in `ZEICHEN` auf und hängt sein `data-symbol` an den Knopf.
+
+### Biografie
+
+Der dritte Bereich führt die Texte einer Figur. Links steht die
+ausführliche Biografie als benannte Abschnitte, die sich anlegen,
+umbenennen, verschieben und löschen lassen. Rechts stehen die
+Kurzbiografie für die Timeline, der Steckbrief, die benannten
+Beziehungen und die Besetzung.
+
+Beim Steckbrief liegen zwei Schichten übereinander, wie auch die
+Charakterseite sie liest. Was der Wiki-Abruf gefunden hat, steht blass im
+leeren Feld; was hineingeschrieben wird, liegt darüber und kommt nach
+`CHAR_FACTS_EXTRA`. Ein Feld zu leeren heißt also, wieder die Angabe des
+Wikis gelten zu lassen. Kräfte stehen in keiner Infobox und gehören
+deshalb ganz der Handarbeit.
+
+| Feld | Wohin es geschrieben wird |
+| --- | --- |
+| Abschnitte | `PROFILES` in `js/profiles.js` |
+| Kurzbiografie | `BIOS` in `js/data.js` |
+| Besetzung | `ACTORS` in `js/data.js` |
+| Herkunft, Spezies, Größe, Status, Zugehörigkeit, Kräfte | `CHAR_FACTS_EXTRA` in `js/facts.js` |
+| Beziehungen | `CHAR_BONDS` in `js/facts.js` |
+
+**Speichern** schreibt alle drei Dateien in einem Schritt, und der
+Verlauf nimmt sie als einen zurück. Geschrieben wird dabei nicht die
+Datei, sondern der Eintrag der Figur: Seine Zeilen werden ausgetauscht,
+alles davor und dahinter bleibt Zeichen für Zeichen stehen. Kommentare,
+Gruppen und die Reihenfolge überleben das, ein neuer Eintrag kommt an die
+Stelle des ersten Auftritts. Vor dem Schreiben werden die neuen Fassungen
+geladen und geprüft; trägt eine nicht das Erwartete, bleibt alles, wie es
+war. Angefangene Texte stehen nur im Browser, deshalb fragt das Studio
+vor jedem Wechsel nach.
+
+### Steckbriefe aus den Wikis
+
+`CHAR_FACTS` in `js/facts.js` ist erzeugt und gehört
+[tools/fetch-facts.py](tools/fetch-facts.py) und
+[tools/build-facts.py](tools/build-facts.py). Beide lassen sich aus dem
+Reiter Biografie auslösen:
+
+- **Wiki neu** holt die offene Figur noch einmal aus beiden Wikis.
+- **Fehlende nachziehen** holt die Figuren, die im Block noch keinen
+  Eintrag haben. Die Zahl daneben sagt, wie viele das sind.
+
+`build-facts.py` schreibt den Block als Ganzes und kennt nur, was in
+seiner Namensliste steht. Das Studio baut deshalb in eine Kopie neben
+`js/facts.js` und setzt daraus genau die Einträge, die eben geholt
+wurden. Alles andere im Block bleibt unberührt, und ein Lauf über eine
+einzelne Figur ist eine Sache von Sekunden.
+
+Der Rohtext der Infoboxen bleibt unter `tools/portrait-studio/.wiki`
+liegen. Was einmal geholt ist, wird nicht noch einmal geholt; nur beim
+ausdrücklichen Neuabruf einer Figur fliegt ihr Eintrag vorher heraus.
 
 ### Rückgängig und wiederholen
 
-Über der Bühne stehen **↶ ↷**, dazu Strg+Z und Strg+Y. Sie fassen zwei
+Über der Bühne stehen die beiden Pfeile **Rückgängig** und
+**Wiederholen**, dazu Strg+Z und Strg+Y. Sie fassen zwei
 Sorten von Schritten in einer Reihe zusammen, in der Reihenfolge, in der
 sie passiert sind. Der Tooltip nennt jeweils den Schritt, um den es geht.
 
 **Die Arbeit an der Bühne** liegt nur im Browser: Ausschnitt verschieben,
-an Ecke oder Kante ziehen, zoomen, *Automatisch zuschneiden*,
+an Ecke oder Kante ziehen, zoomen, ausrichten, *Automatisch zuschneiden*,
 *Zurücksetzen*. Zusammenhängendes wird zu einem Schritt — ein Zug mit der
 Maus ist einer, ein Stapel Radbewegungen auch, sobald eine halbe Sekunde
 Ruhe ist. Jeder Schritt merkt sich, wo er entstanden ist; führt ein
@@ -186,8 +286,9 @@ Zoom und Lage des Bildes stehen bewusst nicht drin, sie ändern nichts am
 Ergebnis.
 
 **Die Eingriffe, die geschrieben wurden**, hält der Server: gespeicherte
-Bilder, Fassungen, Namen, Schlüssel, Auftritte, Körpergrößen und
-Offen-Markierungen. Dahinter stehen keine Gegenrechnungen, sondern
+Bilder, Fassungen, Namen, Schlüssel, Auftritte, Körpergrößen,
+Offen-Markierungen, die Texte einer Figur und die Steckbriefe aus den
+Wikis. Dahinter stehen keine Gegenrechnungen, sondern
 Schnappschüsse: Vor und nach jedem Eingriff sichert das Studio genau die
 Dateien, die er anfassen kann, unter `tools/portrait-studio/.verlauf`.
 Rückgängig spielt den Stand von vorher zurück, wiederholen den von
@@ -200,9 +301,39 @@ geleert. Nach einem Neustart weiß niemand mehr, ob die Dateien in der
 Zwischenzeit von Hand angefasst wurden, und ein Rückgängig würde dann
 fremde Arbeit überschreiben. Er hält die letzten 40 Schritte.
 
+### Die Sicherung
+
+Darunter liegt die zweite Ebene. Vor jedem Eingriff legt das Studio eine
+Kopie der Datei nach `tools/portrait-studio/.sicherung`, mit dem Zeitpunkt
+im Namen: die Porträts und Ganzkörperbilder, dazu `chars.js`, `data.js`,
+`profiles.js`, `facts.js` und die Quellenangabe `CREDITS.md`. Sie überlebt
+den Neustart, hält keine Reihenfolge und kennt kein Wiederholen — sie ist
+kein Verlauf, sondern ein Stapel Kopien.
+
+**Sicherung** oben rechts im Kopf öffnet ihn. Jede Zeile nennt die Figur,
+den Platz, an den die Fassung gehört, den Zeitpunkt und die Größe;
+Bildfassungen zeigen sich in der Vorschau. Vier Fächer trennen Porträts,
+Ganzkörperbilder und Daten. Steht am Platz einer Fassung nichts mehr, sagt
+die Zeile es in Warnfarbe: Dann ist diese Kopie alles, was von der Datei
+geblieben ist.
+
+- **Zurückholen** schreibt die Fassung an ihren Platz. Was dort steht,
+  wird vorher selbst gesichert, und der Schritt geht in den Verlauf — ein
+  Strg+Z nimmt ihn zurück.
+- **Auswahl löschen** trifft die angehakten Zeilen, das Kreuz in der Zeile
+  genau eine.
+- **Ältere aufräumen** behält je Datei die jüngste Fassung und wirft die
+  älteren weg. Das ist der Griff, der den Ordner klein hält, ohne die
+  letzte Rückfallebene zu nehmen.
+- **Alles löschen** leert ihn.
+
+Gelöschtes ist weg: Der Verlauf sichert das Repo, nicht die Sicherung.
+Deshalb fragt jeder Griff, der mehr als eine Zeile trifft, vorher nach.
+Der Ordner steht in der `.gitignore` und gehört diesem Rechner.
+
 ### Neue Figur anlegen
 
-Unter den Filtern in der Liste steht **＋ Neue Figur**. Eine Figur ist in
+Unter den Filtern in der Liste steht **Neue Figur**. Eine Figur ist in
 dieser Datenbank nichts als ein Name in den Besetzungslisten, sie entsteht
 deshalb mit ihrem ersten Auftritt. Der Dialog fragt dreierlei:
 
@@ -252,10 +383,10 @@ der passende Alias; wird ein Alias dadurch überflüssig, fällt er weg.
 Beim **Ändern des Kürzels** kann sich der Schlüssel ändern — muss aber
 nicht, `Ronan` und `Ronan!` ergeben denselben. Ändert er sich, zieht alles
 mit: die Bilddateien in beiden Ordnern und die Verweise in `data.js`,
-`chars.js`, `profiles.js` und `facts.js`. Das ist der einzige Eingriff im
-Studio, der mehrere Dateien auf einmal anfasst, deshalb steht eine Warnung
-im Dialog, geschrieben wird erst auf *Übernehmen*, und von jeder berührten
-Datei liegt vorher eine Kopie in `tools/portrait-studio/.sicherung`.
+`chars.js`, `profiles.js` und `facts.js`. Das ist der Eingriff mit der
+größten Reichweite im Studio, deshalb steht eine Warnung im Dialog,
+geschrieben wird erst auf *Übernehmen*, und von jeder berührten Datei
+liegt vorher eine Kopie in `tools/portrait-studio/.sicherung`.
 
 **Auftritte …** listet alle Filme und Serien mit einem Kontrollkästchen.
 Ein Haken schreibt die Besetzungsliste des Films sofort um. Beim
@@ -285,6 +416,16 @@ Bildschirmpunkte herankommen, die eingerastete Linie leuchtet dabei auf.
 Wer einen Wert dicht daneben braucht, hält beim Ziehen Alt. Gemessen wird
 die Hülle im Browser, mit derselben Alphaschwelle wie beim randlosen
 Zuschnitt.
+
+**Ausrichten** dreht eine schief stehende Vorlage gerade. Der Regler geht
+bis 45 Grad, die Knöpfe daneben drehen um eine Vierteldrehung und der
+Rücksetzer am Ende stellt auf null zurück. Gedreht wird das Bild, nicht der Ausschnitt: Die
+Datei am Ende ist ein aufrechtes Rechteck, und der Ausschnitt bleibt beim
+Drehen auf derselben Stelle der Figur stehen. Der Winkel gehört zum
+Zuschnitt und wird beim Speichern mitgeschnitten, `crop-image.py` dreht
+dafür genauso. Solange eine Drehung eingestellt ist, bleibt *Zuschnitt
+für den Skill merken* gesperrt: Der Skill dreht beim nächsten Lauf nicht
+mit und träfe mit den gemerkten Werten daneben.
 
 Figuren mit mehreren Fassungen (Bruce Banner, Tony
 Stark, …) haben je Fassung ein eigenes Porträt und ein eigenes
@@ -328,8 +469,8 @@ genau dieser Rahmen, maßstäblich, mit Bodenlinie und der Größe aus
 des Bestandes gebracht (höchstens 1500 Pixel hoch und 1200 breit),
 kleinere bleiben, wie sie sind.
 
-Unter den Fassungs-Chips steht die Leiste **＋ Neu / Umbenennen / ▲ / ▼ /
-Löschen**. Sie schreibt in `FULLSIZE_LOOKS` in `js/chars.js`, aus dem auch
+Unter den Fassungs-Chips steht die Leiste **Neu / Umbenennen / hoch /
+runter / Zum Standard / Löschen**. Sie schreibt in `FULLSIZE_LOOKS` in `js/chars.js`, aus dem auch
 die Charakterseite ihre Fassungsleiste nimmt:
 
 **Die Beschriftung ist der einzige Wert, der gepflegt wird.** Der
@@ -353,7 +494,7 @@ Nur Figuren ohne Eintrag in `FULLSIZE_LOOKS` haben ihr eines Bild unter
 - **Umbenennen** ändert Beschriftung und Dateinamen zusammen. Bei einer
   Figur mit nur einem Bild ist der Knopf gesperrt: Dort gibt es nichts zu
   unterscheiden, und die Datei soll wie die Figur heißen.
-- **▲ ▼** verschieben die Fassung in der Reihenfolge, in der die
+- **Die beiden Winkel** verschieben die Fassung in der Reihenfolge, in der die
   Charakterseite ihre Schalter zeigt. Wer nach ganz vorn rutscht, ist die
   neue Standardansicht.
 - **Zum Standard** ist die Abkürzung dafür: Die Fassung rückt an die
@@ -383,8 +524,8 @@ Sprungpose, ein wehender Umhang oder ein Sockel macht das Bild höher als
 die Figur, und weil der Rahmen das Bild misst, steht sie darin zu klein.
 Der zweite Regler gleicht genau das aus, in Prozent, ohne der Figur eine
 Größe anzudichten, die sie nicht hat. Beide wirken sofort auf die obere
-Vorschau, darunter steht zum Vergleich, was gerade gilt. Das ↺ neben
-einem Regler stellt ihn auf den Stand aus `chars.js` zurück.
+Vorschau, darunter steht zum Vergleich, was gerade gilt. Der Rücksetzer
+neben einem Regler stellt ihn auf den Stand aus `chars.js` zurück.
 
 Gearbeitet wird damit auf der Bühne, nicht in der Vorschau: Der Schalter
 *Rahmen der Seite* legt den Rahmen der Charakterseite über die
@@ -420,10 +561,42 @@ jeweiligen Eintrag wieder heraus, weil das der Vorgabewert ist. Vor dem
 Schreiben wird die neue Fassung geladen und geprüft, und eine Kopie der
 alten `chars.js` liegt in `tools/portrait-studio/.sicherung`.
 
+### Vorlagen aufbereiten
+
+Unter der Bühne stehen zwei Knöpfe, die die Vorlage anfassen statt den
+Ausschnitt. Beide legen ihr Ergebnis als eigenes Bild bei den Vorlagen
+ab, gespeichert wird dadurch noch nichts. Ihre Reihenfolge ist nicht
+gleichgültig: erst hochrechnen, dann freistellen.
+
+**Upscale** rechnet eine zu kleine Vorlage mit Real-ESRGAN vierfach hoch.
+Im Fenster dazu lässt sich ein Gesichtsmodell wählen, GFPGAN oder
+CodeFormer, das die Gesichter danach neu aufbaut. Ohne das bleiben sie
+wächsern, denn Real-ESRGAN schärft nur Kanten und erfindet keine Iris.
+
+**Freistellen** nimmt den Hintergrund aus einer deckenden Vorlage. Das
+lohnt weit über die Bequemlichkeit hinaus: Mit Alphakanal findet der
+Vorschlag den Kopf über die Umrissform statt über eine geschätzte
+Gesichtsbox, und im Rahmen der Charakterseite steht die Figur frei statt
+in einem Kasten. Gerechnet wird auf diesem Rechner, ohne Verbindung nach
+draußen. Zwei Einstellungen stehen im Fenster:
+
+- **Modell.** Voreingestellt ist BiRefNet, dieselbe Bauart, auf der auch
+  die bekannten Netzdienste aufsetzen. ISNet und U²-Net sind schneller
+  und gröber. Angeboten wird nur, was als Datei in `~/.u2net` liegt.
+- **Zweiter Durchgang am Ausschnitt.** Das Modell rechnet auf 1024 Pixel.
+  Steht die Figur klein in der Vorlage, wird sie dafür ausgeschnitten und
+  noch einmal gerechnet, was den Fehler an der Kante etwa halbiert.
+- **Farbsaum herausrechnen.** Halbdurchsichtige Randpixel tragen den
+  alten Hintergrund anteilig mit sich, ohne Abzug bekäme jede
+  Haarsträhne vor dem dunklen Grund der Seite einen hellen Rand.
+
 Für den Vorschlag und das Speichern braucht es Python mit Pillow, NumPy
 und OpenCV. Ohne diese Umgebung startet das Studio zwar, kann aber nichts
 schneiden. Der Pfad lässt sich über die Umgebungsvariable
-`PORTRAIT_PYTHON` vorgeben.
+`PORTRAIT_PYTHON` vorgeben. Das Freistellen braucht zusätzlich `rembg`
+und `onnxruntime` sowie mindestens ein Modell in `~/.u2net`, gesucht wird
+das passende Python über `FREISTELLEN_PYTHON` und dieselben Kandidaten.
+Was der Server gefunden hat, steht beim Start in seiner Ausgabe.
 
 ## Anpassen
 
