@@ -284,8 +284,13 @@ const FULLSIZE_LOOKS = {
     ['God of Stories', 'loki-god-of-stories'],
   ],
   'sam-wilson': [
-    ['Captain America', 'sam-wilson'],
-    ['Falcon', 'sam-wilson-falcon'],
+    ['Stealth Suit', 'sam-wilson-stealth-suit'],
+    ['Stealth Suit (Maskiert)', 'sam-wilson-stealth-suit-maskiert'],
+    ['Vibranium Captain America Suit', 'sam-wilson-vibranium-captain-america-suit'],
+    ['Vibranium Captain America Suit (Masked)', 'sam-wilson-vibranium-captain-america-suit-masked'],
+    ['EXO-7 Falcon (Upgraded Service Suit)', 'sam-wilson-exo-7-falcon-upgraded-service-suit'],
+    ['EXO-7 Falcon (Avengers Suit)', 'sam-wilson-exo-7-falcon-avengers-suit'],
+    ['EXO-7 Falcon (Air Force Prototype)', 'sam-wilson-exo-7-falcon-air-force-prototype'],
   ],
   'gamora': [
     ['Guardians', 'gamora'],
@@ -342,6 +347,8 @@ const FULLSIZE_LOOKS = {
   'clint-barton': [
     ['Age of Ultron', 'clint-barton'],
     ['Civil War', 'clint-barton-civil-war'],
+    ['Ronin (Unmaskiert)', 'clint-barton-ronin-unmaskiert'],
+    ['Ronin', 'clint-barton-ronin'],
   ],
   'john-walker': [
     ['Maskiert', 'john-walker'],

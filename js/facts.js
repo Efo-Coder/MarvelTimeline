@@ -1044,6 +1044,12 @@ const CHAR_FACTS = {
     teams: ['Arishem the Judge'],
     status: 'Verstorben',
   },
+  'gilgamesh': {
+    origin: 'World Forge',
+    species: 'Eternal',
+    teams: ['Eternals of Earth'],
+    status: 'Verstorben',
+  },
   'kro': {
     species: 'Deviant',
     teams: ['Deviant'],
@@ -2363,6 +2369,10 @@ const CHAR_FACTS_EXTRA = {
   'ajak': {
     height: '1,70 m',
     powers: ['Heilung durch Berührung', 'Verbindung zu den Celestials', 'Anführerin der Eternals'],
+  },
+  'gilgamesh': {
+    height: '1,78 m',
+    powers: ['goldenes Exoskelett aus kosmischer Energie um Arme und Fäuste', 'der stärkste Eternal seiner Zeit', 'Nahkämpfer aus siebentausend Jahren Übung'],
   },
   'dane-whitman': {
     origin: 'England',
