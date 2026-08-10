@@ -135,8 +135,8 @@ Freistellers eine weiche Vignette.
 | riri-williams-what-if.webp | Riri Williams/Ironheart Mk II: BPWF PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Riri-Williams-Ironheart-Mk-II-BPWF-PNG-938693197 |
 | rocket.webp | Guardians of the Galaxy vol 3 Rocket PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-vol-3-Rocket-PNG-958078364 |
 | ronan.webp | Ronan The Accuser Power Stone render png | imattheo | https://www.deviantart.com/imattheo/art/Ronan-The-Accuser-Power-Stone-render-png-891483729 |
-| sam-wilson.webp | Sam Wilson/Captain America: BNW PNG4 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Sam-Wilson-Captain-America-BNW-PNG4-1144998093 |
-| sam-wilson-falcon.webp | Sam Wilson/Falcon: FaTWS PNG3 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Sam-Wilson-Falcon-FaTWS-PNG3-871284523 |
+| sam-wilson-vibranium-captain-america-suit.webp | Sam Wilson/Captain America: BNW PNG4 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Sam-Wilson-Captain-America-BNW-PNG4-1144998093 |
+| sam-wilson-exo-7-falcon-avengers-suit.webp | Sam Wilson/Falcon: FaTWS PNG3 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Sam-Wilson-Falcon-FaTWS-PNG3-871284523 |
 | samuel-sterns-the-leader.webp | Samuel Sterns/Leader: (Concept) CABNW PNG2 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Samuel-Sterns-Leader-CABNW-PNG2-1143486348 |
 | scott-lang.webp | Antman and the Wasp Scott Lang PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Antman-and-the-Wasp-Scott-Lang-PNG-763307233 |
 | scott-summers-cyclops.webp | PNG Ciclope - Cyclops - X-Men - James Marsden | MikeMoon1990 | https://www.deviantart.com/mikemoon1990/art/PNG-Ciclope-Cyclops-X-Men-James-Marsden-1111387893 |
