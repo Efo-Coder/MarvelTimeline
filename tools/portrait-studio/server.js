@@ -2874,6 +2874,7 @@ const SICHERUNG_QUELLEN = {
   'data.js': 'js/data.js',
   'profiles.js': 'js/profiles.js',
   'facts.js': 'js/facts.js',
+  'galaxy-config.js': 'js/galaxy-config.js',
   'CREDITS.md': 'assets/characters/fullsize/CREDITS.md',
 };
 
@@ -3083,7 +3084,7 @@ const STILDATEI = 'styles/studio.css';
 const SEITENDATEIEN = ['index.html', 'studio.js', 'components/hintergrund.js',
   'components/elektrorand.js', 'components/partikelschrift.js',
   'components/zaehlwerk.js', 'components/farbschema.js', 'components/icons.js',
-  'components/strands.js'];
+  'components/strands.js', 'components/galaxie.js'];
 
 function mtime(name) {
   try { return fs.statSync(path.join(HIER, name)).mtimeMs; } catch { return 0; }
@@ -3129,6 +3130,249 @@ function wacheStarten() {
       console.log('  Änderungen kommen dann erst beim Neuladen von Hand an.');
     }
   }
+}
+
+/* ---------- Galaxie-Hintergrund ----------
+
+   Die Regler des Hintergrunds der Seite stehen in js/galaxy-config.js.
+   Das Studio zeigt sie mit einer laufenden Vorschau daneben, deshalb
+   liest und schreibt es die Datei hier.
+
+   Die Beschreibung der Regler steht ebenfalls hier und nicht in der
+   Oberfläche: Sie bestimmt gleichzeitig, was die Schieber anzeigen und
+   was beim Speichern durchgelassen wird. Zwei Listen, die auseinander-
+   laufen könnten, wären eine zu viel. */
+
+const GALAXIE_DATEI = path.join(REPO, 'js', 'galaxy-config.js');
+
+const GALAXIE_REGLER = [
+  {
+    name: 'nebGlow', titel: 'Helligkeit', gruppe: 'Nebel', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Wie kräftig die beiden prozeduralen Nebelfelder über dem gemalten '
+      + 'Grundbild liegen. Bei 0.7 sind sie nur ein blasser Hauch, gemessen knapp '
+      + 'eine von 255 Stufen. Ab etwa 2 tragen sie das Bild sichtbar mit.',
+  },
+  {
+    name: 'nebRoughness', titel: 'Rauheit', gruppe: 'Nebel', min: 0.3, max: 0.85, schritt: 0.01,
+    hilfe: 'Wie viel jede Lage des Rauschens von der vorigen behält. 0.5 lässt die '
+      + 'feinen Lagen fast verschwinden, 0.65 gibt fasrige Struktur, ab 0.75 wird es '
+      + 'körnig. Der eigentliche Regler für Feinstruktur im Nebel.',
+  },
+  {
+    name: 'nebWarp', titel: 'Verwirbelung', gruppe: 'Nebel', min: 0, max: 1, schritt: 0.01,
+    hilfe: 'Das Rauschen fragt sich selbst nach der Stelle, an der es abgelesen wird. '
+      + 'Aus runden Wolken werden dadurch gezogene, wirbelnde Schwaden.',
+  },
+  {
+    name: 'nebOctaves', titel: 'Oktaven', gruppe: 'Nebel', min: 1, max: 8, schritt: 1,
+    hilfe: 'Wie viele Lagen Rauschen übereinanderliegen, jede doppelt so fein wie die '
+      + 'vorige. Allein bewirkt das wenig, spürbar wird es erst mit hoher Rauheit.',
+  },
+  {
+    name: 'nebFactor', titel: 'Auflösung', gruppe: 'Nebel', min: 1, max: 6, schritt: 1,
+    hilfe: 'Kantenlänge des gebackenen Nebelbilds, als Vielfaches von 400 x 288. '
+      + 'Gemessen ändert der Sprung von 1 auf 4 nur zwei von 255 Stufen und kostet '
+      + 'das Sechzehnfache an Speicher.',
+  },
+  {
+    name: 'nebPulse', titel: 'Atmen', gruppe: 'Nebel', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Wie stark die Helligkeit der Nebel im Lauf der Zeit schwankt. '
+      + '0 lässt sie gleichmäßig stehen.',
+  },
+
+  {
+    name: 'bgTint', titel: 'Umfärben', gruppe: 'Grundbild', min: 0, max: 1, schritt: 0.01,
+    hilfe: 'Trennt Struktur und Farbe im gemalten Grundbild. Bei 0 behält es seine '
+      + 'eigenen Farben, bei 1 wird nur noch seine Helligkeit als Dichte gelesen und '
+      + 'die Farbe kommt vollständig aus der Palette der gewählten Phase.',
+  },
+  {
+    name: 'bgZoom', titel: 'Zoom', gruppe: 'Grundbild', min: 1, max: 1.6, schritt: 0.01,
+    hilfe: 'Wie weit das Grundbild über den Schirm hinaus aufgezogen wird. 1 sitzt so '
+      + 'knapp wie möglich, jeder Punkt mehr schneidet ringsum etwas vom Bild ab.',
+  },
+  {
+    name: 'bgResample', titel: 'Verkleinern', gruppe: 'Grundbild', art: 'auswahl',
+    werte: [['mip', 'Mipmap, weich'], ['roh', 'Roh, hart'], ['fein', 'Fein gerechnet']],
+    hilfe: 'Wie das 3072 Punkte breite Grundbild auf Schirmgröße verkleinert wird. '
+      + 'Davon hängt ab, wie hart die darin gemalten Sterne herauskommen. Mipmap ist '
+      + 'am weichsten, Roh am härtesten, Fein flimmert beim Ändern der Fenstergröße nicht.',
+  },
+  {
+    name: 'parallaxX', titel: 'Parallaxe quer', gruppe: 'Grundbild', min: 0, max: 40, schritt: 1,
+    hilfe: 'Wie weit der Mauszeiger das Grundbild waagerecht verschiebt, in Bildpunkten. '
+      + 'Jeder Punkt kostet doppelt so viel Rand am Bild.',
+  },
+  {
+    name: 'parallaxY', titel: 'Parallaxe hoch', gruppe: 'Grundbild', min: 0, max: 40, schritt: 1,
+    hilfe: 'Wie weit der Mauszeiger das Grundbild senkrecht verschiebt, in Bildpunkten.',
+  },
+  {
+    name: 'sunPulse', titel: 'Sonne pulsiert', gruppe: 'Grundbild', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Wie stark der Schein um die Sonne links oben pulsiert. Die Sonne selbst ist '
+      + 'ins Grundbild gemalt, hier bewegt sich nur der Schein darüber.',
+  },
+
+  {
+    name: 'starDensity', titel: 'Dichte gesamt', gruppe: 'Sterne', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Dichte beider Sternschichten zusammen. 1 sind auf einem Schirm von '
+      + '1440 x 900 Punkten rund 1100 feine und 120 helle Sterne, größere Schirme '
+      + 'bekommen entsprechend mehr.',
+  },
+  {
+    name: 'faintDensity', titel: 'Feine Sterne', gruppe: 'Sterne', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Die feinen Sterne allein, als Vielfaches der Gesamtdichte. Sie sind der '
+      + 'Staub im Hintergrund, kleiner als ein Bildpunkt und ohne Funkeln.',
+  },
+  {
+    name: 'brightDensity', titel: 'Helle Sterne', gruppe: 'Sterne', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Die hellen Sterne allein, als Vielfaches der Gesamtdichte. Jeder von ihnen '
+      + 'hat einen weichen Halo, funkelt in seinem eigenen Takt und läuft bei der '
+      + 'Parallaxe weiter als die feinen. Daher kommt die Tiefe.',
+  },
+  {
+    name: 'twinkle', titel: 'Funkeln', gruppe: 'Sterne', art: 'schalter',
+    hilfe: 'Lässt die hellen Sterne heller und dunkler werden, jeder in seinem eigenen '
+      + 'Takt. Aus stehen sie alle gleich hell.',
+  },
+  {
+    name: 'twinkleSpeed', titel: 'Funkeltempo', gruppe: 'Sterne', min: 0, max: 4, schritt: 0.05,
+    hilfe: 'Wie schnell das Funkeln geht. Wirkt zusätzlich zum Gesamttempo.',
+  },
+  {
+    name: 'shootingStars', titel: 'Sternschnuppen', gruppe: 'Sterne', art: 'schalter',
+    hilfe: 'Ob überhaupt Sternschnuppen durchs Bild ziehen.',
+  },
+  {
+    name: 'shootInterval', titel: 'Abstand in Sek.', gruppe: 'Sterne', min: 2, max: 60, schritt: 0.5,
+    hilfe: 'Mittlerer Abstand zwischen zwei Sternschnuppen, in Sekunden. Der wirkliche '
+      + 'Abstand streut darum herum, von gut der Hälfte bis knapp zum Anderthalbfachen. '
+      + 'Bei 12.5 sind das die 7 bis 18 Sekunden der Vorlage, kleine Werte machen aus '
+      + 'dem seltenen Ereignis einen Regen.',
+  },
+
+  {
+    name: 'drift', titel: 'Wandern', gruppe: 'Bewegung', min: 0, max: 2, schritt: 0.05,
+    hilfe: 'Lässt Grundbild, Nebel und Sterne von selbst wandern und das Bild langsam '
+      + 'atmen. Bei 0 steht alles still und nur der Mauszeiger bewegt noch etwas. '
+      + 'So steht es auf der Seite.',
+  },
+  {
+    name: 'timeScale', titel: 'Tempo gesamt', gruppe: 'Bewegung', min: 0, max: 3, schritt: 0.05,
+    hilfe: 'Tempo aller Bewegungen auf einmal, also Wandern, Atmen, Pulsieren und '
+      + 'Funkeln. 0 friert das Bild ein.',
+  },
+
+  {
+    name: 'tintStrength', titel: 'Stärke', gruppe: 'Phasenfarbe', min: 0, max: 1, schritt: 0.01,
+    hilfe: 'Wie kräftig die Akzentfarben der gerade sichtbaren Phase über Grundbild und '
+      + 'Nebel liegen. Der Schleier behält dabei die Helligkeitsstruktur des Bildes und '
+      + 'dreht nur den Farbton. 0 schaltet die Phasenwirkung ab.',
+  },
+  {
+    name: 'tintEase', titel: 'Überblenden', gruppe: 'Phasenfarbe', min: 0.005, max: 0.2, schritt: 0.005,
+    hilfe: 'Wie schnell die Farben beim Wechsel der Phase ineinander übergehen. '
+      + 'Kleine Werte heißen träge, große lassen die Farbe umspringen.',
+  },
+];
+
+/* Gelesen wird, indem die Datei wirklich ausgeführt wird. Ein Textmuster
+   darüberzulegen wäre schneller und bei der ersten Umformatierung
+   falsch. */
+function galaxieLesen() {
+  const ctx = { window: {} };
+  vm.createContext(ctx);
+  vm.runInContext(fs.readFileSync(GALAXIE_DATEI, 'utf8')
+    + ';globalThis.OUT = { config: window.GALAXY_CONFIG,'
+    + ' regions: window.GALAXY_REGIONS, fixed: window.GALAXY_FIXED };',
+  ctx, { filename: 'galaxy-config-probe.js' });
+  return ctx.OUT;
+}
+
+function galaxieZahl(wert) {
+  /* Ohne das Runden schreibt 0.1 + 0.2 seine siebzehn Stellen in die
+     Datei. Sechs reichen für jeden Regler hier. */
+  const n = Math.round(Number(wert) * 1e6) / 1e6;
+  if (!Number.isFinite(n)) throw new Error('Keine Zahl: ' + wert);
+  return String(n);
+}
+
+function galaxieWert(wert) {
+  if (typeof wert === 'string') return "'" + wert.replace(/'/g, "\\'") + "'";
+  if (typeof wert === 'boolean') return String(wert);
+  return galaxieZahl(wert);
+}
+
+/* Geschrieben wird Zeile für Zeile und nur der Wert. Die Datei besteht
+   zu vier Fünfteln aus Erklärungen, welcher Regler was tut, und die
+   sollen genau so stehen bleiben. Deshalb kein Neuschreiben aus einem
+   Objekt heraus, sondern ein Muster je Regler, das auf die Einrückung
+   von vier Leerzeichen besteht. Passt es nicht, bricht es ab, statt
+   irgendwo im Text zu landen. */
+function galaxieSchreiben(auftrag) {
+  const alt = galaxieLesen();
+  let quelle = fs.readFileSync(GALAXIE_DATEI, 'utf8');
+  let geaendert = false;
+
+  const erlaubt = new Map(GALAXIE_REGLER.map((r) => [r.name, r]));
+  for (const [name, wert] of Object.entries(auftrag.config || {})) {
+    const regler = erlaubt.get(name);
+    if (!regler) throw new Error('Unbekannter Regler: ' + name);
+    if (typeof wert !== typeof alt.config[name]) {
+      throw new Error(`Der Regler ${name} will ${typeof alt.config[name]}, `
+        + `bekommen hat er ${typeof wert}.`);
+    }
+    if (regler.art === 'auswahl' && !regler.werte.some(([w]) => w === wert)) {
+      throw new Error(`${name} kennt den Wert ${wert} nicht.`);
+    }
+    if (typeof wert === 'number' && (wert < regler.min || wert > regler.max)) {
+      throw new Error(`${name} liegt mit ${wert} außerhalb von ${regler.min} bis ${regler.max}.`);
+    }
+    if (wert === alt.config[name]) continue;
+    const muster = new RegExp('^( {4}' + name + ': )([^,\\n]*)(,)$', 'm');
+    if (!muster.test(quelle)) {
+      throw new Error(`Die Zeile für ${name} steht nicht wie erwartet in `
+        + 'js/galaxy-config.js. Wurde die Datei umformatiert?');
+    }
+    quelle = quelle.replace(muster, (_, vorn, __, komma) => vorn + galaxieWert(wert) + komma);
+    geaendert = true;
+  }
+
+  if (auftrag.regions) {
+    if (auftrag.regions.length !== alt.regions.length) {
+      throw new Error(`Es sind ${alt.regions.length} Nebelbereiche, `
+        + `gekommen sind ${auftrag.regions.length}.`);
+    }
+    const zeilen = auftrag.regions.map((R, i) => {
+      const c = (R.col || alt.regions[i].col).map((k) => Math.max(0, Math.min(255, Math.round(k))));
+      const z = (k) => galaxieZahl(R[k] === undefined ? alt.regions[i][k] : R[k]);
+      return `    { x: ${z('x')}, y: ${z('y')}, rx: ${z('rx')}, ry: ${z('ry')},`
+        + ` col: [${c.join(', ')}], ridged: ${!!R.ridged},`
+        + ` amp: ${z('amp')}, sc: ${z('sc')} },`;
+    });
+    const muster = /(window\.GALAXY_REGIONS = \[)[\s\S]*?(\n {2}\];)/;
+    if (!muster.test(quelle)) throw new Error('GALAXY_REGIONS steht nicht wie erwartet in der Datei.');
+    const neu = quelle.replace(muster, (_, kopf, fuss) => kopf + '\n' + zeilen.join('\n') + fuss);
+    if (neu !== quelle) { quelle = neu; geaendert = true; }
+  }
+
+  if (!geaendert) return { geaendert: false };
+
+  /* Prüfen, bevor die Datei angefasst wird: die neue Fassung laden und
+     nachsehen, ob wirklich drinsteht, was drinstehen sollte. */
+  const ctx = { window: {} };
+  vm.createContext(ctx);
+  vm.runInContext(quelle + ';globalThis.OUT = { config: window.GALAXY_CONFIG,'
+    + ' regions: window.GALAXY_REGIONS };', ctx, { filename: 'galaxy-config-neu.js' });
+  for (const [name, wert] of Object.entries(auftrag.config || {})) {
+    if (ctx.OUT.config[name] !== wert) {
+      throw new Error(`Die neue Fassung trägt bei ${name} ${ctx.OUT.config[name]} statt ${wert}.`);
+    }
+  }
+
+  sichereQuelle(GALAXIE_DATEI, stempelJetzt());
+  fs.writeFileSync(GALAXIE_DATEI, quelle, 'utf8');
+  return { geaendert: true, ...ctx.OUT };
 }
 
 /* ---------- HTTP ---------- */
@@ -3558,6 +3802,38 @@ const server = http.createServer(async (req, res) => {
     }
 
     /* --- Endgültig speichern --- */
+    /* --- Regler des Galaxie-Hintergrunds lesen ---
+
+       Mitgeliefert werden die Phasenfarben aus js/data.js, damit die
+       Vorschau im Studio den Schleier jeder Phase zeigen kann, und die
+       Beschreibung der Regler, aus der die Oberfläche ihre Schieber
+       baut. */
+    if (weg === '/api/galaxie' && req.method === 'GET') {
+      const stand = galaxieLesen();
+      const phasen = ladeDaten().PHASES.map((p) => ({
+        id: p.id, num: p.num, titel: p.title, accent: p.accent, nebula: p.nebula,
+      }));
+      /* Wie js/data.js: Ohne Phase zeigt die Galaxie die Akzentfarben
+         aller sechs nebeneinander, also das ganze Spektrum. */
+      const grundfarben = ladeDaten().PHASES.map((p) => {
+        const n = parseInt(p.accent.slice(1), 16);
+        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+      });
+      return sende(res, 200, {
+        ...stand, regler: GALAXIE_REGLER, phasen, grundfarben,
+      });
+    }
+
+    /* --- Regler schreiben --- */
+    if (weg === '/api/galaxie' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = mitVerlauf('Galaxie-Regler gespeichert',
+        ['js/galaxy-config.js'], [], () => galaxieSchreiben(auftrag));
+      return sende(res, 200, {
+        ok: true, ...ergebnis, sicherung: SICHERUNG, verlauf: verlaufStand(),
+      });
+    }
+
     if (weg === '/api/speichern' && req.method === 'POST') {
       const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
       const gk = auftrag.bereich === 'ganzkoerper';

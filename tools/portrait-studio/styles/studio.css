@@ -382,6 +382,7 @@ h1, h2 {
 .liste,
 .filmliste,
 .vorschau,
+.galaxie-spalte,
 .quellen-block .chips {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent) transparent;
@@ -390,11 +391,13 @@ h1, h2 {
 .liste::-webkit-scrollbar,
 .filmliste::-webkit-scrollbar,
 .vorschau::-webkit-scrollbar,
+.galaxie-spalte::-webkit-scrollbar,
 .quellen-block .chips::-webkit-scrollbar { width: 8px; }
 
 .liste::-webkit-scrollbar-thumb,
 .filmliste::-webkit-scrollbar-thumb,
 .vorschau::-webkit-scrollbar-thumb,
+.galaxie-spalte::-webkit-scrollbar-thumb,
 .quellen-block .chips::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--accent) 40%, transparent);
 }
@@ -3299,6 +3302,247 @@ button.mit-symbol {
    fällt die Reihe unter den Chips auseinander. */
 .fassung-leiste button.mit-symbol,
 .drehung button.mit-symbol { gap: 0.25rem; }
+
+/* ===== Galaxie ========================================================
+
+   Die Regler des Hintergrunds der Seite, links die laufende Vorschau,
+   rechts die Schieber. Der Dialog ist der breiteste im Studio: Die
+   Vorschau muss groß genug sein, dass man einen Nebel überhaupt
+   beurteilen kann, und daneben stehen gut zwanzig Regler.
+
+   Alles hier folgt der Sprache der übrigen Tafeln: kantig, ein Akzent,
+   Aufschriften in Versalien mit weitem Satz. */
+
+.dialog.galaxie-dialog { width: min(1180px, 96vw); }
+
+.galaxie-raster {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 0.9rem;
+  align-items: start;
+}
+
+/* Die Bühne. Derselbe tiefe Grund wie bei den Bildern, damit nichts von
+   der Farbe des Studios in der Galaxie steht. */
+.galaxie-buehne {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--linie);
+  background: var(--tief);
+  overflow: hidden;
+}
+
+/* Breite und Höhe müssen ausgeschrieben stehen: Ein Canvas ist ein
+   ersetztes Element und behält bei width: auto seine Eigengröße von
+   300 x 150 Punkten, auch wenn es absolut sitzt. */
+.galaxie-buehne canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.galaxie-phasen {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 0.55rem;
+  border: 1px solid var(--linie);
+}
+
+.galaxie-phasen button {
+  flex: 1 0 auto;
+  padding: 0.34rem 0.6rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.galaxie-phasen button + button { border-left: 1px solid var(--linie); }
+.galaxie-phasen button:hover { color: var(--text); }
+
+.galaxie-phasen button.an {
+  color: var(--accent-hell);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.galaxie-fuss {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.galaxie-fuss b { color: var(--text); font-weight: 600; }
+
+/* Die Spalte der Regler. Sie ist die einzige Stelle im Dialog, die
+   rollt, damit Vorschau und Knopfleiste stehen bleiben. Ihre Leiste
+   kommt aus dem gemeinsamen Abschnitt Scrollleisten weiter oben.
+
+   Der negative Rand zieht die Spalte bis an den Rahmen des Dialogs, also
+   durch dessen seitliche Polsterung hindurch. Dort sitzt dann auch die
+   Scrollleiste, statt mitten im Weiß zu stehen. Die gleich große
+   Polsterung nach innen hält den Inhalt an seinem Platz. */
+.galaxie-spalte {
+  max-height: min(66vh, 620px);
+  overflow-y: auto;
+  margin-right: -1.1rem;
+  padding-right: 1.1rem;
+}
+
+.galaxie-gruppe { margin-bottom: 0.9rem; }
+
+.galaxie-gruppe-marke {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.45rem;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.galaxie-gruppe-marke::before {
+  content: "";
+  width: 3px;
+  height: 11px;
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* Eine Zeile ist immer dasselbe Muster: Aufschrift, Steller, Ablesung.
+   Die Ablesung steht rechtsbündig auf fester Breite, sonst wandert der
+   Schieber beim Ziehen, weil aus 0.5 eine 0.55 wird. */
+.galaxie-zeile {
+  display: grid;
+  grid-template-columns: 8.2rem minmax(0, 1fr) 2.6rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.11rem 0;
+  cursor: pointer;
+}
+
+.galaxie-marke {
+  color: var(--muted);
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.galaxie-zeile:hover .galaxie-marke { color: var(--text); }
+
+.galaxie-wert {
+  color: var(--accent-hell);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.galaxie-zeile input[type=range] { width: 100%; min-width: 0; }
+.galaxie-zeile input[type=checkbox] { justify-self: start; }
+
+.galaxie-zeile select {
+  min-width: 0;
+  padding: 0.16rem 0.3rem;
+  border: 1px solid var(--linie);
+  border-radius: 0;
+  background: var(--flaeche);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.7rem;
+}
+
+.galaxie-hinweis {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.galaxie-hinweis b { color: var(--text); font-weight: 600; }
+
+/* Ein Nebelbereich. Der eigene Rahmen sagt, dass die Zeilen darin
+   zusammengehören, ohne dass es dasteht. */
+.galaxie-bereich {
+  margin-bottom: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--linie);
+  background: rgba(var(--accent-rgb), 0.03);
+}
+
+.galaxie-bereich-kopf {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.galaxie-bereich-marke {
+  flex: 1;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.galaxie-bereich-kopf input[type=color] {
+  width: 26px;
+  height: 20px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--linie-hell);
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.galaxie-schalter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.galaxie-lage > summary {
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 0.15rem 0;
+}
+
+.galaxie-lage > summary:hover { color: var(--text); }
+
+/* Der Hinweis auf ungesicherte Änderungen sitzt links in der
+   Knopfleiste und schiebt die Knöpfe nach rechts. */
+.galaxie-offen {
+  margin-right: auto;
+  align-self: center;
+  color: var(--warn);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .galaxie-raster { grid-template-columns: minmax(0, 1fr); }
+  .galaxie-spalte { max-height: 40vh; }
+}
 
 /* ===== Enge Fenster =================================================== */
 

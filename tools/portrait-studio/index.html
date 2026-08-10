@@ -49,6 +49,14 @@ try {
     Sicherung
   </button>
 
+  <!-- Die Regler des Galaxie-Hintergrunds der Seite. Wie die Sicherung
+       gehört auch das zu keiner Figur, deshalb steht der Weg dorthin im
+       Kopf und nicht bei den Werkzeugen. -->
+  <button type="button" class="kopf-werkzeug" id="galaxie-knopf" data-symbol="galaxie"
+          title="Den Galaxie-Hintergrund der Seite einstellen">
+    Galaxie
+  </button>
+
   <!-- Das Farbschema. Der Knopf zeigt, welches gilt, das Feld darunter
        die Auswahl. Gesetzt wird es in farbschema.js. -->
   <div class="schema" id="schema">
@@ -847,6 +855,60 @@ try {
   </form>
 </dialog>
 
+<!-- Galaxie: die Regler des Hintergrunds der Seite, mit laufender
+     Vorschau daneben. Das Canvas heißt galaxy, weil js/galaxy.js genau
+     diese Kennung sucht. Der Dialog lädt die echten Dateien aus dem Repo
+     nach, es läuft also dieselbe Galaxie wie auf der Seite und nicht
+     etwas Nachgebautes. Bedient wird alles in components/galaxie.js. -->
+<dialog id="galaxie-dialog" class="dialog galaxie-dialog">
+  <form method="dialog">
+    <h2>Galaxie</h2>
+
+    <div class="galaxie-raster">
+
+      <div class="galaxie-vorschau">
+        <div class="galaxie-buehne">
+          <canvas id="galaxy"></canvas>
+        </div>
+        <div class="galaxie-phasen" id="galaxie-phasen"></div>
+        <p class="galaxie-fuss">
+          Gezeichnet auf <b id="galaxie-backend">…</b>. Die Vorschau läuft mit den
+          echten Dateien aus <b>js/</b>, die Regler wirken sofort. Erst
+          <b>Sichern</b> schreibt sie nach <b>js/galaxy-config.js</b>.
+        </p>
+      </div>
+
+      <div class="galaxie-spalte">
+        <div id="galaxie-regler"></div>
+        <div class="galaxie-gruppe">
+          <p class="galaxie-gruppe-marke">Nebelbereiche</p>
+          <p class="galaxie-hinweis">
+            Sechs Bereiche legen zusammen das prozedurale Nebelbild. Es liegt
+            als blasser Hauch über dem gemalten Grundbild, kräftiger wird es
+            über <b>Nebel &rsaquo; Helligkeit</b>.
+          </p>
+          <div id="galaxie-bereiche"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="dialog-warnung" id="galaxie-warnung" hidden></p>
+
+    <menu class="dialog-knoepfe">
+      <span class="galaxie-offen" id="galaxie-offen" hidden>Nicht gespeichert</span>
+      <button type="button" class="knopf leise" id="galaxie-zurueck" disabled
+              data-symbol="zuruecksetzen"
+              title="Alle Regler auf den Stand der Datei zurückstellen">Zurücksetzen</button>
+      <button type="button" class="knopf" id="galaxie-sichern" disabled
+              data-symbol="speichern"
+              title="Die Regler nach js/galaxy-config.js schreiben">Sichern</button>
+      <button type="submit" value="zu" class="knopf leise" id="galaxie-zu"
+              data-symbol="schliessen">Schließen</button>
+    </menu>
+  </form>
+</dialog>
+
 <!-- Fortschritt der laufenden Arbeit. Der Server schickt den Stand über
      einen Ereignisstrom, hier steht nur die Anzeige. -->
 <div id="fortschritt" class="fortschritt" hidden role="status" aria-live="polite">
@@ -873,5 +935,8 @@ try {
 <script src="components/partikelschrift.js"></script>
 <script src="components/zaehlwerk.js"></script>
 <script src="studio.js"></script>
+<!-- Als einzige Komponente nach studio.js: Sie benutzt dessen json()
+     und melde(). -->
+<script src="components/galaxie.js"></script>
 </body>
 </html>
