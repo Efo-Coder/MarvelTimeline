@@ -1,0 +1,277 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Galaxy Diff</title>
+
+<!-- Prüfseite für den Galaxie-Hintergrund. Sie startet beide Renderer
+     nebeneinander auf zwei Canvas, schiebt sie durch dieselben Bilder und
+     stellt Funktionen bereit, mit denen pruefen.js von außen vergleicht.
+     Von Hand aufrufen bringt nichts, die Seite zeigt nur das WebGL2-Bild.
+     Gestartet wird sie über `node tools/galaxy-diff/pruefen.js`. -->
+<style>
+  html, body { margin: 0; background: #000; }
+  canvas { display: block; }
+  /* Breite und Höhe müssen ausgeschrieben stehen: Ein Canvas ist ein
+     ersetztes Element und behält bei width: auto trotz inset: 0 seine
+     Eigengröße von 300 x 150 Punkten. */
+  #galaxy, #zwei { position: fixed; inset: 0; width: 100%; height: 100%; }
+  #zwei { visibility: hidden; }
+</style>
+<canvas id="galaxy"></canvas>
+
+<script>window.GALAXY_DEBUG = true;</script>
+<script src="js/galaxy-config.js"></script>
+<script src="js/galaxy-canvas-2d.js"></script>
+<script src="js/galaxy.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  const c2 = document.createElement('canvas');
+  c2.id = 'zwei';
+  document.body.appendChild(c2);
+  const TWO = window.GalaxyCanvas2D.start(c2);
+  const GL = window.Galaxy;
+
+  const scratch = document.createElement('canvas');
+  const sctx = scratch.getContext('2d', { willReadFrequently: true });
+
+  function grab(canvas) {
+    scratch.width = canvas.width;
+    scratch.height = canvas.height;
+    sctx.clearRect(0, 0, scratch.width, scratch.height);
+    sctx.drawImage(canvas, 0, 0);
+    return sctx.getImageData(0, 0, scratch.width, scratch.height);
+  }
+
+  function compare(a, b, amp) {
+    const n = a.data.length;
+    let sum = 0, max = 0, over2 = 0, over8 = 0, over24 = 0, px = 0;
+    const out = new ImageData(a.width, a.height);
+    for (let i = 0; i < n; i += 4) {
+      let worst = 0;
+      for (let k = 0; k < 3; k++) {
+        const d = Math.abs(a.data[i + k] - b.data[i + k]);
+        sum += d;
+        if (d > worst) worst = d;
+        out.data[i + k] = Math.min(255, d * amp);
+      }
+      out.data[i + 3] = 255;
+      if (worst > max) max = worst;
+      if (worst > 2) over2++;
+      if (worst > 8) over8++;
+      if (worst > 24) over24++;
+      px++;
+    }
+    return {
+      mittel: +(sum / (px * 3)).toFixed(3),
+      max: max,
+      ueber2: +(100 * over2 / px).toFixed(2),
+      ueber8: +(100 * over8 / px).toFixed(2),
+      ueber24: +(100 * over24 / px).toFixed(2),
+      breite: a.width,
+      hoehe: a.height,
+      bild: out,
+    };
+  }
+
+  function toPng(img) {
+    scratch.width = img.width;
+    scratch.height = img.height;
+    sctx.putImageData(img, 0, 0);
+    return scratch.toDataURL('image/png');
+  }
+
+  /* Grundstellung für den Vergleich: nebFactor 1, damit die GPU dasselbe
+     400 x 288 große Nebelbild backt, das die CPU rechnet. */
+  const BASIS = {
+    starDensity: 1, faintDensity: 1, brightDensity: 1,
+    drift: 0, nebGlow: 0.7, twinkle: true, shootingStars: true, shootInterval: 12.5,
+    tintStrength: 0.4, tintEase: 0.035, parallaxX: 6, parallaxY: 4, bgZoom: 1,
+    nebFactor: 1, nebOctaves: 5, nebWarp: 0, nebRoughness: 0.5,
+    bgTint: 0, bgResample: 'mip',
+    timeScale: 1, nebPulse: 1, sunPulse: 1, twinkleSpeed: 1,
+  };
+
+  let letzteNebel = null;
+
+  function anwenden(patch) {
+    /* Beide Renderer teilen sich dasselbe GALAXY_CONFIG. Galaxy.set setzt
+       es und zieht auf der WebGL2-Seite alles Nötige nach, die
+       Rückfallebene muss danach von Hand hinterher. */
+    GL.set(Object.assign({}, BASIS, patch || {}));
+    const cfg = window.GALAXY_CONFIG;
+    /* Die GPU backt bei jedem Aufruf neu, die CPU nur, wenn sich am
+       Rauschen wirklich etwas geändert hat. Eine halbe Sekunde je
+       Nebelbild will man nicht siebenmal umsonst warten. */
+    const kennung = cfg.nebOctaves + '/' + cfg.nebWarp + '/' + cfg.nebRoughness;
+    if (kennung !== letzteNebel) {
+      TWO.rebake();
+      letzteNebel = kennung;
+    }
+    TWO.rebuildStars();
+    GL.snapPalette();
+    TWO.snapPalette();
+  }
+
+  /* Beide Fassungen Bild für Bild durch denselben Zeitverlauf schieben,
+     damit auch die Sternschnuppen im Gleichschritt bleiben. Verglichen
+     wird nur das letzte Bild. */
+  function lauf(frames, dt) {
+    for (let i = 1; i <= frames; i++) {
+      GL.renderAt(i * dt, dt);
+      TWO.renderAt(i * dt, dt);
+    }
+  }
+
+  window.galaxyDiff = function (fall) {
+    anwenden(fall.cfg);
+    lauf(fall.frames || 1, fall.dt || 0.016);
+    const a = grab(document.getElementById('galaxy'));
+    const b = grab(c2);
+    const r = compare(a, b, fall.amp || 8);
+    const bild = r.bild;
+    delete r.bild;
+    r.name = fall.name;
+    return { stats: r, diff: toPng(bild), neu: null, alt: null };
+  };
+
+  window.galaxyShot = function (fall) {
+    anwenden(fall.cfg);
+    lauf(fall.frames || 1, fall.dt || 0.016);
+    return {
+      neu: document.getElementById('galaxy').toDataURL('image/png'),
+      alt: c2.toDataURL('image/png'),
+    };
+  };
+
+  /* Genaue Auskunft statt Augenmaß: Verteilung der Abweichungen, die
+     schlimmsten Punkte mit Koordinaten und beiden Farben, dazu der
+     mittlere Fehler je Bildzeile, um Bänder zu erkennen. */
+  window.galaxyProbe = function (fall) {
+    anwenden(fall.cfg);
+    lauf(fall.frames || 1, fall.dt || 0.016);
+    const a = grab(document.getElementById('galaxy'));
+    const b = grab(c2);
+    const w = a.width, h = a.height;
+    const hist = new Array(16).fill(0);
+    const zeile = new Float64Array(h);
+    const kanal = [0, 0, 0];
+    const vorzeichen = [0, 0, 0];
+    const schlimm = [];
+    for (let y = 0; y < h; y++) {
+      let zs = 0;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        let worst = 0;
+        for (let k = 0; k < 3; k++) {
+          const roh = a.data[i + k] - b.data[i + k];
+          const d = Math.abs(roh);
+          kanal[k] += d;
+          vorzeichen[k] += roh;
+          zs += d;
+          if (d > worst) worst = d;
+        }
+        hist[Math.min(15, worst)]++;
+        if (worst >= (fall.schwelle || 12)) {
+          schlimm.push({
+            x: x, y: y, d: worst,
+            neu: [a.data[i], a.data[i + 1], a.data[i + 2]],
+            alt: [b.data[i], b.data[i + 1], b.data[i + 2]],
+          });
+        }
+      }
+      zeile[y] = zs / (w * 3);
+    }
+    schlimm.sort((p, q) => q.d - p.d);
+    const px = w * h;
+    /* Zeilen, deren mittlerer Fehler deutlich über dem Bildmittel liegt. */
+    const mittel = Array.from(zeile).reduce((s, v) => s + v, 0) / h;
+    const baender = [];
+    for (let y = 0; y < h; y++) {
+      if (zeile[y] > mittel * 2.2) baender.push({ y: y, e: +zeile[y].toFixed(3) });
+    }
+    return {
+      name: fall.name,
+      kanal: kanal.map(v => +(v / px).toFixed(3)),
+      versatz: vorzeichen.map(v => +(v / px).toFixed(3)),
+      hist: hist,
+      histAnteil: hist.map(v => +(100 * v / px).toFixed(3)),
+      schlimmste: schlimm.slice(0, 12),
+      anzahlSchlimm: schlimm.length,
+      baender: baender.slice(0, 40),
+      zeilenMittel: +mittel.toFixed(3),
+    };
+  };
+
+  /* Zwei Einstellungen der WebGL2-Fassung gegeneinander, um zu sehen, ob
+     ein Regler überhaupt etwas bewirkt. */
+  window.galaxyEigen = function (a, b, frames, dt) {
+    const gc = document.getElementById('galaxy');
+    anwenden(a);
+    lauf(frames || 1, dt || 0.016);
+    const bildA = grab(gc);
+    anwenden(b);
+    lauf(frames || 1, dt || 0.016);
+    const bildB = grab(gc);
+    const r = compare(bildA, bildB, 6);
+    return { mittel: r.mittel, max: r.max, ueber2: r.ueber2, ueber8: r.ueber8, diff: toPng(r.bild) };
+  };
+
+  /* Sternschnuppen fallen nicht in einem einzelnen Bild, sie ziehen über
+     ein bis zwei Sekunden durch und sind dann weg. Ein Vergleich zweier
+     Standbilder trifft sie deshalb nur mit Glück.
+
+     An der mittleren Helligkeit sind sie auch nicht zu erkennen: Ein
+     Strich von 200 mal 1,6 Punkten hebt sie über ein Bild von 1280 mal
+     720 gerechnet um neun Hundertstel einer Stufe, das liegt im Rauschen.
+
+     Also zweimal dieselbe Zeitspanne, einmal ohne Schweife und einmal
+     mit, und Bild für Bild verglichen. Was übrig bleibt, ist genau der
+     Schweif. Verkleinert auf 320 x 180, weil es nur darum geht, ob
+     überhaupt etwas da ist. */
+  const klein = document.createElement('canvas');
+  klein.width = 320; klein.height = 180;
+  const kctx = klein.getContext('2d', { willReadFrequently: true });
+
+  function reihe(cfg, frames, dt) {
+    anwenden(cfg);
+    /* Ohne das hinge jede Messung an der davor: Wann die nächste Schnuppe
+       fällt, steht nach dem letzten Lauf schon fest. */
+    GL.resetShots();
+    const gc = document.getElementById('galaxy');
+    const bilder = [];
+    for (let i = 1; i <= frames; i++) {
+      GL.renderAt(i * dt, dt);
+      kctx.drawImage(gc, 0, 0, 320, 180);
+      bilder.push(kctx.getImageData(0, 0, 320, 180).data);
+    }
+    return bilder;
+  }
+
+  window.galaxySchweife = function (fall) {
+    const frames = fall.frames || 240;
+    const dt = fall.dt || 0.05;
+    const ohne = reihe({ ...fall.cfg, shootingStars: false }, frames, dt);
+    const mit = reihe({ ...fall.cfg, shootingStars: true }, frames, dt);
+
+    let mitSchweif = 0, groesster = 0;
+    for (let i = 0; i < frames; i++) {
+      let schlimmst = 0;
+      for (let k = 0; k < ohne[i].length; k += 4) {
+        const d = Math.abs(mit[i][k] - ohne[i][k]);
+        if (d > schlimmst) schlimmst = d;
+      }
+      if (schlimmst > 6) mitSchweif++;
+      if (schlimmst > groesster) groesster = schlimmst;
+    }
+    return { bilder: frames, mitSchweif, groesster };
+  };
+
+  window.galaxyBereit = function () {
+    return !!(GL && GL.ready && GL.ready() && TWO && TWO.ready());
+  };
+
+  window.galaxyBackend = GL.backend;
+})();
+</script>

@@ -21,3 +21,10 @@ tools/portrait-studio/vendor/
 # die eigenen Skripte daneben bleiben im Repo.
 tools/portrait-studio/services/facial-recognition/vendor/
 tools/portrait-studio/services/facial-recognition/models/
+
+# Prüfwerkzeug für den Galaxie-Hintergrund: die Bilder jedes Laufs und
+# der Browser-Treiber, den es sich mit `npm i puppeteer-core` selbst holt.
+tools/galaxy-diff/out/
+tools/galaxy-diff/node_modules/
+tools/galaxy-diff/package.json
+tools/galaxy-diff/package-lock.json
