@@ -677,14 +677,151 @@ Was der Server gefunden hat, steht beim Start in seiner Ausgabe.
   nicht.
 - **Akzentfarben pro Phase**: ebenfalls in `js/data.js`
   (`accent` fürs UI, `nebula` = drei RGB-Farben für die Galaxie-Nebel).
-- **Galaxie-Animation**: [js/galaxy.js](js/galaxy.js)
-  (Sterndichte, Nebel, Sternschnuppen).
+- **Galaxie-Animation**: alle Regler an einer Stelle in
+  [js/galaxy-config.js](js/galaxy-config.js), gezeichnet wird in
+  [js/galaxy.js](js/galaxy.js) auf WebGL2. Siehe
+  [Der Galaxie-Hintergrund](#der-galaxie-hintergrund).
 - **Scroll-Gefühl**: in [js/main.js](js/main.js) beim Lenis-Aufruf
   (`lerp: 0.09` – kleiner = weicher/träger, größer = direkter).
 - **Hero-Sequenz**: Länge über `.hero-track { height: 460vh }` in
   `css/style.css` (mehr = gemächlicher), die Fenster der Textstufen in
   `js/main.js` bei `heroStages` (Anteile 0–1 am Scrollweg des Tracks).
 - **Layout/Design**: [css/style.css](css/style.css).
+
+## Der Galaxie-Hintergrund
+
+Der Hintergrund ist ein einziges bildschirmfüllendes Canvas hinter der
+ganzen Seite. Von unten nach oben liegen darauf: ein gemaltes Grundbild
+(`assets/theme/galaxy-bg.webp`, 3072 x 2048), zwei prozedural erzeugte
+Nebelfelder, der Phasenschleier, die pulsierende Sonne links oben, ein
+feines Sternenfeld, die hellen Sterne mit Funkeln, gelegentliche
+Sternschnuppen und zuletzt drei abdunkelnde Verläufe.
+
+Gezeichnet wird auf WebGL2, in fünf Durchgängen mit eigenen Shadern. Das
+Nebelbild backt die Grafikkarte einmal beim Start in eine Textur, alles
+Übrige entsteht pro Bildpunkt.
+
+| Datei | Wofür |
+| --- | --- |
+| [js/galaxy-config.js](js/galaxy-config.js) | Alle Regler und die sechs Nebelbereiche. Wer am Aussehen dreht, dreht hier. |
+| [js/galaxy.js](js/galaxy.js) | Der WebGL2-Renderer und die Schnittstelle `window.Galaxy`. |
+| [js/galaxy-canvas-2d.js](js/galaxy-canvas-2d.js) | Rückfallebene ohne WebGL2. Startet nur, wenn `js/galaxy.js` sie ruft. |
+| [tools/portrait-studio/components/galaxie.js](tools/portrait-studio/components/galaxie.js) | Die Tafel im Bild-Studio: Vorschau und Schieber. |
+
+Alle drei müssen in dieser Reihenfolge eingebunden sein, siehe das Ende
+von `index.html` und `characters.html`.
+
+### Regler im Bild-Studio
+
+Der bequeme Weg. Das Studio starten (`node start.js`, oder direkt
+`node tools/portrait-studio/server.js`), oben im Kopf auf **Galaxie**.
+
+Links läuft eine Vorschau, rechts stehen alle Regler als Schieber. Die
+Vorschau ist kein Nachbau: Der Dialog lädt dieselben Dateien aus `js/`,
+die auch die Seite lädt, und lässt sie in seinem eigenen Canvas laufen.
+Was dort zu sehen ist, ist deshalb genau das, was herauskommt.
+
+Über der Fußzeile stehen die sechs Phasen zur Auswahl, damit sich der
+Phasenschleier beurteilen lässt und nicht nur der Seitenanfang. Ganz
+unten in der Reglerspalte sitzen die sechs Nebelbereiche einzeln, mit
+Farbe, Stärke, Feinheit, Graten und ihrer Lage.
+
+Die Regler wirken sofort, aber nur in der Vorschau. Erst **Sichern**
+schreibt sie nach `js/galaxy-config.js`, und zwar Zeile für Zeile: Die
+Erklärungen in der Datei bleiben dabei unangetastet. Vorher legt das
+Studio wie immer eine Kopie in `.sicherung`, und **Rückgängig** nimmt den
+Schritt zurück.
+
+### Regler zur Laufzeit
+
+```js
+Galaxy.set({ nebWarp: 0.35, bgTint: 0.8, timeScale: 0.5 })
+Galaxy.get()                                   // aktueller Stand
+Galaxy.setRegions([{ col: [200, 40, 90] }])    // Nebelbereiche einzeln
+Galaxy.getRegions()
+Galaxy.setPalette([[70,110,255], ...])         // ruft main.js pro Phase
+```
+
+Was das Nebelbild betrifft, löst ein neues Backen aus (unter einer
+Millisekunde), der Rest wirkt im nächsten Bild. Jeder Regler ist in
+`js/galaxy-config.js` einzeln beschrieben. Die wichtigsten:
+
+- **`bgTint`** trennt Struktur und Farbe im gemalten Grundbild. Bei 0
+  behält es seine eigenen Farben, bei 1 wird nur noch seine Helligkeit
+  als Dichte gelesen und die Farbe kommt vollständig aus der Palette der
+  gerade sichtbaren Phase. Der Schleier allein konnte die gemalten Farben
+  nur anhauchen, das hier färbt sie wirklich um.
+- **`nebWarp`** verzerrt das Rauschen mit sich selbst. Aus runden Wolken
+  werden gezogene, wirbelnde Schwaden.
+- **`nebRoughness`** bestimmt, wie viel jede Oktave von der vorigen
+  behält. Der eigentliche Regler für Feinstruktur im Nebel.
+- **`bgResample`** legt fest, wie das Grundbild verkleinert wird, und
+  entscheidet damit, wie hart die darin gemalten Sterne herauskommen.
+- **`shootInterval`** ist der mittlere Abstand zwischen zwei
+  Sternschnuppen in Sekunden. Der wirkliche Abstand streut von gut der
+  Hälfte bis knapp zum Anderthalbfachen, bei 12.5 sind das die 7 bis 18
+  Sekunden der Vorlage.
+- **`timeScale`**, **`nebPulse`**, **`sunPulse`**, **`twinkleSpeed`**
+  regeln das Tempo der Bewegungen.
+
+### Nachprüfen
+
+Der Umbau von Canvas auf WebGL2 sollte am Bild nichts ändern. Ob das
+stimmt, entscheidet nicht das Auge, sondern
+[tools/galaxy-diff/pruefen.js](tools/galaxy-diff/pruefen.js): Es startet
+beide Renderer im selben Browser, schiebt sie Bild für Bild durch
+denselben Zeitverlauf und zählt die Abweichung Punkt für Punkt.
+
+```
+cd tools/galaxy-diff && npm i puppeteer-core     # einmalig
+node tools/galaxy-diff/pruefen.js                # alle drei Prüfungen
+node tools/galaxy-diff/pruefen.js schichten      # Schicht für Schicht
+node tools/galaxy-diff/pruefen.js regler         # wirkt jeder Regler?
+node tools/galaxy-diff/pruefen.js seite          # läuft die echte Seite?
+```
+
+Stand bei der Umstellung, 1280 x 720, Abweichung in Stufen von 255: im
+Mittel 0,6 über alle Schichten, 99,3 Prozent aller Bildpunkte innerhalb
+von zwei Stufen, kein einziger über 24 außer bei bewegten Schweifen. Die
+verbliebene Abweichung ist symmetrische Rundung und kein Versatz, das ist
+mitgemessen: Canvas rundet nach jeder der sechs Schichten auf acht Bit,
+der Shader nur einmal am Ende.
+
+Drei Dinge sind bewusst anders und nicht angeglichen worden:
+
+- Die feinen Sterne bekommen ihre Kantenglättung aus 64 ausgezählten
+  Proben statt aus einem weichen Übergang. Bei Radien um einen halben
+  Bildpunkt entscheidet das über die Helligkeit, und Auszählen trifft
+  genau das, was Canvas rechnet.
+- Sterne werden additiv übereinandergelegt, Canvas legt sie innerhalb
+  ihrer Ebene deckend übereinander. Additiv ist richtiger, überlappende
+  Sterne sind Licht und keine Farbe.
+- Die hellen Sterne bekommen ihren Halo als Formel statt als 48 Punkte
+  großes Bild, das auf 5 bis 24 Punkte zusammengezogen wird.
+
+Zwei Erwartungen haben sich beim Messen nicht bestätigt und stehen
+deshalb anders in der Vorgabe, als zuerst gedacht war: `nebFactor` ändert
+das Bild um zwei von 255 Stufen und steht deshalb auf 1 statt auf 4, das
+Sechzehnfache an Speicher lohnt dafür nicht. Die Weichheit der Nebel kam
+nicht von der Auflösung des gebackenen Bildes, sondern daher, dass die
+feinen Oktaven kaum Energie tragen und die ganze Schicht nur ein blasser
+Hauch über dem Grundbild ist (gemessen 0,9 von 255 Stufen).
+
+### Tempo
+
+Gemessen auf einer Intel-Grafikeinheit, Median des Abstands zwischen den
+Bildern über mehrere Läufe:
+
+| | WebGL2 | Canvas 2D |
+| --- | --- | --- |
+| 1920 x 1080 | 16,6 bis 16,7 ms | 16,7 bis 16,8 ms |
+| 3840 x 2160 | 17 bis 24 ms | 33 bis 40 ms |
+
+Bei 1080p laufen beide mit vollen 60 Bildern, die alte Fassung mit etwas
+mehr Ausreißern nach oben. Auf sehr großen Flächen, also 4K oder ein
+2K-Schirm mit doppelter Punktdichte, ist die neue Fassung ungefähr
+doppelt so schnell. Die Werte schwanken von Lauf zu Lauf spürbar, weil
+die Grafikeinheit sich den Speicher mit allem anderen teilt.
 
 ## Hinweise
 
