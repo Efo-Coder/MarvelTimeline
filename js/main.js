@@ -158,13 +158,25 @@
     box.addEventListener('mouseleave', hideTip);
     box.addEventListener('click', () => openModal(record));
 
-    const date = el('p', 'date', movie.period || movie.date);
-
-    li.append(box, el('div', 'connector'), buildDot(movie), date);
+    /* Die Pille sitzt unter dem Logo, das Datum am Fuß des Verbindungs-
+       strichs dicht über der Zeitskala. */
+    li.append(box);
     const tags = [];
     if (movie.series) tags.push('Serie');
     if (movie.upcoming) tags.push('Demnächst');
-    if (tags.length) li.append(el('span', 'badge', tags.join(' · ')));
+    if (tags.length) {
+      const tag = el('div', 'entry-tag');
+      tag.append(el('span', 'badge', tags.join(' · ')));
+      li.append(tag);
+    } else {
+      /* Ohne Pille wächst dafür der Strich: Er beginnt so wie im Original
+         gleich unter dem Logo, und der Punkt bleibt trotzdem auf der
+         Höhe der Skala (siehe .entry.untagged im CSS). */
+      li.classList.add('untagged');
+    }
+
+    li.append(el('div', 'connector'),
+      el('p', 'date', movie.period || movie.date), buildDot(movie));
     return li;
   }
 
@@ -211,6 +223,9 @@
       section, pin, wrap, viewport, timeline,
       arrowL, arrowR, arrowLShown: false, arrowRShown: false, overflow: 0,
       tx: 0, targetX: null, scrollX: 0, tlLeft: 0, tlTop: 0, pinRect: null,
+      /* Kopfzeile, Zeitskala und Phasenband blenden im Gleichschritt mit
+         den Einträgen, siehe updateEntries */
+      reveal: { heading, shown: -1 },
       entries: Array.from(list.children, node => ({
         node,
         /* Beim seitlichen Ein-/Ausblenden bewegt sich nur der Inhalt –
@@ -950,6 +965,7 @@
       const tlRect = item.timeline.getBoundingClientRect();
       item.tlLeft = tlRect.left + item.viewport.scrollLeft - pinRect.left;
       item.tlTop = tlRect.top - pinRect.top;
+      item.reveal.shown = -1;
       for (const e of item.entries) {
         e.left = e.node.offsetLeft;
         e.top = e.node.offsetTop;
@@ -1066,19 +1082,45 @@
   function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
   function smooth(x) { return x * x * (3 - 2 * x); }
 
+  /* Fortschritt eines Elements beim Seiten-Scroll: 0 außerhalb, 1 im Bild.
+     Eintritt von unten und Austritt nach oben laufen über dieselbe
+     Strecke, damit Zurückscrollen die Einblendung rückwärts abspielt. */
+  function revealY(top, height, vh, my) {
+    return clamp01(Math.min(
+      (vh - my - top) / REVEAL_SPAN,
+      (top + height - my) / REVEAL_SPAN
+    ));
+  }
+
   function updateEntries(item, tx, vw, vh) {
     const mx = vw * EDGE_X;
     const my = vh * EDGE_Y;
     const baseLeft = item.pinRect.left + item.tlLeft + tx;
     const baseTop = item.pinRect.top + item.tlTop;
+
+    /* Alles außer den Einträgen selbst: Kopfzeile oben, darunter die
+       Zeitskala und das Phasenband. Alle hängen am Fortschritt der
+       Einträge statt an ihrer eigenen Höhe im Bild, sonst käme die
+       Kopfzeile früher herein und die Linien blieben stehen, während die
+       Logos schon weg sind. Die Linien sind Pseudo-Elemente und lesen
+       ihren Wert aus --reveal, siehe style.css.
+       Alle Einträge liegen auf einer Höhe, der erste steht für die Reihe. */
+    const rv = item.reveal;
+    const row = item.entries[0];
+    const qr = Math.round(revealY(baseTop + row.top, row.height, vh, my) * 200);
+    if (qr !== rv.shown) {
+      rv.shown = qr;
+      const ev = smooth(qr / 200);
+      rv.heading.style.opacity = ev.toFixed(3);
+      rv.heading.style.transform = 'translateY(' + ((1 - ev) * ENTRY_RISE).toFixed(1) + 'px)';
+      item.pin.style.setProperty('--reveal', ev.toFixed(3));
+    }
+
     for (const e of item.entries) {
       const left = baseLeft + e.left;
       const top = baseTop + e.top;
       /* Vertikal (Seiten-Scroll): kompletter Eintrag blendet mit Hub */
-      const vy = clamp01(Math.min(
-        (vh - my - top) / REVEAL_SPAN,           // Eintritt von unten
-        (top + e.height - my) / REVEAL_SPAN      // Austritt nach oben
-      ));
+      const vy = revealY(top, e.height, vh, my);
       /* Quantisiert (Schritte von 0.005): keine Writes für unsichtbare
          Mikroänderungen, z. B. während Lenis ausrollt */
       const qy = Math.round(vy * 200);

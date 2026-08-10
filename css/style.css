@@ -53,8 +53,15 @@
   --font-display: 'Bebas Neue', 'Arial Narrow', Impact, sans-serif;
   --font-brand: 'Dharma Gothic E', var(--font-display);
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Die vier Stockwerke eines Eintrags über der Zeitskala, von oben nach
+     unten. Ihre Summe ist die Höhe der Skalenlinie. */
   --logo-h: 130px;   /* Höhe des Logo-Bereichs über der Linie  */
+  --tag-h: 40px;     /* Zeile der Pille darunter, samt Luft zum Strich */
   --conn-h: 54px;    /* Länge der Verbindungslinie zum Zeitstrahl */
+  --date-h: 40px;    /* Datumszeile am Fuß des Strichs, direkt über der Skala.
+                        Der Rest unter der Schrift ist Luft für den Infinity-
+                        Stein, der 14px über die Linie ragt. */
+  --scale-y: calc(var(--logo-h) + var(--tag-h) + var(--conn-h) + var(--date-h));
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -870,15 +877,25 @@ html.lenis, html.lenis body { height: auto; }
   padding: 4.5rem 0 2rem;
 }
 
+/* Startzustand wie bei .entry: Die Kopfzeile wird scroll-gekoppelt
+   eingeblendet (updateEntries in main.js), damit Saga und Jahre mit der
+   Timeline darunter zusammen ins Bild kommen. */
 .phase-heading {
   text-align: center;
   padding: 0 1.5rem;
   margin-bottom: 0.6rem;
+  opacity: 0;
+  transform: translateY(18px);
+  will-change: opacity, transform;
 }
 
+/* Mitwachsend statt fest: Mit dem großen letter-spacing braucht die
+   längste Saga („The Multiverse Saga“) auf schmalen Fenstern sonst zwei
+   Zeilen. Nach oben ist die Größe so gedeckelt, dass die Kopfzeile unter
+   dem Phasenband der Timeline bleibt. */
 .saga {
   font-family: var(--font-brand);
-  font-size: 0.95rem;
+  font-size: clamp(1.05rem, 1.9vw, 1.45rem);
   letter-spacing: 0.45em;
   text-transform: uppercase;
   color: var(--accent);
@@ -888,9 +905,9 @@ html.lenis, html.lenis body { height: auto; }
 
 .years {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: clamp(0.95rem, 1.25vw, 1.1rem);
   letter-spacing: 0.25em;
-  margin: 0.35rem 0 0;
+  margin: 0.5rem 0 0;
 }
 
 /* ----- Horizontale Timeline (Mausrad/Touch scrollbar) ----- */
@@ -909,10 +926,53 @@ html.lenis, html.lenis body { height: auto; }
 
 .timeline-viewport::-webkit-scrollbar { display: none; }
 
-/* Wrapper um den Viewport – Anker für den Hinweis-Pfeil, der nicht
-   mitscrollen und nicht unter die Randmaske fallen soll */
+/* Wrapper um den Viewport – Anker für den Hinweis-Pfeil und den
+   Zeitstrahl, die beide nicht mitscrollen und nicht unter die Randmaske
+   fallen sollen */
 .timeline-wrap {
   position: relative;
+}
+
+/* Beim Scrollen blendet die ganze Phase als ein Block: Kopfzeile,
+   Einträge, beide Linien und der Schriftzug dazwischen. Den Fortschritt
+   legt main.js auf --reveal, weil ein Skript die Linien als
+   Pseudo-Elemente nicht unmittelbar ansprechen kann. Ohne Skript und bei
+   reduzierter Bewegung greift der Rückfallwert 1, dann stehen sie fest. */
+.timeline-wrap::before,
+.phase-band {
+  opacity: var(--reveal, 1);
+  transform: translateY(calc((1 - var(--reveal, 1)) * 18px)); /* Hub wie bei .entry */
+  will-change: opacity, transform;
+}
+
+/* Mit Skript startet die Phase verdeckt wie ihre Einträge. Sonst stünden
+   die Linien einen Moment allein da, wenn man per Ankersprung in einer
+   Phase landet, die vorher außerhalb der Scrub-Reichweite lag. */
+html.js .phase-pin { --reveal: 0; }
+
+/* Die beiden Linien des Phasenbandes: oben der Zeitstrahl, unten der
+   Abschluss unter dem Schriftzug. Eine gemeinsame Regel, damit sie in
+   Breite, Stärke und Verblendung zu den Rändern hin nie auseinanderlaufen. */
+.timeline-wrap::before,
+.phase-band::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.55) 5%,
+    rgba(255, 255, 255, 0.55) 95%,
+    transparent);
+}
+
+/* Der Zeitstrahl steht bewusst neben dem Viewport statt darin: Als
+   gleichförmige Linie sähe er mitscrollend genauso aus, bliebe aber von
+   der Randmaske des Viewports angeschnitten – und damit anders verblendet
+   als die untere Linie. */
+.timeline-wrap::before {
+  top: calc(1.5rem + var(--scale-y)); /* = padding-top des Viewports + Höhe eines Eintrags */
 }
 
 /* Dezente Pfeile an den Rändern auf Höhe des Zeitstrahls: Die Timeline
@@ -920,7 +980,7 @@ html.lenis, html.lenis body { height: auto; }
    main.js (.visible) – am jeweiligen Timeline-Ende ausgeblendet. */
 .scroll-arrow {
   position: absolute;
-  top: calc(1.5rem + var(--logo-h) + var(--conn-h) + 1px); /* = padding-top des Viewports + Position des Zeitstrahls */
+  top: calc(1.5rem + var(--scale-y) + 1px); /* auf der Mitte des Zeitstrahls */
   transform: translateY(-50%);
   padding: 0.4rem;
   pointer-events: none;
@@ -973,21 +1033,6 @@ html.lenis, html.lenis body { height: auto; }
   padding: 0 clamp(2rem, 6vw, 6rem);
 }
 
-/* Der durchgehende Zeitstrahl */
-.timeline::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: calc(var(--logo-h) + var(--conn-h));
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(255, 255, 255, 0.55) 5%,
-    rgba(255, 255, 255, 0.55) 95%,
-    transparent);
-}
-
 .entries {
   display: flex;
   list-style: none;
@@ -1025,20 +1070,23 @@ html.lenis, html.lenis body { height: auto; }
    Kind-Elementen (Punkt und Datum bleiben stabil auf der Zeitskala) –
    eigener Layer aus demselben Grund wie bei .entry */
 .logo-box,
-.connector,
-.badge {
+.entry-tag,
+.connector {
   will-change: opacity, transform;
 }
 
 /* Als <button> ausgezeichnet (öffnet das Info-Modal), deshalb erst die
    Browser-Voreinstellungen des Buttons zurücknehmen. */
+/* Unten ausgerichtet statt mittig: Sonst stünde unter einem flachen Logo
+   der halbe Kasten leer und der Strich setzte weit darunter an. So beginnt
+   er bei jedem Logo dicht an dessen Unterkante. */
 .logo-box {
   height: var(--logo-h);
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  padding: 0 14px;
+  padding: 0 14px 6px;
   background: none;
   border: 0;
   color: inherit;
@@ -1083,10 +1131,12 @@ html.lenis, html.lenis body { height: auto; }
           drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
 }
 
+/* Der Verlauf beginnt oben am Logo kräftig und läuft nach unten aus. So
+   zeigt die Spitze zur Zeitskala, an der das Datum steht. */
 .connector {
   width: 2px;
   height: var(--conn-h);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.75));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
 }
 
 .dot {
@@ -1115,17 +1165,39 @@ html.lenis, html.lenis body { height: auto; }
           drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 65%, transparent));
 }
 
+/* Die Pille steht dicht unter dem Logo. Oben ausgerichtet, damit der Rest
+   der Zeile als Abstand zum Verbindungsstrich frei bleibt: Gestreckt würde
+   die Pille sonst bis an ihn heranwachsen. */
+.entry-tag {
+  height: var(--tag-h);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10px;
+}
+
+/* Wo keine Pille steht, nimmt der Strich deren Zeile ein. So beginnt er
+   überall gleich unter dem Logo, und die Punkte aller Einträge sitzen
+   trotzdem auf einer Höhe. */
+.entry.untagged .connector {
+  height: calc(var(--conn-h) + var(--tag-h));
+}
+
+/* Das Datum schließt den Verbindungsstrich nach unten ab und steht damit
+   unmittelbar über der Zeitskala. Die feste Höhe hält den Abstand zur
+   Linie, an der gleich der Punkt sitzt. */
 .date {
-  margin: 14px 0 0;
+  height: var(--date-h);
+  margin: 0;
   font-family: var(--font-display);
   font-size: 1rem;
+  line-height: 1.1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #e6ebff;
 }
 
 .badge {
-  margin-top: 8px;
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -1133,21 +1205,29 @@ html.lenis, html.lenis body { height: auto; }
   color: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 65%, transparent);
   border-radius: 999px;
-  padding: 0.15rem 0.55rem;
+  /* Senkrecht so viel, dass die Pille genau die Höhe behält, die ihr die
+     gestreckte Zeile vorher gegeben hat. */
+  padding: 0.25rem 0.55rem;
 }
 
 /* ----- "P H A S E  O N E"-Band unter dem Zeitstrahl (wie im Original) ----- */
 
+/* Das Band hat zwei Linien, die obere ist der Zeitstrahl selbst. Deshalb
+   sitzt es unmittelbar unter dem Viewport und zieht nur noch die untere
+   Linie – in derselben Breite und mit demselben Verlauf wie die Skala,
+   damit beide als ein Paar lesbar sind. */
 .phase-band {
-  width: min(1100px, 92%);
-  margin: 2.4rem auto 0;
-  padding: 0.55rem 1rem 0.4rem;
+  position: relative;
+  margin: 0;
+  /* Oben liegt schon die untere Polsterung des Viewports, unten muss der
+     Abstand zur Linie also selbst kommen – sonst klebte der Schriftzug an
+     ihr statt mittig zwischen beiden Linien zu stehen. */
+  padding: 0 1rem 0.95rem;
   text-align: center;
-  border-top: 1px solid transparent;
-  border-bottom: 1px solid transparent;
-  border-left: none;
-  border-right: none;
-  border-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent) 1;
+}
+
+.phase-band::after {
+  bottom: 0;
 }
 
 .phase-band h2 {
@@ -3029,7 +3109,16 @@ a.char-film { text-decoration: none; }
 @media (max-width: 640px) {
   :root {
     --logo-h: 108px;
+    --tag-h: 34px;
     --conn-h: 44px;
+    --date-h: 34px;
+  }
+
+  /* Auf schmalen Fenstern zählt jede Zeile Höhe, deshalb rückt die Pille
+     hier dichter unter das Logo (--tag-h oben ist um genau diese 6px
+     kleiner als auf großen Fenstern). */
+  .entry-tag {
+    padding-top: 4px;
   }
 
   .char-full-actions {
@@ -3148,10 +3237,15 @@ a.char-film { text-decoration: none; }
     transition: none;
   }
 
-  .entry {
+  /* Ohne Bewegung läuft das Scrub nicht, das den Wert sonst pro Frame
+     setzt – hier steht die ganze Phase von Anfang an da. */
+  .entry,
+  .phase-heading {
     opacity: 1;
     transform: none;
   }
+
+  html.js .phase-pin { --reveal: 1; }
 
   /* Ohne Bewegung entfällt die gepinnte Textsequenz: Der Hero wird wieder
      eine normale viewportfüllende Sektion, die Stufen stehen untereinander
