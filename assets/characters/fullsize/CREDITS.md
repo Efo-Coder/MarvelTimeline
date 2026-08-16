@@ -98,6 +98,7 @@ Freistellers eine weiche Vignette.
 | kurt-wagner-nightcrawler.webp | Nightcrawler Earth-2000 PNG  | HunterC-10 | https://www.deviantart.com/hunterc-10/art/Nightcrawler-Earth-2000-PNG-1176597609 |
 | logan-wolverine.webp | Wolverine (Deadpool and Wolverine) png | jalonct | https://www.deviantart.com/jalonct/art/Wolverine-Deadpool-and-Wolverine-png-1082358927 |
 | loki.webp | Thor Ragnarok: Loki - Transparent! | SpeedCam | https://www.deviantart.com/camo-flauge/art/Thor-Ragnarok-Loki-Transparent-695691743 |
+| lucky.webp | Lucky The Pizza Dog PNG Hawkeye | akithefull | https://www.deviantart.com/akithefull/art/Lucky-The-Pizza-Dog-PNG-Hawkeye-943186410 |
 | loki-tva.webp | TVA Loki PNG | PurpleAxell | https://www.deviantart.com/purpleaxell/art/TVA-Loki-PNG-918143820 |
 | m-baku.webp | Black Panther's M'Baku - Transparent! | SpeedCam | https://www.deviantart.com/speedcam/art/Black-Panther-s-M-Baku-Transparent-732912934 |
 | malekith.webp | Malekith (Thor TDW) | Background-Conquerer | https://www.deviantart.com/background-conquerer/art/Malekith-Thor-TDW-907017253 |
