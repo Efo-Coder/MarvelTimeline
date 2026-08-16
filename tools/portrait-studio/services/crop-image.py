@@ -17,7 +17,7 @@ zu den Ganzkörperbildern. Dort ist der Ausschnitt ein freies Rechteck, und
 der Vorschlag ist kein Kopf, sondern die Hülle des sichtbaren Inhalts:
 Ganzkörperbilder gehören randlos zugeschnitten, sonst steht die Figur auf
 der Charakterseite zu klein im Rahmen und schwebt über der Bodenlinie.
-Dieselbe Regel wie in tools/crop-fullsize.py.
+Dieselbe Regel wie in services/fullsize/crop-fullsize.py.
 
 --winkel richtet eine schief stehende Vorlage aus. Gedreht wird um ihren
 Mittelpunkt, die Fläche wächst dabei auf die Hülle des gedrehten Bildes.
@@ -60,7 +60,7 @@ MIN_SIZE = 240      # Untergrenze, so groß waren die alten Porträts
 HEAD_SHARE = 0.60   # Anteil der Kopfhöhe an der Bildhöhe
 TOP_MARGIN = 0.06   # Luft über dem Kopf, Anteil der Bildhöhe
 
-# Ganzkörper. ALPHA_MIN steht wie in tools/crop-fullsize.py bei 8: Ein
+# Ganzkörper. ALPHA_MIN steht wie in services/fullsize/crop-fullsize.py bei 8: Ein
 # verlustbehaftetes WebP legt einen Saum mit Alphawerten von 1 bis 7 über
 # das ganze Bild, der jede Hülle auf volle Bildgröße offen hält. Höher darf
 # die Schwelle nicht liegen, Energieeffekte fangen bei etwa 10 an.

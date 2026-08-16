@@ -565,7 +565,7 @@ function zeigeZaehler(aufbau) {
 
   /* Die Tafeln werden nicht neu geschrieben, sondern wiederverwendet, je
      eine ihrem Wort zugeordnet. Nur so behält jede Zahl ihr Zählwerk
-     (zaehlwerk.js) und läuft nach einem gespeicherten Bild um eins weiter,
+     (count-up.js) und läuft nach einem gespeicherten Bild um eins weiter,
      statt umzuspringen. Beim Wechsel des Bereichs bleiben die Wörter
      stehen, die es in beiden gibt, und ihre Zahlen laufen von der alten
      auf die neue: Was nur einem Bereich gehört, zählt sich neu hoch.
@@ -640,7 +640,7 @@ function richteBereichEin() {
   symbole.setze($('auto'), gk ? 'randlos' : 'zuschneiden');
   symbole.beschrifte($('auto'), gk ? 'Randlos beschneiden' : 'Automatisch zuschneiden');
   $('auto').title = gk
-    ? 'Schneidet auf die Hülle aller sichtbaren Pixel, wie tools/crop-fullsize.py'
+    ? 'Schneidet auf die Hülle aller sichtbaren Pixel, wie services/fullsize/crop-fullsize.py'
     : 'Nimmt den Kopf-Vorschlag des Porträt-Skills';
 
   const [wort, hilfe] = FILTER_FEHLT[S.bereich];
@@ -4392,7 +4392,7 @@ function frischeWikiLage() {
   const knopf = $('wiki-alle');
   knopf.disabled = !offen;
   symbole.beschrifte(knopf, offen ? `${offen} fehlende nachziehen` : 'Nichts nachzuziehen');
-  knopf.title = 'Ruft tools/fetch-facts.py und tools/build-facts.py auf. Geholt wird nur, '
+  knopf.title = 'Ruft services/biography/fetch-facts.py und services/biography/build-facts.py auf. Geholt wird nur, '
     + 'was noch fehlt, und gesetzt wird nur das Geholte: Die übrigen Einträge im Block '
     + 'bleiben unberührt.';
 }

@@ -1,6 +1,6 @@
 """Aus den Wiki-Rohdaten den Steckbrief-Block in js/facts.js schreiben.
 
-   tools/fetch-facts.py holt die Infoboxen beider Marvel-Wikis als
+   tools/portrait-studio/services/biography/fetch-facts.py holt die Infoboxen beider Marvel-Wikis als
    Rohtext. Dieses Skript macht daraus die kurzen deutschen Angaben, die
    im Fenster neben der Figur stehen:
 
@@ -19,7 +19,9 @@
    js/facts.js. Alles andere in der Datei, vor allem die von Hand
    gepflegten CHAR_BONDS, bleibt unangetastet.
 
-   Aufruf:  python tools/build-facts.py <roh.json> <namen.json> js/facts.js
+   Aufruf, aus der Wurzel des Repos:
+       python tools/portrait-studio/services/biography/build-facts.py \
+           <roh.json> <namen.json> js/facts.js
 """
 
 import json

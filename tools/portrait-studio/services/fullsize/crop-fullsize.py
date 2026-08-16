@@ -20,9 +20,13 @@ bis 30 und sind echter Bildinhalt, den ein groesserer Wert wegschneiden wuerde.
 
 Aufruf
 ------
-    python tools/crop-fullsize.py                # Probelauf, schreibt nichts
-    python tools/crop-fullsize.py --apply        # schreibt die Dateien
-    python tools/crop-fullsize.py --apply a.webp b.webp
+Aus der Wurzel des Repos, der Weg ist SKRIPT:
+
+    SKRIPT=tools/portrait-studio/services/fullsize/crop-fullsize.py
+
+    python $SKRIPT                        # Probelauf, schreibt nichts
+    python $SKRIPT --apply                # schreibt die Dateien
+    python $SKRIPT --apply a.webp b.webp  # nur diese beiden
 """
 
 import argparse
@@ -32,7 +36,8 @@ import sys
 
 from PIL import Image
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Vier Ebenen hoch: fullsize, services, portrait-studio, tools.
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 FULLSIZE = os.path.join(REPO, "assets", "characters", "fullsize")
 
 ALPHA_MIN = 8      # ab hier gilt ein Pixel als Inhalt, siehe oben

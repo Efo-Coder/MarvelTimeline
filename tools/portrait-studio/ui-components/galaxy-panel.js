@@ -29,12 +29,13 @@
   const $$ = (id) => document.getElementById(id);
   const leinwand = $$('galaxy');
 
-  let stand = null;        // was zuletzt in der Datei stand
+  let stand = null;        // was zuletzt in den Dateien stand
   let entwurf = null;      // was gerade eingestellt ist
   let entwurfBereiche = null;
+  let entwurfPhasen = null;
   let gestartet = false;   // läuft die Vorschau schon?
   let Gx = null;           // die Galaxy-Schnittstelle der Vorschau
-  let phase = null;        // gewählte Phase, null heißt Seitenanfang
+  let phaseNr = null;      // gewählte Phase, null heißt Seitenanfang
 
   /* ---------- Kleinkram ---------- */
 
@@ -72,7 +73,18 @@
   function schmutzig() {
     if (!stand) return false;
     for (const r of stand.regler) if (entwurf[r.name] !== stand.config[r.name]) return true;
-    return JSON.stringify(entwurfBereiche) !== JSON.stringify(stand.regions);
+    if (JSON.stringify(entwurfBereiche) !== JSON.stringify(stand.regions)) return true;
+    return JSON.stringify(entwurfPhasen) !== JSON.stringify(stand.phasen);
+  }
+
+  /* Ein Farbfeld, wie es die Nebelbereiche und die Phasen brauchen. */
+  function farbfeld(hex, beiAenderung, hilfe) {
+    const feld = document.createElement('input');
+    feld.type = 'color';
+    feld.value = hex;
+    feld.title = hilfe;
+    feld.addEventListener('input', () => beiAenderung(feld.value));
+    return feld;
   }
 
   function zeigeStand() {
@@ -117,10 +129,24 @@
     }
   }
 
+  /* Ohne Phase zeigt die Galaxie die Akzentfarben aller sechs
+     nebeneinander, also das ganze Spektrum der Timeline. Genau so rechnet
+     js/data.js sein DEFAULT_NEBULA aus, siehe dort. */
+  function grundfarben() {
+    return entwurfPhasen.map((p) => ausHex(p.accent));
+  }
+
   function setzePalette() {
     if (!Gx) return;
-    Gx.setPalette(phase ? phase.nebula : stand.grundfarben);
+    Gx.setPalette(phaseNr === null ? grundfarben() : entwurfPhasen[phaseNr].nebula);
     if (Gx.snapPalette) Gx.snapPalette();
+  }
+
+  function waehlePhase(nr) {
+    phaseNr = nr;
+    const feld = $$('galaxie-phasen');
+    [...feld.children].forEach((b, i) => b.classList.toggle('an', i - 1 === nr || (nr === null && i === 0)));
+    setzePalette();
   }
 
   async function starteVorschau() {
@@ -130,7 +156,7 @@
     window.GALAXY_BASE = '/datei/';
     /* Sonst greift der Renderer auf seine eingebauten Ersatzfarben
        zurück, denn js/data.js wird hier nicht geladen. */
-    window.DEFAULT_NEBULA = stand.grundfarben;
+    window.DEFAULT_NEBULA = grundfarben();
     for (const datei of ['galaxy-config.js', 'galaxy-canvas-2d.js', 'galaxy.js']) {
       await ladeSkript('/datei/js/' + datei);
     }
@@ -338,23 +364,69 @@
     const feld = $$('galaxie-phasen');
     feld.textContent = '';
     const eintraege = [
-      { id: null, titel: 'Alle sechs Akzente, wie am Seitenanfang' },
-      ...stand.phasen,
+      { titel: 'Alle sechs Akzente nebeneinander, wie am Seitenanfang' },
+      ...entwurfPhasen,
     ];
-    for (const p of eintraege) {
+    eintraege.forEach((p, i) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.textContent = p.id === null ? 'Seitenanfang' : 'Phase ' + p.num;
+      b.textContent = i === 0 ? 'Seitenanfang' : 'Phase ' + p.num;
       b.title = p.titel;
-      b.classList.toggle('an', (phase && phase.id) === p.id);
-      b.addEventListener('click', () => {
-        phase = p.id === null ? null : p;
-        for (const andere of feld.children) andere.classList.remove('an');
-        b.classList.add('an');
-        setzePalette();
-      });
+      b.classList.toggle('an', phaseNr === (i === 0 ? null : i - 1));
+      b.addEventListener('click', () => waehlePhase(i === 0 ? null : i - 1));
       feld.append(b);
-    }
+    });
+  }
+
+  /* ---------- Farben der Phasen ---------- */
+
+  /* Sie stehen nicht bei den Reglern, sondern in js/data.js bei der Phase
+     selbst. Der Akzent färbt die ganze Oberfläche dieser Phase, hier ist
+     davon nur seine Wirkung auf den Seitenanfang zu sehen. Die drei
+     Nebelfarben sind das, was die Galaxie während der Phase zeigt. */
+  function bauePhasenFarben() {
+    const feld = $$('galaxie-phasenfarben');
+    feld.textContent = '';
+    entwurfPhasen.forEach((p, i) => {
+      const zeile = document.createElement('div');
+      zeile.className = 'galaxie-phasenfarbe';
+
+      const knopf = document.createElement('button');
+      knopf.type = 'button';
+      knopf.className = 'galaxie-phasenname';
+      knopf.textContent = 'Phase ' + p.num;
+      knopf.title = p.titel + '\n\nZeigt diese Phase in der Vorschau.';
+      knopf.addEventListener('click', () => waehlePhase(i));
+
+      const akzent = farbfeld(p.accent, (hex) => {
+        p.accent = hex;
+        /* Der Akzent färbt Ränder, Knöpfe und Marken der Seite, davon ist
+           hier nichts zu sehen. Was man sieht, ist seine zweite Aufgabe:
+           Am Seitenanfang steuert jede Phase ihren Akzent zur Galaxie
+           bei. Deshalb dorthin umschalten. */
+        waehlePhase(null);
+        zeigeStand();
+      }, 'Der Akzent dieser Phase. Er färbt Ränder, Knöpfe und Marken der '
+        + 'Seite, und am Seitenanfang steuert er zusätzlich eine der sechs '
+        + 'Farben der Galaxie bei. In der Vorschau ist nur das Zweite zu sehen.'
+        + '\n\nIn der Datei: PHASES[' + i + '].accent');
+
+      const nebel = document.createElement('span');
+      nebel.className = 'galaxie-nebelfarben';
+      p.nebula.forEach((c, k) => {
+        nebel.append(farbfeld(alsHex(c), (hex) => {
+          p.nebula[k] = ausHex(hex);
+          waehlePhase(i);
+          zeigeStand();
+        }, ['Erste', 'Zweite', 'Dritte'][k] + ' der drei Farben, die die Galaxie '
+          + 'zeigt, solange diese Phase sichtbar ist. Sie liegen als Verlauf über '
+          + 'der Bildschirmdiagonale, die erste links oben, die dritte rechts unten.'
+          + '\n\nIn der Datei: PHASES[' + i + '].nebula[' + k + ']'));
+      });
+
+      zeile.append(knopf, akzent, nebel);
+      feld.append(zeile);
+    });
   }
 
   /* ---------- Laden, Speichern, Öffnen ---------- */
@@ -362,6 +434,7 @@
   function uebernehmeStand() {
     entwurf = { ...stand.config };
     entwurfBereiche = stand.regions.map((r) => ({ ...r, col: r.col.slice() }));
+    entwurfPhasen = stand.phasen.map((p) => ({ ...p, nebula: p.nebula.map((c) => c.slice()) }));
   }
 
   async function oeffne() {
@@ -371,10 +444,11 @@
       if (!stand) {
         stand = await json('/api/galaxie');
         uebernehmeStand();
-        bauePhasen();
       }
       baueRegler();
       baueBereiche();
+      bauePhasen();
+      bauePhasenFarben();
       zeigeStand();
       await starteVorschau();
       if (Gx.pause) Gx.pause(false);
@@ -397,15 +471,20 @@
       const antwort = await json('/api/galaxie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: entwurf, regions: entwurfBereiche }),
+        body: JSON.stringify({
+          config: entwurf, regions: entwurfBereiche, phasen: entwurfPhasen,
+        }),
       });
-      if (antwort.geaendert === false) {
-        melde('An den Reglern hat sich nichts geändert.');
-      } else {
-        stand = { ...stand, config: antwort.config, regions: antwort.regions };
-        uebernehmeStand();
-        melde('Die Regler stehen jetzt in js/galaxy-config.js.');
-      }
+      stand = {
+        ...stand,
+        config: antwort.config,
+        regions: antwort.regions,
+        phasen: antwort.phasen,
+      };
+      uebernehmeStand();
+      melde(antwort.geaendert === false
+        ? 'Es hat sich nichts geändert.'
+        : 'Gesichert nach js/galaxy-config.js und js/data.js.');
       zeigeStand();
     } catch (fehler) {
       $$('galaxie-warnung').textContent = fehler.message;
@@ -418,8 +497,10 @@
     uebernehmeStand();
     baueRegler();
     baueBereiche();
+    bauePhasenFarben();
     setzeRegler(entwurf);
     setzeBereiche();
+    setzePalette();
     zeigeStand();
   }
 

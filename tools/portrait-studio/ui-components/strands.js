@@ -12,7 +12,7 @@
         gelesen wird, und die Schleife läuft gegen eine feste Obergrenze
         und bricht bei der gewünschten Zahl ab. Beides ist in GLSL ES 1.0
         nicht anders erlaubt, dieselben zwei Kunstgriffe stehen schon in
-        hintergrund.js.
+        background-lines.js.
      2. Der Glaskörper der Vorlage fehlt. Er ist mit glass: false
         abgeschaltet und wäre ein zweiter Durchgang über eine
         Zwischenleinwand, der nichts zeigt.

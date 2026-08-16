@@ -7,10 +7,10 @@
 
    Aufruf:
 
-     node tools/galaxy-diff/pruefen.js            alle drei Prüfungen
-     node tools/galaxy-diff/pruefen.js schichten  nur der Vergleich
-     node tools/galaxy-diff/pruefen.js regler     wirkt jeder Regler?
-     node tools/galaxy-diff/pruefen.js seite      läuft die echte Seite?
+     node tools/galaxy-diff/verify.js            alle drei Prüfungen
+     node tools/galaxy-diff/verify.js schichten  nur der Vergleich
+     node tools/galaxy-diff/verify.js regler     wirkt jeder Regler?
+     node tools/galaxy-diff/verify.js seite      läuft die echte Seite?
 
    Gebraucht wird Chrome und einmalig `npm i puppeteer-core` in diesem
    Ordner. Die Bilder landen in tools/galaxy-diff/out/ und sind über

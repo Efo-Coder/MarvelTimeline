@@ -64,7 +64,7 @@
   --rahmen-rgb: 236, 29, 36;
   --gefahr: #ff5470;
   /* Die drei Töne der treibenden Linien, von tief nach hell. Gelesen
-     werden sie von hintergrund.js. */
+     werden sie von background-lines.js. */
   --hg-a: #0b4a63;
   --hg-b: #45d6f5;
   --hg-c: #a6efff;
@@ -150,7 +150,7 @@
 
 /* ===== Die anderen Schemata ===========================================
 
-   Umgeschaltet wird über den Knopf im Kopf, siehe farbschema.js. Jedes
+   Umgeschaltet wird über den Knopf im Kopf, siehe color-scheme.js. Jedes
    Schema setzt genau die Werte aus dem oberen Teil der Tafel neu, sonst
    nichts.
 
@@ -334,7 +334,7 @@ html, body {
    eine Anzeige statt einer Webseite. Alles Weitere liegt in Tafeln mit
    eigenem Grund darüber, über die Bilder legt sich davon nichts.
 
-   Die treibenden Linien aus hintergrund.js liegen zwischen diesem Grund
+   Die treibenden Linien aus background-lines.js liegen zwischen diesem Grund
    und der Oberfläche. Sie decken ihn nur dort, wo sie leuchten, das
    Netz bleibt also stehen. */
 body {
@@ -354,7 +354,7 @@ body {
 }
 
 /* Die Leinwand der treibenden Linien. Sie steht fest im Fenster, hinter
-   allem und ohne Zeiger: Die Maus verfolgt hintergrund.js über das
+   allem und ohne Zeiger: Die Maus verfolgt background-lines.js über das
    Fenster, sonst läge hier eine Fläche, die jeden Klick abfängt. */
 .hintergrund {
   position: fixed;
@@ -681,7 +681,7 @@ h1, h2 {
 
    Der Fokus ist mehr als ein heller Rahmen: Um das Feld läuft eine
    zappelnde Linie, wie eine Entladung an der Kante. Gerechnet wird sie
-   in elektrorand.js, hier steht nur, wo die Hülle liegt und wie die drei
+   in electric-border.js, hier steht nur, wo die Hülle liegt und wie die drei
    Scheine darin aussehen.
 
    Die Hülle liegt genau auf dem Feld und ist fest am Fenster verankert,
@@ -947,7 +947,7 @@ input[type=range]:focus-visible {
 
 .stat:first-child { border-left: none; }
 
-/* Die Zahl läuft auf ihren Wert (zaehlwerk.js). Tabellenziffern halten
+/* Die Zahl läuft auf ihren Wert (count-up.js). Tabellenziffern halten
    jede Stelle gleich breit, den Platz für die größte vorkommende Zahl
    reserviert das Zählwerk als minWidth. Rechtsbündig, damit die Einer
    dabei stehen bleiben und nur nach links Stellen dazukommen. */
@@ -1458,7 +1458,7 @@ input[type=range]:focus-visible {
 
 /* ---------- Der Name als Partikelschrift ----------
 
-   Gezeichnet wird er in partikelschrift.js, hier steht nur, wo die
+   Gezeichnet wird er in particle-text.js, hier steht nur, wo die
    Leinwand liegt. Die Überschrift selbst behält ihren Platz in der
    Zeile und wird durchsichtig: Sie trägt weiter die Zeile, gibt der
    Vorlesehilfe den Namen und ist ohne das Skript ganz normal zu lesen.
@@ -3235,7 +3235,7 @@ input[type=range]:focus-visible {
 
 /* ===== Symbole ========================================================
 
-   Die Zeichen an den Knöpfen, gesetzt von components/icons.js. Sie sind
+   Die Zeichen an den Knöpfen, gesetzt von ui-components/icons.js. Sie sind
    Strichzeichnungen aus react-icons und tragen keine eigene Farbe: Der
    Strich ist die Textfarbe des Knopfes, also wird das Symbol mit ihm
    zusammen hell, blass oder rot, ohne dass hier eine einzige Regel dazu
@@ -3526,6 +3526,50 @@ button.mit-symbol {
 }
 
 .galaxie-lage > summary:hover { color: var(--text); }
+
+/* Eine Phase mit ihren Farben. Der Akzent steht für sich, die drei
+   Nebelfarben rücken zusammen, denn sie sind ein Verlauf und keine drei
+   einzelnen Entscheidungen. Die Lücke dazwischen sagt das. */
+.galaxie-phasenfarbe {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.16rem 0;
+}
+
+.galaxie-phasenname {
+  flex: 1;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.7rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.galaxie-phasenname:hover { color: var(--accent-hell); }
+
+.galaxie-nebelfarben {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.galaxie-phasenfarbe input[type=color] {
+  width: 26px;
+  height: 20px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--linie-hell);
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Der Akzent bekommt etwas Luft zu den Nebelfarben, sonst liest sich die
+   Reihe als vier gleichrangige Felder. */
+.galaxie-phasenfarbe > input[type=color] { margin-right: 0.35rem; }
 
 /* Der Hinweis auf ungesicherte Änderungen sitzt links in der
    Knopfleiste und schiebt die Knöpfe nach rechts. */

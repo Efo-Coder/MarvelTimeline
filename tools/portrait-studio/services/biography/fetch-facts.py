@@ -16,7 +16,10 @@
    voller Vorlagen, Fussnoten und Klammerzusaetze, und js/facts.js soll
    kurze deutsche Angaben enthalten, keine Wiki-Syntax.
 
-   Aufruf:  python tools/fetch-facts.py <namen.json> <ziel.json>
+   Aufruf, aus der Wurzel des Repos:
+       python tools/portrait-studio/services/biography/fetch-facts.py \
+           <namen.json> <ziel.json>
+
    <namen.json> ist die Liste aus buildCharIndex(): [{slug, real, ...}].
    Ein Lauf laesst sich abbrechen und wiederholen, bereits geholte Figuren
    bleiben in der Zieldatei stehen und werden uebersprungen.

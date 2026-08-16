@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="styles/studio.css">
 <script>
 /* Das gewählte Farbschema muss stehen, bevor der erste Pixel fällt.
-   Käme es erst mit farbschema.js am Ende des Körpers, blitzte bei jedem
+   Käme es erst mit color-scheme.js am Ende des Körpers, blitzte bei jedem
    Laden kurz das Standardschema auf. Geprüft wird der Wert dort, hier
    soll nur nichts zwischen Stylesheet und Anzeige liegen. */
 try {
@@ -20,7 +20,7 @@ try {
 <body>
 
 <!-- Die treibenden Linien hinter der Oberfläche, gezeichnet in
-     hintergrund.js. Die Leinwand liegt fest hinter allem und nimmt keine
+     background-lines.js. Die Leinwand liegt fest hinter allem und nimmt keine
      Zeiger an. -->
 <canvas id="hintergrund" class="hintergrund" aria-hidden="true"></canvas>
 
@@ -58,7 +58,7 @@ try {
   </button>
 
   <!-- Das Farbschema. Der Knopf zeigt, welches gilt, das Feld darunter
-       die Auswahl. Gesetzt wird es in farbschema.js. -->
+       die Auswahl. Gesetzt wird es in color-scheme.js. -->
   <div class="schema" id="schema">
     <button type="button" class="schema-knopf" id="schema-knopf"
             aria-haspopup="true" aria-expanded="false" aria-controls="schema-feld"
@@ -859,7 +859,7 @@ try {
      Vorschau daneben. Das Canvas heißt galaxy, weil js/galaxy.js genau
      diese Kennung sucht. Der Dialog lädt die echten Dateien aus dem Repo
      nach, es läuft also dieselbe Galaxie wie auf der Seite und nicht
-     etwas Nachgebautes. Bedient wird alles in components/galaxie.js. -->
+     etwas Nachgebautes. Bedient wird alles in ui-components/galaxy-panel.js. -->
 <dialog id="galaxie-dialog" class="dialog galaxie-dialog">
   <form method="dialog">
     <h2>Galaxie</h2>
@@ -888,6 +888,17 @@ try {
             über <b>Nebel &rsaquo; Helligkeit</b>.
           </p>
           <div id="galaxie-bereiche"></div>
+        </div>
+        <div class="galaxie-gruppe">
+          <p class="galaxie-gruppe-marke">Farben der Phasen</p>
+          <p class="galaxie-hinweis">
+            Links der Akzent, rechts die drei Nebelfarben. Der Akzent färbt die
+            ganze Oberfläche dieser Phase, davon ist in der Vorschau nichts zu
+            sehen. Er steuert aber zusätzlich eine der sechs Farben am
+            Seitenanfang bei, und das sieht man. Diese Farben stehen in
+            <b>js/data.js</b>, nicht bei den Reglern.
+          </p>
+          <div id="galaxie-phasenfarben"></div>
         </div>
       </div>
 
@@ -927,16 +938,16 @@ try {
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="components/icons.js"></script>
-<script src="components/farbschema.js"></script>
-<script src="components/hintergrund.js"></script>
-<script src="components/strands.js"></script>
-<script src="components/elektrorand.js"></script>
-<script src="components/partikelschrift.js"></script>
-<script src="components/zaehlwerk.js"></script>
+<script src="ui-components/icons.js"></script>
+<script src="ui-components/color-scheme.js"></script>
+<script src="ui-components/background-lines.js"></script>
+<script src="ui-components/strands.js"></script>
+<script src="ui-components/electric-border.js"></script>
+<script src="ui-components/particle-text.js"></script>
+<script src="ui-components/count-up.js"></script>
 <script src="studio.js"></script>
 <!-- Als einzige Komponente nach studio.js: Sie benutzt dessen json()
      und melde(). -->
-<script src="components/galaxie.js"></script>
+<script src="ui-components/galaxy-panel.js"></script>
 </body>
 </html>

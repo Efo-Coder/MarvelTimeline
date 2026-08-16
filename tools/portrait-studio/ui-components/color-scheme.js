@@ -14,7 +14,7 @@
      - studio.js liest die Farben der Bühne beim Start einmal ab, danach
        hängen sie in FARBE fest. Sie werden neu gelesen und die Bühne
        samt Vorschau wird neu gezeichnet.
-     - hintergrund.js, elektrorand.js und partikelschrift.js hören auf
+     - background-lines.js, electric-border.js und particle-text.js hören auf
        das Ereignis „schemawechsel“ am Fenster und holen sich, was sie
        brauchen, selbst.
 

@@ -16,7 +16,7 @@
    Woher die Figuren kommen
    ------------------------
    Aus js/data.js und js/chars.js, geladen in einem vm-Kontext wie in
-   tools/portraits-offen.js. Damit zählt genau das, was auch die Seite
+   pending-portraits.js nebenan. Damit zählt genau das, was auch die Seite
    zeigt: der Slug aus charSlug() samt CHAR_ALIAS, die abweichenden
    Fassungen pro Film aus CHAR_LOOKS und die Ganzkörper-Fassungen aus
    FULLSIZE_LOOKS. Eine neue Figur in data.js taucht hier ohne weiteres
@@ -56,14 +56,19 @@ const { execFile, spawn } = require('child_process');
 /* Der Studioordner: Oben liegen der Server und die beiden Dateien, die
    die Oberfläche tragen, index.html und studio.js. Darunter vier Ordner.
 
-     components/  Die eigenständigen Stücke der Oberfläche.
-     styles/      Das Stilblatt.
-     services/    Was der Server aufruft: crop-image.py schneidet zu,
-                  remove-background.py nimmt den Hintergrund weg, und
-                  facial-recognition/ baut Gesichter neu auf und holt
-                  sich seine Modelle selbst.
-     vendor/      Fremdes, hier nur Real-ESRGAN. Nicht im Repo, siehe
-                  die .gitignore ganz oben.
+     ui-components/  Die eigenständigen Stücke der Oberfläche.
+     styles/         Das Stilblatt.
+     services/       Was der Server aufruft. Oben liegt, was beide
+                     Bildarten bedient: crop-image.py schneidet zu,
+                     remove-background.py nimmt den Hintergrund weg, und
+                     facial-recognition/ baut Gesichter neu auf und holt
+                     sich seine Modelle selbst. Darunter steht je ein
+                     Ordner für die Skripte, die nur einen Bereich
+                     angehen: fullsize/ schneidet die Ganzkörperbilder
+                     randlos nach, biography/ holt die Steckbriefe aus
+                     den Wikis und baut js/facts.js daraus.
+     vendor/         Fremdes, hier nur Real-ESRGAN. Nicht im Repo, siehe
+                     die .gitignore ganz oben.
 
    Was der Browser sieht, liegt unter demselben Weg wie auf der Platte,
    siehe SEITENDATEIEN weiter unten. */
@@ -193,7 +198,7 @@ function ladeDaten() {
 }
 
 /* Hat die Datei einen Alphakanal? null, wenn es kein WebP ist. Gleiche
-   Prüfung wie in tools/portraits-offen.js: Die neuen Porträts sind
+   Prüfung wie in pending-portraits.js nebenan: Die neuen Porträts sind
    freigestellt, die alten aus dem Wiki sind deckend. */
 function hatAlpha(datei) {
   let fd;
@@ -220,7 +225,7 @@ function hatAlpha(datei) {
    Ein Bild kann fertig aussehen und trotzdem nicht gut sein. Diese Liste
    hält fest, was noch einmal gemacht werden soll. Sie steht in
    offen.json neben dieser Datei, die Porträts daraus liest auch
-   tools/portraits-offen.js.
+   pending-portraits.js.
 
    Porträts und Ganzkörperbilder stehen in getrennten Listen, denn beide
    heißen gleich: thor ist ein Porträt und ein Ganzkörperbild. */
@@ -1346,7 +1351,7 @@ function auftrittAendern(filmTitel, name, dabei, slug) {
    nicht erst angefasst.
 
    CHAR_FACTS selbst ist die einzige Ausnahme: Er kommt aus den beiden
-   Marvel-Wikis und gehört tools/fetch-facts.py und tools/build-facts.py,
+   Marvel-Wikis und gehört services/biography/fetch-facts.py und services/biography/build-facts.py,
    siehe weiter unten. */
 
 const FACT_FELDER = ['origin', 'species', 'height', 'teams', 'status', 'powers'];
@@ -1641,10 +1646,11 @@ function texteSchreiben(auftrag) {
 
 /* ---------- Der Steckbrief aus den Wikis ----------
 
-   tools/fetch-facts.py holt die Infoboxen aus dem MCU-Wiki und aus der
-   Marvel Database und legt sie als Rohtext ab. tools/build-facts.py macht
-   daraus die kurzen deutschen Angaben und schreibt sie zwischen die
-   Marken @wiki:anfang und @wiki:ende in js/facts.js.
+   services/biography/fetch-facts.py holt die Infoboxen aus dem MCU-Wiki
+   und aus der Marvel Database und legt sie als Rohtext ab.
+   services/biography/build-facts.py macht daraus die kurzen deutschen
+   Angaben und schreibt sie zwischen die Marken @wiki:anfang und
+   @wiki:ende in js/facts.js.
 
    Beide Skripte arbeiten über Dateien, deshalb liegt hier ein eigener
    Ordner: Die Rohdaten bleiben liegen und sind der Grund, warum ein
@@ -1661,8 +1667,8 @@ function texteSchreiben(auftrag) {
    Figuren, die noch fehlen, und nicht alle. */
 const WIKI_ORDNER = path.join(HIER, '.wiki');
 const WIKI_ROH = path.join(WIKI_ORDNER, 'roh.json');
-const WIKI_HOLEN = path.join(REPO, 'tools', 'fetch-facts.py');
-const WIKI_BAUEN = path.join(REPO, 'tools', 'build-facts.py');
+const WIKI_HOLEN = path.join(HIER, 'services', 'biography', 'fetch-facts.py');
+const WIKI_BAUEN = path.join(HIER, 'services', 'biography', 'build-facts.py');
 
 /* Die Reihenfolge, in der die Figuren im erzeugten Block stehen: erst so,
    wie sie schon dort stehen, damit ein Lauf die Datei nicht umsortiert,
@@ -2089,10 +2095,21 @@ function sendeAnAlle(zeile) {
    aus den Wikis eine Figur, sonst der Lauf selbst. Erst dadurch ist eine
    Messung auf das nächste, doppelt so große Bild übertragbar.
 
-   Der gleitende Mittelwert nimmt die ersten Läufe voll und später jeden
-   neuen zu einem Viertel. Ein Ausreißer, etwa ein Lauf bei ausgelasteter
-   Grafikkarte, verschiebt die Schätzung dann nicht mehr weit. */
+   Aufgehoben werden die letzten Messungen einzeln, nicht ihr Mittel, und
+   geschätzt wird daraus der Wert, den vier von fünf unterbieten. Das
+   Mittel wäre die falsche Wahl: Jeder zweite Lauf läge darüber, und der
+   Balken bliebe jedes zweite Mal sichtbar bei fünfundneunzig hängen. Der
+   Höchstwert wäre es auch, denn er kann nur steigen. Ein einziger Lauf
+   bei ausgelasteter Grafikkarte höbe ihn für immer, und danach spränge
+   der Balken jedes Mal von der Hälfte auf hundert. Das obere Fünftel
+   fängt genau solche Ausreißer ab, ohne dass sie die Schätzung mitziehen,
+   und liegt dabei bewusst eher zu hoch als zu tief.
+
+   Das Fenster begrenzt die Reihe: Ein Rechner, der schneller geworden
+   ist, wird nach so vielen Läufen auch wieder schneller geschätzt. */
 const DAUERN = path.join(HIER, '.durations.json');
+const PROBEN_FENSTER = 12;       // so viele Messungen bleiben je Schlüssel
+const PROBEN_ANTEIL = 0.8;       // vier von fünf Läufen bleiben darunter
 
 /* Millisekunden je Einheit, gemessen auf diesem Rechner und eher großzügig
    gerundet: Ein Balken, der früher ankommt als angekündigt, ist besser als
@@ -2103,7 +2120,8 @@ const DAUER_VORGABE = {
   hochrechnen: 130000,          // je Megapixel der Vorlage
   gesicht: 70000,               // je Megapixel der Vorlage
   freistellen: 700000,          // je Megapixel der Vorlage
-  zuschnitt: 2500,
+  zuschnitt: 7000,              // je Megapixel der Vorlage
+  'zuschnitt:portrait': 1800,   // je Megapixel der Vorlage
   analyse: 800,
   rand: 800,
   verlauf: 1500,
@@ -2111,12 +2129,43 @@ const DAUER_VORGABE = {
   'wiki:bauen': 26000,
 };
 
+/* Nichts unter null und nichts über einer Stunde: Das eine ist keine
+   Messung, das andere ist etwas hängen geblieben. */
+const messbar = (je) => je > 0 && je <= 3600000;
+
+/* Je Schlüssel die letzten Messungen in Millisekunden je Einheit, älteste
+   zuerst.
+
+   Ältere Dateien halten statt der Messungen nur deren Mittel. Das zählt
+   dann als eine einzelne Messung und wird von den nächsten Läufen
+   überholt. Beim Zuschnitt ist inzwischen das Megapixel der Vorlage das
+   Maß und nicht mehr der Lauf: Diese Werte sind in der neuen Einheit
+   nicht mehr zu lesen und fallen weg. */
+const EINHEIT_GEWECHSELT = /^zuschnitt(:|$)/;
+
 let dauern = {};
-try { dauern = JSON.parse(fs.readFileSync(DAUERN, 'utf8')); } catch { /* erster Start */ }
+try {
+  for (const [schluessel, wert] of Object.entries(
+    JSON.parse(fs.readFileSync(DAUERN, 'utf8')))) {
+    if (EINHEIT_GEWECHSELT.test(schluessel)) continue;
+    const gelesen = Array.isArray(wert && wert.proben) ? wert.proben : [wert && wert.ms];
+    const proben = gelesen.filter(messbar).slice(-PROBEN_FENSTER);
+    if (proben.length) dauern[schluessel] = proben;
+  }
+} catch { /* erster Start */ }
+
+/* Der Wert, den PROBEN_ANTEIL der Messungen unterbieten. Bei nur zwei
+   oder drei Messungen ist das schlicht die größte davon, und das ist die
+   richtige Richtung: Solange kaum etwas bekannt ist, lieber zu lang
+   schätzen als zu kurz. */
+function probenSchwelle(proben) {
+  const sortiert = [...proben].sort((a, b) => a - b);
+  return sortiert[Math.max(0, Math.ceil(PROBEN_ANTEIL * sortiert.length) - 1)];
+}
 
 function jeEinheit(schluessel) {
-  const gemessen = dauern[schluessel];
-  if (gemessen && gemessen.ms > 0) return gemessen.ms;
+  const proben = dauern[schluessel];
+  if (proben && proben.length) return probenSchwelle(proben);
   return DAUER_VORGABE[schluessel]
     || DAUER_VORGABE[schluessel.split(':')[0]]
     || 5000;
@@ -2129,17 +2178,22 @@ function schaetzung(schluessel, einheiten) {
 
 function merkeDauer(schluessel, einheiten, gemessen) {
   if (!schluessel) return;
-  const je = gemessen / Math.max(0.05, Number(einheiten) || 1);
-  /* Nichts unter null und nichts über einer Stunde: Das eine ist keine
-     Messung, das andere ist etwas hängen geblieben. */
-  if (!(je > 0 && je <= 3600000)) return;
-  const alt = dauern[schluessel];
-  const laeufeBisher = alt && alt.laeufe > 0 ? alt.laeufe : 0;
-  const gewicht = Math.max(0.25, 1 / (laeufeBisher + 1));
-  const ms = laeufeBisher && alt.ms > 0 ? alt.ms + (je - alt.ms) * gewicht : je;
-  dauern[schluessel] = { ms: Math.round(ms), laeufe: Math.min(99, laeufeBisher + 1) };
+  const je = Math.round(gemessen / Math.max(0.05, Number(einheiten) || 1));
+  if (!messbar(je)) return;
+  dauern[schluessel] = [...(dauern[schluessel] || []), je].slice(-PROBEN_FENSTER);
+  schreibeDauern();
+}
+
+/* Neben den Messungen steht in der Datei die Schätzung, die aus ihnen
+   folgt. Gelesen wird sie nie, sie steht nur da, damit von Hand zu sehen
+   ist, worauf die Reihe hinausläuft. */
+function schreibeDauern() {
+  const inhalt = {};
+  for (const [schluessel, proben] of Object.entries(dauern)) {
+    inhalt[schluessel] = { ms: Math.round(jeEinheit(schluessel)), proben };
+  }
   try {
-    fs.writeFileSync(DAUERN, JSON.stringify(dauern, null, 1), 'utf8');
+    fs.writeFileSync(DAUERN, JSON.stringify(inhalt, null, 1), 'utf8');
   } catch { /* Dann hält die Schätzung nur bis zum Neustart. */ }
 }
 
@@ -2224,9 +2278,13 @@ function laufStarten(titel, abschnitte) {
 /* Eine Arbeit umhüllen, die keine eigenen Zwischenstände meldet. Sie
    bekommt einen einzigen Abschnitt, der Balken läuft mit dessen Schätzung
    mit und bleibt kurz vor dem Ende stehen, bis die Arbeit wirklich fertig
-   ist. So behauptet er nie, fertig zu sein, bevor er es ist. */
-async function mitFortschritt(titel, schluessel, arbeit) {
-  const lauf = laufStarten(titel, [{ schluessel, einheiten: 1, name: titel }]);
+   ist. So behauptet er nie, fertig zu sein, bevor er es ist.
+
+   Einheiten bleibt bei kurzen Arbeiten der Lauf selbst. Wer an Pixeln
+   rechnet, gibt das Megapixel der Vorlage mit, sonst wären die Messungen
+   einer kleinen und einer großen Vorlage derselbe Topf. */
+async function mitFortschritt(titel, schluessel, arbeit, einheiten = 1) {
+  const lauf = laufStarten(titel, [{ schluessel, einheiten, name: titel }]);
   try {
     const ergebnis = await arbeit(lauf);
     lauf.fertig();
@@ -3044,10 +3102,10 @@ function sicherungLoeschen({ namen, alle, veraltet }) {
 }
 
 /* Die Liste der offenen Porträts neu schreiben. Der Nutzer erwartet sie
-   nach jedem Austausch aktuell, siehe tools/portraits-offen.js. */
+   nach jedem Austausch aktuell, siehe pending-portraits.js nebenan. */
 function listeErneuern() {
   return new Promise((fertig) => {
-    execFile(process.execPath, [path.join(REPO, 'tools', 'portraits-offen.js')],
+    execFile(process.execPath, [path.join(HIER, 'pending-portraits.js')],
       { cwd: REPO, timeout: 60000 }, (fehler, aus) => {
         fertig(fehler ? null : (aus || '').trim().split('\n')[0]);
       });
@@ -3081,10 +3139,10 @@ const START = Date.now();
 const SERVERDATEIEN = ['server.js', 'services/crop-image.py', 'services/remove-background.py',
   'services/facial-recognition/enhance-face.py'];
 const STILDATEI = 'styles/studio.css';
-const SEITENDATEIEN = ['index.html', 'studio.js', 'components/hintergrund.js',
-  'components/elektrorand.js', 'components/partikelschrift.js',
-  'components/zaehlwerk.js', 'components/farbschema.js', 'components/icons.js',
-  'components/strands.js', 'components/galaxie.js'];
+const SEITENDATEIEN = ['index.html', 'studio.js', 'ui-components/background-lines.js',
+  'ui-components/electric-border.js', 'ui-components/particle-text.js',
+  'ui-components/count-up.js', 'ui-components/color-scheme.js', 'ui-components/icons.js',
+  'ui-components/strands.js', 'ui-components/galaxy-panel.js'];
 
 function mtime(name) {
   try { return fs.statSync(path.join(HIER, name)).mtimeMs; } catch { return 0; }
@@ -3112,7 +3170,11 @@ function standDesStudios() {
 const AUSGELIEFERT = new Set([...SEITENDATEIEN, STILDATEI]);
 const BEOBACHTET = new Set([...SEITENDATEIEN, STILDATEI, ...SERVERDATEIEN]
   .map((name) => path.basename(name)));
-const WACHORDNER = ['.', 'components', 'styles', 'services', 'services/facial-recognition']
+/* services/fullsize und services/biography stehen bewusst nicht dabei:
+   Ihre Skripte werden bei jedem Lauf neu gestartet, eine Änderung ist
+   also schon beim nächsten Aufruf drin. Ein Wächter darüber meldete
+   nichts, denn gemeldet wird nur, was in BEOBACHTET steht. */
+const WACHORDNER = ['.', 'ui-components', 'styles', 'services', 'services/facial-recognition']
   .map((name) => path.join(HIER, name));
 let wachePause = null;
 
@@ -3375,6 +3437,105 @@ function galaxieSchreiben(auftrag) {
   return { geaendert: true, ...ctx.OUT };
 }
 
+/* ---------- Farben der Phasen ----------
+
+   Sie stehen nicht bei den Reglern, sondern in js/data.js bei der Phase
+   selbst, denn sie gehören zur Phase und nicht zum Hintergrund. Zwei
+   Felder je Phase:
+
+     accent   Ein Hexwert. Er färbt die ganze Oberfläche dieser Phase und
+              bestimmt zugleich, welche Farbe die Galaxie am Seitenanfang
+              beisteuert, wo noch keine Phase gilt.
+     nebula   Drei RGB-Tripel. Sie liegen als Verlauf über der Galaxie,
+              solange diese Phase sichtbar ist. */
+
+const DATEN_DATEI = path.join(REPO, 'js', 'data.js');
+
+function phasenLesen() {
+  return ladeDaten().PHASES.map((p) => ({
+    id: p.id, num: p.num, titel: p.title, accent: p.accent, nebula: p.nebula,
+  }));
+}
+
+function istFarbe(hex) {
+  return typeof hex === 'string' && /^#[0-9a-fA-F]{6}$/.test(hex);
+}
+
+function pruefeNebel(nebula, wo) {
+  if (!Array.isArray(nebula) || nebula.length !== 3) {
+    throw new Error(`${wo}: nebula braucht genau drei Farben.`);
+  }
+  return nebula.map((c) => {
+    if (!Array.isArray(c) || c.length !== 3) throw new Error(`${wo}: jede Farbe braucht drei Werte.`);
+    return c.map((k) => {
+      const n = Math.round(Number(k));
+      if (!Number.isFinite(n) || n < 0 || n > 255) throw new Error(`${wo}: ${k} liegt nicht in 0 bis 255.`);
+      return n;
+    });
+  });
+}
+
+function phasenSchreiben(phasen) {
+  const alt = ladeDaten().PHASES;
+  if (!Array.isArray(phasen) || phasen.length !== alt.length) {
+    throw new Error(`Es sind ${alt.length} Phasen, gekommen sind ${(phasen || []).length}.`);
+  }
+  let quelle = fs.readFileSync(DATEN_DATEI, 'utf8');
+  let geaendert = false;
+
+  phasen.forEach((p, i) => {
+    if (p.id !== alt[i].id) throw new Error(`Phase ${i + 1} heißt ${alt[i].id}, gekommen ist ${p.id}.`);
+    if (!istFarbe(p.accent)) throw new Error(`${alt[i].id}: ${p.accent} ist keine Farbe wie #a1b2c3.`);
+    const nebula = pruefeNebel(p.nebula, alt[i].id);
+
+    /* Der Block dieser Phase, von ihrer Kennung bis zur nächsten. Die
+       Kennungen sind eindeutig, deshalb lässt sich der Anker bei jedem
+       Durchgang neu suchen, auch wenn die Datei inzwischen länger oder
+       kürzer geworden ist. */
+    const anker = new RegExp('^ {4}id: "' + p.id + '",$', 'm').exec(quelle);
+    if (!anker) throw new Error(`Die Zeile id: "${p.id}" steht nicht in js/data.js.`);
+    const rest = quelle.slice(anker.index + 1).search(/^ {4}id: "/m);
+    const ende = rest < 0 ? quelle.length : anker.index + 1 + rest;
+    let block = quelle.slice(anker.index, ende);
+
+    const neuNebel = '[' + nebula.map((c) => '[' + c.join(', ') + ']').join(', ') + ']';
+    for (const [muster, wert, name] of [
+      [/^( {4}accent: ")(#[0-9a-fA-F]{6})(",)$/m, p.accent.toLowerCase(), 'accent'],
+      [/^( {4}nebula: )(\[.*\])(,)$/m, neuNebel, 'nebula'],
+    ]) {
+      if (!muster.test(block)) {
+        throw new Error(`Die Zeile ${name} von ${p.id} steht nicht wie erwartet in `
+          + 'js/data.js. Wurde die Datei umformatiert?');
+      }
+      const neu = block.replace(muster, (_, vorn, __, hinten) => vorn + wert + hinten);
+      if (neu !== block) { block = neu; geaendert = true; }
+    }
+    quelle = quelle.slice(0, anker.index) + block + quelle.slice(ende);
+  });
+
+  if (!geaendert) return { geaendert: false };
+
+  /* Prüfen, bevor die Datei angefasst wird. js/data.js steht für sich
+     allein, es lässt sich einfach laufen lassen. */
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(quelle + ';globalThis.OUT = PHASES;', ctx, { filename: 'data-neu.js' });
+  phasen.forEach((p, i) => {
+    const steht = ctx.OUT[i];
+    if (steht.accent !== p.accent.toLowerCase()) {
+      throw new Error(`Die neue Fassung trägt bei ${p.id} den Akzent ${steht.accent} `
+        + `statt ${p.accent}.`);
+    }
+    if (JSON.stringify(steht.nebula) !== JSON.stringify(pruefeNebel(p.nebula, p.id))) {
+      throw new Error(`Die neue Fassung trägt bei ${p.id} andere Nebelfarben als gewollt.`);
+    }
+  });
+
+  sichereQuelle(DATEN_DATEI, stempelJetzt());
+  fs.writeFileSync(DATEN_DATEI, quelle, 'utf8');
+  return { geaendert: true };
+}
+
 /* ---------- HTTP ---------- */
 
 const TYPEN = {
@@ -3430,7 +3591,7 @@ const server = http.createServer(async (req, res) => {
 
        Ausgeliefert wird nur, was in SEITENDATEIEN oder STILDATEI steht,
        und zwar unter genau dem Weg, unter dem es auch auf der Platte
-       liegt: /components/zaehlwerk.js ist components/zaehlwerk.js. Damit
+       liegt: /ui-components/count-up.js ist ui-components/count-up.js. Damit
        gibt es eine einzige Liste für Wächter, Standmeldung und
        Auslieferung, und der Ordner ist nicht offen für alles. */
     if (weg === '/' || weg === '/index.html') return datei(res, path.join(HIER, 'index.html'));
@@ -3810,27 +3971,34 @@ const server = http.createServer(async (req, res) => {
        baut. */
     if (weg === '/api/galaxie' && req.method === 'GET') {
       const stand = galaxieLesen();
-      const phasen = ladeDaten().PHASES.map((p) => ({
-        id: p.id, num: p.num, titel: p.title, accent: p.accent, nebula: p.nebula,
-      }));
-      /* Wie js/data.js: Ohne Phase zeigt die Galaxie die Akzentfarben
-         aller sechs nebeneinander, also das ganze Spektrum. */
-      const grundfarben = ladeDaten().PHASES.map((p) => {
-        const n = parseInt(p.accent.slice(1), 16);
-        return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-      });
-      return sende(res, 200, {
-        ...stand, regler: GALAXIE_REGLER, phasen, grundfarben,
-      });
+      return sende(res, 200, { ...stand, regler: GALAXIE_REGLER, phasen: phasenLesen() });
     }
 
-    /* --- Regler schreiben --- */
+    /* --- Regler und Phasenfarben schreiben ---
+
+       Zwei Dateien, aber ein Schritt im Verlauf: Rückgängig nimmt beides
+       zusammen zurück, denn wer im Studio auf Sichern drückt, hat eine
+       Einstellung im Sinn und nicht zwei Dateien. */
     if (weg === '/api/galaxie' && req.method === 'POST') {
       const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
-      const ergebnis = mitVerlauf('Galaxie-Regler gespeichert',
-        ['js/galaxy-config.js'], [], () => galaxieSchreiben(auftrag));
+      const dateien = ['js/galaxy-config.js'];
+      if (auftrag.phasen) dateien.push('js/data.js');
+      const ergebnis = mitVerlauf('Galaxie gespeichert', dateien, [], () => {
+        const regler = galaxieSchreiben(auftrag);
+        const farben = auftrag.phasen ? phasenSchreiben(auftrag.phasen) : { geaendert: false };
+        return { geaendert: regler.geaendert || farben.geaendert };
+      });
+      /* Zurück geht immer der Stand, der jetzt in den Dateien steht, und
+         nicht das, was die Schreiber gerade zufällig angefasst haben. */
+      const jetzt = galaxieLesen();
       return sende(res, 200, {
-        ok: true, ...ergebnis, sicherung: SICHERUNG, verlauf: verlaufStand(),
+        ok: true,
+        geaendert: ergebnis.geaendert,
+        config: jetzt.config,
+        regions: jetzt.regions,
+        phasen: phasenLesen(),
+        sicherung: SICHERUNG,
+        verlauf: verlaufStand(),
       });
     }
 
@@ -3888,7 +4056,12 @@ const server = http.createServer(async (req, res) => {
       const setztGroesse = !!groesse && !groesseFehler;
 
       /* Der Zuschnitt selbst läuft außerhalb des Rahmens, er dauert am
-         längsten. Der Verlauf hält nur das Ergebnis fest. */
+         längsten. Der Verlauf hält nur das Ergebnis fest.
+
+         Gedreht und geschnitten wird in Fließkomma über die ganze Vorlage,
+         und das kostet je Pixel: Eine Vorlage mit acht Megapixeln braucht
+         ein Vielfaches der Zeit einer mit zweien. Das Megapixel ist
+         deshalb auch hier das Maß der Schätzung. */
       const rahmen = verlaufVorher(
         setztGroesse
           ? ['tools/portrait-studio/offen.json', 'js/chars.js']
@@ -3896,7 +4069,8 @@ const server = http.createServer(async (req, res) => {
         [auftrag.ziel]);
       const ergebnis = await mitFortschritt(
         gk ? 'Ganzkörperbild speichern' : 'Porträt speichern',
-        gk ? 'zuschnitt:ganzkoerper' : 'zuschnitt:portrait', () => python(args));
+        gk ? 'zuschnitt:ganzkoerper' : 'zuschnitt:portrait',
+        () => python(args), megapixel(pfad));
       /* Neu geschnitten heißt erledigt: Eine Markierung von Hand hat sich
          damit erübrigt und fällt weg. */
       const menge = ladeMarkiert(auftrag.bereich);

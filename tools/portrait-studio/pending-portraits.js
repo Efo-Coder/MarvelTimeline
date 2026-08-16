@@ -19,22 +19,23 @@
    auseinanderlaufen, sobald jemand eine Datei anfasst.
 
    Dazu kommen die Porträts, die im Studio von Hand als noch offen markiert
-   wurden. Sie stehen in tools/portrait-studio/offen.json: freigestellt,
-   aber trotzdem nicht gut genug. Der Alphakanal allein sieht das nicht.
+   wurden. Sie stehen nebenan in offen.json: freigestellt, aber trotzdem
+   nicht gut genug. Der Alphakanal allein sieht das nicht.
 
    Aufruf
    ------
-       node tools/portraits-offen.js
+       node tools/portrait-studio/pending-portraits.js
 */
 
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 
-const REPO = path.dirname(__dirname);
+/* Zwei Ebenen hoch: tools/portrait-studio -> tools -> Wurzel. */
+const REPO = path.resolve(__dirname, '..', '..');
 const PORTRAITS = path.join(REPO, 'assets', 'characters', 'portraits');
 const ZIEL = path.join(REPO, 'assets', 'ersetzen', 'A - Portraits noch offen.txt');
-const MARKIERT = path.join(REPO, 'tools', 'portrait-studio', 'offen.json');
+const MARKIERT = path.join(__dirname, 'offen.json');
 
 /* Von Hand im Studio als offen markierte Porträts. Fehlt die Datei, gibt
    es eben keine. */
@@ -142,7 +143,7 @@ function main() {
     'nach assets/ersetzen, freigestellt als PNG. In Klammern steht der',
     'Dateiname unter assets/characters/portraits.',
     '',
-    'Erzeugt von tools/portraits-offen.js.',
+    'Erzeugt von tools/portrait-studio/pending-portraits.js.',
     '',
     strich,
     '',

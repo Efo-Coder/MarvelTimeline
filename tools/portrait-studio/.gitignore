@@ -12,7 +12,7 @@
 .durations.json
 
 # Rohtext der Infoboxen aus den beiden Marvel-Wikis, dazu die
-# Namenslisten der Läufe. Zwischenlager für tools/fetch-facts.py: Was
+# Namenslisten der Läufe. Zwischenlager für services/biography/fetch-facts.py: Was
 # einmal geholt ist, wird nicht noch einmal geholt. Der fertige
 # Steckbrief steht in js/facts.js und gehört ins Repo, dieser Ordner
 # nicht.
