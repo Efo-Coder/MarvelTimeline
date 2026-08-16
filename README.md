@@ -105,7 +105,7 @@ Oberfläche.
 | Geändert | Was passiert |
 | --- | --- |
 | `styles/studio.css` | Das Stilblatt wird im laufenden Betrieb getauscht. Die Seite lädt nicht neu, die angefangene Arbeit bleibt stehen. |
-| `index.html`, `studio.js` und die Skripte in `components/` | Die Seite lädt neu. Die Figur steht in der Adresse, man landet wieder bei ihr. |
+| `index.html`, `studio.js` und die Skripte in `ui-components/` | Die Seite lädt neu. Die Figur steht in der Adresse, man landet wieder bei ihr. |
 | `server.js` | Node startet den Server neu, die Seite wartet ab und lädt danach nach. |
 
 Der Live-Server-Knopf von VS Code hilft hier übrigens nicht: Er liefert
@@ -211,13 +211,13 @@ Figur aus `js/data.js`. Oben wird zwischen drei Bereichen umgeschaltet:
 bedient, **Biografie** arbeitet an allem, was Text ist.
 
 Unter `tools/portrait-studio/` liegen oben der Server und die beiden
-Dateien, die die Oberfläche tragen. Darunter stehen drei Ordner:
+Dateien, die die Oberfläche tragen. Darunter stehen vier Ordner:
 
 | Ordner | Was darin liegt |
 | --- | --- |
-| `components/` | Die eigenständigen Stücke der Oberfläche: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema, die Stränge im Fortschrittskasten und die Symbole an den Knöpfen. |
+| `ui-components/` | Die eigenständigen Stücke der Oberfläche: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema, die Stränge im Fortschrittskasten und die Symbole an den Knöpfen. |
 | `styles/` | Das Stilblatt `studio.css`. |
-| `services/` | Was der Server aufruft. `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst. |
+| `services/` | Was der Server aufruft, sortiert nach Bereich. Oben liegt, was Porträt und Ganzkörper gleichermaßen bedient: `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst. Darunter steht je ein Ordner für die Skripte eines einzelnen Bereichs: `fullsize/` mit `crop-fullsize.py`, `biography/` mit `fetch-facts.py` und `build-facts.py`. |
 | `vendor/` | Fremdes, hier nur Real-ESRGAN zum Hochrechnen. Rund 50 MB Binärdateien, die nicht im Repo liegen. |
 
 Der Browser bekommt nur, was in `SEITENDATEIEN` und `STILDATEI` in
@@ -227,7 +227,7 @@ Skripte in `services/` liefert der Server nicht aus.
 Die Zeichen an den Knöpfen kommen aus `react-icons`, aus dem Satz Lucide
 darin. Das Studio hat keinen Bauschritt und läuft ohne Internet, deshalb
 liegt nicht das Paket im Repo, sondern nur die Pfaddaten der benutzten
-Symbole, in `components/icons.js`. Wer ein weiteres braucht, nimmt es dort
+Symbole, in `ui-components/icons.js`. Wer ein weiteres braucht, nimmt es dort
 in `ZEICHEN` auf und hängt sein `data-symbol` an den Knopf.
 
 ### Biografie
@@ -265,10 +265,11 @@ vor jedem Wechsel nach.
 
 ### Steckbriefe aus den Wikis
 
-`CHAR_FACTS` in `js/facts.js` ist erzeugt und gehört
-[tools/fetch-facts.py](tools/fetch-facts.py) und
-[tools/build-facts.py](tools/build-facts.py). Beide lassen sich aus dem
-Reiter Biografie auslösen:
+`CHAR_FACTS` in `js/facts.js` ist erzeugt und gehört den beiden Skripten
+in `tools/portrait-studio/services/biography/`:
+[fetch-facts.py](tools/portrait-studio/services/biography/fetch-facts.py)
+holt, [build-facts.py](tools/portrait-studio/services/biography/build-facts.py)
+schreibt. Beide lassen sich aus dem Reiter Biografie auslösen:
 
 - **Wiki neu** holt die offene Figur noch einmal aus beiden Wikis.
 - **Fehlende nachziehen** holt die Figuren, die im Block noch keinen
@@ -481,7 +482,8 @@ Eine Fassung ohne Datei steht mit rotem Punkt in der Liste und wartet auf
 ein eigenes Bild.
 
 *Randlos beschneiden* legt das Rechteck um die Hülle aller sichtbaren
-Pixel, nach derselben Regel wie `tools/crop-fullsize.py`. Das ist keine
+Pixel, nach derselben Regel wie `services/fullsize/crop-fullsize.py` im
+Studioordner. Das ist keine
 Kosmetik: Der Rahmen auf der Charakterseite rechnet damit, dass die Datei
 keine leere Fläche trägt. Ist sie doch da, steht die Figur zu klein im
 Rahmen und schwebt über der Bodenlinie. Die Vorschau rechts ist deshalb
@@ -706,7 +708,7 @@ Nebelbild backt die Grafikkarte einmal beim Start in eine Textur, alles
 | [js/galaxy-config.js](js/galaxy-config.js) | Alle Regler und die sechs Nebelbereiche. Wer am Aussehen dreht, dreht hier. |
 | [js/galaxy.js](js/galaxy.js) | Der WebGL2-Renderer und die Schnittstelle `window.Galaxy`. |
 | [js/galaxy-canvas-2d.js](js/galaxy-canvas-2d.js) | Rückfallebene ohne WebGL2. Startet nur, wenn `js/galaxy.js` sie ruft. |
-| [tools/portrait-studio/components/galaxie.js](tools/portrait-studio/components/galaxie.js) | Die Tafel im Bild-Studio: Vorschau und Schieber. |
+| [tools/portrait-studio/ui-components/galaxy-panel.js](tools/portrait-studio/ui-components/galaxy-panel.js) | Die Tafel im Bild-Studio: Vorschau und Schieber. |
 
 Alle drei müssen in dieser Reihenfolge eingebunden sein, siehe das Ende
 von `index.html` und `characters.html`.
@@ -721,16 +723,22 @@ Vorschau ist kein Nachbau: Der Dialog lädt dieselben Dateien aus `js/`,
 die auch die Seite lädt, und lässt sie in seinem eigenen Canvas laufen.
 Was dort zu sehen ist, ist deshalb genau das, was herauskommt.
 
-Über der Fußzeile stehen die sechs Phasen zur Auswahl, damit sich der
-Phasenschleier beurteilen lässt und nicht nur der Seitenanfang. Ganz
-unten in der Reglerspalte sitzen die sechs Nebelbereiche einzeln, mit
-Farbe, Stärke, Feinheit, Graten und ihrer Lage.
+Unter der Vorschau stehen die sechs Phasen zur Auswahl, damit sich der
+Phasenschleier beurteilen lässt und nicht nur der Seitenanfang. Weiter
+unten in der Reglerspalte kommen zwei Gruppen, die nicht zu den Reglern
+gehören:
 
-Die Regler wirken sofort, aber nur in der Vorschau. Erst **Sichern**
-schreibt sie nach `js/galaxy-config.js`, und zwar Zeile für Zeile: Die
-Erklärungen in der Datei bleiben dabei unangetastet. Vorher legt das
-Studio wie immer eine Kopie in `.sicherung`, und **Rückgängig** nimmt den
-Schritt zurück.
+- **Nebelbereiche**: die sechs Bereiche des prozeduralen Nebelbilds
+  einzeln, mit Farbe, Stärke, Feinheit, Graten und ihrer Lage.
+- **Farben der Phasen**: je Phase der Akzent und die drei Nebelfarben,
+  siehe unten. Sie stehen in `js/data.js`.
+
+Was man anfasst, wirkt sofort, aber nur in der Vorschau. Erst **Sichern**
+schreibt es in die Dateien, und zwar Zeile für Zeile: Von den 4200 Zeilen
+in `js/data.js` ändern sich genau die, die auch gemeint waren, und die
+Erklärungen in `js/galaxy-config.js` bleiben unangetastet. Vorher legt
+das Studio wie immer Kopien in `.sicherung`, und **Rückgängig** nimmt
+beide Dateien in einem Schritt zurück.
 
 ### Regler zur Laufzeit
 
@@ -764,20 +772,48 @@ Millisekunde), der Rest wirkt im nächsten Bild. Jeder Regler ist in
 - **`timeScale`**, **`nebPulse`**, **`sunPulse`**, **`twinkleSpeed`**
   regeln das Tempo der Bewegungen.
 
+### Die Farben der Phasen
+
+Sie gehören nicht zum Hintergrund, sondern zur Phase, und stehen deshalb
+in [js/data.js](js/data.js) bei der Phase selbst. Zwei Felder:
+
+- **`accent`** ist ein Hexwert und färbt die ganze Oberfläche dieser
+  Phase: Ränder, Knöpfe, Chips, die Marke am Zeitstrahl. Er wird als
+  CSS-Variable `--accent` gesetzt.
+- **`nebula`** sind drei RGB-Tripel. Sie liegen als Verlauf über der
+  Bildschirmdiagonale, das erste oben links, das dritte unten rechts, und
+  gelten, solange diese Phase sichtbar ist.
+
+| Phase | Zeile | Akzent |
+| --- | --- | --- |
+| 1 | [data.js:61](js/data.js#L61) | `#4d8cff` Blau |
+| 2 | [data.js:240](js/data.js#L240) | `#ff4d4d` Rot |
+| 3 | [data.js:422](js/data.js#L422) | `#ffd93c` Gelb |
+| 4 | [data.js:665](js/data.js#L665) | `#a855f7` Violett |
+| 5 | [data.js:1045](js/data.js#L1045) | `#34d6a0` Grün |
+| 6 | [data.js:1297](js/data.js#L1297) | `#ffa63c` Orange |
+
+Ein Zusammenhang, den man leicht übersieht: `DEFAULT_NEBULA`
+([data.js:2079](js/data.js#L2079)) wird nicht gepflegt, sondern aus den
+sechs **Akzenten** gerechnet. Das ist die Palette am Seitenanfang, wo
+noch keine Phase gilt, also alle sechs nebeneinander. Wer einen Akzent
+ändert, ändert damit auch den Seitenanfang, aber nicht die Galaxie
+dieser Phase. Wer `nebula` ändert, ändert nur die Galaxie dieser Phase.
+
 ### Nachprüfen
 
 Der Umbau von Canvas auf WebGL2 sollte am Bild nichts ändern. Ob das
 stimmt, entscheidet nicht das Auge, sondern
-[tools/galaxy-diff/pruefen.js](tools/galaxy-diff/pruefen.js): Es startet
+[tools/galaxy-diff/verify.js](tools/galaxy-diff/verify.js): Es startet
 beide Renderer im selben Browser, schiebt sie Bild für Bild durch
 denselben Zeitverlauf und zählt die Abweichung Punkt für Punkt.
 
 ```
 cd tools/galaxy-diff && npm i puppeteer-core     # einmalig
-node tools/galaxy-diff/pruefen.js                # alle drei Prüfungen
-node tools/galaxy-diff/pruefen.js schichten      # Schicht für Schicht
-node tools/galaxy-diff/pruefen.js regler         # wirkt jeder Regler?
-node tools/galaxy-diff/pruefen.js seite          # läuft die echte Seite?
+node tools/galaxy-diff/verify.js                # alle drei Prüfungen
+node tools/galaxy-diff/verify.js schichten      # Schicht für Schicht
+node tools/galaxy-diff/verify.js regler         # wirkt jeder Regler?
+node tools/galaxy-diff/verify.js seite          # läuft die echte Seite?
 ```
 
 Stand bei der Umstellung, 1280 x 720, Abweichung in Stufen von 255: im
