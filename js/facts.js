@@ -21,7 +21,7 @@
 
    Die Datei hat zwei Teile. CHAR_FACTS zwischen den Marken @wiki:anfang
    und @wiki:ende stammt aus den beiden Marvel-Wikis und wird von
-   tools/fetch-facts.py und tools/build-facts.py erzeugt: Spezies, Status
+   tools/portrait-studio/services/biography/fetch-facts.py und tools/portrait-studio/services/biography/build-facts.py erzeugt: Spezies, Status
    und Zugehörigkeit aus dem MCU-Wiki, Größe und Geburtsort aus der
    Marvel Database (Earth-199999). Von Hand geändert wird dort nichts,
    der nächste Lauf überschriebe es.
@@ -522,6 +522,22 @@ const CHAR_FACTS = {
     species: 'Mensch (Cyborg)',
     teams: ['Intelligencia'],
     status: 'Verstorben',
+  },
+  'laura-barton': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['S.H.I.E.L.D.'],
+    status: 'Am Leben',
+  },
+  'cooper-barton': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'lila-barton': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
   },
   'scott-lang': {
     origin: 'USA',
@@ -1160,6 +1176,102 @@ const CHAR_FACTS = {
     origin: 'Hell\'s Kitchen, New York City, New York',
     species: 'Mensch',
     teams: ['Tracksuit Mafia', 'Union Allied Construction', 'Confederated Global Investments', 'Better Tomorrow Initiative'],
+    status: 'Am Leben',
+  },
+  'eleanor-bishop': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Bishop Security'],
+    status: 'Am Leben',
+  },
+  'jack-duquesne': {
+    origin: 'French',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'kazi-kazimierczak': {
+    origin: 'Polish',
+    species: 'Mensch',
+    teams: ['Tracksuit Mafia', 'Sloan Limited'],
+    status: 'Verstorben',
+  },
+  'nathaniel-barton': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'armand-duquesne-iii': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Verstorben',
+  },
+  'derek-bishop': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Verstorben',
+  },
+  'william-lopez': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Choctaw', 'Tracksuit Mafia'],
+    status: 'Verstorben',
+  },
+  'ivan-banionis': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Tracksuit Mafia'],
+    status: 'Am Leben',
+  },
+  'tomas': {
+    origin: 'Polish',
+    species: 'Mensch',
+    teams: ['Tracksuit Mafia'],
+    status: 'Am Leben',
+  },
+  'enrique': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Tracksuit Mafia'],
+    status: 'Am Leben',
+  },
+  'dmitri': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Tracksuit Mafia'],
+    status: 'Am Leben',
+  },
+  'grills': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Fire Department of New York City', 'New York City Live Action Role Players'],
+    status: 'Am Leben',
+  },
+  'wendy-conrad': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Polizei New York', 'New York City Live Action Role Players'],
+    status: 'Am Leben',
+  },
+  'orville': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['New York City Live Action Role Players'],
+    status: 'Am Leben',
+  },
+  'missy': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['New York City Live Action Role Players'],
+    status: 'Am Leben',
+  },
+  'caudle': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Polizei New York'],
+    status: 'Am Leben',
+  },
+  'lucky': {
+    species: 'Hund',
     status: 'Am Leben',
   },
   'wade-wilson-deadpool': {
@@ -2134,6 +2246,14 @@ const CHAR_FACTS_EXTRA = {
     height: '1,88 m',
     powers: ['Magie der mystischen Künste', 'Oberster Zauberer seiner Erde', 'Portale'],
   },
+  'sinister-strange': {
+    origin: 'andere Welt',
+    species: 'Mensch',
+    teams: ['Meister der mystischen Künste'],
+    status: 'Verstorben',
+    height: '1,88 m',
+    powers: ['Magie mit der Kraft des Darkhold', 'drittes Auge', 'Dreamwalking in fremde Körper'],
+  },
   'the-ancient-one': {
     origin: 'Kamar-Taj, Nepal',
     height: '1,70 m',
@@ -2455,6 +2575,59 @@ const CHAR_FACTS_EXTRA = {
     height: '1,96 m',
     powers: ['rohe Körperkraft', 'Verbrecherimperium', 'politischer Einfluss'],
   },
+  'eleanor-bishop': {
+    height: '1,68 m',
+    powers: ['führt Bishop Security', 'plant kalt und weit voraus', 'schiebt eigene Taten anderen zu'],
+  },
+  'jack-duquesne': {
+    origin: 'Frankreich',
+    height: '1,80 m',
+    powers: ['Meister mit jedem Schwert', 'Vermögen aus altem Adel', 'kocht mit Leidenschaft'],
+  },
+  'kazi-kazimierczak': {
+    origin: 'Polen',
+    powers: ['Scharfschütze', 'zweiter Mann der Tracksuit Mafia', 'Doppelspiel für Wilson Fisk'],
+  },
+  'armand-duquesne-iii': {
+    powers: ['Vermögen und Verbindungen', 'sammelt Waffen und Kunst', 'misstraut jedem'],
+  },
+  'derek-bishop': {
+    powers: ['führt Bishop Security', 'Schulden bei Wilson Fisk'],
+  },
+  'william-lopez': {
+    powers: ['Anführer der Tracksuit Mafia', 'lehrt seine Tochter das Kämpfen'],
+  },
+  'ivan-banionis': {
+    powers: ['Anführer der Tracksuit Mafia', 'Nahkampf mit allem, was greifbar ist'],
+  },
+  'tomas': {
+    origin: 'Polen',
+    powers: ['Schlägertrupp der Tracksuit Mafia', 'Fahrer und Späher'],
+  },
+  'enrique': {
+    powers: ['Schlägertrupp der Tracksuit Mafia'],
+  },
+  'dmitri': {
+    powers: ['Schlägertrupp der Tracksuit Mafia'],
+  },
+  'grills': {
+    powers: ['Feuerwehrmann in New York', 'Rollenspieler mit eigener Rüstung', 'kocht für die Gruppe'],
+  },
+  'wendy-conrad': {
+    powers: ['Polizistin', 'führt die New Yorker Rollenspieler an', 'räumt einen Platz in Minuten'],
+  },
+  'orville': {
+    powers: ['Rollenspieler mit Wikingerhelm', 'bleibt immer in seiner Rolle'],
+  },
+  'missy': {
+    powers: ['näht Kostüme und Anzüge', 'kennt jeden Stoff', 'baut Kate Bishops Anzug'],
+  },
+  'caudle': {
+    powers: ['Detective der New Yorker Polizei'],
+  },
+  'lucky': {
+    powers: ['sieht auf einem Auge', 'findet jede Pizza', 'lässt sich von niemandem abschütteln'],
+  },
   'matt-murdock-daredevil': {
     powers: ['geschärfte Sinne', 'Radarsinn', 'Nahkampf'],
   },
@@ -2462,6 +2635,12 @@ const CHAR_FACTS_EXTRA = {
     species: 'Mutant, verändert durch das Weapon-X-Programm',
     height: '1,88 m',
     powers: ['heilt jede Wunde', 'zwei Katanas und zwei Pistolen', 'spricht mit dem Publikum'],
+  },
+  'nicepool': {
+    origin: 'andere Welt',
+    species: 'Mensch',
+    status: 'Verstorben',
+    powers: ['goldene Pistolen', 'gute Laune', 'keine Selbstheilung'],
   },
   'logan-wolverine': {
     height: '1,75 m',
@@ -2841,6 +3020,12 @@ const CHAR_FACTS_EXTRA = {
     height: '1,85 m',
     powers: ['Führung der HYDRA-Zelle in Sokovia', 'Experimente mit Lokis Zepter', 'Menschenversuche'],
   },
+  'laura-barton': {
+    powers: ['frühere Agentin von S.H.I.E.L.D.', 'hält den Rückzugsort der Familie geheim', 'recherchiert für ihren Mann'],
+  },
+  'lila-barton': {
+    powers: ['Bogenschießen beim Vater gelernt'],
+  },
   'bill-foster': {
     height: '1,88 m',
     powers: ['Wachstum auf über sieben Meter', 'Biochemiker von Rang', 'Pym-Partikel'],
@@ -2851,21 +3036,45 @@ const CHAR_FACTS_EXTRA = {
     height: '1,88 m',
     powers: ['Telekinese', 'Manipulation von Materie', 'Redekunst'],
   },
+  'ebony-maw-2014': {
+    species: 'Außerirdischer',
+    teams: ['Black Order'],
+    status: 'Verstorben',
+    powers: ['Telekinese', 'Überredung', 'Stimme des Thanos'],
+  },
   'corvus-glaive': {
     origin: 'unbekannte Welt',
     height: '1,96 m',
     powers: ['Klinge, die alles durchschneidet', 'Wiederbelebung durch die Klinge', 'übermenschliche Kraft'],
+  },
+  'corvus-glaive-2014': {
+    species: 'Außerirdischer',
+    teams: ['Black Order'],
+    status: 'Verstorben',
+    powers: ['Klinge, die alles durchtrennt', 'Nahkampf'],
   },
   'proxima-midnight': {
     origin: 'unbekannte Welt',
     height: '1,88 m',
     powers: ['zielsuchender Dreizack', 'übermenschliche Schnelligkeit', 'Nahkampf'],
   },
+  'proxima-midnight-2014': {
+    species: 'Außerirdische',
+    teams: ['Black Order'],
+    status: 'Verstorben',
+    powers: ['Speer aus einem sterbenden Stern', 'Nahkampf'],
+  },
   'cull-obsidian': {
     species: 'Außerirdischer',
     origin: 'unbekannte Welt',
     height: '2,29 m',
     powers: ['Kettenhammer', 'übermenschliche Kraft', 'nachwachsender Arm'],
+  },
+  'cull-obsidian-2014': {
+    species: 'Außerirdischer',
+    teams: ['Black Order'],
+    status: 'Verstorben',
+    powers: ['Kettenhammer', 'übermenschliche Kraft'],
   },
   'eitri': {
     species: 'Zwerg',
@@ -3244,6 +3453,15 @@ const CHAR_FACTS_EXTRA = {
    Fenster darunter. Ein Ziel-Slug, den es nicht gibt, wird beim Bauen
    übersprungen. */
 const CHAR_BONDS = {
+  'wade-wilson-deadpool': [
+    ['Weggefährte', 'logan-wolverine'],
+    ['Weitere Fassung', 'nicepool'],
+    ['Hund', 'dogpool'],
+  ],
+  'nicepool': [
+    ['Andere Fassung', 'wade-wilson-deadpool'],
+    ['Hund', 'dogpool'],
+  ],
   'maria-rambeau': [
     ['Fassung der Erde-838', 'maria-rambeau-838'],
     ['Fassung einer anderen Welt', 'maria-rambeau-binary'],
@@ -3381,6 +3599,11 @@ const CHAR_BONDS = {
     ['Andere Fassung', 'stephen-strange'],
     ['Verratene Freundin', 'america-chavez'],
   ],
+  'sinister-strange': [
+    ['Andere Fassung', 'stephen-strange'],
+    ['Weitere Fassung', 'defender-strange'],
+    ['Unerreichbare Liebe', 'christine-palmer'],
+  ],
   'sam-wilson': [
     ['Vorgänger', 'steve-rogers'],
     ['Weggefährte', 'bucky-barnes'],
@@ -3483,6 +3706,24 @@ const CHAR_BONDS = {
     ['Ältere Tochter', 'gamora-2014'],
     ['Jüngere Tochter', 'nebula-2014'],
     ['Bezwinger', 'tony-stark'],
+  ],
+  'ebony-maw-2014': [
+    ['Andere Fassung', 'ebony-maw'],
+    ['Herr', 'thanos-2014'],
+  ],
+  'corvus-glaive-2014': [
+    ['Andere Fassung', 'corvus-glaive'],
+    ['Ehefrau', 'proxima-midnight-2014'],
+    ['Herr', 'thanos-2014'],
+  ],
+  'proxima-midnight-2014': [
+    ['Andere Fassung', 'proxima-midnight'],
+    ['Ehemann', 'corvus-glaive-2014'],
+    ['Herr', 'thanos-2014'],
+  ],
+  'cull-obsidian-2014': [
+    ['Andere Fassung', 'cull-obsidian'],
+    ['Herr', 'thanos-2014'],
   ],
   'vision': [
     ['Große Liebe', 'wanda-maximoff'],
