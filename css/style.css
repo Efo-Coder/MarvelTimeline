@@ -60,8 +60,10 @@
   --conn-h: 54px;    /* Länge der Verbindungslinie zum Zeitstrahl */
   --date-h: 40px;    /* Datumszeile am Fuß des Strichs, direkt über der Skala.
                         Der Rest unter der Schrift ist Luft für den Infinity-
-                        Stein, der 14px über die Linie ragt. */
+                        Stein, der 12px über die Linie ragt. */
   --scale-y: calc(var(--logo-h) + var(--tag-h) + var(--conn-h) + var(--date-h));
+  --stone-glow: 20px; /* Luft unter dem Zeitstrahl, damit der Scrollbereich
+                         den Schein der Infinity-Steine nicht abschneidet */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -919,7 +921,13 @@ html.lenis, html.lenis body { height: auto; }
      vertikales Wischen auf Touch läuft weiter an die Seite durch */
   overscroll-behavior-x: contain;
   scrollbar-width: none;
-  padding: 1.5rem 0 0.9rem;
+  /* Neben overflow-x: auto kann overflow-y nur hidden sein: Alles jenseits
+     der Polsterung schneidet der Scrollbereich ab, und der Schein der
+     Infinity-Steine reicht weiter nach unten als deren Bild. Der Zuschlag
+     schafft ihm Platz, der gleich große negative Rand nimmt ihn fürs
+     Layout wieder zurück – so bleibt das Phasenband, wo es war. */
+  padding: 1.5rem 0 calc(0.9rem + var(--stone-glow));
+  margin-bottom: calc(-1 * var(--stone-glow));
   mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 32px, #000 calc(100% - 32px), transparent);
 }
@@ -1139,10 +1147,15 @@ html.js .phase-pin { --reveal: 0; }
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0));
 }
 
+/* Mittig auf der Skalenlinie: Sie ist 2px stark und beginnt genau am Fuß
+   des Eintrags, ihre Mitte liegt also 1px darunter. Der Punkt muss dafür um
+   seinen halben Durchmesser minus dieses 1px nach oben (9/2 - 1 = 3.5px),
+   der untere Rand hält seinen Layout-Platz trotzdem bei 3.5px – sonst
+   rutschte das Phasenband unter der Timeline mit. */
 .dot {
   width: 9px;
   height: 9px;
-  margin-top: -5.5px;
+  margin: -3.5px 0 -2px;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 8px var(--accent),
@@ -1150,20 +1163,35 @@ html.js .phase-pin { --reveal: 0; }
   z-index: 1;
 }
 
-/* Infinity-Stein statt Punkt (Avengers-Filme): mittig auf der Skalenlinie;
-   die negativen Margins geben dem Stein denselben Layout-Platz wie dem
-   9px-Punkt (3.5px), damit die Datumszeilen aller Einträge bündig bleiben. */
+/* Infinity-Stein statt Punkt (Avengers-Filme): nach derselben Rechnung
+   mittig auf der Linie (26/2 - 1 = 12px), und die negativen Margins geben
+   dem Stein denselben Layout-Platz wie dem 9px-Punkt (3.5px), damit die
+   Datumszeilen aller Einträge bündig bleiben. */
 .dot.stone {
   width: 26px;
   height: 26px;
-  margin: -14px 0 -8.5px;
+  margin: -12px 0 -10.5px;
   border-radius: 0;
   background: none;
   box-shadow: none;
   object-fit: contain;
-  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 95%, transparent))
-          drop-shadow(0 0 18px color-mix(in srgb, var(--accent) 65%, transparent));
+  /* Rückfall auf den Phasenakzent, falls ein Stein dazukommt, dessen Farbe
+     unten noch fehlt */
+  --stone-color: var(--accent);
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--stone-color) 95%, transparent))
+          drop-shadow(0 0 18px color-mix(in srgb, var(--stone-color) 65%, transparent));
 }
+
+/* Der Schein trägt die Farbe des Steins, nicht den Akzent seiner Phase –
+   sonst leuchtete etwa der blaue Raumstein in Phase 1 rot. Die Werte sind
+   aus dem hellen Kern der jeweiligen PNG gemittelt, Reihenfolge wie die
+   Zuordnung in main.js. */
+.dot.stone[data-stone="space-stone"]   { --stone-color: #0195fd; }
+.dot.stone[data-stone="reality-stone"] { --stone-color: #fd1304; }
+.dot.stone[data-stone="mind-stone"]    { --stone-color: #fee000; }
+.dot.stone[data-stone="power-stone"]   { --stone-color: #7850f3; }
+.dot.stone[data-stone="time-stone"]    { --stone-color: #10d47c; }
+.dot.stone[data-stone="soul-stone"]    { --stone-color: #f57c07; }
 
 /* Die Pille steht dicht unter dem Logo. Oben ausgerichtet, damit der Rest
    der Zeile als Abstand zum Verbindungsstrich frei bleibt: Gestreckt würde
@@ -1693,15 +1721,17 @@ html.modal-open { overflow: hidden; }
   border-left: 3px solid var(--accent);
   background: rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
+/* Beim Zeigen wird der Grund heller und die Kante zieht die Akzentfarbe
+   an. Verschoben wird die Kachel nicht: Sie steht in einem Raster neben
+   ihren Nachbarn, und ein Ruck zur Seite bricht deren gemeinsame Linie. */
 .char-film:hover,
 .char-film:focus-visible {
   background: color-mix(in srgb, var(--accent) 18%, rgba(255, 255, 255, 0.04));
   border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   border-left-color: var(--accent);
-  transform: translateX(2px);
 }
 
 .char-film:focus-visible {
@@ -2027,15 +2057,17 @@ html.modal-open { overflow: hidden; }
   background: rgba(255, 255, 255, 0.06);
   border: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
   box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 18%, transparent);
-  transition: transform 0.25s var(--ease-out), border-color 0.25s ease,
-              box-shadow 0.25s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Der Kreis hebt sich beim Zeigen leicht an, der Ring zieht die
-   Akzentfarbe an und der Schein ringsum wird kräftiger. */
+/* Beim Zeigen zieht der Ring die Akzentfarbe an und der Schein ringsum
+   wird kräftiger. Bewegt wird der Kreis nicht, weder gehoben noch
+   vergrößert: Im dichten Raster sind hundert Kacheln nebeneinander, und
+   ein Bild, das unter dem Zeiger seine Größe ändert, schiebt den Blick
+   von der Figur weg auf die Bewegung. Farbe und Licht sagen dasselbe
+   ruhiger. */
 .char-cell:hover .char-shot,
 .char-cell:focus-visible .char-shot {
-  transform: translateY(-5px) scale(1.06);
   border-color: color-mix(in srgb, var(--accent) 85%, transparent);
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.5),
               0 0 30px color-mix(in srgb, var(--accent) 38%, transparent);
@@ -2549,17 +2581,24 @@ a.char-film { text-decoration: none; }
   box-sizing: border-box;
   height: calc(26rem * 25 / 18);
   overflow: hidden;
-  padding: 1rem;
+  /* Unten liegt der Streifen der Fassungsleiste, siehe --look-bar
+     weiter unten. Ohne Leiste ist er null und der Rahmen ringsum gleich
+     gepolstert. */
+  padding: 1rem 1rem calc(1rem + var(--look-bar, 0rem));
   border-radius: 18px;
   border: 1px solid color-mix(in srgb, var(--accent) 55%, rgba(255, 255, 255, 0.16));
   /* Zwei Kegel übereinander: ein enger, heller um die Figur und ein
      breiter, schwacher, der nach außen ausläuft. Ein einzelner über die
      ganze Breite wäre ein flächiger Schleier statt eines Lichts, ein
      einzelner enger stünde als harter Fleck in einer schwarzen Fläche. */
+  /* Beide Kegel stehen auf der Standlinie der Figur, nicht auf der
+     Unterkante des Rahmens: Liegt die Fassungsleiste darunter, rückt das
+     Licht mit den Füßen nach oben, sonst schwebte die Figur über ihrem
+     eigenen Schein. */
   background:
-    radial-gradient(26rem 62% at 50% 100%,
+    radial-gradient(26rem 62% at 50% calc(100% - var(--look-bar, 0rem)),
       color-mix(in srgb, var(--accent) 34%, transparent), transparent 70%),
-    radial-gradient(75% 110% at 50% 100%,
+    radial-gradient(75% 110% at 50% calc(100% - var(--look-bar, 0rem)),
       color-mix(in srgb, var(--accent) 12%, transparent), transparent 72%)
     rgba(6, 9, 20, 0.55);
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55),
@@ -2590,7 +2629,7 @@ a.char-film { text-decoration: none; }
   content: "";
   position: absolute;
   left: 50%;
-  bottom: 1rem;
+  bottom: calc(1rem + var(--look-bar, 0rem));
   width: min(32rem, 76%);
   height: 1px;
   transform: translateX(-50%);
@@ -2673,63 +2712,173 @@ a.char-film { text-decoration: none; }
   opacity: 0.75;
 }
 
-/* Fassungs-Schalter im Rahmen links, untereinander und auf halber
-   Höhe zentriert. Sie liegen
-   über dem Bild und nicht mehr unter dem Rahmen, deshalb tragen sie
-   keinen eigenen Kasten: Ein Rahmen um jeden Schalter stünde als zweite
-   Kante im Bild. Sie hängen absolut an .char-figure und nicht am Rahmen
-   selbst, weil der overflow: hidden trägt und ein figcaption ohnehin
-   nur im figure stehen darf.
+/* Das Logo der gezeigten Fassung noch einmal groß in der freien Ecke
+   oben links im Rahmen. Die Leiste unten führt jedes Logo nur in
+   Briefmarkengröße; wer wissen will, aus welchem Film die Figur gerade
+   dasteht, liest es hier.
 
-   Links sind sie bündig mit der Rahmenkante: Der Schein läuft von dort
-   nach innen aus und braucht die Kante als Ursprung. */
+   Es nimmt keine Klicks an: Über ihm liegt nichts, was man treffen
+   wollte, und ein toter Fleck über dem Bild wäre nur im Weg. */
+.char-look-current {
+  position: absolute;
+  top: 1.2rem;
+  left: 1.4rem;
+  z-index: 1;
+  width: min(15rem, 34%);
+  height: 4.4rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Erst mit dem fertigen Bild sichtbar, siehe markCurrent in
+   js/characters.js. Ohne Film bleibt die Ecke ganz leer. */
+.char-look-current.ready { opacity: 1; }
+.char-look-current.empty { display: none; }
+
+.char-look-current img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  /* Der Lichtkegel des Rahmens ist oben zwar schwach, die Logos sind aber
+     selbst hell und randlos. Der Schatten legt eine Kante darunter, damit
+     der Schriftzug nicht im Grund verschwimmt. */
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.65));
+}
+
+/* Fassungs-Schalter als Leiste auf der Unterkante des Rahmens,
+   nebeneinander in einer Zeile. Sie liegen über dem Bild und nicht unter
+   dem Rahmen, deshalb tragen sie keinen eigenen Kasten: Ein Rahmen um
+   jeden Schalter stünde als zweite Kante im Bild. Sie hängen absolut an
+   der Bühne und nicht am Rahmen selbst, weil der overflow: hidden trägt
+   und ein figcaption ohnehin nur im figure stehen darf.
+
+   Figuren mit vielen Fassungen sprengen die Breite: Tony Stark bringt
+   sechzehn Rüstungen mit. Die Leiste rollt dann waagerecht, statt die
+   Schalter umzubrechen und den halben Rahmen zuzudecken.
+
+   Sie liegt nicht über der Figur, sondern in einem eigenen Streifen unter
+   ihrer Standlinie und läuft darin über die ganze Breite des Rahmens.
+   --look-bar ist die Höhe dieses Streifens. Der Wert hängt am figure und
+   nicht am Rahmen, weil alles darin ihm ausweichen muss: die Polsterung
+   des Rahmens, der Lichtkegel, die Standlinie und der Steckbrief rechts.
+   Die Höhe steht fest, statt sich aus dem Inhalt zu ergeben, weil der
+   Rahmen sie kennen muss, bevor die Leiste darin steht. */
+.char-figure:has(.char-look-nav) { --look-bar: 3.4rem; }
+
 .char-look-nav {
   position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
+  /* Genau die Randstärke des Rahmens, nicht 0, wie beim Steckbrief auch:
+     Sonst läge der Grund der Leiste auf der Rahmenlinie und löschte sie
+     über die ganze Unterkante und die beiden unteren Ecken aus. So endet
+     er davor und die Linie läuft durch. */
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
   z-index: 1;
+  height: 3.4rem;
   display: flex;
-  flex-direction: column;
-  /* Alle Schalter so breit wie der längste: Der Lichtstreifen läuft
-     sonst in jeder Zeile unterschiedlich weit ins Bild. */
-  align-items: stretch;
-  gap: 0.12rem;
+  align-items: center;
+  gap: 0.15rem;
   margin: 0;
+  /* Unten etwas Luft, damit die Rollleiste nicht auf der Rahmenlinie
+     aufsitzt. */
+  padding: 0 1.2rem 0.35rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  /* Ausdrücklich hart, obwohl schon der Standard: Der Wert vom html
+     durchdringt bis hierher, und weiches Scrollen des Browsers arbeitete
+     gegen den eigenen Nachlauf des Mausrads (siehe js/characters.js).
+     Beide zusammen schaukeln sich auf und werfen die Leiste an den
+     Anschlag. Der Klick auf einen halb sichtbaren Schalter gibt sein
+     „smooth“ selbst mit. */
+  scroll-behavior: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 60%, transparent) transparent;
+  /* Der Grund läuft nach oben aus: Auf den hellen Beinen der Figur wären
+     die Beschriftungen sonst nicht zu lesen. Unten deckt er, oben ist er
+     fort, bevor er der Figur ins Gesicht steigt. */
+  background: linear-gradient(to top,
+    rgba(4, 6, 15, 0.88), rgba(4, 6, 15, 0.55) 45%, transparent);
+  border-radius: 0 0 17px 17px;
+}
+
+.char-look-nav::-webkit-scrollbar { height: 6px; }
+.char-look-nav::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 /* Der Schein ist ein eigenes Blatt hinter der Schrift (z-index: -1 in
    der eigenen Stapelebene des Schalters, sonst läge er vor dem Text).
-   Die linke Polsterung entspricht der des Rahmens, damit die Schrift
-   auf einer Linie mit seinem Innenrand steht, die rechte gibt dem Schein
-   den Auslauf. */
+
+   Jeder Schalter ist Logo und Beschriftung nebeneinander. Ausgerichtet
+   wird an der Mitte, damit der Fassungsname auf der Mittellinie des
+   Logos sitzt und nicht auf dessen Grundlinie. */
 .char-look {
   position: relative;
   isolation: isolate;
-  padding: 0.5rem 4.5rem 0.5rem 1.1rem;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.85rem;
   border: 0;
   background: none;
   color: #b9c2dc;
-  /* Nicht die Fließtextschrift der Seite: Die Schalter sind Beschriftung
-     im Bild, keine Prosa. Sie bleiben aber bewusst auf der Schrift der
-     Bedienoberfläche und übernehmen nicht die fette Schrift des Namens
-     darüber. Sie sind Bedienelemente, keine Überschrift. Das Gewicht
-     bleibt über alle Zustände gleich, sonst spränge die Breite der Leiste
-     beim Wechsel der gewählten Fassung. */
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1.5rem;
-  line-height: 1.15;
-  letter-spacing: 0.08em;
   text-align: left;
   white-space: nowrap;
   cursor: pointer;
   transition: color 0.2s ease;
 }
 
+/* Der Logokasten ist fest bemessen und bleibt auch ohne Datei stehen:
+   Alle Fassungsnamen fangen so bündig auf derselben Linie an, egal wie
+   breit das jeweilige Logo geschnitten ist. Das Format ist breit und
+   flach, weil Filmlogos Schriftzüge sind. Fehlt der Film, bleibt der
+   Kasten leer und nur der Name steht da. */
+.char-look-logo {
+  /* Breit und flach: Filmlogos sind Schriftzüge und stoßen fast immer an
+     der Breite an, nicht an der Höhe. Schmaler als in der Ecke oben, denn
+     hier steht jedes Logo neben fünfzehn anderen und die Leiste soll
+     nicht endlos weit rollen. */
+  width: 4.6rem;
+  height: 1.5rem;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.char-look-logo img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Die Fließtextschrift der Seite statt der schmalen Bedienoberflächen-
+   schrift: Neben einem Logo ist der Fassungsname die ruhige Beschriftung
+   und soll dem Schriftzug daneben nicht die Aufmerksamkeit nehmen. Das
+   Gewicht bleibt über alle Zustände gleich, sonst spränge die Breite der
+   Leiste beim Wechsel der gewählten Fassung. */
+.char-look-label {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+}
+
 /* Rechteckig und ohne Rundung, damit er als Lichtstreifen von der Kante
-   liest und nicht als zweite Pille. Voll an der linken Kante, nach
-   rechts hin immer transparenter. */
+   liest und nicht als zweite Pille. Voll an der unteren Kante, nach oben
+   hin immer transparenter: Das Licht steht auf derselben Linie wie die
+   Leiste selbst. */
 .char-look::before {
   content: "";
   position: absolute;
@@ -2737,45 +2886,48 @@ a.char-film { text-decoration: none; }
   z-index: -1;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(to right,
+  background: linear-gradient(to top,
     color-mix(in srgb, var(--accent) 42%, transparent),
-    color-mix(in srgb, var(--accent) 16%, transparent) 45%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 55%,
     transparent 100%);
   transition: opacity 0.24s ease;
 }
 
 .char-look:hover { color: #e8ecf8; }
 .char-look:hover::before { opacity: 0.55; }
+.char-look:hover .char-look-logo { opacity: 0.85; }
 
 /* Die gewählte Fassung leuchtet voll und bleibt so auch dann kenntlich,
    wenn die Maus auf einer anderen liegt. */
 .char-look.active { color: #fff; }
+.char-look.active .char-look-logo { opacity: 1; }
 
 .char-look.active::before {
   opacity: 1;
-  background: linear-gradient(to right,
+  background: linear-gradient(to top,
     color-mix(in srgb, var(--accent) 58%, transparent),
-    color-mix(in srgb, var(--accent) 22%, transparent) 45%,
+    color-mix(in srgb, var(--accent) 22%, transparent) 55%,
     transparent 100%);
 }
 
 /* Für die Tastatur reicht der Schein allein nicht: Er unterscheidet sich
-   kaum von der gewählten Fassung. Eine schmale Marke an der Kante zeigt,
-   wo der Fokus steht. */
+   kaum von der gewählten Fassung. Eine schmale Marke auf der Standlinie
+   der Leiste zeigt, wo der Fokus steht. */
 .char-look:focus-visible {
   outline: none;
   color: #fff;
 }
 
 .char-look:focus-visible::before { opacity: 0.85; }
+.char-look:focus-visible .char-look-logo { opacity: 1; }
 
 .char-look:focus-visible::after {
   content: "";
   position: absolute;
-  top: 0.15rem;
-  bottom: 0.15rem;
-  left: 0;
-  width: 2px;
+  left: 0.15rem;
+  right: 0.15rem;
+  bottom: 0;
+  height: 2px;
   background: var(--accent);
 }
 
@@ -2791,7 +2943,11 @@ a.char-film { text-decoration: none; }
    overflow: hidden trägt. */
 .char-facts {
   position: absolute;
-  top: 50%;
+  /* Mittig über der Figur, nicht mittig im Rahmen: Unten läuft die
+     Fassungsleiste über die ganze Breite durch, und das Fenster steht in
+     dem, was darüber bleibt. Ohne Leiste ist --look-bar null und beides
+     fällt zusammen. */
+  top: calc(50% - var(--look-bar, 0rem) / 2);
   /* Genau die Randstärke des Rahmens, nicht 0: Sonst läge das Fenster mit
      seinem Grund auf der Rahmenlinie und löschte sie über seine ganze
      Höhe aus. So endet es davor und die Linie läuft durch. */
@@ -2803,7 +2959,7 @@ a.char-film { text-decoration: none; }
   width: min(23rem, 42%);
   /* Der Rahmen ist 36rem hoch. Bleibt oben und unten eine Handbreit
      frei, steht das Fenster als Fenster darin und nicht als Wand. */
-  max-height: calc(100% - 2.4rem);
+  max-height: calc(100% - 2.4rem - var(--look-bar, 0rem));
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 1.1rem 1.2rem 1.3rem;
@@ -3042,7 +3198,9 @@ a.char-film { text-decoration: none; }
   .char-figure-stack,
   .char-figure-layer,
   .char-look,
-  .char-look::before {
+  .char-look::before,
+  .char-look-logo,
+  .char-look-current {
     transition: none;
   }
 
@@ -3145,13 +3303,36 @@ a.char-film { text-decoration: none; }
   .char-figure-frame { height: 25rem; }
 
   /* Der Rahmen ist hier zwei Fünftel niedriger und deutlich schmaler.
-     Figuren mit vielen Fassungen (Tony Stark hat zehn) stünden in der
-     großen Schrift oben und unten aus dem Rahmen heraus, und die Leiste
-     legte sich über die halbe Bühne. */
+     Die Leiste steht im großen Maß zu hoch im Bild und frisst die Beine
+     der Figur, deshalb schrumpfen Logo und Schrift zusammen: ihr
+     Verhältnis zueinander bleibt dasselbe. */
   .char-look {
-    padding: 0.3rem 2.2rem 0.3rem 0.8rem;
-    font-size: 1.1rem;
-    letter-spacing: 0.06em;
+    gap: 0.45rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .char-look-logo {
+    width: 3.6rem;
+    height: 1.15rem;
+  }
+
+  .char-look-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+
+  .char-figure:has(.char-look-nav) { --look-bar: 2.6rem; }
+
+  .char-look-nav {
+    height: 2.6rem;
+    padding: 0 0.7rem 0.3rem;
+  }
+
+  .char-look-current {
+    top: 0.8rem;
+    left: 0.9rem;
+    width: min(9rem, 46%);
+    height: 2.8rem;
   }
 
   /* Im Rahmen ist hier kein Platz mehr für ein Fenster: Neben der Figur
@@ -3313,9 +3494,6 @@ a.char-film { text-decoration: none; }
   .chars-search,
   .chars-clear,
   .char-shot { transition: none; }
-
-  .char-cell:hover .char-shot,
-  .char-cell:focus-visible .char-shot { transform: none; }
 
   .settings-btn,
   .has-dropdown::after,

@@ -119,6 +119,7 @@
     if (!stone) return el('div', 'dot');
     const img = el('img', 'dot stone');
     img.alt = '';
+    img.dataset.stone = stone; /* die Farbe seines Scheins steht im CSS */
     img.addEventListener('error', () => img.replaceWith(el('div', 'dot')));
     img.src = 'assets/infinity stones/' + stone + '.png';
     return img;

@@ -417,6 +417,11 @@
      Warten eingeblendet werden. */
   const lookReady = new Set();
 
+  /* Mit welchem Anteil die Fassungsleiste ihrem Rollziel pro Bild
+     nachläuft. Derselbe Wert wie über der Zeitskala der Timeline
+     (WHEEL_EASE in js/main.js), damit sich beide Leisten gleich anfühlen. */
+  const LOOK_WHEEL_EASE = 0.14;
+
   /* Lädt eine Fassung im Hintergrund. decode() statt load, damit das Bild
      beim Einblenden nicht noch im Dekoder hängt und die erste Bildfolge
      der Überblendung leer bleibt. */
@@ -591,6 +596,10 @@
     let ticket = 0;      // nur der jüngste Wechsel darf noch durchkommen
     let busyTimer = 0;
     let gone = false;    // Datei fehlt, der Rahmen zeigt den Platzhalter
+    /* Setzt das große Logo oben links auf die gezeigte Fassung. Es gibt
+       das nur bei Figuren mit Fassungsleiste, sonst bleibt der Haken leer
+       und der Bildwechsel ruft ins Nichts. */
+    let markCurrent = null;
 
     /* Der Rahmen hat ein festes Format, das Bild schöpft ihn nur so weit
        aus, wie die Körpergröße der Figur es hergibt (FULLSIZE_SCALE in
@@ -644,6 +653,7 @@
         paint(next, file);
         shown = file;
         setFront(1 - front);
+        if (markCurrent) markCurrent(file);
       };
       if (lookReady.has(file)) {
         swap();
@@ -677,11 +687,119 @@
     setFront(0);
 
     if (looks) {
+      /* Das Logo der gezeigten Fassung noch einmal groß in der freien
+         Ecke oben links: Die Leiste unten führt sechzehn Rüstungen in
+         Briefmarkengröße, hier steht der Film dazu in lesbarer Größe.
+         Es liegt über dem Bild, nimmt aber keine Klicks an, sonst fiele
+         ein Griff in diese Ecke ins Leere. */
+      const filmOf = new Map(looks.map(([, file, film]) => [file, film]));
+      const current = el('div', 'char-look-current');
+      const currentImg = el('img');
+      currentImg.alt = '';
+      currentImg.decoding = 'async';
+      current.append(currentImg);
+      stage.append(current);
+
+      markCurrent = file => {
+        const film = filmOf.get(file);
+        current.classList.toggle('empty', !film);
+        if (!film) return;
+        /* Erst mit dem fertigen Bild einblenden: Sonst stünde beim
+           Wechsel für einen Moment die leere Fläche in der Ecke. */
+        current.classList.remove('ready');
+        currentImg.onload = () => current.classList.add('ready');
+        currentImg.onerror = () => current.classList.add('empty');
+        currentImg.src = 'assets/logos/' + film + '.webp';
+      };
+      markCurrent(standard);
+
       const nav = el('div', 'char-look-nav');
       nav.setAttribute('aria-label', 'Fassungen von ' + item.real);
-      for (const [label, file] of looks) {
-        const chip = el('button', 'char-look', label);
+
+      /* Mausrad über der Leiste rollt sie zur Seite. Die Leiste liegt
+         quer, ein Rad dreht sich aber hoch und runter: Ohne diese
+         Übersetzung scrollte die Seite hinter ihr weg und die Fassungen
+         blieben stehen.
+
+         Gerollt wird nicht in Sprüngen, sondern weich: Jede Raste legt
+         ihren Weg auf ein Ziel, und die Leiste läuft ihm Bild für Bild
+         hinterher. Dieselbe Mechanik wie über der Zeitskala der Timeline,
+         siehe onTimelineWheel und WHEEL_EASE in js/main.js. */
+      let targetX = null;   // Ziel, dem die Leiste nachläuft
+      /* Die eigene, ungerundete Position. scrollLeft gibt nur ganze Pixel
+         zurück: Auf den letzten Pixeln ist ein Schritt kleiner als einer,
+         fiele beim Zurücklesen weg, und die Leiste bliebe kurz vor dem
+         Ziel für immer stehen. Gerechnet wird deshalb hier, scrollLeft
+         folgt nur. */
+      let posX = 0;
+      let rolling = 0;      // laufender Bildlauf
+
+      function roll() {
+        rolling = 0;
+        if (targetX === null) return;
+        const diff = targetX - posX;
+        /* Unter einem halben Pixel ist der Rest nicht mehr zu sehen, und
+           ohne diesen Abbruch liefe die Schleife ewig weiter. */
+        if (Math.abs(diff) < 0.5) {
+          posX = targetX;
+          nav.scrollLeft = targetX;
+          targetX = null;
+          return;
+        }
+        posX += diff * LOOK_WHEEL_EASE;
+        nav.scrollLeft = posX;
+        rolling = requestAnimationFrame(roll);
+      }
+
+      /* Am Anschlag bleibt das Ereignis unangetastet und läuft weiter an
+         die Seite: Wer über der Leiste weiterdreht, obwohl links oder
+         rechts nichts mehr kommt, will die Seite scrollen. */
+      nav.addEventListener('wheel', e => {
+        const rest = nav.scrollWidth - nav.clientWidth;
+        if (rest <= 0) return;
+        const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        const step = e.deltaMode === 1 ? raw * 16
+          : e.deltaMode === 2 ? raw * nav.clientWidth
+          : raw;
+        /* Gerechnet wird ab dem Ziel und nicht ab dem, wo die Leiste
+           gerade steht: Sonst verschluckte jede Raste, die während des
+           Nachlaufens kommt, einen Teil ihres Wegs. Steht nichts aus,
+           fängt der Lauf da an, wo die Leiste wirklich steht: Sie kann
+           inzwischen an der Rollleiste gezogen worden sein. */
+        if (targetX === null) posX = nav.scrollLeft;
+        const from = targetX === null ? posX : targetX;
+        const next = Math.max(0, Math.min(rest, from + step));
+        if (next === from) return;
+        e.preventDefault();
+        targetX = next;
+        if (reduceMotion) {
+          posX = next;
+          nav.scrollLeft = next;
+          targetX = null;
+          return;
+        }
+        if (!rolling) rolling = requestAnimationFrame(roll);
+      }, { passive: false });
+
+      for (const [label, file, film] of looks) {
+        const chip = el('button', 'char-look');
         chip.type = 'button';
+        /* Links das Logo des Films, aus dem die Fassung stammt, rechts
+           daneben ihr Name. Der Logokasten hat ein festes Maß und bleibt
+           auch ohne Datei stehen, damit die Namen aller Schalter auf
+           derselben Höhe beginnen. Dieselben Dateien wie auf der
+           Timeline und in der Auftrittsliste (assets/logos/<slug>.webp). */
+        const logo = el('span', 'char-look-logo');
+        if (film) {
+          const logoImg = el('img');
+          logoImg.alt = '';
+          logoImg.loading = 'lazy';
+          logoImg.decoding = 'async';
+          logoImg.addEventListener('error', () => logoImg.remove());
+          logoImg.src = 'assets/logos/' + film + '.webp';
+          logo.append(logoImg);
+        }
+        chip.append(logo, el('span', 'char-look-label', label));
         const active = file === standard;
         chip.setAttribute('aria-pressed', active ? 'true' : 'false');
         if (active) chip.classList.add('active');
@@ -698,6 +816,19 @@
           }
           chip.classList.add('active');
           chip.setAttribute('aria-pressed', 'true');
+          /* Bei vielen Fassungen läuft die Leiste über die Breite hinaus.
+             Ein Schalter, der nur halb im Bild stand, rückt nach dem
+             Klick ganz herein. „nearest“ lässt alles in Ruhe, was ohnehin
+             ganz zu sehen ist, und rührt die Seite darunter nicht an.
+
+             Ein Rollziel vom Mausrad wird dabei fallen gelassen: Sonst
+             zöge der Nachlauf die Leiste gleich wieder zurück. */
+          targetX = null;
+          chip.scrollIntoView({
+            block: 'nearest',
+            inline: 'nearest',
+            behavior: reduceMotion ? 'auto' : 'smooth',
+          });
           showLook(file);
         });
         nav.append(chip);
