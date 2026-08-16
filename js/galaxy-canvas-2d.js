@@ -483,8 +483,13 @@
 
     if (!reduceMotion) {
       window.addEventListener('pointermove', function (e) {
-        mouse.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-        mouse.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        /* Neben der Leinwand zieht das Bild in seine Mitte zurück, siehe
+           die ausführliche Begründung in js/galaxy.js. */
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        const drin = x >= 0 && x <= 1 && y >= 0 && y <= 1;
+        mouse.tx = drin ? (x - 0.5) * 2 : 0;
+        mouse.ty = drin ? (y - 0.5) * 2 : 0;
       });
     }
 

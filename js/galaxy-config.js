@@ -143,10 +143,10 @@
      Mitte nach oben und macht aus weichen Hügeln scharfe Grate, daraus
      entstehen die fasrigen Schlieren. */
   window.GALAXY_REGIONS = [
-    { x: 0.10, y: 0.46, rx: 0.30, ry: 0.90, col: [62, 196, 158], ridged: true, amp: 0.62, sc: 3.4 },
-    { x: 0.23, y: 0.04, rx: 0.30, ry: 0.32, col: [92, 214, 172], ridged: true, amp: 0.50, sc: 4.2 },
+    { x: 0.1, y: 0.46, rx: 0.3, ry: 0.9, col: [62, 196, 158], ridged: true, amp: 0.62, sc: 3.4 },
+    { x: 0.23, y: 0.04, rx: 0.3, ry: 0.32, col: [92, 214, 172], ridged: true, amp: 0.5, sc: 4.2 },
     { x: 0.53, y: 0.24, rx: 0.42, ry: 0.46, col: [44, 54, 184], ridged: false, amp: 0.44, sc: 2.2 },
-    { x: 0.92, y: 0.20, rx: 0.30, ry: 0.48, col: [132, 58, 178], ridged: false, amp: 0.50, sc: 2.6 },
+    { x: 0.92, y: 0.2, rx: 0.3, ry: 0.48, col: [132, 58, 178], ridged: false, amp: 0.5, sc: 2.6 },
     { x: 0.46, y: 0.87, rx: 0.24, ry: 0.22, col: [106, 106, 255], ridged: true, amp: 0.82, sc: 4.6 },
     { x: 0.75, y: 0.86, rx: 0.28, ry: 0.17, col: [236, 168, 84], ridged: true, amp: 0.66, sc: 5.2 },
   ];

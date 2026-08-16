@@ -935,7 +935,10 @@ void main() {
       gl.uniform2f(progBright.u.uPix, pw, ph);
       gl.uniform1f(progBright.u.uDpr, dpr);
       gl.uniform2f(progBright.u.uOfs, px, py);
-      gl.uniform1f(progBright.u.uTime, rawT * CFG.twinkleSpeed);
+      /* t und nicht rawT: timeScale soll wirklich alle Bewegungen
+         anhalten, das Funkeln eingeschlossen. Die Rückfallebene rechnet
+         seit jeher so, hier stand versehentlich die ungeskalierte Zeit. */
+      gl.uniform1f(progBright.u.uTime, t * CFG.twinkleSpeed);
       gl.uniform1f(progBright.u.uTwinkle, CFG.twinkle && !reduceMotion ? 1 : 0);
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, brightN);
     }
@@ -1010,8 +1013,17 @@ void main() {
 
   if (!reduceMotion) {
     window.addEventListener('pointermove', function (e) {
-      mouse.tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-      mouse.ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      /* Steht der Zeiger neben der Leinwand, zieht das Bild in seine
+         Mitte zurück. Auf der Seite liegt die Leinwand über dem ganzen
+         Fenster, dort kommt der Fall nie vor und es bleibt beim Alten.
+         In einer Tafel des Bild-Studios sehr wohl: Ohne das würde die
+         Vorschau jedes Mal mitwandern, wenn jemand zu den Reglern fährt,
+         und zwar bis zum Doppelten des vorgesehenen Wegs. */
+      const drin = x >= 0 && x <= 1 && y >= 0 && y <= 1;
+      mouse.tx = drin ? (x - 0.5) * 2 : 0;
+      mouse.ty = drin ? (y - 0.5) * 2 : 0;
     });
   }
 
