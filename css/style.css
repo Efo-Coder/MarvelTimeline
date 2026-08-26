@@ -3942,6 +3942,162 @@ a.char-film { text-decoration: none; }
       transparent 32%, rgba(21, 21, 21, 0.07) 100%);
 }
 
+/* ---------- Die Kulisse hinter der Figur ----------
+
+   Nachgebaut nach den Heldentafeln, die Marvel zu einzelnen Figuren
+   zeichnet: heller Grund, oben und unten ein angeschnittenes Band mit dem
+   Namen als Muster, unten rechts ein dunkler Keil, und hinter der Figur
+   das Wappen, das zu ihr gehört.
+
+   Alles daran hängt an zwei Farben und einem Zeichen, die js/emblems.js
+   zur Figur liefert und die die Bühne als --stage-dark, --stage-light und
+   als SVG gesetzt bekommt. Steht dort nichts, bleibt das Rot der Marke
+   stehen und die Bühne sieht aus wie zuvor, nur mit Bändern.
+
+   Die Szene liegt eine Ebene tiefer als die Kulisse (-2 gegen -1): So
+   legt sich deren Abdunklung über Bänder und Wappen und bindet beides an
+   die Fläche, statt daneben zu liegen. */
+.char-stage {
+  --stage-dark: #8c1017;
+  --stage-light: #e62429;
+  /* Wie hoch die Bänder oben und unten stehen und wie weit ihre Kante
+     dabei fällt. Beides in rem: Die Bühne ist bei jeder Figur gleich
+     hoch, ein Anteil brächte hier nichts. */
+  --band-h: 2.2rem;
+  --band-skew: 2.6rem;
+}
+
+.char-stage-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Die beiden Bänder. Ihre Kante ist die Schräge, die auf dieser Seite
+   überall läuft: von links oben nach rechts unten, hier über die volle
+   Breite um --band-skew fallend.
+
+   Der Name darin ist kein Text zum Lesen, sondern ein Muster: derselbe
+   Name so oft nebeneinander, wie die Breite hergibt, hohl gesetzt und so
+   blass, dass er die Figur davor nicht stört. Vorlesegeräte bekommen ihn
+   nicht zu hören, das Band trägt aria-hidden. */
+.stage-band {
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  height: calc(var(--band-h) + var(--band-skew));
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.stage-band.top {
+  top: 0;
+  background: color-mix(in srgb, var(--stage-light) 12%, transparent);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--band-skew)), 0 100%);
+  align-items: flex-start;
+  padding-top: 0.55rem;
+}
+
+/* Unten steht das Band voll in der dunklen Farbe: Es ist der Keil, den
+   die Vorlage unter die Figur legt. Damit die Zeile darüber nicht darauf
+   zu stehen kommt, bleibt es flach – siehe --band-h. */
+.stage-band.bottom {
+  bottom: 0;
+  background: var(--stage-dark);
+  clip-path: polygon(0 var(--band-skew), 100% 0, 100% 100%, 0 100%);
+  align-items: flex-end;
+  padding-bottom: 0.5rem;
+}
+
+.stage-band span {
+  font-family: var(--font-impact);
+  font-size: 1.45rem;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding-left: 1.4rem;
+}
+
+/* Oben hohl auf hellem Grund, unten hohl auf dem dunklen Keil: zweimal
+   derselbe Zug, einmal in der Farbe der Figur, einmal in Weiß. */
+.stage-band.top span {
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--stage-dark) 34%, transparent);
+}
+
+.stage-band.bottom span {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.38);
+}
+
+/* Der lange Schrägstrich quer über die Fläche. Er nimmt der weißen Bühne
+   die Leere, ohne etwas zu behaupten: ein Hauch der hellen Farbe, von
+   der linken unteren Ecke nach rechts oben. */
+.stage-slash {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--stage-light) 5%, transparent);
+  clip-path: polygon(0 100%, 38% 100%, 100% 22%, 100% 0, 70% 0);
+}
+
+/* Die drei kurzen Striche in der oberen rechten Ecke, wie sie die
+   Vorlage dort setzt. */
+.stage-ticks {
+  position: absolute;
+  top: calc(var(--band-h) + var(--band-skew) + 4.5rem);
+  right: -2rem;
+  width: 13rem;
+  height: 4.2rem;
+  background: repeating-linear-gradient(108deg,
+    color-mix(in srgb, var(--stage-dark) 20%, transparent) 0 3px,
+    transparent 3px 26px);
+  clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Das Wappen hinter der Figur. Es hängt in der Figurenspalte und nicht
+   in der Szene, damit es genau hinter der Figur steht und nicht neben
+   ihr: Die Spalte weiß, wo die Figur ist, die Szene nicht.
+
+   Seine Größe misst sich an der Höhe der Bühne und nicht an der Spalte.
+   Sonst stünde dasselbe Wappen bei einer Figur mit Fassungswahl kleiner
+   da als bei einer ohne, weil deren Spalte breiter ist. */
+.char-stage-emblem {
+  position: absolute;
+  top: 50%;
+  /* Nicht in der Mitte, sondern nach rechts gerückt: Mittig stünde es
+     genau hinter der Figur, und von einem Zeichen, das die Figur zu
+     zwei Dritteln verdeckt, bleibt nur ein Fleck. Ein Stück nach rechts
+     liegt es halb hinter ihr und halb in der freien Fläche daneben und
+     ist als Form zu erkennen. */
+  left: 62%;
+  width: calc(var(--stage-h) * 0.9);
+  height: calc(var(--stage-h) * 0.9);
+  transform: translate(-50%, -53%);
+  z-index: 0;
+  pointer-events: none;
+  color: var(--stage-light);
+}
+
+.char-stage-emblem svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.2;
+}
+
+/* Die Farben in der Maske. Weiß steht dort für sichtbar, Schwarz für
+   unsichtbar: Was f und s zeichnen, bleibt von der eingefärbten Platte
+   stehen, was c zeichnet, wird aus ihr ausgestanzt und gibt den Blick
+   auf Band und Schrägstrich frei (siehe emblemSvg() in js/emblems.js). */
+.char-stage-emblem .art .f { fill: #fff; }
+.char-stage-emblem .art .s { fill: none; stroke: #fff; }
+.char-stage-emblem .art .c { fill: #000; }
+
 /* ---------- Mitte: Wappen und Figur ---------- */
 
 .char-stage-figure {
@@ -6270,7 +6426,17 @@ html.films-page .chars-masthead {
   .char-stage-info {
     align-items: flex-start;
     padding-block: 0;
+    /* Unter der Figur endet der Text am Fuß der Bühne, und dort liegt
+       der dunkle Keil. Ohne diesen Abstand stünde die Zeile mit dem Film
+       in dunkler Schrift auf dunklem Grund. Nebeneinander gibt es das
+       Problem nicht: Dort steht der Text auf halber Höhe. */
+    padding-bottom: calc(var(--band-h) + var(--band-skew) - 0.6rem);
   }
+
+  /* Einspaltig füllt die Figur die Bühne, und das Zeichen hat keine
+     freie Fläche mehr neben ihr, in die es rücken könnte. Also steht es
+     wieder mittig hinter ihr. */
+  .char-stage-emblem { left: 50%; }
 
   .char-stage-logo {
     position: static;
@@ -6440,7 +6606,21 @@ html.films-page .chars-masthead {
     justify-content: flex-start;
   }
 
-  .char-stage-info { padding-block: 0; }
+  /* padding-block setzt oben und unten zugleich, und unten muss der
+     Abstand zum dunklen Keil stehen bleiben, den die zweispaltige
+     Ansicht weiter oben schon freihält. */
+  .char-stage-info {
+    padding-top: 0;
+    padding-bottom: calc(var(--band-h) + var(--band-skew) - 0.6rem);
+  }
+
+  /* Einspaltig ist die Bühne schmaler als das Zeichen hoch: In voller
+     Größe stünde es von Rand zu Rand und wäre kein Hintergrund mehr,
+     sondern ein zweites Bild. */
+  .char-stage-emblem {
+    width: calc(var(--stage-h) * 0.68);
+    height: calc(var(--stage-h) * 0.68);
+  }
 
   /* Auf dem Telefon steht die Figur der Fähigkeiten-Tafel im Weg: Sie
      nähme dem Absatz die halbe Breite. Der Text bekommt die ganze

@@ -1464,6 +1464,41 @@
 
     const figure = el('figure', 'char-stage');
 
+    /* ---------- Die Kulisse ----------
+
+       Hinter allem liegt die Szene: die beiden Bänder mit dem Namen als
+       Muster, der lange Schrägstrich und die Striche in der Ecke. Sie
+       steht bei jeder Figur gleich, nur ihre beiden Farben wechseln, und
+       die setzt setStage() weiter unten. Das Wappen selbst hängt nicht
+       hier, sondern in der Figurenspalte: Dort steht es genau hinter der
+       Figur, siehe .char-stage-emblem. */
+    const scene = el('div', 'char-stage-scene');
+    scene.setAttribute('aria-hidden', 'true');
+    const bandTop = el('div', 'stage-band top');
+    const bandBottom = el('div', 'stage-band bottom');
+    bandTop.append(el('span'));
+    bandBottom.append(el('span'));
+    scene.append(el('div', 'stage-slash'), bandTop, bandBottom,
+      el('div', 'stage-ticks'));
+    figure.append(scene);
+
+    /* Der Name als Muster in den Bändern. Gezeigt wird der Heldenname,
+       wie ihn die Vorlage groß hinschreibt, und nur ersatzweise der
+       bürgerliche: Wer kein Held ist, steht unter seinem eigenen Namen
+       da und nicht unter dem der Figur, deren Wappen er erbt.
+
+       Wie oft er nebeneinander steht, rechnet sich aus seiner Länge: Ein
+       kurzer Name muss öfter wiederholt werden als ein langer, um
+       dieselbe Breite zu füllen. 180 Zeichen decken auch das breiteste
+       Fenster ab, was darüber hinausgeht, schneidet das Band weg. */
+    const bandName = ((item.roles && item.roles[0]) || item.real || '').toUpperCase();
+    if (bandName) {
+      const oft = Math.max(4, Math.ceil(180 / (bandName.length + 3)));
+      const muster = new Array(oft).fill(bandName).join(' ');
+      bandTop.firstElementChild.textContent = muster;
+      bandBottom.firstElementChild.textContent = muster;
+    }
+
     const frame = el('div', 'char-figure-frame');
     const stack = el('span', 'char-figure-stack');
     /* Der Ersatz für ein fehlendes Bild: Silhouette und
@@ -1481,7 +1516,9 @@
        und dem Film. Die Spalte bleibt auch dann stehen, wenn showEmpty()
        den Rahmen leer räumt. */
     const middle = el('div', 'char-stage-figure');
-    middle.append(frame);
+    const emblem = el('div', 'char-stage-emblem');
+    emblem.setAttribute('aria-hidden', 'true');
+    middle.append(emblem, frame);
 
     /* Zwei Ebenen übereinander: Eine trägt die sichtbare Fassung, die
        andere nimmt die nächste auf und wird darübergeblendet. */
@@ -1595,10 +1632,36 @@
           + filmYear(movie) + ')'
         : countLabel(item.char.entries.length) + ' in der Timeline';
 
+      setStage(movie ? movie.slug : null);
+
       if (railNow) {
         const at = looks.findIndex(other => other[1] === look);
         railNow.textContent = at === -1 ? '–' : String(at + 1);
       }
+    }
+
+    /* Stellt die Kulisse auf das Wappen um, das zu Figur und Film
+       gehört (js/emblems.js).
+
+       Aufgerufen wird das bei jedem Fassungswechsel, denn ohne eigenes
+       Wappen erbt eine Figur das des Films, und der wechselt mit der
+       Fassung. Wer eines hat, behält es: emblemFor() sieht zuerst bei
+       der Figur nach. Gemalt wird nur, wenn sich etwas ändert, sonst
+       baute jeder Klick auf dieselbe Fassung das SVG neu.
+
+       Fehlt die Datei emblems.js, bleibt die Bühne, wie sie war: Die
+       Bänder stehen dann im Rot der Marke, das im CSS voreingestellt
+       ist, und der Wappenplatz bleibt leer. */
+    let emblemNow = null;
+    function setStage(filmSlug) {
+      if (typeof emblemFor !== 'function') return;
+      const name = emblemFor(item.char.slug, filmSlug);
+      if (name === emblemNow) return;
+      emblemNow = name;
+      emblem.innerHTML = emblemSvg(name);
+      const tint = emblemTint(name);
+      figure.style.setProperty('--stage-dark', tint[0]);
+      figure.style.setProperty('--stage-light', tint[1]);
     }
 
     /* ---------- Mitte: das Ganzkörperbild ---------- */

@@ -115,6 +115,52 @@ Ganzkörperbild vor einem blassen Wappen, rechts oben das Logo des Films,
 darunter der Name der Fassung, wovon der Film handelt und in welchem Jahr
 er erschien, ganz unten der Knopf, der auf der Timeline zu ihm führt.
 
+### Die Kulisse hinter der Figur
+
+Der Grund der Bühne gehört der Figur. Hinter ihr steht ihr Wappen, oben
+und unten läuft ein angeschnittenes Band mit ihrem Namen als Muster, und
+beides steht in zwei Farben, die zu ihr passen. Gepflegt wird das in
+`js/emblems.js`.
+
+Welches Zeichen eine Figur bekommt, entscheidet sich in drei Schritten:
+
+1. `EMBLEM_BY_CHAR` — wer ein eigenes Wappen trägt, bekommt es. Tony
+   Stark den Helm, Steve Rogers das Schild, Peter Parker die Spinne.
+   Schlüssel ist der Charakter-Slug aus `charSlug()`.
+2. `EMBLEM_BY_FILM` — alle anderen erben das Zeichen des Films, aus dem
+   ihr Bild stammt. Aamir Khan ist kein Held und hat kein Wappen, aber er
+   steht in *Ms. Marvel*, also steht der Blitz seiner Schwester hinter
+   ihm. Schlüssel ist der Film-Slug aus `data.js`.
+3. Bleibt beides leer, steht das Zeichen des Hauses da.
+
+Weil der zweite Schritt am Film hängt, wechselt das Wappen mit der
+Fassung: Wer in einem anderen Film ein anderes Bild hat, steht dort vor
+dem Wappen jenes Films. Wer im ersten Schritt gefunden wird, behält
+seines über alle Fassungen hinweg.
+
+Gezeichnet ist jedes Zeichen in `EMBLEM_ART` als Umriss in einer Fläche
+von 200 auf 200, nicht als Bilddatei: Es steht mehrere hundert Pixel groß
+und in wechselnden Farben auf der Bühne, und beides kann eine Datei
+nicht. Klasse `f` füllt, `s` zieht eine Linie, `c` stanzt ein Loch. Die
+Löcher sind echte Löcher und keine weißen Flächen, denn unter ihnen läuft
+das Band durch; erreicht wird das über eine SVG-Maske, siehe
+`emblemSvg()`.
+
+`EMBLEM_TINT` hält zu jedem Zeichen ein Farbpaar: den dunklen Ton für den
+Keil unten und den hellen für das Band oben und das Wappen selbst. Es
+sind Töne der Figur und nicht der Phase — die Phasenfarben gehören der
+Timeline, die Charakterseite hält sich von ihnen fern.
+
+Ein neues Zeichen braucht drei Zeilen: den Umriss in `EMBLEM_ART`, das
+Farbpaar in `EMBLEM_TINT` und den Eintrag, wer es trägt. Danach zeigt es
+sich ohne weiteres Zutun auf jeder Bühne, die dazu passt.
+
+Die Maße der Bänder stehen als `--band-h` und `--band-skew` an
+`.char-stage`. Zweispaltig, also unter 1250 Pixeln, rückt die Filmspalte
+unter die Figur und ihre letzte Zeile an den Fuß der Bühne; damit sie
+nicht in dunkler Schrift auf dem dunklen Keil steht, hält `.char-stage-info`
+dort einen Abstand in genau dieser Höhe frei.
+
 Wie groß eine Figur darin steht, sagt `FULLSIZE_SCALE` mal `FULLSIZE_FIT`
 (siehe `fullsizeScale` in `js/chars.js`), und wie groß das ist, hängt an
 der Bühne und nicht am Fenster. Die Höhe der Bühne steht als `--stage-h`
