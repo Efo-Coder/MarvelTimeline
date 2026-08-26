@@ -3944,32 +3944,24 @@ a.char-film { text-decoration: none; }
 
 /* ---------- Die Kulisse hinter der Figur ----------
 
-   Nachgebaut nach den Heldentafeln, die Marvel zu einzelnen Figuren
-   zeichnet: heller Grund, eine große Diagonale quer darüber, unter der
-   Figur ein dunkler Keil, an dessen Kante einzelne Splitter abgesprengt
-   sind, dazu Striche in den Ecken. Hinter allem das Wappen der Figur.
+   Nachgebaut nach der Vorlage: zwei dunkle Flächen, die einander
+   gegenüberliegen, dazwischen die helle Fläche, und darin lange spitze
+   Splitter, die parallel zu den großen Kanten laufen. Die Formen selbst
+   stehen als Zeichnung in js/characters.js (STAGE_SCENE), hier stehen
+   nur ihre Farben.
 
-   Zwei Farben tragen das Ganze, die js/emblems.js zur Figur liefert und
-   die die Bühne als --stage-dark und --stage-light gesetzt bekommt.
-   Steht dort nichts, bleibt das Rot der Marke stehen.
-
-   Die Winkel stehen in Grad und nicht in Prozent: Die Bühne ist auf
-   einem breiten Fenster dreimal so breit wie hoch und auf einem schmalen
-   fast quadratisch. Eine Kante, die in Prozent beschrieben ist, wäre
-   dort steil und hier flach. Alles Schräge dreht deshalb über transform
-   und behält seinen Winkel, egal wie breit die Bühne gerade ist.
+   Warum eine Zeichnung und keine clip-path-Kette: Prozentwerte
+   beschreiben Punkte, nicht Winkel. Dieselbe Kante wäre auf einer
+   Bühne von 2500 Pixeln flach und auf einer von 1100 steil. Die
+   Zeichnung hat ein festes Koordinatensystem, und preserveAspectRatio
+   legt sie über die Bühne, ohne die Winkel anzutasten.
 
    Die Szene liegt eine Ebene tiefer als die Vignette (-2 gegen -1): So
-   legt sich deren Abdunklung darüber und bindet Keil und Wappen an die
-   Fläche, statt sie darauf zu legen. */
+   legt sich deren Abdunklung darüber und bindet die Flächen an die
+   Bühne, statt sie darauf zu legen. */
 .char-stage {
   --stage-dark: #8c1017;
   --stage-light: #e62429;
-  /* Die Neigung, in der auf dieser Bühne alles Schräge liegt. Sie ist
-     steiler als die 7 Grad der Fassungswahl und die 18 der Profilleiste,
-     weil eine Kante quer über die ganze Fläche sonst als waagerecht
-     gelesen wird. */
-  --stage-tilt: -21deg;
 }
 
 .char-stage-scene {
@@ -3980,125 +3972,31 @@ a.char-film { text-decoration: none; }
   overflow: hidden;
 }
 
-/* Die große Diagonale. Sie teilt die helle Fläche in zwei Töne und ist
-   das, was der Bühne überhaupt eine Richtung gibt.
-
-   Gebaut ist sie als übergroßes gedrehtes Rechteck und nicht als
-   clip-path in Prozent: So bleibt ihr Winkel derselbe, ob die Bühne
-   1200 Pixel breit ist oder 2500. Die Übergröße sorgt dafür, dass sie
-   die gedrehte Fläche noch in jeder Ecke abdeckt. */
-.stage-slash {
-  position: absolute;
-  left: -30%;
-  right: -30%;
-  top: 34%;
-  height: 200%;
-  transform: rotate(var(--stage-tilt));
-  transform-origin: 50% 0;
-  background: color-mix(in srgb, var(--stage-light) 7%, transparent);
-  /* Auch ihre Oberkante zackt. Weil das Element gedreht ist, sind die
-     Zacken im clip-path waagerecht beschrieben und stehen erst nach der
-     Drehung schräg. Die Werte sind Bruchteile der Elementhöhe, und die
-     ist doppelt so hoch wie die Bühne - deshalb bleiben sie klein. */
-  clip-path: polygon(
-    0 3%, 12% 0.6%, 19% 3.4%, 34% 0.4%, 41% 3%,
-    58% 0.2%, 65% 2.6%, 81% 0%, 88% 2.4%, 100% 0.8%,
-    100% 100%, 0 100%);
+.stage-art {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-/* Der dunkle Keil unter der Figur.
-
-   Er steigt von links unten hinter der Figur auf, hat dort seine Spitze
-   und fällt rechts davon wieder zum Boden ab. Dass er vor der
-   Filmspalte endet, ist Absicht: Liefe er weiter, stünde die rechte
-   Spalte mit ihrem Text auf dunklem Grund.
-
-   Die Prozentwerte im clip-path beschreiben nur, wo die Punkte liegen,
-   nicht wie steil die Kante wird - deshalb ist das Element mit 11,5rem
-   so hoch angesetzt: Auf der Strecke von 32 bis 64 Prozent der Breite
-   steigt es über fast seine ganze Höhe an, und das ergibt auf jedem
-   üblichen Fenster einen Winkel um die 20 Grad. */
-.stage-wedge {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 12rem;
-  background: var(--stage-dark);
-  /* Die Kante ist kein Strich, sondern ein Blitz: Sie steigt in
-     Segmenten an, knickt dazwischen zurück und schlägt kurz vor der
-     Filmspalte in die Spitze aus. Rechts davon fällt sie in zwei
-     weiteren Zacken zum Boden ab.
-
-     Die Zahlen sind Punkte eines Linienzugs von links nach rechts.
-     Jedes zweite Paar zieht zurück, und genau das macht den Zacken. */
-  clip-path: polygon(
-    0 100%,
-    0 86%,
-    14% 64%,
-    21% 79%,
-    38% 40%,
-    45% 55%,
-    60% 12%,
-    66% 4%,
-    71% 4%,
-    76% 44%,
-    83% 30%,
-    88% 72%,
-    93% 58%,
-    100% 100%);
+/* Die großen Flächen stehen nicht in der reinen Farbe der Figur,
+   sondern in einem sehr dunklen Grundton, dem sie beigemischt ist. In
+   voller Sättigung wäre die Fläche ein Farbfeld; so ist sie das, was
+   die Vorlage zeigt: fast schwarz, aber mit dem Ton der Figur darin. */
+.stage-art .dunkel {
+  fill: color-mix(in srgb, var(--stage-dark) 52%, #1b1f27);
 }
 
-/* Die Splitter, die von der Kante des Keils abgesprengt sind: kurze
-   Striche in seinem Winkel, gestaffelt und verschieden lang, damit die
-   Kante nicht als eine durchgezogene Linie liest.
-
-   Sie liegen als gedrehtes Band über der Kante und sind mit einem
-   Streifenmuster gefüllt. Weil das Band selbst schon im Winkel der
-   Kante liegt, laufen die Streifen darin parallel zu ihr. */
-.stage-shards {
-  position: absolute;
-  left: 30%;
-  bottom: 3.5rem;
-  width: 26rem;
-  height: 9rem;
-  transform: rotate(var(--stage-tilt));
-  transform-origin: 0 100%;
-  background: repeating-linear-gradient(to bottom,
-    var(--stage-dark) 0 0.32rem,
-    transparent 0.32rem 1.5rem);
-  opacity: 0.5;
-  clip-path: polygon(0 100%, 100% 100%, 100% 0, 62% 44%, 22% 62%);
+/* Die Splitter stehen zwischen beidem: dunkler als der Grund, damit sie
+   überhaupt zu sehen sind, und weit heller als die großen Flächen,
+   damit sie wie abgesprengt wirken und nicht wie eine dritte Fläche. */
+.stage-art .splitter {
+  fill: color-mix(in srgb, var(--stage-dark) 22%, transparent);
 }
 
-/* Die Striche in der oberen rechten Ecke und am rechten Rand. Sie
-   stehen steiler als alles andere, wie die Kratzer, die die Vorlage
-   dort setzt. */
-.stage-ticks {
-  position: absolute;
-  background: repeating-linear-gradient(to bottom,
-    color-mix(in srgb, var(--stage-dark) 45%, transparent) 0 0.22rem,
-    transparent 0.22rem 1.35rem);
-  transform: rotate(-58deg);
-}
-
-.stage-ticks.top {
-  top: -1rem;
-  right: 4rem;
-  width: 9rem;
-  height: 7rem;
-  transform-origin: 100% 0;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 42% 62%);
-}
-
-.stage-ticks.side {
-  bottom: 8rem;
-  right: -2rem;
-  width: 7rem;
-  height: 5rem;
-  transform-origin: 100% 100%;
-  opacity: 0.7;
-  clip-path: polygon(0 100%, 100% 100%, 100% 0, 56% 40%);
+/* Die Splitter, die auf einer dunklen Fläche liegen. Dort ist Dunkel
+   auf Dunkel nichts, also stehen sie hell. */
+.stage-art .span {
+  fill: color-mix(in srgb, var(--stage-light) 34%, transparent);
 }
 
 /* Das Wappen hinter der Figur. Es hängt in der Figurenspalte und nicht

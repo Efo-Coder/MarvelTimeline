@@ -1400,6 +1400,45 @@
      darin ein gezackter Stern. Es steht sehr blass und ist reine Kulisse.
      Hinter der Figur auf der Bühne stand es früher auch, dort ist die
      Fläche jetzt frei. */
+  /* ---------- Die Kulisse der Bühne ----------
+
+     Zwei dunkle Flächen, die einander gegenüberliegen, und zwischen
+     ihnen die helle Fläche mit den Splittern: lange, sehr spitze
+     Scherben, die parallel zu den großen Kanten liegen.
+
+     Alle Kanten haben dieselbe Neigung, gut 28 Grad. Damit die auf
+     jeder Bühnenbreite dieselbe bleibt, ist die Kulisse eine Zeichnung
+     mit festem Koordinatensystem und keine Kette von Prozentwerten:
+     2400 auf 800 sind die Maße, in denen die Formen entworfen sind, und
+     slice legt sie über die Bühne, ohne sie zu verziehen. Ist die Bühne
+     flacher als 3:1, schneidet sie oben und unten etwas ab, ist sie
+     höher, links und rechts. Die Winkel stehen in beiden Fällen.
+
+     Die Farben kommen aus --stage-dark und --stage-light, die
+     js/emblems.js zur Figur liefert. */
+  const STAGE_SCENE = '<svg class="stage-art" viewBox="0 0 2400 800"'
+    + ' preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
+    /* Die große dunkle Fläche unten links. Ihre Kante tritt am linken
+       Rand ein und läuft in gut 20 Grad nach rechts unten aus der
+       Fläche heraus - dieselbe Neigung wie alles andere hier. */
+    + '<path class="dunkel" d="M0 288 1366 800 0 800Z"/>'
+    /* Die zweite oben rechts, gegenüberliegend und parallel dazu. */
+    + '<path class="dunkel" d="M1704 0 2400 261 2400 0Z"/>'
+    /* Die Splitter auf der hellen Fläche: lange, sehr spitze Scherben,
+       die etwas steiler liegen als die großen Kanten. Genau dieser
+       Unterschied lässt sie abgesprengt aussehen und nicht parallel
+       verlegt. */
+    + '<path class="splitter" d="M0 176 946 546 0 210Z"/>'
+    + '<path class="splitter" d="M16 316 272 418 24 340Z"/>'
+    + '<path class="splitter" d="M238 392 332 432 244 410Z"/>'
+    + '<path class="splitter" d="M1632 42 2104 262 1642 76Z"/>'
+    + '<path class="splitter" d="M2132 128 2400 254 2138 150Z"/>'
+    /* Und zwei, die auf der dunklen Fläche liegen. Dort sind sie hell
+       statt dunkel, sonst wären sie nicht zu sehen. */
+    + '<path class="span" d="M0 372 366 512 0 402Z"/>'
+    + '<path class="span" d="M2242 44 2400 106 2246 62Z"/>'
+    + '</svg>';
+
   const STAGE_EMBLEM = '<svg viewBox="0 0 400 400" aria-hidden="true">'
     + '<path class="burst" d="M200 30 236.4 112.2 320.2 79.8 287.8 163.6 370 200'
     + ' 287.8 236.4 320.2 320.2 236.4 287.8 200 370 163.6 287.8 79.8 320.2'
@@ -1474,12 +1513,7 @@
        Figur, siehe .char-stage-emblem. */
     const scene = el('div', 'char-stage-scene');
     scene.setAttribute('aria-hidden', 'true');
-    scene.append(
-      el('div', 'stage-slash'),        // die große helle Diagonale
-      el('div', 'stage-wedge'),        // der dunkle Keil unter der Figur
-      el('div', 'stage-shards'),       // die Splitter entlang seiner Kante
-      el('div', 'stage-ticks top'),    // die Striche in der oberen Ecke
-      el('div', 'stage-ticks side'));  // und die am rechten Rand
+    scene.innerHTML = STAGE_SCENE;
     figure.append(scene);
 
     const frame = el('div', 'char-figure-frame');
