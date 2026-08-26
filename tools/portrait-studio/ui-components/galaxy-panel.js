@@ -129,7 +129,7 @@
     }
   }
 
-  /* Ohne Phase zeigt die Galaxie die Akzentfarben aller sechs
+  /* Ohne Phase zeigt die Galaxie die Akzentfarben aller Phasen
      nebeneinander, also das ganze Spektrum der Timeline. Genau so rechnet
      js/data.js sein DEFAULT_NEBULA aus, siehe dort. */
   function grundfarben() {
@@ -359,12 +359,12 @@
 
   /* Der Schleier über dem Hintergrund trägt die Akzentfarben der gerade
      sichtbaren Phase. Ohne diese Reihe sähe man im Studio immer nur den
-     Seitenanfang, auf dem alle sechs nebeneinander liegen. */
+     Seitenanfang, auf dem alle nebeneinander liegen. */
   function bauePhasen() {
     const feld = $$('galaxie-phasen');
     feld.textContent = '';
     const eintraege = [
-      { titel: 'Alle sechs Akzente nebeneinander, wie am Seitenanfang' },
+      { titel: 'Alle Akzente nebeneinander, wie am Seitenanfang' },
       ...entwurfPhasen,
     ];
     eintraege.forEach((p, i) => {
@@ -407,7 +407,7 @@
         waehlePhase(null);
         zeigeStand();
       }, 'Der Akzent dieser Phase. Er färbt Ränder, Knöpfe und Marken der '
-        + 'Seite, und am Seitenanfang steuert er zusätzlich eine der sechs '
+        + 'Seite, und am Seitenanfang steuert er zusätzlich eine der '
         + 'Farben der Galaxie bei. In der Vorschau ist nur das Zweite zu sehen.'
         + '\n\nIn der Datei: PHASES[' + i + '].accent');
 

@@ -42,6 +42,7 @@ function melde(text, schlecht) {
 const S = {
   bereich: 'portrait',   // 'portrait', 'ganzkoerper' oder 'biografie'
   figuren: [],
+  welten: [],          // CHAR_WORLDS aus js/chars.js, siehe zerlegeNamen()
   zaehler: null,
   python: null,
   engine: null,        // Real-ESRGAN: { ok, pfad } oder { ok: false, grund }
@@ -82,6 +83,7 @@ const S = {
   frisch: new Map(),   // Datei -> Zeitstempel, bricht den Bildcache auf
   texte: null,         // Biografie: was der Server zur offenen Figur schickte
   texteStand: '',      // dasselbe als Abdruck, daran hängt „geändert?“
+  begriffe: [],        // Bezeichnungen der Beziehungen: [{ name, anzahl }]
   wikiOffen: 0,        // Figuren ohne Eintrag im erzeugten Steckbrief-Block
 };
 
@@ -152,6 +154,12 @@ const eigenesBild = () => !!(S.quelle && S.quelle.typ === 'portrait');
    denselben Dateinamen, der Name allein sagt es also nicht. */
 const quellOrdner = (quelle) => (quelle.typ === 'portrait' ? 'portraits' : 'fullsize');
 const zieleVon = (figur) => (ganz() ? figur.ganzkoerper : figur.ziele);
+
+/* Wie viele Fassungen in der Liste neben der Figur stehen. Gezählt werden
+   Fassungen und keine Dateien: Eine Fassung mit drei Varianten ist eine,
+   auch wenn sie in drei Bildern vorliegt. */
+const fassungsZahl = (figur) => (ganz()
+  ? fassungenVon(figur).length : figur.ziele.length);
 const ordner = () => (ganz() ? 'fullsize' : 'portraits');
 
 function bildUrl(datei, welcher) {
@@ -163,9 +171,16 @@ function bildUrl(datei, welcher) {
 /* ---------- Fortschritt ----------
 
    Der Server meldet über einen Ereignisstrom, was gerade läuft, wie lange
-   es voraussichtlich dauert und wie viel davon schon vorbei ist.
-   Angezeigt wird die jüngste Arbeit, denn das ist die, die der Nutzer eben
-   ausgelöst hat.
+   es voraussichtlich dauert und wie viel davon schon vorbei ist. Angezeigt
+   wird jede laufende Arbeit mit eigenem Balken, untereinander im selben
+   Kasten.
+
+   Vorher stand dort nur die jüngste. Wer ein Bild speicherte und
+   währenddessen zur nächsten Fassung wechselte, sah den Zuschnitt
+   verschwinden und stattdessen die Gesichtssuche der neuen Vorlage
+   anlaufen, die nach einer Sekunde auf hundert Prozent sprang. Der
+   Zuschnitt lief die ganze Zeit weiter, nur zu sehen war er nicht mehr,
+   und der Balken meldete den Abschluss von etwas ganz anderem.
 
    Die Zahl kommt aus der Uhr: Sie zeigt, welcher Anteil der erwarteten
    Dauer verstrichen ist. Der Server schätzt diese Dauer aus seinen
@@ -198,14 +213,15 @@ const NACHSCHLAG = 0.15;         // erste Verlängerung, Anteil der Schätzung
 const NACHSCHLAG_MIN = 5000;     // aber nie weniger als fünf Sekunden
 const NACHSCHLAG_MAX = 60000;    // und nie mehr als eine Minute am Stück
 
-let anzeigeZeit = 0;
-let ausblendZeit = 0;
-let sichtbarSeit = 0;
+
+/* Der Kasten insgesamt: Er geht auf, sobald eine Arbeit länger dauert als
+   ANZEIGE_AB, und wieder zu, wenn die letzte Zeile verschwunden ist. */
+let kastenSeit = 0;              // wann er zuletzt aufging
 let bildTakt = 0;
-let uhr = null;                  // { id, start, erwartet, frist, stufe, schritt }
-let letzterAnteil = 0;
-let letzteZahl = '';
-let letzteZeile = '';
+
+/* Je laufender Arbeit eine Uhr und eine Zeile im Kasten. Der Schlüssel
+   ist die Nummer, die der Server vergibt. */
+const uhren = new Map();         // id -> { id, start, erwartet, frist, stufe, ... }
 
 function kurve(teil) {
   if (teil <= 0) return 0;
@@ -223,7 +239,7 @@ function kurve(teil) {
    größer als der vorige: Wer schon das Doppelte gebraucht hat, wird kaum
    in den nächsten fünf Sekunden fertig, und eine Restzeit, die zwanzigmal
    „noch etwa 5 s“ sagt, glaubt niemand mehr. */
-function frist(verstrichen) {
+function frist(uhr, verstrichen) {
   while (verstrichen >= uhr.frist) {
     uhr.frist += uhr.stufe;
     uhr.stufe = Math.min(NACHSCHLAG_MAX, uhr.stufe * 1.6);
@@ -243,134 +259,165 @@ function restText(ms) {
 /* Die Breite ändert sich mit jedem Bild, Zahl und Zeile nur, wenn sie
    wirklich anders lauten. Das hält die Vorleseprogramme ruhig, die am
    Kasten hängen. */
-function schreibe(anteil, zeile) {
+function schreibe(uhr, anteil, zeile) {
   const zahl = Math.round(anteil * 100) + ' %';
-  if (zahl !== letzteZahl) {
-    letzteZahl = zahl;
-    $('fortschritt-zahl').textContent = zahl;
+  if (zahl !== uhr.letzteZahl) {
+    uhr.letzteZahl = zahl;
+    uhr.feld.zahl.textContent = zahl;
   }
-  if (zeile !== letzteZeile) {
-    letzteZeile = zeile;
-    $('fortschritt-schritt').textContent = zeile;
+  if (zeile !== uhr.letzteZeile) {
+    uhr.letzteZeile = zeile;
+    uhr.feld.schritt.textContent = zeile;
   }
-  $('fortschritt-balken').style.width = (anteil * 100).toFixed(2) + '%';
+  uhr.feld.balken.style.width = (anteil * 100).toFixed(2) + '%';
 }
 
 function male() {
   bildTakt = 0;
+  let laeuft = false;
+  const jetzt = performance.now();
+  for (const uhr of uhren.values()) {
+    if (uhr.fertig) continue;
+    laeuft = true;
+    const verstrichen = jetzt - uhr.start;
+    /* Nie rückwärts, auch wenn der Rechner beim Umschalten der Ansicht
+       einmal aussetzt. */
+    uhr.anteil = Math.max(uhr.anteil, kurve(verstrichen / uhr.erwartet));
+    schreibe(uhr, uhr.anteil,
+      [uhr.schritt, restText(frist(uhr, verstrichen) - verstrichen)].filter(Boolean).join(', '));
+  }
+  if (laeuft) bildTakt = requestAnimationFrame(male);
+}
+
+/* Eine Zeile im Kasten, aus der Vorlage in index.html. */
+function baueZeile() {
+  const zeile = $('fortschritt-zeile').content.firstElementChild.cloneNode(true);
+  return {
+    wurzel: zeile,
+    titel: zeile.querySelector('.fortschritt-titel'),
+    zahl: zeile.querySelector('.fortschritt-zahl'),
+    balken: zeile.querySelector('.fortschritt-balken'),
+    schritt: zeile.querySelector('.fortschritt-schritt'),
+  };
+}
+
+/* Eine einzelne Uhr fällt weg, samt ihrer Zeile. */
+function nimmUhr(id) {
+  const uhr = uhren.get(id);
   if (!uhr) return;
-  const verstrichen = performance.now() - uhr.start;
-  /* Nie rückwärts, auch wenn der Rechner beim Umschalten der Ansicht
-     einmal aussetzt. */
-  letzterAnteil = Math.max(letzterAnteil, kurve(verstrichen / uhr.erwartet));
-  schreibe(letzterAnteil,
-    [uhr.schritt, restText(frist(verstrichen) - verstrichen)].filter(Boolean).join(', '));
-  bildTakt = requestAnimationFrame(male);
+  clearTimeout(uhr.ausblendZeit);
+  uhr.feld.wurzel.remove();
+  uhren.delete(id);
+  if (!uhren.size) schliesseKasten();
+}
+
+function schliesseKasten() {
+  cancelAnimationFrame(bildTakt);
+  bildTakt = 0;
+  kastenSeit = 0;
+  $('fortschritt-laeufe').textContent = '';
+  $('fortschritt').hidden = true;
 }
 
 function versteckeFortschritt() {
+  for (const uhr of uhren.values()) clearTimeout(uhr.ausblendZeit);
+  uhren.clear();
   clearTimeout(anzeigeZeit);
-  clearTimeout(ausblendZeit);
-  cancelAnimationFrame(bildTakt);
   anzeigeZeit = 0;
-  ausblendZeit = 0;
-  sichtbarSeit = 0;
-  bildTakt = 0;
-  uhr = null;
-  letzterAnteil = 0;
-  letzteZahl = '';
-  letzteZeile = '';
-  $('fortschritt').hidden = true;
-  $('fortschritt-balken').classList.remove('abschluss');
-  $('fortschritt-balken').style.width = '0';
+  schliesseKasten();
 }
 
-function zeigeFortschritt(lauf) {
+/* Der Kasten geht mit Verzögerung auf: Was in einer knappen halben
+   Sekunde durch ist, soll gar nicht erst aufblitzen. */
+let anzeigeZeit = 0;
+
+function oeffneKasten(spaeter) {
   const kasten = $('fortschritt');
-
-  if (!lauf) {
-    /* Der Lauf ist weg. Kam vorher die Meldung, dass er fertig ist, läuft
-       das Nachleuchten schon und die volle Länge bleibt stehen: Ein
-       Balken, der nie ankommt, wirkt hängen geblieben. Ein Abbruch
-       dagegen verschwindet sofort, er hat die hundert Prozent ja nicht
-       verdient. */
-    if (!ausblendZeit) versteckeFortschritt();
-    return;
-  }
-
-  /* Ein neuer Lauf während des Nachleuchtens übernimmt sofort. */
-  if (ausblendZeit) {
-    clearTimeout(ausblendZeit);
-    ausblendZeit = 0;
-  }
-
-  const balken = $('fortschritt-balken');
-  if (!uhr || uhr.id !== lauf.id) {
-    /* Die Uhr wird einmal je Lauf gestellt, auf den Beginn, den der Server
-       meldet. Spätere Meldungen rühren sie nicht mehr an, sonst zöge jede
-       von ihnen den Balken um die Laufzeit der Leitung zurück.
-
-       Löst eine Arbeit die eben fertige ab, fiele der Balken von voll auf
-       leer, und das Auge läse es als Rückschritt. Der Sprung nach unten
-       geschieht deshalb ohne Übergang, nur der letzte nach oben wird
-       geführt. */
-    const erwartet = Math.max(500, lauf.erwartet || 0);
-    uhr = {
-      id: lauf.id,
-      start: performance.now() - (lauf.verstrichen || 0),
-      erwartet,
-      frist: erwartet,
-      stufe: Math.max(NACHSCHLAG_MIN, erwartet * NACHSCHLAG),
-      titel: lauf.titel,
-      schritt: lauf.schritt || '',
-    };
-    letzterAnteil = 0;
-    letzteZahl = '';
-    letzteZeile = '';
-    balken.classList.remove('abschluss');
-    balken.style.width = '0';
-  }
-  uhr.titel = lauf.titel;
-  uhr.schritt = lauf.schritt || '';
-  $('fortschritt-titel').textContent = lauf.titel;
-
-  if (lauf.fertig) {
-    cancelAnimationFrame(bildTakt);
-    bildTakt = 0;
-    /* War der Kasten noch gar nicht zu sehen, ging alles unter einer
-       halben Sekunde über die Bühne. Dann bleibt er auch weg. War er eben
-       erst aufgegangen, geht er sofort wieder zu: Die vollen hundert
-       Prozent noch fast eine Sekunde stehen zu lassen, nachdem der Kasten
-       einen Wimpernschlag lang da war, machte aus dem Zucken erst recht
-       ein Blinken. */
-    if (kasten.hidden || performance.now() - sichtbarSeit < KAUM_GESEHEN) {
-      return versteckeFortschritt();
-    }
-    letzterAnteil = 1;
-    balken.classList.add('abschluss');
-    schreibe(1, uhr.schritt);
-    ausblendZeit = setTimeout(versteckeFortschritt, ABSCHLUSS_STEHT);
-    return;
-  }
-
-  if (!bildTakt) bildTakt = requestAnimationFrame(male);
-
-  if (kasten.hidden && !anzeigeZeit) {
-    anzeigeZeit = setTimeout(() => {
-      anzeigeZeit = 0;
-      if (!uhr) return;
-      kasten.hidden = false;
-      sichtbarSeit = performance.now();
-    }, Math.max(0, ANZEIGE_AB - (lauf.verstrichen || 0)));
-  }
+  if (!kasten.hidden || anzeigeZeit) return;
+  anzeigeZeit = setTimeout(() => {
+    anzeigeZeit = 0;
+    if (!uhren.size) return;
+    kasten.hidden = false;
+    kastenSeit = performance.now();
+  }, Math.max(0, spaeter));
 }
 
+/* Der Stand, wie der Server ihn schickt: alle Läufe, jüngster zuerst.
+   Daraus werden die Zeilen im Kasten, in der Reihenfolge, in der die
+   Arbeiten angefangen haben – die älteste oben, damit eine neue Arbeit
+   die anderen nicht verschiebt. */
+function zeigeFortschritt(laeufe) {
+  const liste = Array.isArray(laeufe) ? laeufe : [];
+  const gemeldet = new Set(liste.map((l) => l.id));
+
+  /* Was der Server nicht mehr kennt, ist weg. Das ist der Abbruch: Er hat
+     die vollen hundert Prozent nicht verdient und verschwindet sofort.
+     Ein Lauf, der schon im Nachleuchten steht, bleibt dagegen stehen,
+     bis sein Zeitgeber ihn abräumt. */
+  for (const [id, uhr] of [...uhren]) {
+    if (!gemeldet.has(id) && !uhr.fertig) nimmUhr(id);
+  }
+
+  const felder = $('fortschritt-laeufe');
+  for (const lauf of [...liste].reverse()) {
+    let uhr = uhren.get(lauf.id);
+    if (!uhr) {
+      /* Die Uhr wird einmal je Lauf gestellt, auf den Beginn, den der
+         Server meldet. Spätere Meldungen rühren sie nicht mehr an, sonst
+         zöge jede von ihnen den Balken um die Laufzeit der Leitung
+         zurück. */
+      const erwartet = Math.max(500, lauf.erwartet || 0);
+      uhr = {
+        id: lauf.id,
+        start: performance.now() - (lauf.verstrichen || 0),
+        erwartet,
+        frist: erwartet,
+        stufe: Math.max(NACHSCHLAG_MIN, erwartet * NACHSCHLAG),
+        anteil: 0,
+        letzteZahl: '',
+        letzteZeile: '',
+        seit: performance.now(),
+        fertig: false,
+        ausblendZeit: 0,
+        feld: baueZeile(),
+      };
+      uhren.set(lauf.id, uhr);
+      felder.append(uhr.feld.wurzel);
+      oeffneKasten(ANZEIGE_AB - (lauf.verstrichen || 0));
+    }
+    uhr.schritt = lauf.schritt || '';
+    if (uhr.titel !== lauf.titel) {
+      uhr.titel = lauf.titel;
+      uhr.feld.titel.textContent = lauf.titel;
+    }
+
+    if (lauf.fertig && !uhr.fertig) {
+      uhr.fertig = true;
+      /* War der Kasten noch gar nicht zu sehen, ging alles unter einer
+         halben Sekunde über die Bühne. Dann bleibt die Zeile auch weg.
+         War er eben erst aufgegangen, geht sie sofort wieder zu: Die
+         vollen hundert Prozent noch fast eine Sekunde stehen zu lassen,
+         nachdem der Kasten einen Wimpernschlag lang da war, machte aus
+         dem Zucken erst recht ein Blinken. */
+      if ($('fortschritt').hidden || performance.now() - kastenSeit < KAUM_GESEHEN) {
+        nimmUhr(lauf.id);
+        continue;
+      }
+      uhr.anteil = 1;
+      uhr.feld.balken.classList.add('abschluss');
+      schreibe(uhr, 1, uhr.schritt);
+      uhr.ausblendZeit = setTimeout(() => nimmUhr(lauf.id), ABSCHLUSS_STEHT);
+    }
+  }
+
+  if (uhren.size && !bildTakt) bildTakt = requestAnimationFrame(male);
+}
 function hoereFortschritt() {
   const strom = new EventSource('/api/fortschritt');
   strom.addEventListener('message', (ev) => {
     let stand;
     try { stand = JSON.parse(ev.data); } catch { return; }
-    zeigeFortschritt(stand.laeufe[0] || null);
+    zeigeFortschritt(stand.laeufe || []);
   });
   /* Fällt die Verbindung, verbindet der Browser von allein neu. Die
      Anzeige geht dabei ohne Nachleuchten weg: Wie weit die Arbeit
@@ -396,12 +443,14 @@ async function start() {
   try {
     const daten = await json('/api/figuren');
     S.figuren = daten.figuren;
+    S.welten = daten.welten || [];
     S.zaehler = daten.zaehler;
     S.python = daten.python;
     S.engine = daten.engine;
     S.gesicht = daten.gesicht;
     S.frei = daten.frei;
     S.wikiOffen = daten.wikiOffen || 0;
+    S.begriffe = daten.begriffe || [];
     richteGesichtEin();
     richteFreiEin();
     pruefeStand(daten.stand);
@@ -477,9 +526,12 @@ function pruefeStand(stand) {
   }
   if (laedtNeu) return;
 
-  /* Ein neues START heißt: Das hier ist nicht mehr derselbe Server. */
+  /* Ein neues START heißt: Das hier ist nicht mehr derselbe Server.
+     Verglichen wird der Abdruck der Seitendateien, nicht ihr Zeitpunkt:
+     Eine bloß angefasste Datei ist kein Grund, mitten in der Arbeit neu
+     zu laden, siehe abdruck() in server.js. */
   const neuerServer = stand.start && stand.start !== serverStart;
-  if (neuerServer || stand.seite > seitenStand) {
+  if (neuerServer || stand.seite !== seitenStand) {
     laedtNeu = true;
     melde(neuerServer ? 'Der Server ist neu gestartet, die Seite lädt nach …'
       : 'Die Oberfläche hat sich geändert, die Seite lädt neu …');
@@ -823,19 +875,25 @@ function baueListe() {
     text.className = 'eintrag-text';
     const name = document.createElement('span');
     name.className = 'eintrag-name';
-    name.textContent = figur.name;
+    /* Oben steht, was auf der Charakterseite groß über der Kachel steht,
+       und danach ist die Liste auch sortiert. Der Realname rutscht in die
+       Zeile darunter: Sonst läge der Schlüssel der Ordnung nirgends
+       sichtbar, und die Liste läse sich ungeordnet. */
+    name.textContent = figur.ueberschrift || figur.name;
     const unten = document.createElement('span');
     unten.className = 'eintrag-unten';
-    unten.textContent = [figur.rolle, `${figur.auftritte} Auftritt${figur.auftritte === 1 ? '' : 'e'}`]
+    unten.textContent = [figur.welt,
+      figur.ueberschrift === figur.name ? '' : figur.name,
+      `${figur.auftritte} Auftritt${figur.auftritte === 1 ? '' : 'e'}`]
       .filter(Boolean).join(' · ');
     text.append(name, unten);
 
     knopf.append(bild, text);
-    const ziele = zieleVon(figur);
-    if (ziele.length > 1) {
+    const anzahl = fassungsZahl(figur);
+    if (anzahl > 1) {
       const marke = document.createElement('span');
       marke.className = 'marke';
-      marke.textContent = ziele.length + ' Fassungen';
+      marke.textContent = anzahl + ' Fassungen';
       knopf.append(marke);
     }
     const punkt = document.createElement('span');
@@ -871,7 +929,7 @@ function filtern() {
       || (S.filter === 'fertig' && zustand === 'fertig')
       || (S.filter === 'fehlt' && zustand === 'fehlt');
     if (passt && suche) {
-      const heuhaufen = [figur.name, figur.rolle, figur.slug,
+      const heuhaufen = [figur.name, figur.ueberschrift, figur.rolle, figur.welt, figur.slug,
         ...zieleVon(figur).map((z) => z.datei), ...figur.filme].join(' ').toLowerCase();
       passt = heuhaufen.includes(suche);
     }
@@ -918,6 +976,7 @@ async function waehleFigur(slug) {
   $('arbeit').hidden = false;
   $('figur-name').textContent = figur.name;
   $('figur-rolle').textContent = figur.rolle;
+  $('figur-welt').textContent = figur.welt || '';
   $('figur-filme').textContent = figur.filme.join(', ');
   $('figur-filme').title = figur.filme.join(', ');
 
@@ -955,6 +1014,15 @@ function passendeQuelle(ziel) {
 
 async function waehleZiel(ziel) {
   S.ziel = ziel;
+  /* Die Zeile unter dem Knopf gehört der Fassung, für die sie geschrieben
+     wurde. „Wird geschnitten …“ oder „Gespeichert: xy.webp“ über einer
+     anderen Fassung stehen zu lassen, wäre eine falsche Auskunft: Läuft
+     dort gerade etwas, meldet es der Fortschrittskasten, und was fertig
+     ist, stand in der Meldung. */
+  const info = $('speicher-info');
+  info.className = 'speicher-info';
+  info.textContent = ziel && speichertGerade.has(speicherSchluessel(S.bereich, ziel.datei))
+    ? 'Wird geschnitten …' : '';
   /* Die Regler stehen auf dem, was für diese Fassung in chars.js steht:
      die Körpergröße aus FULLSIZE_SCALE, die Feinkorrektur des Bildes aus
      FULLSIZE_FIT. Ohne Eintrag ist beides 1.0, also ein erwachsener
@@ -999,21 +1067,60 @@ function zeichneChips() {
   const zieleFeld = $('ziele');
   zieleFeld.textContent = '';
   $('ziel-block').hidden = !ziele.length;
-  for (const ziel of ziele) {
+  /* Im Ganzkörper-Betrieb steht jede Fassung einmal in der Reihe, auch
+     wenn sie in mehreren Bildern vorliegt. Ihre Varianten hängen als
+     Ziffern am Chip, genauso wie sie auf der Charakterseite an der
+     Profilleiste hängen. Bearbeitet wird dabei immer ein einzelnes Bild:
+     Ein Klick auf eine Ziffer wählt genau dieses. */
+  const gezeigt = ganz() ? fassungenVon(S.figur) : ziele;
+  for (const ziel of gezeigt) {
+    const stamm = stammVon(ziel);
+    const varianten = ganz() ? variantenVon(S.figur, stamm) : [ziel];
+    /* Offen ist die Variante, die gerade auf der Bühne steht, sonst die
+       erste. So weiß der Chip, welchen Zustandspunkt und welchen Namen er
+       trägt, bevor jemand eine Ziffer angeklickt hat. */
+    const offen = varianten.find((z) => z === S.ziel) || varianten[0];
     const chip = document.createElement('button');
     chip.type = 'button';
-    chip.className = 'chip' + (ziel === S.ziel ? ' an' : '');
+    chip.className = 'chip' + (offen === S.ziel ? ' an' : '');
     const punkt = document.createElement('span');
-    punkt.className = 'punkt ' + zielZustand(ziel);
+    punkt.className = 'punkt ' + zielZustand(offen);
     const text = document.createElement('span');
-    text.textContent = ziel.label;
+    text.textContent = offen.label;
     chip.append(punkt, text);
-    chip.title = `${ziel.datei}.webp`
-      + (ziel.filme ? ' · ' + ziel.filme.join(', ') : '')
-      + (ziel.zustand === 'fehlt' ? ' · noch keine Datei' : '')
-      + (ziel.markiert ? ' · von Hand als offen markiert' : '');
-    chip.addEventListener('click', () => waehleZiel(ziel));
-    zieleFeld.append(chip);
+    chip.title = `${offen.datei}.webp`
+      + (offen.filme ? ' · ' + offen.filme.join(', ') : '')
+      + (varianten.length > 1 ? ` · ${varianten.length} Varianten` : '')
+      + (offen.zustand === 'fehlt' ? ' · noch keine Datei' : '')
+      + (offen.markiert ? ' · von Hand als offen markiert' : '');
+    chip.addEventListener('click', () => waehleZiel(offen));
+    if (varianten.length < 2) {
+      zieleFeld.append(chip);
+      continue;
+    }
+    /* Chip und Ziffern stehen zusammen in einem Kasten, damit sie beim
+       Umbrechen der Reihe nicht auseinanderfallen. */
+    const gruppe = document.createElement('span');
+    gruppe.className = 'chip-gruppe';
+    gruppe.append(chip);
+    for (const variante of varianten) {
+      const ziffer = document.createElement('button');
+      ziffer.type = 'button';
+      ziffer.className = 'chip-variante' + (variante === S.ziel ? ' an' : '');
+      const punkt2 = document.createElement('span');
+      punkt2.className = 'punkt ' + zielZustand(variante);
+      const zahl = document.createElement('span');
+      zahl.textContent = String(variante.variante);
+      ziffer.append(punkt2, zahl);
+      ziffer.title = `${variante.datei}.webp`
+        + (variante.zustand === 'fehlt' ? ' · noch keine Datei' : '')
+        + (variante.markiert ? ' · von Hand als offen markiert' : '');
+      ziffer.setAttribute('aria-label',
+        `${offen.label}, Variante ${variante.variante} von ${varianten.length}`);
+      ziffer.addEventListener('click', () => waehleZiel(variante));
+      gruppe.append(ziffer);
+    }
+    zieleFeld.append(gruppe);
   }
   frischeFassungsleiste();
 
@@ -1435,10 +1542,16 @@ function standardRect(breite, hoehe) {
    sonst auf zwei Bilder, und das langsamere käme zuletzt an. */
 let lauf = 0;
 
+const neueMarke = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
 async function waehleQuelle(quelle) {
   if (quelle.typ === 'upload' && !S.upload) return;
   const meiner = ++lauf;
-  S.quelle = quelle;
+  /* Die Marke sagt dem Server, welche Pixel gerade auf der Bühne liegen.
+     Sie ist neu, weil die Vorlage gleich frisch von der Platte kommt:
+     Was er beim letzten Speichern von dieser Datei beiseitegelegt hat,
+     zeigt die Bühne damit nicht mehr, und es gilt der Stand im Ordner. */
+  S.quelle = { ...quelle, marke: neueMarke() };
   zeichneChips();
   /* Die Schablone bleibt, wie sie steht: Sie hängt an der Figur und ihren
      Fassungen, nicht daran, welche Vorlage gerade auf der Bühne liegt. */
@@ -1482,8 +1595,10 @@ async function waehleQuelle(quelle) {
      nicht von selbst los: Wer es aufschlägt, will es meist nur nachziehen
      oder schärfen, und eine Erkennung, die sofort enger schneidet, nähme
      ihm genau das. Der Knopf holt sie jederzeit. */
-  if (!quadrat()) setzeRandlos(false);
-  else if (eigenesBild()) {
+  if (!quadrat()) {
+    setzeRandlos(false);
+    stelleSchwebeHer();
+  } else if (eigenesBild()) {
     S.vorschlag = { ...S.rect };
     frischeDaten();
   } else if (S.python.ok) await holeVorschlag();
@@ -1512,6 +1627,28 @@ function setzeRandlos(merken) {
   if (vorher) merkeAusschnitt('Randlos beschnitten', vorher);
 }
 
+/* Eine fliegende Figur wieder in die Luft heben, wenn ihre Vorlage
+   aufgeschlagen wird.
+
+   Der randlose Zuschnitt legt das Rechteck eng um die sichtbaren Pixel
+   und nimmt der Figur damit genau die leere Fläche weg, die sie schweben
+   lässt. Wer sie nur nachschärfen will, sähe sie danach auf der
+   Bodenlinie stehen und schriebe beim Speichern eine Null in
+   FULLSIZE_LIFT. Deshalb wird die gespeicherte Schwebe hier wieder
+   angehängt: unten so viel Fläche, dass ihr Anteil wieder stimmt.
+
+   Nur der Boden wandert. Streifen links, rechts und oben bleiben
+   weggeschnitten, die gehören nicht zur Schwebe. */
+function stelleSchwebeHer() {
+  const schwebe = (S.ziel && S.ziel.schwebe) || 0;
+  if (quadrat() || !S.rect || !(schwebe > 0) || !S.alpha) return;
+  S.rect.hoehe /= (1 - schwebe);
+  passeAnsichtAn(true);
+  zeichne();
+  vorschau();
+  frischeDaten();
+}
+
 /* Den Vorschlag holen und übernehmen: beim Porträt den Kopf aus dem
    Skill, beim Ganzkörperbild die Hülle des sichtbaren Inhalts. Beim
    Wechsel der Vorlage passiert das von allein, per Knopf auch später
@@ -1529,7 +1666,8 @@ async function holeVorschlag(merken) {
        genauso. Sein Vorschlag steht damit in denselben Pixeln wie der
        Ausschnitt auf der Bühne. */
     const p = new URLSearchParams({ typ: quelle.typ, bereich: S.bereich, winkel });
-    if (quelle.typ === 'fullsize') p.set('name', quelle.name); else p.set('id', quelle.id);
+    if (quelle.typ === 'upload') p.set('id', quelle.id); else p.set('name', quelle.name);
+    if (quelle.marke) p.set('marke', quelle.marke);
     const daten = await json('/api/auto?' + p);
     /* Inzwischen umgeschaltet oder weitergedreht: Der Vorschlag gehört
        dann zu einer Fläche, die es so nicht mehr gibt. */
@@ -1603,7 +1741,7 @@ function baueReferenzWahl() {
   wahl.textContent = '';
   wahl.append(new Option('Ohne', ''));
   const dateien = S.figur ? zieleVon(S.figur).filter((z) => z.zustand !== 'fehlt') : [];
-  for (const z of dateien) wahl.append(new Option(z.label || z.datei, z.datei));
+  for (const z of dateien) wahl.append(new Option(z.labelBild || z.label || z.datei, z.datei));
   wahl.disabled = !dateien.length;
   /* Eine von Hand gewählte Schablone hat Vorrang, solange es sie noch
      gibt: So übersteht sie das Speichern und den Sprung zu einer anderen
@@ -1872,30 +2010,81 @@ function zeichne() {
    Rahmen und schöpft ihn nur bis zu diesem Anteil aus. Aus dem Ausschnitt
    folgt so der Rahmen, in dem er später steht. Beide Maße sind Pixel der
    Vorlage, die Bühne rechnet sie wie alles andere mit view.k um. */
-const RAHMEN_SEITEN = 1349 / 546;   // Innenmaß des Rahmens, siehe css/style.css
+const RAHMEN_SEITEN = 1.1;          // --frame-ratio, siehe css/style.css
 const RAHMEN_LUFT = 0.82;           // ebenda: darüber bleibt Platz für den Kopf
 
+/* ---------- Die Schwebe: leere Fläche unter der Figur ----------
+
+   Wer den Ausschnitt unter die Figur hinaus nach unten zieht, will sie
+   fliegen lassen und nicht kleiner haben. Für den Rahmen ist die leere
+   Fläche aber Bild wie jede andere, und dieselbe Figur stünde in einer
+   höheren Datei kleiner da.
+
+   Deshalb wird gemessen statt ausgeglichen: Wie viel des Ausschnitts
+   unter dem letzten sichtbaren Pixel liegt, steht als eigene Zahl in
+   FULLSIZE_LIFT und rechnet die Datei auf der Seite wieder groß. Die
+   Bildkorrektur bleibt davon unberührt, sie sagt weiter, wie die Pose
+   von einer ruhig stehenden abweicht.
+
+   Ohne freigestellte Vorlage gibt es keine Hülle und damit keine
+   Schwebe: Ein Bild mit undurchsichtigem Hintergrund hat unten keine
+   leere Fläche, sondern Hintergrund. */
+function schwebeJetzt(genau) {
+  /* Nach einer Drehung wird die Hülle erst nach einer kurzen Pause neu
+     gemessen. Fürs Zeichnen ist das gleichgültig, beim Speichern nicht:
+     Dort muss die Zahl stimmen, auch wenn sie gerade fehlt. */
+  if (genau && !S.kasten && S.bild) messeKasten();
+  const k = S.kasten;
+  const r = S.rect;
+  if (quadrat() || !r || !k || !k.alpha || !(r.hoehe > 0)) return 0;
+  const leer = (r.y + r.hoehe) - k.unten;
+  return Math.max(0, Math.min(0.9, Math.round((leer / r.hoehe) * 1000) / 1000));
+}
+
+/* Wie viel der Rahmen von der Datei zeigt: Körpergröße mal
+   Bildkorrektur, über die Schwebe wieder aufgerechnet, gedeckelt bei
+   der vollen Rahmenhöhe. Dieselbe Rechnung steht als max-height an
+   .char-figure-frame img in css/style.css. */
+function dateiAnteil(skala, korrektur, schwebe) {
+  return Math.min(1, wirkung(skala, korrektur) * RAHMEN_LUFT / (1 - schwebe));
+}
+
+/* Welche Kante des Ausschnitts seine Größe im Rahmen bestimmt. Der
+   Rahmen ist 1.1 mal so breit wie hoch; ein Ausschnitt, der breiter als
+   das ist, stößt zuerst an die Seiten und zählt dann mit seiner Breite.
+
+   Anders als in der Höhe zählt seitlich das Maß der Figur und nicht das
+   der Datei: Der Zuschnitt sitzt links und rechts eng an ihr, leere
+   Fläche steht nur unten. */
 function rahmenMasse() {
   if (!S.rect) return null;
-  const anteil = wirkung(S.skala, S.korrektur) * RAHMEN_LUFT;
   const r = S.rect;
+  const schwebe = schwebeJetzt();
+  const hochkant = r.hoehe / dateiAnteil(S.skala, S.korrektur, schwebe);
+  const quer = r.breite / (RAHMEN_SEITEN * wirkung(S.skala, S.korrektur) * RAHMEN_LUFT);
   /* Es zählt die Kante, die zuerst anstößt: Eine weit ausgebreitete
      Flugpose stößt an die Seiten, alles Stehende an die Höhe. */
-  const hoehe = Math.max(r.hoehe, r.breite / RAHMEN_SEITEN) / anteil;
-  return { hoehe, breite: hoehe * RAHMEN_SEITEN, anteil: r.hoehe / hoehe };
+  const hoehe = Math.max(hochkant, quer);
+  return { hoehe, breite: hoehe * RAHMEN_SEITEN, schwebe,
+    /* Was der Rahmen zeigt, ist die Figur und nicht die leere Fläche
+       unter ihr. */
+    anteil: r.hoehe * (1 - schwebe) / hoehe };
 }
 
 /* Die Referenz in diesem Rahmen, gerechnet wie auf der Seite: Ihre Höhe
-   folgt ihren eigenen Werten, und wird sie dabei breiter als der Rahmen,
-   begrenzt ihn die Breite. Dieselben beiden Schranken stehen als
-   max-width und max-height in css/style.css. */
+   folgt ihren eigenen Werten samt ihrer eigenen Schwebe, und wird sie
+   dabei breiter als der Rahmen, begrenzt ihn die Breite. Dieselben
+   beiden Schranken stehen als max-width und max-height in
+   css/style.css. */
 function referenzMasse(mass) {
   if (!S.referenz || !mass || !S.figur) return null;
   const eintrag = zieleVon(S.figur).find((z) => z.datei === S.referenz.datei);
-  const wert = wirkung((eintrag && eintrag.skala) || 1, (eintrag && eintrag.korrektur) || 1);
+  const skala = (eintrag && eintrag.skala) || 1;
+  const korrektur = (eintrag && eintrag.korrektur) || 1;
+  const wert = wirkung(skala, korrektur);
   const rb = S.referenz.bild;
   const seiten = rb.naturalWidth / rb.naturalHeight;
-  let hoehe = mass.hoehe * wert * RAHMEN_LUFT;
+  let hoehe = mass.hoehe * dateiAnteil(skala, korrektur, (eintrag && eintrag.schwebe) || 0);
   let breite = hoehe * seiten;
   if (breite > mass.breite * wert * RAHMEN_LUFT) {
     breite = mass.breite * wert * RAHMEN_LUFT;
@@ -2333,6 +2522,26 @@ function frischeSkalaFelder() {
     + `${Math.round(S.korrektur * 100)} %)`);
   hinweis.classList.toggle('zuviel', !moeglich);
 
+  /* Die Schwebe steht daneben als Ablesung und nicht als Regler: Sie
+     wird am Ausschnitt gemessen und nicht eingestellt. Sichtbar ist sie
+     nur, wenn es sie gibt, sonst stünde bei jeder stehenden Figur eine
+     Zeile mit einer Null. */
+  const schwebe = schwebeJetzt();
+  const zeile = $('d-schwebe');
+  zeile.hidden = schwebe <= 0;
+  if (schwebe > 0) {
+    const anteil = document.createElement('b');
+    anteil.textContent = Math.round(schwebe * 100) + ' %';
+    zeile.replaceChildren('Schwebe: ', anteil, ' der Datei sind unter der Figur leer');
+    /* Voll ist der Rahmen, wenn die Datei ihn ganz ausfüllt. Von da an
+       hebt weiteres Ziehen die Figur nicht mehr, sondern macht sie
+       kleiner. */
+    if (dateiAnteil(S.skala, S.korrektur, schwebe) >= 1) {
+      zeile.append('. Der Rahmen ist voll, weiter steigt sie nicht.');
+    }
+    zeile.classList.toggle('zuviel', dateiAnteil(S.skala, S.korrektur, schwebe) >= 1);
+  }
+
   const knopf = $('skala-speichern');
   knopf.disabled = !S.ziel || !moeglich
     || (S.skala === alteSkala && S.korrektur === alteKorrektur);
@@ -2352,8 +2561,13 @@ function vorschauGanzkoerper() {
   const leinwand = $('pv-gk');
   leinwand.parentElement.style.setProperty('--figure-scale',
     wirkung(S.skala, S.korrektur));
+  /* Oben die Schwebe, die dieser Ausschnitt gerade ergibt, unten die,
+     die mit der Datei in chars.js steht. */
+  leinwand.parentElement.style.setProperty('--figure-lift', schwebeJetzt());
   $('pv-gk-alt').parentElement.style.setProperty('--figure-scale',
     wirkung((S.ziel && S.ziel.skala) || 1, (S.ziel && S.ziel.korrektur) || 1));
+  $('pv-gk-alt').parentElement.style.setProperty('--figure-lift',
+    (S.ziel && S.ziel.schwebe) || 0);
   frischeSkalaFelder();
 
   if (!S.bild || !S.rect) {
@@ -2464,16 +2678,88 @@ function frischeDaten() {
 
   if (S.art) $('art').textContent = AUSKUNFT[S.art] || S.art;
   zeigeDrehung();
-  $('speichern').disabled = !(S.bild && S.rect && S.ziel);
+  /* Gesperrt ist der Knopf nur für die eine Fassung, die gerade
+     geschnitten wird. Jede andere lässt sich nebenher speichern. */
+  $('speichern').disabled = !(S.bild && S.rect && ziel)
+    || speichertGerade.has(speicherSchluessel(S.bereich, ziel.datei));
   $('hochskalieren').disabled = !(S.bild && S.quelle) || skaliertLaeuft;
   $('freistellen').disabled = !(S.bild && S.quelle) || freiLaeuft;
 }
 
+/* ---------- Speichern ----------
+
+   Ein Zuschnitt läuft ein paar Sekunden, und in dieser Zeit soll die
+   Oberfläche weiter bedienbar sein: zur nächsten Fassung wechseln, die
+   nächste Figur aufschlagen, ein zweites Bild losschicken. Der Server
+   kann das, er arbeitet die Aufträge nebeneinander ab.
+
+   Dafür darf nach dem Warten nichts mehr aus S gelesen werden. Alles,
+   wozu der Auftrag gehört – Bereich, Figur, Ziel, Ordner –, wird vorher
+   festgehalten und danach an genau diesen Objekten nachgetragen. Vorher
+   schrieb die Antwort in S.ziel, und das war nach einem Wechsel die
+   falsche Fassung: Das eben geschnittene Bild blieb in der Liste auf
+   „fehlt“ stehen, das andere sprang auf „fertig“, und das Ganze sah aus,
+   als hätte der Server den Auftrag fallen gelassen. Geschrieben war die
+   Datei die ganze Zeit.
+
+   Die Anzeige am Werkzeug – Knopf, Zeile darunter, Vorschau – gehört
+   dagegen dem, was gerade auf der Bühne liegt. Sie wird nur angefasst,
+   wenn das immer noch derselbe Auftrag ist. */
+
+/* Welche Ziele gerade geschnitten werden, je Bereich und Datei. Ein
+   zweiter Klick auf dieselbe Fassung wartet, ein Klick auf eine andere
+   nicht. */
+const speichertGerade = new Set();
+
+function speicherSchluessel(bereich, datei) {
+  return bereich + '/' + datei;
+}
+
 async function speichern() {
   if (!S.bild || !S.rect || !S.ziel) return;
-  const knopf = $('speichern');
+
+  /* Der Auftrag, wie er jetzt dasteht. Ab hier ist S nur noch für die
+     Anzeige zuständig, nicht mehr für den Inhalt. */
+  const auftrag = {
+    bereich: S.bereich,
+    figur: S.figur,
+    ziel: S.ziel,
+    ordner: ordner(),
+    quadrat: quadrat(),
+    winkel: winkelJetzt(),
+    daten: {
+      bereich: S.bereich,
+      ziel: S.ziel.datei,
+      quelle: S.quelle,
+      x: S.rect.x,
+      y: S.rect.y,
+      breite: S.rect.breite,
+      hoehe: S.rect.hoehe,
+      /* Der Ausschnitt ist in der gedrehten Fläche gemessen, also muss
+         der Server vor dem Schneiden genauso drehen. */
+      winkel: winkelJetzt(),
+      merken: quadrat() && $('merken').checked && !winkelJetzt() && !eigenesBild(),
+      /* Der Zuschnitt und die Größe im Rahmen gehören zusammen, also
+         gehen die Regler mit. Der Knopf darüber bleibt trotzdem: Er
+         setzt die Größe, ohne die Datei neu zu schneiden.
+
+         Die Schwebe kommt nur hier mit und nicht über den Knopf: Sie ist
+         am Ausschnitt gemessen und gilt für die Datei, die gerade
+         geschrieben wird. */
+      ...(quadrat() ? {} : { skala: S.skala, korrektur: S.korrektur, schwebe: schwebeJetzt(true) }),
+    },
+  };
+
+  const schluessel = speicherSchluessel(auftrag.bereich, auftrag.ziel.datei);
+  if (speichertGerade.has(schluessel)) return;
+  speichertGerade.add(schluessel);
+
+  /* Zeigt die Bühne noch denselben Auftrag? Danach richtet sich, ob die
+     Anzeige am Werkzeug etwas zu sagen hat. */
+  const nochDa = () => S.ziel === auftrag.ziel && S.bereich === auftrag.bereich;
+
   const info = $('speicher-info');
-  knopf.disabled = true;
+  $('speichern').disabled = true;
   info.className = 'speicher-info';
   info.textContent = 'Wird geschnitten …';
 
@@ -2485,76 +2771,79 @@ async function speichern() {
     antwort = await json('/api/speichern', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bereich: S.bereich,
-        ziel: S.ziel.datei,
-        quelle: S.quelle,
-        x: S.rect.x,
-        y: S.rect.y,
-        breite: S.rect.breite,
-        hoehe: S.rect.hoehe,
-        /* Der Ausschnitt ist in der gedrehten Fläche gemessen, also muss
-           der Server vor dem Schneiden genauso drehen. */
-        winkel: winkelJetzt(),
-        merken: quadrat() && $('merken').checked && !winkelJetzt() && !eigenesBild(),
-        /* Der Zuschnitt und die Größe im Rahmen gehören zusammen, also
-           gehen die Regler mit. Der Knopf darüber bleibt trotzdem: Er
-           setzt die Größe, ohne die Datei neu zu schneiden. */
-        ...(quadrat() ? {} : { skala: S.skala, korrektur: S.korrektur }),
-      }),
+      body: JSON.stringify(auftrag.daten),
     });
   } catch (fehler) {
-    knopf.disabled = false;
-    info.className = 'speicher-info schlecht';
-    info.textContent = 'Nicht gespeichert: ' + fehler.message;
-    melde('Nicht gespeichert: ' + fehler.message, true);
+    speichertGerade.delete(schluessel);
+    if (nochDa()) {
+      $('speichern').disabled = false;
+      info.className = 'speicher-info schlecht';
+      info.textContent = 'Nicht gespeichert: ' + fehler.message;
+    }
+    melde(`${auftrag.ziel.datei}.webp nicht gespeichert: ${fehler.message}`, true);
     return;
   }
+  speichertGerade.delete(schluessel);
 
-  S.ziel.zustand = antwort.zustand;
-  if (antwort.warMarkiert) S.ziel.markiert = false;
+  const ziel = auftrag.ziel;
+  ziel.zustand = antwort.zustand;
+  if (antwort.warMarkiert) ziel.markiert = false;
   /* Die Größe steht jetzt in chars.js. Damit ist sie der neue Vergleich,
      unten in der Vorschau wie an den beiden Rücksetzern. */
   if (antwort.groessenwerte) {
-    S.ziel.skala = antwort.groessenwerte.skala;
-    S.ziel.korrektur = antwort.groessenwerte.korrektur;
+    ziel.skala = antwort.groessenwerte.skala;
+    ziel.korrektur = antwort.groessenwerte.korrektur;
+    ziel.schwebe = antwort.groessenwerte.schwebe;
   }
   /* Die Datei gibt es jetzt. Ohne diesen Eintrag fände die Fassung beim
      nächsten Hinwechseln ihre eigene Vorlage nicht und meldete wieder,
      es gebe noch kein Bild. */
-  if (!quadrat() && !S.figur.quellen.some((q) => q.datei === S.ziel.datei)) {
-    S.figur.quellen.push({ datei: S.ziel.datei, label: S.ziel.label });
+  if (!auftrag.quadrat && auftrag.figur
+    && !auftrag.figur.quellen.some((q) => q.datei === ziel.datei)) {
+    auftrag.figur.quellen.push({ datei: ziel.datei, label: ziel.label });
   }
   S.zaehler = antwort.zaehler;
-  S.frisch.set(ordner() + '/' + S.ziel.datei, Date.now());
+  /* Der Stempel gehört an die Datei, die geschrieben wurde, nicht an die,
+     die gerade zu sehen ist. Sonst zeigte das Studio beim Zurückwechseln
+     weiter das Bild von vorhin. */
+  S.frisch.set(auftrag.ordner + '/' + ziel.datei, Date.now());
   pruefeStand(antwort.stand);
   frischerVerlauf(antwort.verlauf);
   zeigeZaehler();
-  frischeListe(S.figur);
-  zeichneChips();
-  frischeDaten();
-  vorschau();
-  knopf.disabled = false;
-  const mass = quadrat()
+  if (auftrag.figur) frischeListe(auftrag.figur);
+
+  const mass = auftrag.quadrat
     ? `${antwort.groesse} × ${antwort.groesse}`
     : `${antwort.breite} × ${antwort.hoehe}`;
   const g = antwort.groessenwerte;
-  info.className = 'speicher-info gut';
-  const winkel = winkelJetzt();
-  info.textContent = `Gespeichert: ${S.ziel.datei}.webp, ${mass} px.`
+  const winkel = auftrag.winkel;
+  const satz = `Gespeichert: ${ziel.datei}.webp, ${mass} px.`
     + (winkel ? ` Um ${(winkel < 0 ? '−' : '') + Math.abs(winkel).toFixed(1)}° gedreht.` : '')
     + (antwort.warMarkiert ? ' Die Markierung „noch offen“ ist damit weg.' : '')
     + (antwort.gemerkt ? ' Zuschnitt in manuell.json vermerkt.' : '')
     + (antwort.verkleinert ? ' Die Vorlage war größer als der Bestand und wurde verkleinert.' : '')
     + (g && g.geaendert
       ? ` Körpergröße ${g.skala.toFixed(2)}`
-        + (g.korrektur === 1 ? '' : ` und Bildkorrektur ${Math.round(g.korrektur * 100)} %`)
+        + (g.korrektur === 1 ? '' : `, Bildkorrektur ${Math.round(g.korrektur * 100)} %`)
+        + (g.schwebe ? `, Schwebe ${Math.round(g.schwebe * 100)} %` : '')
         + ' stehen in chars.js.'
       : '')
     + (antwort.groessenfehler
       ? ' Die Größe blieb stehen: ' + antwort.groessenfehler : '')
     + (antwort.sicherung ? ' Die alte Datei liegt in tools/portrait-studio/.sicherung.' : '');
-  melde(`${S.ziel.datei}.webp gespeichert.` + (antwort.liste ? ' ' + antwort.liste : ''));
+
+  if (nochDa()) {
+    zeichneChips();
+    frischeDaten();
+    vorschau();
+    info.className = 'speicher-info gut';
+    info.textContent = satz;
+  } else if (S.figur === auftrag.figur) {
+    /* Dieselbe Figur, andere Fassung: Ihre Chips tragen den Zustand
+       jeder Fassung, und einer davon hat sich eben geändert. */
+    zeichneChips();
+  }
+  melde(`${ziel.datei}.webp gespeichert.` + (antwort.liste ? ' ' + antwort.liste : ''));
 }
 
 /* Von Hand auf „noch offen“ stellen. Das wirkt sofort, ohne Speichern:
@@ -2602,36 +2891,307 @@ async function markiereOffen(gewollt) {
    Die Porträt-Fassungen stehen dagegen in CHAR_LOOKS und hängen am Film,
    nicht an einer Beschriftung. Für sie ist diese Leiste ausgeblendet. */
 
+/* Der Stamm eines Bildes: die Fassung, zu der es gehört. Bei einer
+   Fassung ohne Varianten ist beides derselbe Name. Die Eingriffe an
+   einer Fassung nennen ihn und nicht die einzelne Datei. */
+const stammVon = (ziel) => (ziel && (ziel.stamm || ziel.datei)) || '';
+
+/* Die Fassungen einer Figur, jede einmal. In figur.ganzkoerper steht
+   jedes Bild für sich, eine Fassung mit drei Varianten also dreimal. */
+function fassungenVon(figur) {
+  const gesehen = new Set();
+  const liste = [];
+  for (const ziel of (figur && figur.ganzkoerper) || []) {
+    const stamm = stammVon(ziel);
+    if (gesehen.has(stamm)) continue;
+    gesehen.add(stamm);
+    liste.push(ziel);
+  }
+  return liste;
+}
+
+/* Alle Bilder einer Fassung, in der Reihenfolge ihrer Varianten. */
+function variantenVon(figur, stamm) {
+  return ((figur && figur.ganzkoerper) || []).filter((z) => stammVon(z) === stamm);
+}
+
 /* Die Stelle des Ziels in der ganzen Liste, nicht nur unter den
    gepflegten: Fassungen, die bisher nur als Datei im Ordner liegen,
-   wandern beim ersten Eingriff von selbst in FULLSIZE_LOOKS. */
+   wandern beim ersten Eingriff von selbst in FULLSIZE_LOOKS.
+
+   Gezählt werden Fassungen und keine Bilder: Die Leiste verschiebt und
+   löscht Fassungen, und eine Fassung mit drei Varianten ist eine. */
 /* Standard ist, was an erster Stelle steht, unabhängig vom Dateinamen. */
 function fassungLage() {
   const figur = S.figur;
   const ziel = S.ziel;
-  if (!figur || !ziel) return { stelle: -1, anzahl: 0 };
-  const stelle = figur.ganzkoerper.indexOf(ziel);
-  return { standard: stelle === 0, stelle, anzahl: figur.ganzkoerper.length };
+  if (!figur || !ziel) return { stelle: -1, anzahl: 0, varianten: 1 };
+  const fassungen = fassungenVon(figur);
+  const stamm = stammVon(ziel);
+  const stelle = fassungen.findIndex((z) => stammVon(z) === stamm);
+  return {
+    standard: stelle === 0,
+    stelle,
+    anzahl: fassungen.length,
+    varianten: ziel.varianten || 1,
+    variante: ziel.variante || 1,
+  };
 }
 
 function frischeFassungsleiste() {
   const leiste = $('fassung-leiste');
   leiste.hidden = !ganz();
+  frischeFilmwahl();
+  frischeBeschreibung();
   if (leiste.hidden) return;
   const l = fassungLage();
   const knopf = (tat) => leiste.querySelector(`[data-tat="${tat}"]`);
   knopf('neu').disabled = !S.figur;
-  /* Eine Figur mit nur einem Bild hat nichts zu beschriften: Ihre Datei
-     heißt wie die Figur und soll das auch bleiben. */
-  knopf('umbenennen').disabled = !S.ziel || l.anzahl < 2;
+  /* Auch die Figur mit ihrem einzigen Bild darf beschriftet werden: Ohne
+     Beschriftung schreibt die Charakterseite ihren Namen an die
+     Fassungstafel, und wer stattdessen die Fassung benennt, legt damit
+     zugleich ihren Eintrag in FULLSIZE_LOOKS an. */
+  knopf('umbenennen').disabled = !S.ziel;
   knopf('loeschen').disabled = !S.ziel || l.anzahl < 2;
   knopf('hoch').disabled = !S.ziel || l.stelle < 1;
   knopf('runter').disabled = !S.ziel || l.stelle < 0 || l.stelle >= l.anzahl - 1;
   knopf('standard').disabled = !S.ziel || l.standard;
+  /* Varianten hängen an der Fassung und nicht an der Figur: Auch die
+     Figur mit ihrem einzigen Bild darf eine zweite Aufnahme bekommen.
+     Weg geht eine nur, solange es überhaupt eine zweite gibt. */
+  knopf('variante-neu').disabled = !S.ziel || l.varianten >= 9;
+  knopf('variante-weg').disabled = !S.ziel || l.varianten < 2;
+  /* Die beiden Pfeile schieben das offene Bild in der Reihe seiner
+     Varianten, nicht die Fassung in ihrer Liste. Sie stehen deshalb
+     waagerecht: So hängen die Ziffern auch am Chip. */
+  knopf('variante-hoch').disabled = !S.ziel || l.variante < 2;
+  knopf('variante-runter').disabled = !S.ziel || l.variante >= l.varianten;
+  /* Umhängen geht in beide Richtungen: Eine Fassung wird Variante einer
+     anderen, sobald es überhaupt eine andere gibt, und eine Variante
+     löst sich, sobald sie eine ist. */
+  knopf('zu-variante').disabled = !S.ziel || l.anzahl < 2;
+  knopf('zu-fassung').disabled = !S.ziel || l.varianten < 2;
   const grund = l.anzahl < 2 ? 'Die Figur hat nur dieses eine Bild.'
     : (l.standard ? 'Das ist schon die Standardansicht.' : '');
-  for (const tat of ['umbenennen', 'loeschen', 'hoch', 'runter', 'standard']) {
+  for (const tat of ['loeschen', 'hoch', 'runter', 'standard']) {
     knopf(tat).title = knopf(tat).disabled && grund ? grund : knopf(tat).dataset.hilfe;
+  }
+  /* Ein gesperrter Knopf sagt, woran es liegt. Bei den Varianten sind das
+     zwei verschiedene Gründe: Die Fassung hat nur ihr eines Bild, oder
+     das offene steht schon am Ende der Reihe. */
+  const einBild = 'Diese Fassung hat nur dieses eine Bild.';
+  const enden = {
+    'variante-weg': einBild,
+    'zu-fassung': 'Diese Fassung hat nur dieses eine Bild, sie steht schon für sich.',
+    'variante-hoch': l.varianten < 2 ? einBild : 'Das ist schon die erste Variante.',
+    'variante-runter': l.varianten < 2 ? einBild : 'Das ist schon die letzte Variante.',
+    'zu-variante': 'Die Figur hat nur diese eine Fassung, es gibt nichts zum Anhängen.',
+    'variante-neu': 'Mehr als neun Varianten trägt eine Fassung nicht.',
+  };
+  for (const [tat, warum] of Object.entries(enden)) {
+    knopf(tat).title = knopf(tat).disabled && S.ziel ? warum : knopf(tat).dataset.hilfe;
+  }
+}
+
+/* ---------- Der Film einer Fassung ----------
+
+   Zu jeder Ganzkörper-Fassung gehört der Film, aus dem sie stammt: Die
+   Charakterseite setzt sein Logo auf die Fassungstafel und schreibt
+   Titel und Jahr neben die Bühne. Gemeint ist der Film, der die Fassung
+   zeigt, und nicht jeder, in dem sie vorkommt – Steve Rogers trägt
+   seinen Winter-Soldier-Anzug auch noch in Age of Ultron.
+
+   Geschrieben wird an zwei Stellen, je nachdem, ob die Figur eine
+   Fassungsliste hat: mit Liste als dritter Wert in FULLSIZE_LOOKS, ohne
+   Liste in FULLSIZE_STANDARD. Wer nur in einem Titel vorkommt, braucht
+   auch dort nichts, das rechnet die Charakterseite selbst aus. Welcher
+   Fall gilt, entscheidet der Server; hier steht nur, was dazu
+   angezeigt wird. */
+
+/* Steht der Film in der Fassungsliste? Das ist der Fall, sobald die
+   Figur mehr als ein Ganzkörperbild hat: Dann entsteht die Liste beim
+   ersten Eingriff von selbst. */
+const filmInListe = () => !!S.figur && fassungenVon(S.figur).length > 1;
+
+/* Slug -> Titel, aus allen Filmen. Mehrstaffel-Serien haben pro Staffel
+   eine Zeile, aber denselben Slug und dasselbe Logo. In der Wahl steht
+   deshalb ein Eintrag, benannt nach dem gemeinsamen Teil des Titels:
+   „Loki“ statt „Loki – Staffel 1“. */
+function filmTitel() {
+  const titel = new Map();
+  for (const film of alleFilme || []) {
+    const bisher = titel.get(film.slug);
+    if (bisher === undefined) titel.set(film.slug, film.titel);
+    else if (bisher !== film.titel) titel.set(film.slug, bisher.split(' – ')[0]);
+  }
+  return titel;
+}
+
+/* Die Filmwahl mit allem, was data.js führt: vorn die Auftritte der
+   Figur, dahinter die übrigen Titel. Ein eingetragener Film, den data.js
+   gar nicht kennt, bleibt trotzdem stehen – was von Hand da steht, soll
+   nicht durch ein Aufklappen verschwinden. */
+function fuelleFilmwahl(wahl, jetzt, ohneText) {
+  const titel = filmTitel();
+  wahl.textContent = '';
+  const ohne = document.createElement('option');
+  ohne.value = '';
+  ohne.textContent = ohneText;
+  wahl.append(ohne);
+
+  const gesehen = new Set();
+  const gruppe = (name, slugs) => {
+    const liste = slugs.filter((slug) => slug && !gesehen.has(slug));
+    if (!liste.length) return;
+    const feld = document.createElement('optgroup');
+    feld.label = name;
+    for (const slug of liste) {
+      gesehen.add(slug);
+      const eintrag = document.createElement('option');
+      eintrag.value = slug;
+      eintrag.textContent = titel.get(slug) || slug;
+      feld.append(eintrag);
+    }
+    wahl.append(feld);
+  };
+  gruppe('Auftritte der Figur', (S.figur && S.figur.filmSlugs) || []);
+  gruppe('Weitere Titel', [...titel.keys()]);
+  gruppe('Steht so in chars.js', [jetzt]);
+  wahl.value = jetzt || '';
+}
+
+function zeigeFilmLogo(slug) {
+  const feld = $('film-logo');
+  const bild = feld.querySelector('img');
+  feld.hidden = !slug;
+  if (!slug) {
+    bild.removeAttribute('src');
+    return;
+  }
+  /* Zu manchen Titeln liegt kein Logo im Ordner. Dann bleibt der Platz
+     leer, statt ein kaputtes Bild zu zeigen. */
+  bild.onerror = () => { feld.hidden = true; };
+  bild.src = `/datei/assets/logos/${slug}.webp`;
+}
+
+function frischeFilmwahl() {
+  const feld = $('fassung-film');
+  const zeigen = ganz() && !!S.ziel;
+  feld.hidden = !zeigen;
+  $('film-wahl').disabled = !zeigen;
+  if (!zeigen) return;
+  const ziel = S.ziel;
+  holeFilme().then(() => {
+    /* Bis die Filme da sind, kann längst eine andere Fassung offen sein. */
+    if (S.ziel !== ziel || !ganz()) return;
+    const titel = filmTitel();
+    /* Ohne Fassungsliste rechnet die Charakterseite den Film des
+       einzelnen Bildes selbst aus, sofern die Figur nur in einem Titel
+       vorkommt. Dann steht er schon in der Wahl, ohne dass er
+       irgendwo geschrieben stünde. */
+    const auto = (!ziel.gepflegt && ziel.datei === S.figur.slug && S.figur.filmAuto) || '';
+    fuelleFilmwahl($('film-wahl'), ziel.film,
+      auto ? `Aus dem einzigen Titel: ${titel.get(auto) || auto}` : 'Ohne Film');
+    $('film-wahl').disabled = false;
+    zeigeFilmLogo(ziel.film || auto);
+    $('film-hinweis').textContent = ziel.gepflegt ? 'steht in FULLSIZE_LOOKS'
+      : (filmInListe() ? 'kommt in FULLSIZE_LOOKS'
+        : (ziel.film ? 'steht in FULLSIZE_STANDARD' : ''));
+  }, (fehler) => melde('Die Filme ließen sich nicht laden: ' + fehler.message, true));
+}
+
+async function filmSetzen(film) {
+  const figur = S.figur;
+  const ziel = S.ziel;
+  if (!figur || !ziel || film === (ziel.film || '')) return;
+  const titel = filmTitel().get(film) || film;
+  await fassungAktion(
+    { aktion: 'film', slug: figur.slug, datei: ziel.datei, film },
+    ziel.datei,
+    film ? `„${ziel.label}“ stammt jetzt aus ${titel}.`
+      : `„${ziel.label}“ steht jetzt ohne Film.`);
+}
+
+/* ---------- Der Satz zu einer Fassung ----------
+
+   Unter der Fassungstafel der Charakterseite steht ein Satz, der die
+   gezeigte Fassung beschreibt: woher der Anzug stammt, wozu er gebaut
+   wurde, in welchem Zustand die Figur darin steckt. Er gehört der
+   Fassung und nicht der Figur, und auch die Figur mit ihrem einzigen
+   Bild hat einen, denn ihre Standardansicht ist ebenso eine Fassung wie
+   die zwanzigste Rüstung Tony Starks.
+
+   Geschrieben wird er in FULLSIZE_NOTES (js/looks.js) unter dem Stamm
+   der Fassung. Nur wo zu einer einzelnen Aufnahme schon etwas Eigenes
+   steht, gilt deren Dateiname, denn die Bühne sieht zuerst dort nach. */
+
+/* Unter welchem Namen der Satz dieser Fassung steht. */
+function beschreibungSchluessel(ziel) {
+  return ziel && ziel.beschreibungEigen ? ziel.datei : stammVon(ziel);
+}
+
+/* Ein Satz und keine Erzählung, hier wie auf dem Server: Umbrüche und
+   doppelte Leerzeichen fallen weg, damit der Vergleich mit dem
+   Geschriebenen nicht an einem Leerzeichen scheitert. */
+const einSatz = (text) => String(text || '').replace(/\s+/g, ' ').trim();
+
+function frischeBeschreibung() {
+  const feld = $('fassung-beschreibung');
+  const zeigen = ganz() && !!S.ziel;
+  feld.hidden = !zeigen;
+  if (!zeigen) return;
+  const eingabe = $('beschreibung-feld');
+  const schluessel = beschreibungSchluessel(S.ziel);
+  /* Wer gerade tippt, soll nicht mitten im Satz überschrieben werden.
+     Diese Funktion läuft nach jedem Eingriff an der Leiste mit, und die
+     Leiste bleibt bedienbar, solange etwas unterwegs ist. Wechselt
+     dabei die Fassung, gilt der neue Satz trotzdem. */
+  if (eingabe.dataset.datei !== schluessel || document.activeElement !== eingabe) {
+    eingabe.value = S.ziel.beschreibung || '';
+  }
+  eingabe.dataset.datei = schluessel;
+  /* Wo der Satz landet. „steht bei dieser Aufnahme“ heißt: Diese eine
+     Variante trägt einen eigenen, der den der Fassung übergeht. */
+  $('beschreibung-hinweis').textContent = S.ziel.beschreibungEigen
+    ? 'steht bei dieser Aufnahme'
+    : (S.ziel.beschreibung ? 'steht in FULLSIZE_NOTES' : 'kommt in FULLSIZE_NOTES');
+  frischeBeschreibungKnopf();
+}
+
+/* Der Knopf ist nur zu haben, solange sich der Text von dem
+   unterscheidet, was geschrieben steht. Der Zähler daneben sagt, wie
+   viel noch passt. */
+function frischeBeschreibungKnopf() {
+  const jetzt = einSatz($('beschreibung-feld').value);
+  const vorher = einSatz(S.ziel && S.ziel.beschreibung);
+  $('beschreibung-ok').disabled = !S.ziel || jetzt === vorher;
+  $('beschreibung-zaehler').textContent = `${jetzt.length}/400`;
+}
+
+async function beschreibungSetzen() {
+  const figur = S.figur;
+  const ziel = S.ziel;
+  if (!figur || !ziel) return;
+  const text = einSatz($('beschreibung-feld').value);
+  if (text === einSatz(ziel.beschreibung)) return;
+  $('beschreibung-ok').disabled = true;
+  try {
+    const antwort = await json('/api/beschreibung', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slug: figur.slug, datei: beschreibungSchluessel(ziel), text,
+      }),
+    });
+    frischerVerlauf(antwort.verlauf);
+    await frischeFigur(antwort.figur, ziel.datei, false);
+    melde(text
+      ? `„${ziel.label}“ hat ihren Satz, js/looks.js ist geschrieben.`
+      : `Der Satz zu „${ziel.label}“ ist gelöscht.`);
+  } catch (fehler) {
+    melde('Nicht geschrieben: ' + fehler.message, true);
+  } finally {
+    frischeBeschreibung();
   }
 }
 
@@ -2641,8 +3201,10 @@ function frischeFassungsleiste() {
 async function neuLaden(slug, datei) {
   const daten = await json('/api/figuren');
   S.figuren = daten.figuren;
+  S.welten = daten.welten || [];
   S.zaehler = daten.zaehler;
   S.wikiOffen = daten.wikiOffen || 0;
+  S.begriffe = daten.begriffe || [];
   S.figur = null;
   /* Die Auswahl der Zielfigur in den Beziehungen führt alle Figuren. Kam
      eine dazu oder wechselte einen Schlüssel, muss sie neu gebaut
@@ -2658,17 +3220,134 @@ async function neuLaden(slug, datei) {
   if (ziel && ziel !== S.ziel) waehleZiel(ziel);
 }
 
-async function fassungAktion(auftrag, danach) {
+/* ---------- Eine Figur nachziehen ----------
+
+   Eine Fassung umzubenennen oder um einen Platz zu verschieben ändert
+   genau eine Figur. Bis hierher holte die Oberfläche danach trotzdem alle
+   vierhundert vom Server, warf ihre Liste weg, baute sie neu auf, schlug
+   die Figur wieder auf, lud deren Vorlage frisch von der Platte und ließ
+   beim Porträt sogar die Gesichtserkennung wieder anlaufen. Gemessen
+   dauerte das über zwei Sekunden, in denen nichts anzuklicken war, und
+   danach stand die Liste wieder ganz oben.
+
+   Jetzt kommt die eine geänderte Figur mit der Antwort zurück und wird an
+   ihrer Stelle eingesetzt. Die Bühne bleibt stehen: Bei einer Umbenennung
+   sind es dieselben Pixel unter einem anderen Namen, und den zieht die
+   Quelle einfach nach. */
+async function frischeFigur(neu, datei, buehneNeu) {
+  if (!neu) return;
+  const stelle = S.figuren.findIndex((f) => f.slug === neu.slug);
+  if (stelle === -1) return;
+  const alt = S.figuren[stelle];
+  /* Die Verweise auf die Knöpfe der Liste hängen an der alten Figur und
+     gehören zum DOM, nicht zu den Daten. */
+  neu._knopf = alt._knopf;
+  neu._bild = alt._bild;
+  neu._punkt = alt._punkt;
+  S.figuren[stelle] = neu;
+  frischeEintrag(neu);
+
+  if (S.figur !== alt) return;
+  S.figur = neu;
+  /* Die offene Fassung wiederfinden: erst über den Dateinamen, den der
+     Aufrufer nennt, sonst über den, der vorher offen war. */
+  const ziele = zieleVon(neu);
+  const gesucht = datei || (S.ziel && S.ziel.datei);
+  const ziel = ziele.find((z) => z.datei === gesucht) || ziele[0] || null;
+  const zielGewechselt = !ziel || !S.ziel || ziel.datei !== S.ziel.datei;
+
+  /* Eine Fassung, die es eben noch nicht gab, und eine, die eben
+     verschwunden ist, brauchen eine neue Vorlage auf der Bühne. Dafür
+     gibt es den gewohnten Weg. */
+  if (buehneNeu) {
+    referenzVonHand = false;
+    await waehleZiel(ziel);
+    return;
+  }
+
+  S.ziel = ziel;
+  if (ziel) {
+    S.skala = ziel.skala || 1;
+    S.korrektur = ziel.korrektur || 1;
+    $('skala').value = String(S.skala);
+    $('korrektur').value = String(S.korrektur);
+    frischeSkalaFelder();
+  }
+
+  /* Eine umbenannte Fassung liegt unter neuem Namen auf der Platte. Die
+     Bühne zeigt weiter dieselben Pixel, nur die Quelle heißt jetzt
+     anders. Die Marke ist neu, denn was der Server beiseitegelegt hatte,
+     gehörte zum alten Namen. */
+  if (ganz() && ziel && S.quelle && S.quelle.typ === 'fullsize' && zielGewechselt) {
+    S.quelle = { typ: 'fullsize', name: ziel.datei, marke: neueMarke() };
+  }
+
+  zeichneChips();
+  frischeDaten();
+  frischeSchleier();
+}
+
+/* Nur die eine Zeile in der Liste: Punkt, Bild, Zahl der Fassungen. */
+function frischeEintrag(figur) {
+  if (!figur._knopf) return;
+  frischeListe(figur);
+  const marke = figur._knopf.querySelector('.marke');
+  const anzahl = fassungsZahl(figur);
+  if (anzahl > 1) {
+    if (marke) marke.textContent = anzahl + ' Fassungen';
+    else {
+      const neu = document.createElement('span');
+      neu.className = 'marke';
+      neu.textContent = anzahl + ' Fassungen';
+      figur._knopf.insertBefore(neu, figur._punkt);
+    }
+  } else if (marke) marke.remove();
+}
+
+async function fassungAktion(auftrag, danach, meldung) {
+  /* Die Leiste bleibt bedienbar. Gezeichnet wird nur, welcher Knopf
+     gerade arbeitet: Wer eine Fassung umbenennt, will danach oft gleich
+     ihre Stelle ändern, und dafür soll er nicht warten müssen. */
   const leiste = $('fassung-leiste');
-  for (const b of leiste.children) b.disabled = true;
+  const eigener = [...leiste.children].find((b) => b.dataset.tat === auftrag.aktion)
+    || [...leiste.children].find((b) => b.dataset.tat === auftrag.richtung);
+  if (eigener) eigener.classList.add('laeuft');
   try {
     const antwort = await json('/api/fassung', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(auftrag),
     });
-    await neuLaden(auftrag.slug, danach || antwort.datei);
-    if (antwort.bildWeg) melde(`Fassung entfernt. Das Bild liegt in ${antwort.bildWeg}.`);
+    S.zaehler = antwort.zaehler || S.zaehler;
+    frischerVerlauf(antwort.verlauf);
+    zeigeZaehler();
+    /* Angelegt und gelöscht heißt: eine andere Fassung mit einer anderen
+       Vorlage. Dasselbe gilt fürs Anlegen und Entfernen einer Variante
+       und fürs Umhängen, denn dort wechselt unter der Bühne das Bild.
+       Umbenennen, Verschieben, das Tauschen zweier Varianten und die
+       Filmzuordnung lassen dieselben Pixel stehen, die Quelle zieht den
+       neuen Namen einfach nach. */
+    const andereDatei = ['neu', 'loeschen', 'variante-neu', 'variante-weg',
+      'zu-variante', 'zu-fassung'].includes(auftrag.aktion);
+    await frischeFigur(antwort.figur, danach || antwort.datei, andereDatei);
+    const mit = (antwort.mitgewandert || []).length
+      ? ' Mitgewandert: ' + antwort.mitgewandert.join(', ') + '.' : '';
+    if (meldung) melde(meldung);
+    else if (auftrag.aktion === 'variante-neu') {
+      melde(`${antwort.datei}.webp wartet als Variante ${antwort.varianten} `
+        + `auf ihr Bild.${mit}`);
+    } else if (auftrag.aktion === 'variante-weg') {
+      melde('Variante entfernt.'
+        + (antwort.bildWeg ? ` Das Bild liegt in ${antwort.bildWeg}.` : '') + mit);
+    } else if (auftrag.aktion === 'zu-variante') {
+      melde(`Angehängt. ${antwort.datei}.webp ist jetzt Variante ${antwort.variante} `
+        + `von ${antwort.varianten}.${mit}`);
+    } else if (auftrag.aktion === 'zu-fassung') {
+      melde(`${antwort.datei}.webp steht jetzt als eigene Fassung in der Liste.${mit}`);
+    } else if (auftrag.aktion === 'variante-hoch' || auftrag.aktion === 'variante-runter') {
+      melde(`Getauscht. Das Bild ist jetzt Variante ${antwort.variante} `
+        + `von ${antwort.varianten}.${mit}`);
+    } else if (antwort.bildWeg) melde(`Fassung entfernt. Das Bild liegt in ${antwort.bildWeg}.`);
     else if (antwort.umbenannt) {
       const u = antwort.umbenannt;
       melde(`${u.alt}.webp heißt jetzt ${u.neu}.webp.`
@@ -2677,6 +3356,7 @@ async function fassungAktion(auftrag, danach) {
   } catch (fehler) {
     melde('Nicht geändert: ' + fehler.message, true);
   } finally {
+    if (eigener) eigener.classList.remove('laeuft');
     frischeFassungsleiste();
   }
 }
@@ -2690,6 +3370,21 @@ function zeigeDateinamen() {
   const hinweis = $('fassung-datei');
   if (!dialogKontext) {
     hinweis.hidden = true;
+    return;
+  }
+  /* Beim Anhängen entsteht kein Name aus einer Beschriftung: Die Bilder
+     heißen danach nach der Zielfassung und zählen hinter deren eigenen
+     weiter. Welche das sind, hängt an der Wahl darüber und ändert sich
+     mit ihr. */
+  if (dialogKontext.anhaengen) {
+    const nach = $('fassung-zielwahl').value;
+    const dort = dialogKontext.anhaengen[nach] || 1;
+    const namen = [];
+    for (let i = 0; i < dialogKontext.meine; i += 1) namen.push(nach + '-' + (dort + i + 1));
+    hinweis.innerHTML = 'Heißt danach: '
+      + namen.map((name) => `<code>${name}.webp</code>`).join(', ')
+      + (dort < 2 ? `, und <code>${nach}.webp</code> heißt <code>${nach}-1.webp</code>` : '');
+    hinweis.hidden = false;
     return;
   }
   const stamm = slugAus($('fassung-label').value.trim());
@@ -2706,28 +3401,54 @@ function zeigeDateinamen() {
   hinweis.hidden = false;
 }
 
-function frageFassung({ titel, text, label, ohneLabel, knopf, kontext }) {
+function frageFassung({ titel, text, label, ohneLabel, mitFilm, film, knopf, kontext,
+  ziele, gefahr }) {
   const dialog = $('fassung-dialog');
   $('fassung-titel').textContent = titel;
   $('fassung-text').textContent = text;
   $('fassung-label').value = label || '';
   $('fassung-label').closest('label').hidden = !!ohneLabel;
-  /* Ohne Beschriftungsfeld ist es die Rückfrage vor dem Löschen, und
-     dann trägt der Knopf auch dessen Zeichen. */
-  symbole.setze($('fassung-ok'), ohneLabel ? 'loeschen' : 'uebernehmen');
+  /* An welche Fassung angehängt wird. Die Wahl steht nur beim Umhängen
+     da, und der Hinweis darunter rechnet mit ihr. */
+  $('fassung-zielfeld').hidden = !ziele;
+  if (ziele) {
+    const wahl = $('fassung-zielwahl');
+    wahl.textContent = '';
+    for (const eintrag of ziele) {
+      const stelle = document.createElement('option');
+      stelle.value = eintrag.wert;
+      stelle.textContent = eintrag.text;
+      wahl.append(stelle);
+    }
+  }
+  /* Der Film wird nur beim Anlegen gefragt. Beim Umbenennen bleibt er,
+     wo er war, und beim Löschen gibt es nichts zu wählen. */
+  $('fassung-filmfeld').hidden = !mitFilm;
+  if (mitFilm) fuelleFilmwahl($('fassung-filmwahl'), film || '', 'Ohne Film');
+  /* Ohne Beschriftungsfeld ist es meist die Rückfrage vor dem Löschen,
+     und dann trägt der Knopf auch dessen Zeichen. Beim Umhängen geht
+     nichts verloren, dort steht die Gefahr ausdrücklich auf nein. */
+  const rot = gefahr === undefined ? !!ohneLabel : !!gefahr;
+  symbole.setze($('fassung-ok'), rot ? 'loeschen' : 'uebernehmen');
   symbole.beschrifte($('fassung-ok'), knopf);
-  $('fassung-ok').classList.toggle('gefahr', !!ohneLabel);
+  $('fassung-ok').classList.toggle('gefahr', rot);
   $('fassung-fehler').hidden = true;
   dialogKontext = kontext || null;
   zeigeDateinamen();
   dialog.showModal();
-  ($(ohneLabel ? 'fassung-ok' : 'fassung-label')).focus();
+  const zuerst = ziele ? $('fassung-zielwahl')
+    : $(ohneLabel ? 'fassung-ok' : 'fassung-label');
+  zuerst.focus();
   if (!ohneLabel) $('fassung-label').select();
   return new Promise((fertig) => {
     dialog.addEventListener('close', () => {
       dialogKontext = null;
       fertig(dialog.returnValue === 'ok'
-        ? { label: $('fassung-label').value.trim() }
+        ? {
+          label: $('fassung-label').value.trim(),
+          film: $('fassung-filmwahl').value,
+          ziel: $('fassung-zielwahl').value,
+        }
         : null);
     }, { once: true });
   });
@@ -2739,14 +3460,25 @@ async function fassungKlick(tat) {
   if (!figur) return;
 
   if (tat === 'neu') {
+    /* Die Filmwahl im Dialog braucht die Titel. Sie stehen nach dem
+       ersten Abruf im Speicher, danach kostet das nichts mehr. */
+    try {
+      await holeFilme();
+    } catch (fehler) {
+      melde('Die Filme ließen sich nicht laden: ' + fehler.message, true);
+      return;
+    }
     const antwort = await frageFassung({
       titel: 'Neue Fassung',
       text: `Eine weitere Ansicht für ${figur.name}. Sie erscheint sofort in der `
-        + 'Liste und wartet auf ihr Bild. Der Dateiname entsteht aus der Beschriftung.',
+        + 'Liste und wartet auf ihr Bild. Der Dateiname entsteht aus der Beschriftung, '
+        + 'der Film sagt, aus welchem Auftritt die Fassung stammt.',
       knopf: 'Anlegen',
+      mitFilm: true,
+      film: (ziel && ziel.film) || '',
       kontext: {
         slug: figur.slug,
-        belegt: new Set(figur.ganzkoerper.map((z) => z.datei).concat(figur.slug)),
+        belegt: new Set(fassungenVon(figur).map(stammVon).concat(figur.slug)),
       },
     });
     if (!antwort || !antwort.label) return;
@@ -2754,6 +3486,7 @@ async function fassungKlick(tat) {
       aktion: 'neu',
       slug: figur.slug,
       label: antwort.label,
+      film: antwort.film,
       standardLabel: (figur.ganzkoerper[0] && figur.ganzkoerper[0].label) || 'Standard',
     });
     return;
@@ -2764,18 +3497,25 @@ async function fassungKlick(tat) {
   if (tat === 'umbenennen') {
     const antwort = await frageFassung({
       titel: 'Fassung umbenennen',
-      text: `So heißt ${ziel.datei}.webp in der Fassungsleiste der Charakterseite. `
-        + 'Der Dateiname folgt der Beschriftung und wird mit umbenannt.',
+      text: `So heißt ${stammVon(ziel)}.webp in der Fassungsleiste der Charakterseite. `
+        + (fassungenVon(figur).length < 2
+          ? `Bisher steht dort ${figur.ueberschrift || figur.name}, denn die Figur hat `
+            + 'nur dieses eine Bild. '
+            + 'Mit der Beschriftung bekommt sie ihre eigene Fassungsliste. ' : '')
+        + 'Der Dateiname folgt der Beschriftung und wird mit umbenannt.'
+        + (ziel.varianten > 1
+          ? ` Die ${ziel.varianten} Varianten wandern alle mit.` : ''),
       label: ziel.label,
       knopf: 'Übernehmen',
       kontext: {
         slug: figur.slug,
-        belegt: new Set(figur.ganzkoerper.filter((z) => z !== ziel).map((z) => z.datei)),
+        belegt: new Set(fassungenVon(figur)
+          .filter((z) => stammVon(z) !== stammVon(ziel)).map(stammVon)),
       },
     });
     if (!antwort || !antwort.label || antwort.label === ziel.label) return;
     await fassungAktion({
-      aktion: 'umbenennen', slug: figur.slug, datei: ziel.datei, label: antwort.label,
+      aktion: 'umbenennen', slug: figur.slug, datei: stammVon(ziel), label: antwort.label,
     });
     return;
   }
@@ -2783,32 +3523,161 @@ async function fassungKlick(tat) {
   /* Standard ist der erste Eintrag. „Zum Standard“ schiebt die Fassung
      also nur nach vorn, es wandert keine Datei. */
   if (tat === 'standard') {
-    await fassungAktion({ aktion: 'standard', slug: figur.slug, datei: ziel.datei },
+    await fassungAktion({ aktion: 'standard', slug: figur.slug, datei: stammVon(ziel) },
       ziel.datei);
     return;
   }
 
   if (tat === 'hoch' || tat === 'runter') {
     await fassungAktion({
-      aktion: 'verschieben', slug: figur.slug, datei: ziel.datei, richtung: tat,
+      aktion: 'verschieben', slug: figur.slug, datei: stammVon(ziel), richtung: tat,
     }, ziel.datei);
     return;
   }
 
   if (tat === 'loeschen') {
+    const bilder = variantenVon(figur, stammVon(ziel)).filter((z) => z.zustand !== 'fehlt');
     const antwort = await frageFassung({
       titel: 'Fassung löschen',
       text: `„${ziel.label}“ aus der Fassungsliste von ${figur.name} entfernen.`
-        + (ziel.zustand === 'fehlt' ? ' Ein Bild gibt es dazu noch nicht.'
-          : ` ${ziel.datei}.webp wandert dabei in die Sicherung und steht `
-            + 'danach nicht mehr auf der Charakterseite.'),
+        + (!bilder.length ? ' Ein Bild gibt es dazu noch nicht.'
+          : ` ${bilder.map((z) => z.datei + '.webp').join(', ')} wandert dabei in die `
+            + 'Sicherung und steht danach nicht mehr auf der Charakterseite.'),
       ohneLabel: true,
       knopf: 'Löschen',
     });
     if (!antwort) return;
     await fassungAktion({
-      aktion: 'loeschen', slug: figur.slug, datei: ziel.datei,
+      aktion: 'loeschen', slug: figur.slug, datei: stammVon(ziel),
     }, figur.slug);
+    return;
+  }
+
+  /* ---------- Varianten ----------
+
+     Eine zweite Aufnahme derselben Fassung. Sie bekommt keinen eigenen
+     Eintrag in der Fassungsliste, sondern nur eine Nummer: Aus
+     <Fassung>.webp wird <Fassung>-1.webp, die neue heißt <Fassung>-2.webp
+     und wartet auf ihr Bild. Auf der Charakterseite steht sie danach als
+     Schalter oben an der Profilleiste. */
+  if (tat === 'variante-neu') {
+    const stamm = stammVon(ziel);
+    const jetzt = ziel.varianten || 1;
+    const antwort = await frageFassung({
+      titel: 'Variante anlegen',
+      text: jetzt < 2
+        ? `Ein zweites Bild für „${ziel.label}“. ${stamm}.webp heißt danach `
+          + `${stamm}-1.webp, die neue Variante ${stamm}-2.webp und wartet auf ihr Bild. `
+          + 'Auf der Charakterseite stehen sie als Schalter 1 und 2 an der Profilleiste.'
+        : `Ein weiteres Bild für „${ziel.label}“. Es heißt ${stamm}-${jetzt + 1}.webp `
+          + 'und wartet auf seine Vorlage.',
+      ohneLabel: true,
+      knopf: 'Anlegen',
+    });
+    if (!antwort) return;
+    await fassungAktion({ aktion: 'variante-neu', slug: figur.slug, datei: ziel.datei },
+      null, null);
+    return;
+  }
+
+  if (tat === 'variante-weg') {
+    const jetzt = ziel.varianten || 1;
+    const antwort = await frageFassung({
+      titel: 'Variante entfernen',
+      text: `Variante ${ziel.variante} von „${ziel.label}“.`
+        + (ziel.zustand === 'fehlt' ? ' Ein Bild gibt es dazu noch nicht.'
+          : ` ${ziel.datei}.webp wandert dabei in die Sicherung.`)
+        + (jetzt > 2
+          ? ' Die Varianten dahinter rücken eine Nummer nach vorn.'
+          : ` Übrig bleibt ein einziges Bild, es heißt danach wieder `
+            + `${stammVon(ziel)}.webp.`),
+      ohneLabel: true,
+      knopf: 'Entfernen',
+    });
+    if (!antwort) return;
+    await fassungAktion({ aktion: 'variante-weg', slug: figur.slug, datei: ziel.datei },
+      null, null);
+    return;
+  }
+
+  /* Die Reihenfolge der Varianten steckt allein in ihren Nummern. Wer
+     verschoben wird, tauscht mit seinem Nachbarn den Dateinamen, und auf
+     der Charakterseite tauschen damit die Ziffern an der Profilleiste
+     ihre Bilder. Variante 1 ist die, die dort zuerst steht. */
+  if (tat === 'variante-hoch' || tat === 'variante-runter') {
+    await fassungAktion({ aktion: tat, slug: figur.slug, datei: ziel.datei });
+    return;
+  }
+
+  /* ---------- Umhängen ----------
+
+     Was als eigene Fassung angelegt wurde, ist manchmal doch nur eine
+     zweite Aufnahme derselben, und was als Variante mitläuft, manchmal
+     doch ein eigener Anzug. Beides lässt sich nachträglich umhängen,
+     ohne ein Bild neu zu schneiden: Es wandern die Dateinamen und mit
+     ihnen Körpergröße, Bildkorrektur, Schwebe, Offen-Markierung und
+     Quellenangabe. */
+  if (tat === 'zu-variante') {
+    const andere = fassungenVon(figur).filter((z) => stammVon(z) !== stammVon(ziel));
+    if (!andere.length) return;
+    const meine = variantenVon(figur, stammVon(ziel)).length;
+    const antwort = await frageFassung({
+      titel: 'Zur Variante machen',
+      text: `„${ziel.label}“ hängt danach als Variante hinter einer anderen Fassung. `
+        + 'Auf der Charakterseite steht dafür keine eigene Tafel mehr, sondern eine '
+        + 'Ziffer an der Profilleiste, und Beschriftung und Film der Zielfassung gelten '
+        + 'dann für alle ihre Bilder.'
+        + (meine > 1 ? ` Alle ${meine} Bilder wandern mit.` : ''),
+      ohneLabel: true,
+      gefahr: false,
+      knopf: 'Anhängen',
+      ziele: andere.map((z) => ({
+        wert: stammVon(z),
+        text: z.label + (z.varianten > 1 ? ` (${z.varianten} Bilder)` : ''),
+      })),
+      kontext: {
+        meine,
+        anhaengen: Object.fromEntries(andere.map((z) => [stammVon(z), z.varianten || 1])),
+      },
+    });
+    if (!antwort) return;
+    await fassungAktion({
+      aktion: 'zu-variante', slug: figur.slug, datei: stammVon(ziel), ziel: antwort.ziel,
+    });
+    return;
+  }
+
+  if (tat === 'zu-fassung') {
+    /* Die Filmwahl im Dialog braucht die Titel, genau wie beim Anlegen. */
+    try {
+      await holeFilme();
+    } catch (fehler) {
+      melde('Die Filme ließen sich nicht laden: ' + fehler.message, true);
+      return;
+    }
+    const jetzt = ziel.varianten || 1;
+    const antwort = await frageFassung({
+      titel: 'Zur Fassung machen',
+      text: `Variante ${ziel.variante} von „${ziel.label}“ bekommt eine eigene Tafel, `
+        + 'gleich hinter der Fassung, aus der sie kommt. Die Beschriftung sagt, was sie '
+        + `von ihr unterscheidet, und ${ziel.datei}.webp wird nach ihr umbenannt. `
+        + (jetzt > 2
+          ? 'Die Varianten dahinter rücken eine Nummer nach vorn.'
+          : `Drüben bleibt ein einziges Bild übrig, es heißt danach wieder `
+            + `${stammVon(ziel)}.webp.`),
+      knopf: 'Lösen',
+      mitFilm: true,
+      film: ziel.film || '',
+      kontext: {
+        slug: figur.slug,
+        belegt: new Set(fassungenVon(figur).map(stammVon).concat(figur.slug)),
+      },
+    });
+    if (!antwort || !antwort.label) return;
+    await fassungAktion({
+      aktion: 'zu-fassung', slug: figur.slug, datei: ziel.datei,
+      label: antwort.label, film: antwort.film,
+    });
   }
 }
 
@@ -2828,21 +3697,62 @@ async function fassungKlick(tat) {
 
    In data.js steht beides in einer Zeichenkette, getrennt durch " / " mit
    Leerzeichen davor und danach. Genau daran teilt splitName() in
-   js/chars.js auf, und zwar am ersten Slash: „Marc Spector / Steven Grant
-   / Moon Knight“ ist ein Realname und zwei Heldennamen. Deshalb wird hier
-   auch nur am ersten getrennt und der Rest bleibt am Stück, so kommt beim
-   Zusammensetzen wieder genau dasselbe heraus. */
+   js/chars.js auf, und zwar am letzten Slash: „Marc Spector / Steven
+   Grant / Moon Knight“ sind zwei bürgerliche Namen und ein Heldenname.
+   Deshalb wird hier ebenso am letzten getrennt, der Anfang bleibt am
+   Stück im Realnamen, und beim Zusammensetzen kommt wieder genau
+   dasselbe heraus. */
 function zerlegeNamen(name) {
-  const schnitt = name.indexOf(' / ');
+  const { rest, welt } = loeseWelt(name);
+  const schnitt = rest.lastIndexOf(' / ');
   return schnitt === -1
-    ? { real: name, alias: '' }
-    : { real: name.slice(0, schnitt), alias: name.slice(schnitt + 3) };
+    ? { real: rest, alias: '', welt }
+    : { real: rest.slice(0, schnitt), alias: rest.slice(schnitt + 3), welt };
 }
 
-function setzeNamenZusammen(real, alias) {
+function setzeNamenZusammen(real, alias, welt) {
   const links = real.trim().replace(/\s+/g, ' ');
   const rechts = alias.trim().replace(/\s+/g, ' ');
-  return rechts ? `${links} / ${rechts}` : links;
+  const name = rechts ? `${links} / ${rechts}` : links;
+  const wo = (welt || '').trim();
+  return wo ? `${name} (${wo})` : name;
+}
+
+/* ---------- Die Welt am Ende des Namens ----------
+
+   Aus welcher Wirklichkeit eine Figur stammt, hängt in data.js als
+   Klammer am Namen: „Christine Palmer (Erde-838)“. Nicht jede Klammer
+   ist eine Welt, „Gamora (2014)“ nennt eine Zeit und „Peter Parker /
+   Spider-Man (Maguire)“ eine Besetzung. Welche zählt, steht in
+   CHAR_WORLDS (js/chars.js), und die Liste kommt mit den Figuren vom
+   Server. Genau daran teilt auch splitName() dort auf.
+
+   Damit ist die Welt im Studio ein eigenes Feld und klebt nicht am
+   Realnamen: Wer sie wechselt, ändert nur die Klammer. */
+function loeseWelt(name) {
+  const klammer = name.match(/ \(([^()]+)\)$/);
+  return klammer && S.welten.includes(klammer[1])
+    ? { rest: name.slice(0, -klammer[0].length), welt: klammer[1] }
+    : { rest: name, welt: '' };
+}
+
+/* Die Auswahl einer Welt: leer, dann alles Bekannte. Eine Welt, die die
+   Liste nicht kennt, bliebe sonst beim Öffnen des Dialogs unter den
+   Tisch fallen und ginge beim nächsten Übernehmen verloren. */
+function fuelleWeltwahl(wahl, jetzt) {
+  wahl.textContent = '';
+  const ohne = document.createElement('option');
+  ohne.value = '';
+  ohne.textContent = 'Ohne Welt';
+  wahl.append(ohne);
+  const alle = S.welten.includes(jetzt) || !jetzt ? S.welten : [jetzt, ...S.welten];
+  for (const welt of alle) {
+    const eintrag = document.createElement('option');
+    eintrag.value = welt;
+    eintrag.textContent = welt;
+    wahl.append(eintrag);
+  }
+  wahl.value = jetzt || '';
 }
 
 /* Dieselbe Regel wie charSlug() in js/chars.js, ohne den Alias. */
@@ -2879,6 +3789,13 @@ function zeigeFigurDialog() {
     alias.maxLength = 60;
     alias.value = teile.alias;
     alias.placeholder = 'Heldenname, darf leer bleiben';
+    /* Die Welt ist eine Auswahl und kein Feld: Getippt wäre sie ein
+       zweites Mal geschrieben, und ein Tippfehler machte aus der Klammer
+       wieder einen Teil des Namens. */
+    const welt = document.createElement('select');
+    welt.className = 'weltwahl';
+    welt.title = 'Aus welcher Wirklichkeit diese Fassung stammt';
+    fuelleWeltwahl(welt, teile.welt);
     const knopf = document.createElement('button');
     knopf.type = 'button';
     knopf.className = 'knopf';
@@ -2886,14 +3803,15 @@ function zeigeFigurDialog() {
     symbole.setze(knopf, 'uebernehmen');
     knopf.disabled = true;
     const pruefe = () => {
-      const neu = setzeNamenZusammen(real.value, alias.value);
+      const neu = setzeNamenZusammen(real.value, alias.value, welt.value);
       knopf.disabled = !real.value.trim() || neu === name;
     };
     real.addEventListener('input', pruefe);
     alias.addEventListener('input', pruefe);
+    welt.addEventListener('change', pruefe);
     knopf.addEventListener('click', () => nameSpeichern(figur.slug, name,
-      setzeNamenZusammen(real.value, alias.value), i));
-    zeile.append(real, trenner, alias, knopf);
+      setzeNamenZusammen(real.value, alias.value, welt.value), i));
+    zeile.append(real, trenner, alias, welt, knopf);
     liste.append(zeile);
   });
 
@@ -2902,8 +3820,94 @@ function zeigeFigurDialog() {
      deshalb einer. */
   aliasStand = figur.alias.find((a) => a) || '';
   $('figur-alias').value = aliasStand;
+  $('welt-neu').value = '';
+  frischeWelten();
   frischeSchluessel();
+  $('loeschen-text').textContent = `${figur.ueberschrift || figur.name} verliert dabei `
+    + loeschumfang(figur).join(', ') + '. Rückgängig holt alles zurück.';
   $('figur-dialog').showModal();
+}
+
+/* Was die Auswahl gerade kennt, und was die Eingabe daneben damit
+   anfangen kann. Zweimal dieselbe Welt anzulegen bringt nichts,
+   gestrichen wird nur, was es gibt: Jeder Knopf ist deshalb genau dann
+   an, wenn er etwas zu tun hat. */
+function frischeWelten() {
+  const feld = $('welt-bekannt');
+  const eingabe = $('welt-neu').value.trim();
+  feld.textContent = '';
+  for (const welt of S.welten) {
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.className = welt === eingabe ? 'an' : '';
+    knopf.textContent = welt;
+    knopf.title = 'In das Feld darüber setzen';
+    knopf.addEventListener('click', () => {
+      $('welt-neu').value = welt;
+      frischeWelten();
+      $('welt-neu').focus();
+    });
+    feld.append(knopf);
+  }
+  $('welt-hinzu').disabled = !eingabe || S.welten.includes(eingabe);
+  $('welt-weg').disabled = !S.welten.includes(eingabe);
+}
+
+/* Eine neue Welt kommt in CHAR_WORLDS (js/chars.js) und steht danach in
+   jeder Auswahl. Am Namen der Figur ändert das noch nichts: Sie wird
+   danach in ihrer Zeile gewählt und übernommen. */
+async function weltAnlegen() {
+  const name = $('welt-neu').value.trim();
+  if (!name) return;
+  try {
+    const antwort = await json('/api/welt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    S.welten = antwort.welten || S.welten;
+    frischerVerlauf(antwort.verlauf);
+    /* Jede offene Auswahl bekommt die neue Welt, ohne ihre eigene Wahl
+       zu verlieren. */
+    for (const wahl of document.querySelectorAll('.weltwahl')) {
+      fuelleWeltwahl(wahl, wahl.value);
+    }
+    $('welt-neu').value = '';
+    frischeWelten();
+    melde(`Welt „${antwort.welt}“ steht jetzt zur Wahl.`);
+  } catch (fehler) {
+    melde('Welt nicht angelegt: ' + fehler.message, true);
+  }
+}
+
+/* Eine Welt wieder aus CHAR_WORLDS nehmen.
+
+   Der Server lässt das nur zu, solange kein Name sie mehr trägt: Die
+   Liste entscheidet, ob eine Klammer am Ende eines Namens eine
+   Wirklichkeit meint oder eine Variante, und eine gestrichene Welt
+   machte aus der einen die andere. Trägt sie noch jemand, sagt der
+   Fehler, wer. */
+async function weltStreichen() {
+  const name = $('welt-neu').value.trim();
+  if (!name || !S.welten.includes(name)) return;
+  if (!confirm(`„${name}“ aus der Weltenliste streichen?`)) return;
+  try {
+    const antwort = await json('/api/welt/loeschen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    S.welten = antwort.welten || S.welten;
+    frischerVerlauf(antwort.verlauf);
+    for (const wahl of document.querySelectorAll('.weltwahl')) {
+      fuelleWeltwahl(wahl, wahl.value);
+    }
+    $('welt-neu').value = '';
+    frischeWelten();
+    melde(`Welt „${antwort.welt}“ steht nicht mehr zur Wahl.`);
+  } catch (fehler) {
+    melde('Welt nicht gestrichen: ' + fehler.message, true);
+  }
 }
 
 /* Zeigt, welcher Schlüssel aus der Eingabe entstünde, und gibt den Knopf
@@ -2924,6 +3928,89 @@ function frischeSchluessel() {
     w.hidden = true;
   }
   return neu;
+}
+
+/* Was das Löschen dieser Figur mitnimmt, in Worten. Es steht schon im
+   Dialog, bevor jemand den Knopf drückt: Wer erst in der Rückfrage
+   erfährt, dass acht Bilder und eine Biografie daranhängen, hat den
+   Schritt bereits halb getan. */
+function loeschumfang(figur) {
+  /* Gezählt wird alles, was dasteht: Fremde Bilder stehen gar nicht
+     erst in der Liste. Der Server führt jeder Figur nur ihre eigenen
+     Dateien zu (eigeneDateien() in server.js), und „gamora-2014“ gehört
+     nicht zu „gamora“, bleibt beim Löschen liegen und zählt hier auch
+     nicht mit. */
+  const bilder = zieleVon(figur).filter((z) => z.zustand !== 'fehlt').length
+    + figur.ganzkoerper.filter((z) => z.zustand !== 'fehlt').length;
+  const raus = [
+    `${figur.auftritte} Auftritt${figur.auftritte === 1 ? '' : 'e'} in js/data.js`,
+  ];
+  if (bilder) raus.push(`${bilder} Bilddatei${bilder === 1 ? '' : 'en'}`);
+  const t = figur.texte || {};
+  const texte = [];
+  if (t.abschnitte) texte.push(`Biografie mit ${t.abschnitte} Abschnitten`);
+  if (t.kurz) texte.push('Kurzbiografie');
+  if (t.felder) texte.push('Steckbrief');
+  if (t.bonds) texte.push(`${t.bonds} Beziehungen`);
+  if (t.besetzung) texte.push('Besetzung');
+  if (texte.length) raus.push(texte.join(', '));
+  raus.push('Schlüssel, Alias und Fassungen in js/chars.js');
+  return raus;
+}
+
+/* Die Figur, die nach dem Löschen an ihrer Stelle steht. Ohne sie bliebe
+   die Bühne auf einer Figur stehen, die es nicht mehr gibt. */
+function nachbarVon(slug) {
+  const i = S.figuren.findIndex((f) => f.slug === slug);
+  if (i === -1) return null;
+  const nachbar = S.figuren[i + 1] || S.figuren[i - 1];
+  return nachbar ? nachbar.slug : null;
+}
+
+async function figurLoeschen() {
+  const figur = S.figur;
+  if (!figur) return;
+  $('weg-text').textContent = `„${figur.ueberschrift || figur.name}“ verschwindet `
+    + 'aus der Datenbank und damit von der Charakterseite, aus der Timeline und '
+    + 'aus der Galaxie. Das geht mit:';
+  const liste = $('weg-liste');
+  liste.textContent = '';
+  for (const zeile of loeschumfang(figur)) {
+    const li = document.createElement('li');
+    li.textContent = zeile;
+    liste.append(li);
+  }
+  const dialog = $('weg-dialog');
+  dialog.showModal();
+  $('weg-ok').focus();
+  const ja = await new Promise((fertig) => {
+    dialog.addEventListener('close', () => fertig(dialog.returnValue === 'ok'), { once: true });
+  });
+  if (!ja) return;
+
+  const nachbar = nachbarVon(figur.slug);
+  const knopf = $('figur-loeschen');
+  knopf.disabled = true;
+  try {
+    const antwort = await json('/api/figur/loeschen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: figur.slug }),
+    });
+    $('figur-dialog').close();
+    S.zaehler = antwort.zaehler;
+    pruefeStand(antwort.stand);
+    await neuLaden(nachbar, null);
+    melde(`${antwort.name} gelöscht: ${antwort.auftritte} Auftritte, `
+      + `${antwort.bilder.length} Bilder, ${antwort.dateien.length} Dateien geändert.`
+      + (antwort.beziehungen
+        ? ` ${antwort.beziehungen} Beziehung${antwort.beziehungen === 1 ? '' : 'en'} `
+          + 'anderer Figuren zeigten auf sie und sind mit weg.' : ''));
+  } catch (fehler) {
+    melde('Figur nicht gelöscht: ' + fehler.message, true);
+  } finally {
+    knopf.disabled = false;
+  }
 }
 
 async function nameSpeichern(slug, alt, neu, index) {
@@ -3103,7 +4190,8 @@ async function auftrittSetzen(film, kasten) {
 const neueFigur = { filme: new Set() };
 
 function frischeNeueFigur() {
-  const name = setzeNamenZusammen($('neu-name').value, $('neu-held').value);
+  const name = setzeNamenZusammen($('neu-name').value, $('neu-held').value,
+    $('neu-welt').value);
   const alias = $('neu-alias').value.trim();
   const slug = alias ? slugAus(alias) : slugAus(name);
   const belegt = slug && S.figuren.find((f) => f.slug === slug);
@@ -3133,6 +4221,7 @@ async function zeigeNeueFigur() {
   $('neu-held').value = '';
   $('neu-alias').value = '';
   $('neu-suche').value = '';
+  fuelleWeltwahl($('neu-welt'), '');
   maleNeueFilme();
   frischeNeueFigur();
   $('neu-dialog').showModal();
@@ -3151,7 +4240,8 @@ function maleNeueFilme() {
 }
 
 async function legeFigurAn() {
-  const name = setzeNamenZusammen($('neu-name').value, $('neu-held').value);
+  const name = setzeNamenZusammen($('neu-name').value, $('neu-held').value,
+    $('neu-welt').value);
   const alias = $('neu-alias').value.trim();
   const filme = [...neueFigur.filme];
   try {
@@ -3227,7 +4317,9 @@ function haengeAn(schritt) {
 
 /* Was ein Bühnenschritt festhält: der Ausschnitt und die Ausrichtung der
    Vorlage. Beide zusammen, denn ein Ausschnitt ohne seinen Winkel meint
-   in einer anders gedrehten Fläche etwas anderes. */
+   in einer anders gedrehten Fläche etwas anderes. Die Schwebe steht
+   nicht dabei: Sie wird aus beidem gemessen und kommt mit ihnen von
+   selbst zurück. */
 const SCHRITT_WERTE = ['x', 'y', 'breite', 'hoehe', 'viertel', 'fein'];
 
 function zustandJetzt() {
@@ -4028,7 +5120,7 @@ function baueBondWahl() {
   for (const figur of S.figuren) {
     const wahl = document.createElement('option');
     wahl.value = figur.slug;
-    wahl.textContent = figur.rolle ? `${figur.name} · ${figur.rolle}` : figur.name;
+    wahl.textContent = [figur.name, figur.rolle, figur.welt].filter(Boolean).join(' · ');
     bondVorlage.append(wahl);
   }
 }
@@ -4059,6 +5151,7 @@ async function ladeTexte(figur) {
   S.texte = null;
   S.texteStand = '';
   $('bio-liste').textContent = '';
+  begriffeSchliessen();
   $('bond-liste').textContent = '';
   $('texte-speichern').disabled = true;
   setzeTexteInfo('', '');
@@ -4082,7 +5175,7 @@ function zeigeTexte() {
   for (const name of ['origin', 'species', 'height']) $('t-' + name).value = t.hand[name] || '';
   $('t-status').value = t.hand.status || '';
   $('t-teams').value = (t.hand.teams || []).join('\n');
-  $('t-powers').value = (t.hand.powers || []).join('\n');
+  $('t-powers').value = alsBloecke(t.kraefte || []);
   zeigeWikiVorgaben();
   maleAbschnitte();
   maleBonds();
@@ -4103,8 +5196,9 @@ function zeigeWikiVorgaben() {
     ? `Aus dem Wiki: ${w.status}` : 'Aus dem Wiki: unbekannt';
   $('t-teams').placeholder = (w.teams || []).join('\n') || NICHTS_IM_WIKI;
   /* Kräfte stehen in keiner Infobox und lassen sich gar nicht abfragen,
-     siehe js/facts.js. Dort ist das leere Feld also wirklich leer. */
-  $('t-powers').placeholder = 'Steht in keinem Wiki, gehört ganz der Handarbeit';
+     siehe js/powers.js. Dort ist das leere Feld also wirklich leer. */
+  $('t-powers').placeholder = 'Übermenschliche Kraft\nDas Serum hebt Kraft, Reflexe und Ausdauer an den äußersten Rand '
+    + 'dessen, was ein Mensch erreichen kann.';
   frischeZurueckTasten();
 }
 
@@ -4244,6 +5338,9 @@ function frischeBioStand() {
 
 function maleBonds() {
   const feld = $('bond-liste');
+  /* Das Feld der Begriffe hängt an einer dieser Zeilen. Sie werden alle
+     neu gebaut, es muss also zu. */
+  begriffeSchliessen();
   feld.textContent = '';
   S.texte.bonds.forEach((paar, i) => feld.append(baueBond(paar, i)));
 }
@@ -4257,9 +5354,30 @@ function baueBond(paar, i) {
   label.maxLength = 40;
   label.value = paar[0];
   label.placeholder = 'Bester Freund';
+  label.setAttribute('aria-autocomplete', 'list');
   label.addEventListener('input', () => {
     paar[0] = label.value;
     frischeTexteKnopf();
+    /* Getippt wird meist ein Begriff, den es schon gibt. Was dazu passt,
+       steht deshalb beim Tippen von selbst darunter. */
+    begriffe.alles = false;
+    if (begriffeOffen()) begriffeMalen();
+    else if (label.value.trim() && begriffePassen(label.value).length) begriffeOeffnen(label, paar);
+  });
+  /* Verlassen mit einem Wort, das die Liste nicht kennt: Es ist neu und
+     wird gemerkt. */
+  label.addEventListener('change', () => begriffAnlegen(label.value));
+  label.addEventListener('keydown', (ev) => begriffeTastatur(ev, label, paar));
+
+  const auf = document.createElement('button');
+  auf.type = 'button';
+  auf.className = 'bond-begriffe';
+  auf.title = 'Begriffe, die schon benutzt sind';
+  auf.setAttribute('aria-haspopup', 'listbox');
+  symbole.setze(auf, 'runter');
+  auf.addEventListener('click', () => {
+    if (begriffeOffen() && begriffe.eingabe === label) begriffeSchliessen();
+    else begriffeOeffnen(label, paar, true);
   });
 
   const wahl = bondWahl(paar[1]);
@@ -4279,7 +5397,7 @@ function baueBond(paar, i) {
     frischeTexteKnopf();
   });
 
-  zeile.append(label, wahl, weg);
+  zeile.append(label, auf, wahl, weg);
   return zeile;
 }
 
@@ -4292,6 +5410,347 @@ function neueBond() {
   if (zeile) zeile.querySelector('input').focus();
 }
 
+/* ---------- Die Begriffe der Beziehungen ----------
+
+   „Weggefährte“, „Bruder“, „Erzfeind“: Die Bezeichnung einer Beziehung
+   ist Freitext, aber fast immer eine, die es schon gibt. Neben dem Feld
+   steht deshalb ein Pfeil, der die Liste aufschlägt, und wer tippt,
+   filtert sie dabei. Ein Begriff, den die Liste nicht kennt, wird beim
+   Verlassen des Feldes gemerkt und steht von da an mit darin. Wo er
+   schon steht, lässt er sich umbenennen, und das gilt dann bei jeder
+   Figur, die ihn trägt.
+
+   Woher die Liste kommt und wo die frisch getippten Begriffe liegen,
+   steht in server.js unter „Die Begriffe der Beziehungen“. Hier steht
+   nur die Bedienung.
+
+   Das Feld gibt es einmal für alle Zeilen, es hängt am Fenster und
+   nicht an der Zeile: In der Tafel steckt es in einem Kasten, der
+   rollt, und würde an dessen Rand abgeschnitten. Beim Rollen wird es
+   deshalb geschlossen, sonst stünde es neben einer Zeile, die
+   inzwischen weitergewandert ist. */
+
+/* So viele Begriffe stehen höchstens im Feld. Zweihundert Zeilen bei
+   jedem Tastendruck neu zu bauen kostet mehr, als die letzten davon
+   wert sind: Wer so weit unten sucht, tippt schneller weiter. */
+const BEGRIFF_MAX = 60;
+
+const begriffe = {
+  eingabe: null,   // das Feld, neben dem die Liste steht
+  paar: null,      // die Beziehung dazu, ein Eintrag aus S.texte.bonds
+  treffer: [],     // was gerade zu sehen ist
+  wahl: -1,        // hervorgehoben von den Pfeiltasten
+  aendert: '',     // Begriff, der gerade umbenannt wird
+  alles: false,    // ganze Liste zeigen, statt nach dem Feld zu filtern
+};
+
+function begriffeOffen() {
+  return !$('begriff-feld').hidden;
+}
+
+function begriffeSchliessen() {
+  const feld = $('begriff-feld');
+  if (feld.hidden) return;
+  feld.hidden = true;
+  feld.textContent = '';
+  begriffe.eingabe = null;
+  begriffe.paar = null;
+  begriffe.treffer = [];
+  begriffe.wahl = -1;
+  begriffe.aendert = '';
+}
+
+function begriffeOeffnen(eingabe, paar, alles) {
+  begriffe.eingabe = eingabe;
+  begriffe.paar = paar;
+  begriffe.wahl = -1;
+  begriffe.aendert = '';
+  begriffe.alles = !!alles;
+  $('begriff-feld').hidden = false;
+  begriffeMalen();
+}
+
+/* Was zu einem Text passt, die häufigsten zuerst. Was vorn anfängt,
+   steht über dem, was ihn nur irgendwo trägt. */
+function begriffePassen(text) {
+  const wort = text.trim().toLowerCase();
+  if (!wort) return S.begriffe;
+  const vorn = [];
+  const drin = [];
+  for (const b of S.begriffe) {
+    const stelle = b.name.toLowerCase().indexOf(wort);
+    if (stelle === 0) vorn.push(b);
+    else if (stelle > 0) drin.push(b);
+  }
+  return [...vorn, ...drin];
+}
+
+/* Was gerade im Feld steht. Der Pfeil schlägt die ganze Liste auf, auch
+   wenn in der Zeile schon ein Begriff steht: Wer ihn drückt, sucht einen
+   anderen. Erst die nächste Taste im Feld filtert wieder. */
+function begriffeTreffer() {
+  if (begriffe.alles) return S.begriffe;
+  return begriffePassen(begriffe.eingabe ? begriffe.eingabe.value : '');
+}
+
+function begriffTaste(symbol, hilfe, tun, gefahr) {
+  const knopf = document.createElement('button');
+  knopf.type = 'button';
+  knopf.className = 'begriff-taste' + (gefahr ? ' gefahr' : '');
+  knopf.title = hilfe;
+  symbole.setze(knopf, symbol);
+  knopf.addEventListener('click', tun);
+  return knopf;
+}
+
+function begriffeMalen() {
+  const feld = $('begriff-feld');
+  feld.textContent = '';
+  begriffe.treffer = begriffeTreffer();
+  if (begriffe.wahl >= begriffe.treffer.length) begriffe.wahl = -1;
+
+  const sichtbar = begriffe.treffer.slice(0, BEGRIFF_MAX);
+  sichtbar.forEach((b, i) => feld.append(begriffZeile(b, i)));
+  if (!sichtbar.length) {
+    feld.append(begriffNotiz(S.begriffe.length
+      ? 'Kein Begriff dazu. Wer das Feld verlässt, legt ihn an.'
+      : 'Noch steht kein Begriff in der Liste.'));
+  } else if (begriffe.treffer.length > sichtbar.length) {
+    feld.append(begriffNotiz(`${begriffe.treffer.length - sichtbar.length} weitere, `
+      + 'Tippen sucht sie heraus.'));
+  }
+  begriffeStellen();
+}
+
+function begriffNotiz(text) {
+  const p = document.createElement('p');
+  p.className = 'begriff-leer';
+  p.textContent = text;
+  return p;
+}
+
+function begriffZeile(b, i) {
+  const zeile = document.createElement('div');
+  zeile.className = 'begriff-zeile';
+
+  /* Umbenennen geschieht an Ort und Stelle: Aus der Zeile wird ein Feld
+     mit demselben Wort darin. */
+  if (begriffe.aendert === b.name) {
+    zeile.classList.add('taufe');
+    const eingabe = document.createElement('input');
+    eingabe.type = 'text';
+    eingabe.maxLength = 40;
+    eingabe.value = b.name;
+    eingabe.className = 'begriff-taufe';
+    eingabe.addEventListener('keydown', (ev) => {
+      ev.stopPropagation();
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        begriffTaufen(b, eingabe.value);
+      } else if (ev.key === 'Escape') {
+        ev.preventDefault();
+        begriffe.aendert = '';
+        begriffeMalen();
+      }
+    });
+    zeile.append(eingabe,
+      begriffTaste('uebernehmen', 'Umbenennen', () => begriffTaufen(b, eingabe.value)),
+      begriffTaste('schliessen', 'Lassen, wie es war', () => {
+        begriffe.aendert = '';
+        begriffeMalen();
+      }));
+    setTimeout(() => { eingabe.focus(); eingabe.select(); }, 0);
+    return zeile;
+  }
+
+  if (i === begriffe.wahl) zeile.classList.add('an');
+
+  const nehmen = document.createElement('button');
+  nehmen.type = 'button';
+  nehmen.className = 'begriff-wahl';
+  nehmen.setAttribute('role', 'option');
+  nehmen.setAttribute('aria-selected', String(i === begriffe.wahl));
+  const name = document.createElement('b');
+  name.textContent = b.name;
+  const zahl = document.createElement('i');
+  /* Wie oft der Begriff schon steht. Ein frisch getippter steht nirgends
+     und trägt deshalb keine Zahl, sondern ein Wort. */
+  zahl.textContent = b.anzahl ? String(b.anzahl) : 'neu';
+  nehmen.append(name, zahl);
+  nehmen.addEventListener('click', () => begriffNehmen(b));
+
+  zeile.append(nehmen,
+    begriffTaste('umbenennen', b.anzahl
+      ? `„${b.name}“ in allen ${b.anzahl} Beziehungen umbenennen`
+      : `„${b.name}“ umbenennen`,
+    () => {
+      begriffe.aendert = b.name;
+      begriffeMalen();
+    }));
+  /* Weg kann nur, was bei keiner Figur steht. Alles andere verschwindet
+     mit seiner Beziehung und nicht aus dieser Liste. */
+  if (!b.anzahl) {
+    zeile.append(begriffTaste('schliessen', 'Aus der Liste nehmen',
+      () => begriffWeg(b), true));
+  }
+  return zeile;
+}
+
+/* Das Feld steht unter seiner Zeile, und wenn dort kein Platz mehr ist,
+   darüber. */
+function begriffeStellen() {
+  const feld = $('begriff-feld');
+  const eingabe = begriffe.eingabe;
+  if (!eingabe) return;
+  const kasten = eingabe.getBoundingClientRect();
+  feld.style.minWidth = Math.round(Math.max(kasten.width, 240)) + 'px';
+  feld.style.left = Math.round(kasten.left) + 'px';
+  const drunter = window.innerHeight - kasten.bottom - 10;
+  const hoehe = feld.offsetHeight;
+  feld.style.top = hoehe > drunter && kasten.top > drunter
+    ? Math.round(Math.max(8, kasten.top - 5 - hoehe)) + 'px'
+    : Math.round(kasten.bottom + 5) + 'px';
+}
+
+/* Pfeiltasten laufen durch die Liste, die Eingabe nimmt, was steht. */
+function begriffeTastatur(ev, eingabe, paar) {
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    if (!begriffeOffen()) begriffeOeffnen(eingabe, paar, true);
+    begriffeWandern(ev.key === 'ArrowDown' ? 1 : -1);
+  } else if (ev.key === 'Enter' && begriffeOffen()) {
+    ev.preventDefault();
+    if (begriffe.wahl >= 0) begriffNehmen(begriffe.treffer[begriffe.wahl]);
+    else begriffeSchliessen();
+  } else if (ev.key === 'Escape' && begriffeOffen()) {
+    ev.preventDefault();
+    begriffeSchliessen();
+  }
+}
+
+function begriffeWandern(richtung) {
+  const anzahl = Math.min(begriffe.treffer.length, BEGRIFF_MAX);
+  if (!anzahl) return;
+  const stelle = begriffe.wahl + richtung;
+  begriffe.wahl = stelle < 0 ? anzahl - 1 : stelle % anzahl;
+  begriffeMalen();
+  const zeile = $('begriff-feld').children[begriffe.wahl];
+  if (zeile) zeile.scrollIntoView({ block: 'nearest' });
+}
+
+/* Einen Begriff aus der Liste in die Zeile setzen. */
+function begriffNehmen(b) {
+  const eingabe = begriffe.eingabe;
+  const paar = begriffe.paar;
+  if (!b || !eingabe || !paar) return;
+  eingabe.value = b.name;
+  paar[0] = b.name;
+  frischeTexteKnopf();
+  begriffeSchliessen();
+  eingabe.focus();
+}
+
+/* Ein Wort, das die Liste noch nicht kennt, kommt hinein. Das geschieht
+   still: Wer tippt, will eine Beziehung schreiben und keine Liste
+   pflegen. */
+async function begriffAnlegen(wort) {
+  const kurz = wort.trim();
+  if (!kurz || S.begriffe.some((b) => b.name === kurz)) return;
+  try {
+    const antwort = await json('/api/begriffe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: kurz }),
+    });
+    S.begriffe = antwort.begriffe;
+    if (begriffeOffen()) begriffeMalen();
+  } catch (fehler) {
+    melde('Der Begriff ließ sich nicht merken: ' + fehler.message, true);
+  }
+}
+
+async function begriffWeg(b) {
+  if (!confirm(`„${b.name}“ aus der Liste nehmen?`)) return;
+  try {
+    const antwort = await json('/api/begriffe/loeschen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: b.name }),
+    });
+    S.begriffe = antwort.begriffe;
+    begriffe.wahl = -1;
+    if (begriffeOffen()) begriffeMalen();
+  } catch (fehler) {
+    melde('Der Begriff blieb stehen: ' + fehler.message, true);
+  }
+}
+
+async function begriffTaufen(b, wort) {
+  const neu = wort.trim();
+  if (!neu || neu === b.name) {
+    begriffe.aendert = '';
+    begriffeMalen();
+    return;
+  }
+  const schon = S.begriffe.some((x) => x.name === neu);
+  const frage = schon
+    ? `„${neu}“ steht schon in der Liste. Beide zusammenlegen?`
+    : `„${b.name}“ in „${neu}“ umbenennen?`
+      + (b.anzahl ? ` Er steht in ${b.anzahl} Beziehung${b.anzahl === 1 ? '' : 'en'}.` : '');
+  if (!confirm(frage)) return;
+
+  try {
+    const antwort = await json('/api/begriffe/umbenennen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alt: b.name, neu }),
+    });
+    S.begriffe = antwort.begriffe;
+    if (antwort.verlauf) frischerVerlauf(antwort.verlauf);
+    begriffe.aendert = '';
+    begriffe.wahl = -1;
+    /* Trägt die offene Figur den Begriff, stehen ihre Zeilen jetzt
+       anders da und werden neu gebaut. Das Feld schließt dabei, es hinge
+       sonst an einer Eingabe, die es nicht mehr gibt. */
+    if (begriffTauschen(b.name, neu)) {
+      maleBonds();
+    } else if (begriffeOffen()) {
+      begriffeMalen();
+    }
+    frischeTexteKnopf();
+    melde(antwort.stellen
+      ? `„${b.name}“ heißt jetzt „${neu}“: ${antwort.stellen} `
+        + `Beziehung${antwort.stellen === 1 ? '' : 'en'} bei ${antwort.figuren} `
+        + `Figur${antwort.figuren === 1 ? '' : 'en'}`
+      : `Der Begriff heißt jetzt „${neu}“.`);
+  } catch (fehler) {
+    melde('Das Umbenennen ging nicht: ' + fehler.message, true);
+  }
+}
+
+/* Die offene Figur steht im Browser und weiß nicht, dass ihre Datei sich
+   gerade geändert hat. Der Begriff wird deshalb auch hier getauscht, in
+   den Zeilen wie in dem Abdruck, an dem „geändert?“ hängt: Sonst stünde
+   die Figur als geändert da, obwohl niemand sie angefasst hat. */
+function begriffTauschen(alt, neu) {
+  if (!S.texte) return false;
+  if (S.texteStand) {
+    try {
+      const stand = JSON.parse(S.texteStand);
+      stand.bonds = (stand.bonds || [])
+        .map(([label, ziel]) => [label === alt ? neu : label, ziel]);
+      S.texteStand = JSON.stringify(stand);
+    } catch (fehler) { /* dann bleibt der Abdruck, wie er war */ }
+  }
+  let getroffen = false;
+  for (const paar of S.texte.bonds) {
+    if (paar[0] !== alt) continue;
+    paar[0] = neu;
+    getroffen = true;
+  }
+  return getroffen;
+}
+
 /* ---------- Sammeln, vergleichen, speichern ---------- */
 
 /* Ein mehrzeiliges Feld als Liste: leere Zeilen fallen weg, der Rest
@@ -4299,6 +5758,21 @@ function neueBond() {
    js/facts.js, die wichtigste zuerst. */
 function alsListe(id) {
   return $(id).value.split('\n').map((zeile) => zeile.trim()).filter(Boolean);
+}
+
+/* Die Kräfte sind Paare aus Name und Absatz. Im Feld steht je Fähigkeit
+   ein Block: oben der Name, darunter der Text, dazwischen eine
+   Leerzeile zur nächsten. Das liest sich wie die Tafel selbst und
+   braucht keine eigene Liste mit Knöpfen. */
+function alsBloecke(paare) {
+  return paare.map(([name, text]) => name + '\n' + text).join('\n\n');
+}
+
+function ausBloecken(id) {
+  return $(id).value.split(/\n\s*\n/)
+    .map((block) => block.split('\n').map((zeile) => zeile.trim()).filter(Boolean))
+    .filter((zeilen) => zeilen.length)
+    .map((zeilen) => [zeilen[0], zeilen.slice(1).join(' ')]);
 }
 
 function sammleTexte() {
@@ -4312,8 +5786,8 @@ function sammleTexte() {
       height: $('t-height').value,
       status: $('t-status').value,
       teams: alsListe('t-teams'),
-      powers: alsListe('t-powers'),
     },
+    kraefte: ausBloecken('t-powers'),
     bonds: S.texte.bonds.map(([label, ziel]) => [label, ziel]),
     actors: alsListe('t-actors'),
   };
@@ -4363,6 +5837,9 @@ async function texteSpeichern() {
     });
     if (antwort.texte) figur.texte = antwort.texte;
     S.zaehler = antwort.zaehler;
+    /* Eine gespeicherte Beziehung ändert die Zahlen hinter den
+       Begriffen, und ein frisch getippter steht jetzt bei einer Figur. */
+    if (antwort.begriffe) S.begriffe = antwort.begriffe;
     frischerVerlauf(antwort.verlauf);
     zeigeZaehler(false);
     frischeListe(figur);
@@ -4404,8 +5881,10 @@ async function frischeFiguren() {
   const offen = S.figur ? S.figur.slug : null;
   const daten = await json('/api/figuren');
   S.figuren = daten.figuren;
+  S.welten = daten.welten || [];
   S.zaehler = daten.zaehler;
   S.wikiOffen = daten.wikiOffen || 0;
+  S.begriffe = daten.begriffe || [];
   S.figur = S.figuren.find((f) => f.slug === offen) || null;
   baueBondWahl();
   zeigeZaehler(true);
@@ -4463,6 +5942,35 @@ async function wikiAbrufen(slug) {
 
 $('bio-neu').addEventListener('click', neuerAbschnitt);
 $('bond-neu').addEventListener('click', neueBond);
+
+/* Das Feld der Begriffe steht über allem und gehört doch zu einer Zeile.
+   Es schließt, sobald daneben geklickt wird, und ebenso, sobald die
+   Tafel darunter rollt oder das Fenster sich ändert: Dann stünde es
+   neben nichts mehr. Der Pfeil, der es aufschlägt, ist davon
+   ausgenommen, sonst schlösse dieser Klick es und der nächste Griff
+   öffnete es wieder. */
+document.addEventListener('pointerdown', (ev) => {
+  if (!begriffeOffen()) return;
+  const ziel = ev.target;
+  if ($('begriff-feld').contains(ziel)) {
+    /* Ein Knopf im Feld darf die Eingabe nicht aus dem Fokus nehmen, aus
+       ihr kommt der Text. Das Feld zum Umbenennen braucht ihn dagegen. */
+    if (!ziel.closest('.begriff-taufe')) ev.preventDefault();
+    return;
+  }
+  if (ziel === begriffe.eingabe || (ziel.closest && ziel.closest('.bond-begriffe'))) return;
+  begriffeSchliessen();
+}, true);
+
+document.addEventListener('scroll', (ev) => {
+  if (!begriffeOffen()) return;
+  /* Das Feld rollt in sich selbst, wenn die Liste lang ist. Das ist
+     kein Grund, es zu schließen. */
+  if (ev.target === $('begriff-feld')) return;
+  begriffeSchliessen();
+}, true);
+
+window.addEventListener('resize', begriffeSchliessen);
 $('texte-speichern').addEventListener('click', texteSpeichern);
 $('wiki-figur').addEventListener('click', () => {
   if (S.figur) wikiAbrufen(S.figur.slug);
@@ -4521,7 +6029,21 @@ $('fassung-leiste').addEventListener('click', (ev) => {
   if (knopf && !knopf.disabled) fassungKlick(knopf.dataset.tat);
 });
 
+$('film-wahl').addEventListener('change', (ev) => filmSetzen(ev.target.value));
+
+/* Geschrieben wird auf den Knopf oder auf Enter. Das Verlassen des
+   Feldes reicht nicht: Wer nur nachliest und weiterklickt, soll damit
+   keine Datei anfassen. Umbruch im Satz gibt es mit Umschalt. */
+$('beschreibung-feld').addEventListener('input', frischeBeschreibungKnopf);
+$('beschreibung-ok').addEventListener('click', beschreibungSetzen);
+$('beschreibung-feld').addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Enter' || ev.shiftKey) return;
+  ev.preventDefault();
+  if (!$('beschreibung-ok').disabled) beschreibungSetzen();
+});
+
 $('fassung-label').addEventListener('input', zeigeDateinamen);
+$('fassung-zielwahl').addEventListener('change', zeigeDateinamen);
 $('figur-bearbeiten').addEventListener('click', zeigeFigurDialog);
 $('figur-auftritte').addEventListener('click', zeigeAuftritte);
 $('figur-alias').addEventListener('input', frischeSchluessel);
@@ -4533,12 +6055,22 @@ $('figur-alias').addEventListener('keydown', (ev) => {
   ev.preventDefault();
   if (!$('alias-uebernehmen').disabled) aliasSpeichern();
 });
+$('welt-neu').addEventListener('input', frischeWelten);
+$('welt-hinzu').addEventListener('click', weltAnlegen);
+$('welt-weg').addEventListener('click', weltStreichen);
+$('figur-loeschen').addEventListener('click', figurLoeschen);
+$('welt-neu').addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Enter') return;
+  ev.preventDefault();
+  if (!$('welt-hinzu').disabled) weltAnlegen();
+});
 $('auftritt-suche').addEventListener('input', baueFilmliste);
 
 $('figur-neu').addEventListener('click', zeigeNeueFigur);
 $('neu-name').addEventListener('input', frischeNeueFigur);
 $('neu-held').addEventListener('input', frischeNeueFigur);
 $('neu-alias').addEventListener('input', frischeNeueFigur);
+$('neu-welt').addEventListener('change', frischeNeueFigur);
 $('neu-suche').addEventListener('input', maleNeueFilme);
 $('neu-dialog').addEventListener('close', () => {
   if ($('neu-dialog').returnValue === 'ok') legeFigurAn();
@@ -4735,30 +6267,42 @@ for (const welcher of ['skala', 'korrektur']) {
 
 /* Beide Werte stehen nicht im Bild, sondern in js/chars.js. Deshalb
    schreibt sie ein eigener Knopf, unabhängig vom Zuschnitt. */
+/* Wie beim Zuschnitt gilt auch hier: Nach dem Warten steht in S womöglich
+   schon eine andere Fassung. Die beiden Zahlen gehören zu der, für die
+   der Knopf gedrückt wurde, und werden deshalb vorher festgehalten. */
 $('skala-speichern').addEventListener('click', async () => {
   const ziel = S.ziel;
   const knopf = $('skala-speichern');
   if (!ziel) return;
+  const skala = S.skala;
+  const korrektur = S.korrektur;
   knopf.disabled = true;
   try {
     const antwort = await json('/api/skala', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ datei: ziel.datei, skala: S.skala, korrektur: S.korrektur }),
+      body: JSON.stringify({ datei: ziel.datei, skala, korrektur }),
     });
-    ziel.skala = S.skala;
-    ziel.korrektur = S.korrektur;
+    ziel.skala = skala;
+    ziel.korrektur = korrektur;
     frischerVerlauf(antwort.verlauf);
-    vorschau();
-    const prozent = Math.round(S.korrektur * 100);
-    melde(S.skala === 1 && S.korrektur === 1
+    if (S.ziel === ziel) vorschau();
+    const prozent = Math.round(korrektur * 100);
+    melde(skala === 1 && korrektur === 1
       ? `${ziel.datei} steht wieder auf der Standardgröße, chars.js führt die Datei nicht mehr.`
-      : `Körpergröße ${S.skala.toFixed(2)}`
-        + (S.korrektur === 1 ? '' : `, Bildkorrektur ${prozent} %`)
+      : `Körpergröße ${skala.toFixed(2)}`
+        + (korrektur === 1 ? '' : `, Bildkorrektur ${prozent} %`)
         + ` für ${ziel.datei} in js/chars.js eingetragen.`);
   } catch (fehler) {
-    knopf.disabled = false;
     melde('Größe nicht gesetzt: ' + fehler.message, true);
+  } finally {
+    /* Der Knopf ging vorher nur im Fehlerfall wieder auf. Nach einem
+       geglückten Schreiben blieb er grau stehen, bis irgendetwas anderes
+       die Anzeige neu aufbaute. Jetzt entscheidet wieder die Regel, die
+       ihn ohnehin führt: offen, sobald die Regler von dem abweichen, was
+       in chars.js steht. */
+    knopf.disabled = false;
+    frischeSkalaFelder();
   }
 });
 

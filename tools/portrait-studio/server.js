@@ -46,6 +46,7 @@
 
 'use strict';
 
+const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
 const os = require('os');
@@ -80,6 +81,7 @@ const FULLSIZE = path.join(REPO, 'assets', 'characters', 'fullsize');
 const SICHERUNG = path.join(HIER, '.sicherung');
 const OFFEN = path.join(HIER, 'offen.json');
 const UPLOADS = path.join(os.tmpdir(), 'portrait-studio-uploads');
+const URFASSUNGEN = path.join(os.tmpdir(), 'portrait-studio-urfassungen');
 
 const argv = process.argv.slice(2);
 const PORT = Number(wert('--port') || 4321);
@@ -154,7 +156,8 @@ function python(args) {
 
 /* ---------- Datenbank lesen ---------- */
 
-const QUELLDATEIEN = ['js/data.js', 'js/chars.js', 'js/profiles.js', 'js/facts.js'];
+const QUELLDATEIEN = ['js/data.js', 'js/chars.js', 'js/looks.js', 'js/profiles.js',
+  'js/facts.js', 'js/powers.js'];
 
 /* Wie die vier Dateien gerade dastehen: Zeitpunkt und Länge jeder
    einzelnen. Ändert eine sich, ändert sich diese Zeichenkette. */
@@ -169,7 +172,7 @@ function quellStand() {
   }).join('|');
 }
 
-/* Die vier Dateien zu lesen und auszuwerten sind eine halbe Million
+/* Die Quelldateien zu lesen und auszuwerten sind eine halbe Million
    Zeichen JavaScript, und fast jede Anfrage braucht sie, manche mehrfach.
    Das Ergebnis wird deshalb gehalten, bis eine der Dateien sich rührt.
    Geschrieben werden sie ohnehin nur von hier oder von Hand, und beides
@@ -182,15 +185,20 @@ function ladeDaten() {
 
   const ctx = {};
   vm.createContext(ctx);
-  /* Alle vier in einem Rutsch, denn const aus getrennten Läufen sieht der
+  /* Alle in einem Rutsch, denn const aus getrennten Läufen sieht der
      jeweils andere nicht. Die Zuweisung am Ende holt sie heraus.
      profiles.js und facts.js gehören dazu, seit das Studio auch die Texte
-     einer Figur führt: Biografie, Steckbrief, Beziehungen. */
+     einer Figur führt, looks.js seit dem Satz unter der Fassungstafel:
+     Biografie, Steckbrief, Beziehungen, Beschreibung. */
   const src = [
     ...QUELLDATEIEN.map((rel) => fs.readFileSync(path.join(REPO, rel), 'utf8')),
-    ';globalThis.OUT = { PHASES, CHAR_ALIAS, CHAR_LOOKS, FULLSIZE_LOOKS, FULLSIZE_SCALE,'
-      + ' FULLSIZE_FIT, CHAR_NO_IMAGE, CHAR_NO_PROFILE, charSlug, splitName,'
-      + ' ACTORS, BIOS, PROFILES, CHAR_FACTS, CHAR_FACTS_EXTRA, CHAR_BONDS };',
+    ';globalThis.OUT = { PHASES, CHAR_ALIAS, CHAR_LOOKS, FULLSIZE_LOOKS, FULLSIZE_STANDARD,'
+      + ' FULLSIZE_SCALE, FULLSIZE_VARIANTS, lookVariants, lookVariantFile, lookVariantFiles,'
+      + ' FULLSIZE_FIT, FULLSIZE_LIFT, FULLSIZE_NOTES, lookNote,'
+      + ' CHAR_NO_IMAGE, CHAR_NO_PROFILE, CHAR_WORLDS,'
+      + ' charSlug, splitName,'
+      + ' ACTORS, BIOS, PROFILES, CHAR_FACTS, CHAR_FACTS_EXTRA, CHAR_BONDS,'
+      + ' CHAR_POWERS };',
   ].join('\n');
   vm.runInContext(src, ctx, { filename: 'daten.js' });
   datenSpeicher = { stand, daten: ctx.OUT };
@@ -200,7 +208,7 @@ function ladeDaten() {
 /* Hat die Datei einen Alphakanal? null, wenn es kein WebP ist. Gleiche
    Prüfung wie in pending-portraits.js nebenan: Die neuen Porträts sind
    freigestellt, die alten aus dem Wiki sind deckend. */
-function hatAlpha(datei) {
+function alphaLesen(datei) {
   let fd;
   try {
     const kopf = Buffer.alloc(30);
@@ -218,6 +226,30 @@ function hatAlpha(datei) {
   } finally {
     if (fd !== undefined) fs.closeSync(fd);
   }
+}
+
+/* Die Antwort je Datei, gehalten bis der Server ein Bild anfasst.
+
+   Vierhundert Porträts einzeln zu öffnen kostete gemessen achtzig
+   Millisekunden, und baueFiguren() tat das bei jeder Anfrage. Auch die
+   billigere Frage nach Zeitpunkt und Länge kostet noch, wenn sie
+   vierhundertmal gestellt wird und die Dateien auf einem Laufwerk liegen,
+   über dem ein Abgleichdienst sitzt.
+
+   Deshalb wird gar nicht mehr gefragt. Wer ein Bild schreibt, sagt
+   Bescheid, siehe bilderVergessen(); ein Bild, das von außen dazukommt
+   oder verschwindet, rückt den Zeitpunkt seines Ordners weiter und
+   räumt den Speicher damit ebenfalls. Nur ein Bild, das außerhalb des
+   Studios an Ort und Stelle überschrieben wird, bliebe hier auf seinem
+   alten Wert stehen – bis zum nächsten Eingriff im Studio oder zum
+   Neustart. */
+const alphaSpeicher = new Map();   // Pfad -> Alpha, oder null
+
+function hatAlpha(datei) {
+  if (alphaSpeicher.has(datei)) return alphaSpeicher.get(datei);
+  const alpha = alphaLesen(datei);
+  alphaSpeicher.set(datei, alpha);
+  return alpha;
 }
 
 /* ---------- Von Hand als offen markiert ----------
@@ -259,6 +291,45 @@ function webpListe(ordner) {
   }
 }
 
+/* ---------- Welche Bilder es gibt ----------
+
+   Ob eine Datei da ist, wurde bisher je Datei gefragt. Bei elfhundert
+   Fassungen und Zielen sind das elfhundert Einzelfragen ans
+   Dateisystem, gemessen einhundertfünfzig Millisekunden, und
+   baueFiguren() stellte sie bei jeder Anfrage neu.
+
+   Ein Verzeichnis auf einmal zu lesen kostet dagegen eine Millisekunde.
+   Gehalten wird das Ergebnis, bis der Ordner sich rührt: Anlegen,
+   Löschen und Umbenennen rücken seinen Zeitpunkt weiter, und was der
+   Server selbst schreibt, meldet er über bilderVergessen(). */
+const ordnerSpeicher = new Map();   // Ordner -> { stand, menge }
+
+function ordnerStand(ordner) {
+  try { return String(fs.statSync(ordner).mtimeMs); } catch { return '-'; }
+}
+
+function bilderDa(ordner) {
+  const stand = ordnerStand(ordner);
+  const gemerkt = ordnerSpeicher.get(ordner);
+  if (gemerkt && gemerkt.stand === stand) return gemerkt.menge;
+  const menge = new Set(webpListe(ordner));
+  ordnerSpeicher.set(ordner, { stand, menge });
+  /* Der Ordner hat sich gerührt: Was darin steht, kann anders sein als
+     beim letzten Blick, also gilt auch der Alphakanal nicht mehr. */
+  alphaSpeicher.clear();
+  return menge;
+}
+
+/* Nach jedem eigenen Schreiben an einem Bild. Ein überschriebenes Bild
+   rückt den Zeitpunkt des Ordners nicht weiter, und ein neu angelegtes
+   tut es auf manchen Dateisystemen erst mit Verzögerung. Wer schreibt,
+   weiß es dagegen sicher. */
+function bilderVergessen() {
+  ordnerSpeicher.clear();
+  alphaSpeicher.clear();
+  figurenSpeicher = null;
+}
+
 /* Beschriftung einer Fassung: der gepflegte Name aus FULLSIZE_LOOKS, sonst
    der Zusatz aus dem Dateinamen in lesbar. */
 function beschriftung(datei, slug, namen) {
@@ -271,15 +342,14 @@ function beschriftung(datei, slug, namen) {
 /* Ein Porträt ist fertig, wenn es freigestellt ist. Die alten aus dem
    Fandom-Wiki sind deckend. */
 function zustand(datei) {
-  const pfad = path.join(PORTRAITS, datei + '.webp');
-  if (!fs.existsSync(pfad)) return 'fehlt';
-  return hatAlpha(pfad) ? 'fertig' : 'alt';
+  if (!bilderDa(PORTRAITS).has(datei)) return 'fehlt';
+  return hatAlpha(path.join(PORTRAITS, datei + '.webp')) ? 'fertig' : 'alt';
 }
 
 /* Bei den Ganzkörperbildern gibt es die Unterscheidung nicht: Was da ist,
    ist freigestellt. Offen ist, was fehlt oder von Hand markiert wurde. */
 function zustandGk(datei) {
-  return fs.existsSync(path.join(FULLSIZE, datei + '.webp')) ? 'fertig' : 'fehlt';
+  return bilderDa(FULLSIZE).has(datei) ? 'fertig' : 'fehlt';
 }
 
 /* Wie weit die Texte einer Figur gediehen sind. Die Liste im Studio malt
@@ -304,7 +374,7 @@ function texteStand(D, slug) {
       const wert = facts[f];
       return Array.isArray(wert) ? wert.length > 0 : !!wert;
     }).length,
-    kraefte: !!(facts.powers && facts.powers.length),
+    kraefte: (D.CHAR_POWERS[slug] || []).length > 0,
     bonds: (D.CHAR_BONDS[slug] || []).length,
     besetzung: !!D.ACTORS[slug],
   };
@@ -315,10 +385,72 @@ function texteStand(D, slug) {
   return stand;
 }
 
-/* Alle Figuren der Datenbank, jede mit ihren Zielen und Quellen. */
+/* ---------- Wem eine Bilddatei gehört ----------
+
+   Die Bilder einer Figur heißen wie ihr Schlüssel, ihre weiteren
+   Fassungen tragen ihn als Präfix: gamora, gamora-kid,
+   gamora-guardians-of-the-galaxy-vol-2. Das Präfix allein reicht als
+   Regel aber nicht, denn manche Varianten sind eigene Figuren mit
+   eigenem Schlüssel, eigenen Auftritten und eigenen Texten.
+   „gamora-2014“ ist keine Fassung von „gamora“, sondern die Gamora von
+   2014, und „nakia-bahadir“ hat mit der Nakia aus Wakanda nichts gemein
+   als die ersten fünf Buchstaben.
+
+   Eine Datei gehört deshalb der Figur mit dem längsten Schlüssel, der
+   auf sie passt. „gamora-2014-avengers-endgame“ trifft „gamora“ und
+   „gamora-2014“, und die zweite gewinnt. Betroffen sind im Bestand
+   christine-palmer, corvus-glaive, cull-obsidian, ebony-maw, gamora,
+   karl-mordo, maria-rambeau, nakia, peggy-carter und peter-parker.
+
+   Ohne diese Regel führt die eine Figur die Bilder der anderen mit auf:
+   Ein neues Bild für Gamora 2014 stünde dann auch in Gamoras
+   Fassungsleiste, und eine Umbenennung nähme es mit. */
+function fremdeSchluessel(slug, alleSlugs) {
+  return alleSlugs.filter((s) => s !== slug && s.length > slug.length
+    && s.startsWith(slug + '-'));
+}
+
+/* Der Test „gehört diese Datei zu <slug>?“, fertig gebunden. */
+function eigeneDateien(slug, alleSlugs) {
+  const fremde = fremdeSchluessel(slug, alleSlugs);
+  return (datei) => passtZuPraefix(datei, [slug]) && !passtZuPraefix(datei, fremde);
+}
+
+/* ---------- Alle Figuren ----------
+
+   Die Liste ist die Grundlage fast jeder Anfrage, und manche Anfrage
+   braucht sie mehrfach: /api/fassung baute sie dreimal, einmal für die
+   Prüfung der Figur, einmal für die des Ziels und einmal für die Zähler.
+   Gemessen kostete jeder Aufbau vierhundert Millisekunden, und der
+   Server steht in dieser Zeit still. Ein Umbenennen brauchte damit
+   allein im Backend über eine Sekunde, bevor irgendetwas geschrieben
+   war.
+
+   Gehalten wird das Ergebnis deshalb, bis sich etwas rührt, woraus es
+   entsteht: die Quelldateien, die beiden Bildordner und die Liste der
+   von Hand markierten Bilder. Alle drei kosten zusammen einen
+   Bruchteil einer Millisekunde zu prüfen. Was der Server selbst
+   schreibt, wirft den Speicher über bilderVergessen() weg, denn ein
+   überschriebenes Bild rührt keinen der drei Zeitpunkte an. */
+let figurenSpeicher = null;
+
+function figurenStand() {
+  return quellStand()
+    + '|' + ordnerStand(PORTRAITS) + '|' + ordnerStand(FULLSIZE)
+    + '|' + (() => { try { return fs.statSync(OFFEN).mtimeMs; } catch { return '-'; } })();
+}
+
 function baueFiguren() {
+  const stand = figurenStand();
+  if (figurenSpeicher && figurenSpeicher.stand === stand) return figurenSpeicher.figuren;
+  const figuren = figurenAufbauen();
+  figurenSpeicher = { stand, figuren };
+  return figuren;
+}
+
+function figurenAufbauen() {
   const D = ladeDaten();
-  const vorhanden = new Set(webpListe(FULLSIZE));
+  const vorhanden = bilderDa(FULLSIZE);
   const markiert = ladeMarkiert('portrait');
   const markiertGk = ladeMarkiert('ganzkoerper');
 
@@ -352,44 +484,112 @@ function baueFiguren() {
     }
   }
 
+  const alleSlugs = [...figuren.keys()];
   const liste = [];
   for (const figur of figuren.values()) {
     const { slug } = figur;
+    /* Was im Ordner nach dieser Figur benannt ist, einer anderen aber
+       gehört, bleibt draußen: siehe eigeneDateien(). */
+    const meine = eigeneDateien(slug, alleSlugs);
     /* Der ausführlichste gepflegte Name trägt die Rolle, „Realname /
        Heldenname“ wird für Überschrift und Rollenzeile getrennt. */
     const voll = [...figur.namen].sort((a, b) => b.length - a.length)[0];
-    const { real, role } = D.splitName(voll);
+    /* Die Welt steckt als Klammer im Namen und kommt hier als eigene
+       Angabe heraus, sonst hinge sie im Studio am Realnamen fest. */
+    const { real, role, world } = D.splitName(voll);
+
+    /* Die Zeile, die auf der Charakterseite groß über der Kachel steht:
+       alle Heldennamen dieser Figur, sonst der bürgerliche. Sie ist
+       zugleich der Schlüssel, nach dem dort sortiert wird, und deshalb
+       auch hier. Beide Listen lesen sich damit gleich, und wer eine Figur
+       auf der Seite an einer Stelle sucht, findet sie im Studio an
+       derselben. Gebaut wird sie wortgleich wie in js/characters.js. */
+    const rollen = [];
+    for (const name of figur.namen) {
+      const r = D.splitName(name).role;
+      if (r && !rollen.includes(r)) rollen.push(r);
+    }
+    const ueberschrift = rollen.length ? rollen.join(' · ') : real;
 
     /* Die Ganzkörper-Fassungen dieser Figur: die gepflegten aus
        FULLSIZE_LOOKS zuerst, danach alles, was im Ordner sonst noch nach
        ihr benannt ist. Anders als bei den Quellen zählen hier auch
        Fassungen ohne Datei, die sind ja gerade das, was noch fehlt. */
     const inLooks = !!D.FULLSIZE_LOOKS[slug];
-    const gepflegt = D.FULLSIZE_LOOKS[slug] || [['Standard', slug]];
+
+    /* Zu jeder Fassung gehört der Film, aus dem sie stammt. Bei Figuren
+       mit Fassungsliste steht er als dritter Wert im Eintrag, bei Figuren
+       mit nur einem Bild in FULLSIZE_STANDARD. Wer nur in einem Titel
+       vorkommt, braucht auch dort nichts: Dann kann das Bild aus keinem
+       anderen sein, das rechnet die Charakterseite selbst aus
+       (standardFilm() in js/characters.js). */
+    const filmAuto = figur.filmSlugs.length === 1 ? figur.filmSlugs[0] : '';
+    const gepflegt = D.FULLSIZE_LOOKS[slug]
+      || [['Standard', slug, D.FULLSIZE_STANDARD[slug] || '']];
     const ganzkoerper = [];
     const quellen = [];
     const gesehen = new Set();
     /* „gepflegt“ heißt: Die Fassung steht in FULLSIZE_LOOKS und lässt sich
        dort umbenennen, verschieben und löschen. Alles andere ist nur eine
-       Datei im Ordner. */
-    const merke = (datei, label, gefuehrt) => {
-      if (gesehen.has(datei)) return;
-      gesehen.add(datei);
-      ganzkoerper.push({
-        datei,
-        label,
-        gepflegt: gefuehrt,
-        zustand: zustandGk(datei),
-        markiert: markiertGk.has(datei),
-        skala: D.FULLSIZE_SCALE[datei] || 1,
-        korrektur: D.FULLSIZE_FIT[datei] || 1,
-      });
-      if (vorhanden.has(datei)) quellen.push({ datei, label });
+       Datei im Ordner.
+
+       Eine Fassung mit Varianten liegt in mehreren Dateien
+       (FULLSIZE_VARIANTS in js/chars.js). In der Liste steht jede von
+       ihnen einzeln: Bearbeitet wird immer ein Bild, nicht eine Fassung.
+       Zusammen gehören sie über „stamm“, und die Oberfläche macht daraus
+       einen Chip mit den Schaltern 1, 2, 3. */
+    const merke = (stamm, label, gefuehrt, film) => {
+      if (gesehen.has(stamm)) return;
+      gesehen.add(stamm);
+      const anzahl = D.lookVariants(stamm);
+      for (const datei of D.lookVariantFiles(stamm)) {
+        gesehen.add(datei);
+        const nr = anzahl > 1 ? Number(datei.slice(stamm.length + 1)) : 1;
+        /* „label“ ist die Fassung, „labelBild“ das einzelne Bild. Wo
+           eine Liste Dateien aufzählt – Vorlagen, Schablonen –, stünde
+           die Fassung sonst drei Mal gleich da. */
+        const labelBild = anzahl > 1 ? `${label} ${nr}` : label;
+        ganzkoerper.push({
+          datei,
+          stamm,
+          variante: nr,
+          varianten: anzahl,
+          label,
+          labelBild,
+          film: film || '',
+          gepflegt: gefuehrt,
+          zustand: zustandGk(datei),
+          markiert: markiertGk.has(datei),
+          skala: D.FULLSIZE_SCALE[datei] || 1,
+          korrektur: D.FULLSIZE_FIT[datei] || 1,
+          schwebe: D.FULLSIZE_LIFT[datei] || 0,
+          /* Der Satz, den die Charakterseite unter die Fassungstafel
+             schreibt. Er gehört der Fassung und steht deshalb unter ihrem
+             Stamm. Nur wo zu einer einzelnen Aufnahme etwas Eigenes
+             vermerkt ist, gilt das (FULLSIZE_NOTES in js/looks.js). */
+          beschreibung: D.FULLSIZE_NOTES[datei] || D.FULLSIZE_NOTES[stamm] || '',
+          beschreibungEigen: datei !== stamm && !!D.FULLSIZE_NOTES[datei],
+        });
+        if (vorhanden.has(datei)) quellen.push({ datei, label: labelBild });
+      }
     };
-    for (const [label, datei] of gepflegt) merke(datei, label, inLooks);
+    for (const [label, datei, film] of gepflegt) merke(datei, label, inLooks, film);
+    /* Von einer Fassung mit Varianten liegt der Stamm selbst gar nicht
+       mehr im Ordner, dort stehen nur seine Nummern. Solange die Fassung
+       in FULLSIZE_LOOKS steht, hat merke() sie oben schon
+       zusammengefasst. Fehlt sie dort, weiß allein FULLSIZE_VARIANTS um
+       die Zusammengehörigkeit, und ohne diesen Griff stünde jede Nummer
+       als eigene Fassung in der Liste: „Variante +“ an einer Fassung, die
+       bisher nur eine Datei im Ordner war, ließ sie auseinanderfallen.
+
+       Die Nummer zählt nur als solche, wenn ihr Stamm wirklich in
+       FULLSIZE_VARIANTS steht. Eine Fassung, die von sich aus auf eine
+       Ziffer endet, bleibt damit, was sie ist. */
     for (const datei of vorhanden) {
-      if (datei !== slug && !datei.startsWith(slug + '-')) continue;
-      merke(datei, beschriftung(datei, slug, namen), false);
+      if (!meine(datei)) continue;
+      const teil = /^(.+)-([1-9])$/.exec(datei);
+      const stamm = teil && D.lookVariants(teil[1]) > 1 ? teil[1] : datei;
+      merke(stamm, beschriftung(stamm, slug, namen), false, '');
     }
 
     const ziele = [...figur.ziele.values()].map((z) => ({
@@ -403,7 +603,9 @@ function baueFiguren() {
     liste.push({
       slug,
       name: real,
+      ueberschrift,
       rolle: role,
+      welt: world,
       /* Die Namen, wie sie in data.js stehen, und der Alias, der daraus
          den Schlüssel macht. Beides lässt sich im Studio ändern. */
       namen: figur.namen,
@@ -411,6 +613,8 @@ function baueFiguren() {
       auftritte: figur.filme.length,
       filme: figur.filme,
       filmSlugs: figur.filmSlugs,
+      /* Der Film, den die Charakterseite auch ohne Eintrag kennt. */
+      filmAuto,
       ziele,
       ganzkoerper,
       quellen,
@@ -418,7 +622,8 @@ function baueFiguren() {
     });
   }
 
-  liste.sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  /* Wie auf der Charakterseite: nach der Zeile, die oben steht. */
+  liste.sort((a, b) => a.ueberschrift.localeCompare(b.ueberschrift, 'de'));
   return liste;
 }
 
@@ -466,6 +671,15 @@ function zaehlen(figuren) {
    Vor dem Schreiben wird die neue Fassung geprüft: Sie muss sich laden
    lassen und die erwarteten Werte tragen. Sonst bleibt die alte stehen. */
 const CHARS = path.join(REPO, 'js', 'chars.js');
+/* Die Fähigkeiten liegen für sich, das Studio schreibt sie nicht. Beim
+   Löschen einer Figur muss ihr Eintrag trotzdem mit weg, sonst bliebe er
+   als Waise stehen. */
+const POWERS = path.join(REPO, 'js', 'powers.js');
+
+/* Die Sätze zu den Fassungen liegen für sich in js/looks.js: ein Satz je
+   Ganzkörper-Fassung, geschlüsselt nach ihrem Dateinamen. Die
+   Charakterseite schreibt ihn unter die Fassungstafel. */
+const LOOKS = path.join(REPO, 'js', 'looks.js');
 
 /* Die Dateien im Repo tragen CRLF. Beim Zerlegen fällt der Wagenrücklauf
    weg und beim Zusammensetzen wieder an, sonst mischt eine neue Zeile die
@@ -478,6 +692,11 @@ function zahl(wert) {
 
 /* Zwei Nachkommastellen, mehr trägt weder der Regler noch chars.js. */
 const runde = (wert) => Math.round(Number(wert) * 100) / 100;
+
+/* Die Schwebe ist gemessen und nicht geregelt, und sie steht im Nenner:
+   Bei 0.9 wären zwei Stellen schon ein Zehntel Größe. Deshalb hier drei. */
+const runde3 = (wert) => Math.round(Number(wert) * 1000) / 1000;
+const zahl3 = (wert) => String(runde3(wert));
 
 /* Der Winkel, mit dem die Bühne ihre Vorlage ausrichtet. Was keine Zahl
    ist, ist keine Drehung: Ein NaN käme sonst als Zeichenkette bei
@@ -598,26 +817,249 @@ function neueKorrekturQuelle(quelle, datei, korrektur) {
   return mitBlock(quelle, block, zeilen);
 }
 
-function setzeSkala(datei, skala, korrektur) {
+/* FULLSIZE_LIFT ist wie FULLSIZE_FIT eine flache Liste nach Dateinamen.
+   Der Wert sagt, welcher Anteil der Datei unter der Figur leer ist, weil
+   sie fliegt. 0 ist der Normalfall und steht nicht darin, dieser Wert
+   nimmt den Eintrag also wieder heraus.
+
+   Gemessen wird die Zahl im Studio an den durchsichtigen Pixeln der
+   Datei. Sie gehört deshalb zum Bild und wird nur zusammen mit ihm
+   geschrieben, nie vom Knopf „In chars.js schreiben“ allein. */
+function neueSchwebeQuelle(quelle, datei, schwebe) {
+  const block = blockVon(quelle, 'FULLSIZE_LIFT');
+  const zeilen = block.zeilen.filter((z) => z.trim() !== '');
+  const vorhanden = zeilen.findIndex((z) => {
+    const t = WERT_ZEILE.exec(z);
+    return t && t[1] === datei;
+  });
+  const zeile = `  '${datei}': ${zahl3(schwebe)},`;
+
+  if (schwebe === 0) {
+    if (vorhanden === -1) return null;              // stand schon auf der Bodenlinie
+    zeilen.splice(vorhanden, 1);
+  } else if (vorhanden !== -1) {
+    if (zeilen[vorhanden] === zeile) return null;   // steht schon so da
+    zeilen[vorhanden] = zeile;
+  } else {
+    let stelle = zeilen.findIndex((z) => {
+      const t = WERT_ZEILE.exec(z);
+      return t && t[1].localeCompare(datei, 'de') > 0;
+    });
+    if (stelle === -1) stelle = zeilen.length;
+    zeilen.splice(stelle, 0, zeile);
+  }
+  return mitBlock(quelle, block, zeilen);
+}
+
+/* FULLSIZE_VARIANTS ist wie FULLSIZE_FIT eine flache Liste, nur mit
+   ganzen Zahlen: Wie viele Bilder eine Fassung hat. Eins ist der
+   Normalfall und steht nicht darin, dieser Wert nimmt den Eintrag also
+   wieder heraus. */
+function neueVariantenQuelle(quelle, stamm, anzahl) {
+  const block = blockVon(quelle, 'FULLSIZE_VARIANTS');
+  const zeilen = block.zeilen.filter((z) => z.trim() !== '');
+  const vorhanden = zeilen.findIndex((z) => {
+    const t = WERT_ZEILE.exec(z);
+    return t && t[1] === stamm;
+  });
+  const zeile = `  '${stamm}': ${anzahl},`;
+
+  if (anzahl < 2) {
+    if (vorhanden === -1) return null;              // hatte schon nur ein Bild
+    zeilen.splice(vorhanden, 1);
+  } else if (vorhanden !== -1) {
+    if (zeilen[vorhanden] === zeile) return null;   // steht schon so da
+    zeilen[vorhanden] = zeile;
+  } else {
+    let stelle = zeilen.findIndex((z) => {
+      const t = WERT_ZEILE.exec(z);
+      return t && t[1].localeCompare(stamm, 'de') > 0;
+    });
+    if (stelle === -1) stelle = zeilen.length;
+    zeilen.splice(stelle, 0, zeile);
+  }
+  return mitBlock(quelle, block, zeilen);
+}
+
+/* ---------- Der Satz zu einer Fassung ----------
+
+   FULLSIZE_NOTES in js/looks.js trägt zu jeder Ganzkörper-Fassung einen
+   Satz, den die Charakterseite unter die Fassungstafel schreibt. Die
+   Liste ist nach Figuren gruppiert, und jede Gruppe trägt eine
+   Überschrift mit dem Namen der Figur. Ein neuer Satz stellt sich
+   deshalb zu den Sätzen derselben Figur; hat sie noch keine, entsteht am
+   Ende eine neue Gruppe. Sortiert wird dabei nichts: Die Reihenfolge der
+   Gruppen folgt der Handlung.
+
+   Ein leerer Text nimmt den Eintrag wieder heraus, und mit ihm die
+   Überschrift, falls sonst nichts mehr unter ihr steht. */
+
+const NOTIZ_ZEILE = /^\s*'([^']+)':/;
+
+/* Einfache Anführungszeichen wie im Bestand. Was der Satz selbst an
+   Anführungszeichen und Rückstrichen trägt, wird dabei geschützt. */
+function notizZeile(datei, text) {
+  const geschuetzt = text.split('\\').join('\\\\').split("'").join("\\'");
+  return `  '${datei}': '${geschuetzt}',`;
+}
+
+/* Die Sätze, wie eine Fassung von looks.js sie trägt. */
+function notizenLesen(fassung) {
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(`${fassung}\n;globalThis.PROBE = FULLSIZE_NOTES;`, ctx,
+    { filename: 'looks-lesen.js' });
+  return ctx.PROBE;
+}
+
+const istUeberschrift = (zeile) => zeile.includes('/* ----------');
+
+/* Bleibt von einer Gruppe nur noch ihre Überschrift übrig, geht sie mit,
+   zusammen mit der Leerzeile davor. Sonst sammelten sich über die Zeit
+   Namen ohne Inhalt in der Datei. */
+function leereGruppeRaeumen(zeilen, ab) {
+  let kopf = -1;
+  for (let i = Math.min(ab, zeilen.length) - 1; i >= 0; i -= 1) {
+    if (NOTIZ_ZEILE.test(zeilen[i])) return;
+    if (istUeberschrift(zeilen[i])) { kopf = i; break; }
+  }
+  if (kopf === -1) return;
+  for (let i = kopf + 1; i < zeilen.length; i += 1) {
+    if (istUeberschrift(zeilen[i])) break;
+    if (NOTIZ_ZEILE.test(zeilen[i])) return;
+  }
+  const von = kopf > 0 && zeilen[kopf - 1].trim() === '' ? kopf - 1 : kopf;
+  zeilen.splice(von, kopf - von + 1);
+}
+
+/* Die Stelle eines Schlüssels in den Zeilen des Blocks. */
+function notizStelle(zeilen, datei) {
+  return zeilen.findIndex((z) => {
+    const t = NOTIZ_ZEILE.exec(z);
+    return t && t[1] === datei;
+  });
+}
+
+/* „gruppe“ ist der Name der Figur für eine neue Überschrift,
+   „geschwister“ sind die übrigen Fassungen derselben Figur: An ihnen
+   erkennt der Schreiber, wo der neue Satz hingehört. */
+function neueBeschreibungQuelle(quelle, datei, text, gruppe, geschwister) {
+  const block = blockVon(quelle, 'FULLSIZE_NOTES', 'js/looks.js');
+  const { zeilen } = block;
+  const vorhanden = notizStelle(zeilen, datei);
+  const zeile = notizZeile(datei, text);
+
+  if (!text) {
+    if (vorhanden === -1) return null;              // stand ohnehin nichts da
+    zeilen.splice(vorhanden, 1);
+    leereGruppeRaeumen(zeilen, vorhanden);
+  } else if (vorhanden !== -1) {
+    if (zeilen[vorhanden] === zeile) return null;   // steht schon so da
+    zeilen[vorhanden] = zeile;
+  } else {
+    let letzte = -1;
+    for (let i = 0; i < zeilen.length; i += 1) {
+      const t = NOTIZ_ZEILE.exec(zeilen[i]);
+      if (t && geschwister.includes(t[1])) letzte = i;
+    }
+    if (letzte === -1) zeilen.push('', `  /* ---------- ${gruppe} ---------- */`, zeile);
+    else zeilen.splice(letzte + 1, 0, zeile);
+  }
+  return mitBlock(quelle, block, zeilen);
+}
+
+/* Prüfen, bevor die Datei angefasst wird: laden und nachsehen, ob jeder
+   genannte Satz danach so dasteht. Ein leerer Text heißt, dass der
+   Schlüssel danach gar nicht mehr vorkommt. */
+function looksSchreiben(fassung, proben, stempel) {
+  const jetzt = notizenLesen(fassung);
+  for (const [datei, text] of proben) {
+    if (jetzt[datei] !== (text || undefined)) {
+      throw new Error(`Die neue Fassung von looks.js trägt bei ${datei} nicht, was sie soll.`);
+    }
+  }
+  fs.mkdirSync(SICHERUNG, { recursive: true });
+  const sicher = path.join(SICHERUNG, `looks-${stempel}.js`);
+  if (!fs.existsSync(sicher)) fs.copyFileSync(LOOKS, sicher);
+  fs.writeFileSync(LOOKS, fassung, 'utf8');
+}
+
+function setzeBeschreibung(datei, text, gruppe, geschwister) {
+  const quelle = fs.readFileSync(LOOKS, 'utf8');
+  const fassung = neueBeschreibungQuelle(quelle, datei, text, gruppe, geschwister);
+  if (fassung === null) return { geaendert: false };
+  looksSchreiben(fassung, [[datei, text]], stempelJetzt());
+  return { geaendert: true, datei, beschreibung: text };
+}
+
+/* Der Satz hängt am Dateinamen und folgt ihm deshalb: Wird eine Fassung
+   umbenannt, zieht er mit und bleibt dabei in seiner Gruppe stehen. Ein
+   Satz, der unter dem neuen Namen schon stünde, weicht ihm. */
+function notizUmziehen(alt, neu, stempel) {
+  const quelle = fs.readFileSync(LOOKS, 'utf8');
+  const text = notizenLesen(quelle)[alt];
+  if (!text) return false;
+  const block = blockVon(quelle, 'FULLSIZE_NOTES', 'js/looks.js');
+  const { zeilen } = block;
+  const belegt = notizStelle(zeilen, neu);
+  if (belegt !== -1) zeilen.splice(belegt, 1);
+  const stelle = notizStelle(zeilen, alt);
+  if (stelle === -1) return false;
+  zeilen[stelle] = notizZeile(neu, text);
+  looksSchreiben(mitBlock(quelle, block, zeilen), [[alt, ''], [neu, text]], stempel);
+  return true;
+}
+
+/* Und dasselbe fürs Löschen: Mit der Fassung geht ihr Satz, und mit dem
+   letzten Satz einer Figur auch deren Überschrift. */
+function notizWeg(dateien, stempel) {
+  const quelle = fs.readFileSync(LOOKS, 'utf8');
+  let stand = quelle;
+  const proben = [];
+  for (const datei of dateien) {
+    const naechste = neueBeschreibungQuelle(stand, datei, '', '', []);
+    if (naechste === null) continue;
+    stand = naechste;
+    proben.push([datei, '']);
+  }
+  if (!proben.length) return false;
+  looksSchreiben(stand, proben, stempel);
+  return true;
+}
+
+/* Die Schwebe kommt nur mit, wenn sie mitgeschickt wurde: Der Knopf „In
+   chars.js schreiben“ setzt die beiden Regler, ohne die Datei neu zu
+   schneiden, und über die leere Fläche in einer Datei, die er gar nicht
+   anfasst, weiß er nichts. */
+function setzeSkala(datei, skala, korrektur, schwebe) {
   const quelle = fs.readFileSync(CHARS, 'utf8');
   const mitSkala = neueSkalaQuelle(quelle, datei, skala);
-  const neu = neueKorrekturQuelle(mitSkala === null ? quelle : mitSkala, datei, korrektur);
-  if (mitSkala === null && neu === null) return { geaendert: false };
-  const fassung = neu === null ? mitSkala : neu;
+  const mitKorrektur = neueKorrekturQuelle(
+    mitSkala === null ? quelle : mitSkala, datei, korrektur);
+  const bisher = mitKorrektur === null ? mitSkala : mitKorrektur;
+  const neu = schwebe === undefined ? null
+    : neueSchwebeQuelle(bisher === null ? quelle : bisher, datei, schwebe);
+  if (mitSkala === null && mitKorrektur === null && neu === null) return { geaendert: false };
+  const fassung = neu === null ? bisher : neu;
 
   /* Prüfen, bevor die Datei angefasst wird: laden und nachsehen. */
   const ctx = {};
   vm.createContext(ctx);
   vm.runInContext(
     [fs.readFileSync(path.join(REPO, 'js', 'data.js'), 'utf8'), fassung,
-      ';globalThis.PROBE = { skala: FULLSIZE_SCALE, korrektur: FULLSIZE_FIT };'].join('\n'),
+      ';globalThis.PROBE = { skala: FULLSIZE_SCALE, korrektur: FULLSIZE_FIT,'
+      + ' schwebe: FULLSIZE_LIFT };'].join('\n'),
     ctx, { filename: 'chars-probe.js' });
-  const gerundet = (wert) => (wert === 1 ? undefined : Math.round(wert * 100) / 100);
-  for (const [name, wert] of [['Körpergröße', skala], ['Bildkorrektur', korrektur]]) {
-    const tabelle = name === 'Körpergröße' ? ctx.PROBE.skala : ctx.PROBE.korrektur;
-    if (tabelle[datei] !== gerundet(wert)) {
+  /* Der Normalfall steht in keiner der Listen: bei den beiden Reglern
+     die 1, bei der Schwebe die 0. */
+  const proben = [['Körpergröße', skala, ctx.PROBE.skala, 1, runde],
+    ['Bildkorrektur', korrektur, ctx.PROBE.korrektur, 1, runde]];
+  if (schwebe !== undefined) proben.push(['Schwebe', schwebe, ctx.PROBE.schwebe, 0, runde3]);
+  for (const [name, wert, tabelle, standard, genau] of proben) {
+    const soll = wert === standard ? undefined : genau(wert);
+    if (tabelle[datei] !== soll) {
       throw new Error(`Die neue Fassung von chars.js trägt bei der ${name} `
-        + `${tabelle[datei]} statt ${gerundet(wert)}.`);
+        + `${tabelle[datei]} statt ${soll}.`);
     }
   }
 
@@ -625,21 +1067,91 @@ function setzeSkala(datei, skala, korrektur) {
   const stempel = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   fs.copyFileSync(CHARS, path.join(SICHERUNG, `chars-${stempel}.js`));
   fs.writeFileSync(CHARS, fassung, 'utf8');
-  return { geaendert: true, skala, korrektur };
+  return { geaendert: true, skala, korrektur, schwebe };
 }
 
 /* ---------- Fassungen verwalten ----------
 
    FULLSIZE_LOOKS in js/chars.js führt je Figur ihre Ganzkörper-Fassungen
-   als [Beschriftung, Dateiname]. Der erste Eintrag ist die Standardansicht
-   und heißt wie der Charakter-Slug, er bleibt deshalb stehen. Figuren mit
-   nur einer Ansicht haben gar keinen Eintrag, der Block entsteht erst mit
-   der zweiten Fassung und fällt mit ihr wieder weg.
+   als [Beschriftung, Dateiname, Film]. Der erste Eintrag ist die
+   Standardansicht und heißt wie der Charakter-Slug, er bleibt deshalb
+   stehen. Figuren mit nur einer Ansicht haben gar keinen Eintrag, der
+   Block entsteht erst mit der zweiten Fassung und fällt mit ihr wieder
+   weg. Ihr Film steht dann in FULLSIZE_STANDARD.
 
    Gearbeitet wird zeilenweise, damit Kommentare und Reihenfolge der Datei
    erhalten bleiben. Geschrieben wird erst, wenn sich die neue Fassung
    laden lässt und trägt, was sie soll. */
-const EINTRAG = /^\s*\['(.*?)', '([a-z0-9-]+)'\],$/;
+
+/* Der Film ist der dritte Wert und darf fehlen: Dann bleibt der Logoplatz
+   auf der Charakterseite leer. Die Beschriftung ist genügsam gefasst, der
+   Dateiname dahinter macht sie eindeutig. */
+const EINTRAG = /^\s*\['(.*?)', '([a-z0-9-]+)'(?:, '([a-z0-9-]*)')?\],$/;
+
+function fassungZeile(label, datei, film) {
+  return `    ['${label}', '${datei}'${film ? `, '${film}'` : ''}],`;
+}
+
+/* Ein Film-Slug, wie ihn data.js führt, oder nichts. Alles andere käme
+   als kaputte Zeile in chars.js an. */
+function filmRoh(wert) {
+  const film = String(wert || '').trim();
+  if (film && !/^[a-z0-9-]+$/.test(film)) throw new Error('Kein Film-Slug: ' + film);
+  return film;
+}
+
+/* FULLSIZE_STANDARD trägt den Film der Figuren, die nur ein einziges
+   Ganzkörperbild haben. Ein leerer Film nimmt die Zeile wieder heraus,
+   denn ohne Eintrag rechnet die Charakterseite selbst.
+
+   Die Liste folgt der Handlung: Wer früher zum ersten Mal auftritt,
+   steht weiter oben. Eine neue Zeile wird danach eingeordnet, statt sie
+   unten anzuhängen. */
+const FILM_ZEILE = /^\s*'([^']+)':\s*'([a-z0-9-]*)',/;
+
+/* Charakter-Slug -> Stelle seines ersten Auftritts in der Handlung. */
+function auftrittsOrdnung(figuren) {
+  const platz = new Map();
+  for (const phase of ladeDaten().PHASES) {
+    for (const film of phase.movies) if (!platz.has(film.slug)) platz.set(film.slug, platz.size);
+  }
+  const ordnung = new Map();
+  for (const figur of figuren) {
+    const erster = platz.get(figur.filmSlugs[0]);
+    if (erster !== undefined) ordnung.set(figur.slug, erster);
+  }
+  return ordnung;
+}
+
+function neueStandardFilmQuelle(quelle, slug, film, ordnung) {
+  const block = blockVon(quelle, 'FULLSIZE_STANDARD');
+  const zeilen = block.zeilen.filter((z) => z.trim() !== '');
+  const vorhanden = zeilen.findIndex((z) => {
+    const t = FILM_ZEILE.exec(z);
+    return t && t[1] === slug;
+  });
+  const zeile = `  '${slug}': '${film}',`;
+
+  if (!film) {
+    if (vorhanden === -1) return null;                 // stand schon nicht da
+    zeilen.splice(vorhanden, 1);
+  } else if (vorhanden !== -1) {
+    if (zeilen[vorhanden] === zeile) return null;      // steht schon so da
+    zeilen[vorhanden] = zeile;
+  } else {
+    const meiner = ordnung && ordnung.get(slug);
+    let stelle = -1;
+    if (meiner !== undefined) {
+      stelle = zeilen.findIndex((z) => {
+        const t = FILM_ZEILE.exec(z);
+        const andere = t && ordnung.get(t[1]);
+        return andere !== undefined && andere > meiner;
+      });
+    }
+    zeilen.splice(stelle === -1 ? zeilen.length : stelle, 0, zeile);
+  }
+  return mitBlock(quelle, block, zeilen);
+}
 
 /* Dieselbe Regel wie charSlug() in js/chars.js, ohne den Alias. Aus der
    Beschriftung wird damit der Dateizusatz: Leerzeichen werden zu
@@ -690,7 +1202,103 @@ function dateiUmbenennen(alt, neu, stempel) {
       bericht.push('Quellenangabe');
     }
   }
+  if (notizUmziehen(alt, neu, stempel)) bericht.push('Beschreibung');
   return bericht;
+}
+
+/* Ein Umzug ist ein Paar [von, nach]. Mehrere davon laufen der Reihe
+   nach, und deshalb darf jedes Ziel entweder frei sein oder selbst noch
+   umziehen: Beim Tausch zweier Varianten ist jeder Name für einen
+   Augenblick doppelt vergeben, beim Aufrücken zeigt jeder Schritt auf
+   den Platz, den der vorige gerade geräumt hat. Was hier durchfällt,
+   wäre eine fremde Datei, die einer anderen im Weg liegt, und die soll
+   kein Eingriff überschreiben. */
+function umzuegePruefen(umzuege) {
+  const gehen = new Set(umzuege.map(([von]) => von));
+  for (const [, nach] of umzuege) {
+    if (!gehen.has(nach) && fs.existsSync(path.join(FULLSIZE, nach + '.webp'))) {
+      throw new Error(`${nach}.webp liegt schon im Ordner.`);
+    }
+  }
+}
+
+/* Die Umzüge ausführen und melden, was dabei alles mitgewandert ist. */
+function umzuegeAusfuehren(umzuege, stempel, bericht = []) {
+  const mitgewandert = [];
+  for (const [von, nach] of umzuege) {
+    for (const was of dateiUmbenennen(von, nach, stempel)) {
+      if (!mitgewandert.includes(was)) mitgewandert.push(was);
+    }
+  }
+  for (const was of bericht) if (!mitgewandert.includes(was)) mitgewandert.push(was);
+  return mitgewandert;
+}
+
+/* Körpergröße, Bildkorrektur und Schwebe hängen wie das Bild am
+   Dateinamen. Bei einer Umbenennung ziehen sie mit: am alten Namen
+   zurücksetzen, am neuen eintragen. Was dabei umgezogen ist, kommt in
+   „bericht“.
+
+   Der Normalfall steht in keiner der drei Listen und ist deshalb zugleich
+   der Wert, mit dem der alte Name wieder herausfällt: bei den beiden
+   Reglern die 1, bei der Schwebe die 0. */
+function masseUmziehen(quelle, werte, alt, neu, bericht) {
+  let stand = quelle;
+  const umziehen = (topf, schreiber, name, standard) => {
+    const wert = topf[alt];
+    if (!wert) return;
+    for (const [datei, neuerWert] of [[alt, standard], [neu, wert]]) {
+      const naechste = schreiber(stand, datei, neuerWert);
+      if (naechste !== null) stand = naechste;
+    }
+    /* Die gelesenen Werte wandern mit. Beim Entfernen einer Variante
+       rückt jede dahinter eine Nummer vor, und dieselbe Zahl geht dabei
+       durch mehrere Hände: erst von -3 auf -2, dann von -2 auf -1. Ohne
+       diese beiden Zeilen fände der zweite Schritt am alten Namen nichts
+       mehr und ließe die Zeile stehen, wo sie nicht hingehört. */
+    delete topf[alt];
+    topf[neu] = wert;
+    if (bericht && !bericht.includes(name)) bericht.push(name);
+  };
+  umziehen(werte.S, neueSkalaQuelle, 'Körpergröße', 1);
+  umziehen(werte.F, neueKorrekturQuelle, 'Bildkorrektur', 1);
+  umziehen(werte.L, neueSchwebeQuelle, 'Schwebe', 0);
+  return stand;
+}
+
+/* Und dasselbe fürs Löschen: Der Standardwert nimmt die Zeilen wieder
+   heraus. */
+function masseLoeschen(quelle, datei) {
+  let stand = quelle;
+  for (const [schreiber, standard] of [[neueSkalaQuelle, 1], [neueKorrekturQuelle, 1],
+    [neueSchwebeQuelle, 0]]) {
+    const naechste = schreiber(stand, datei, standard);
+    if (naechste !== null) stand = naechste;
+  }
+  return stand;
+}
+
+/* Die Werte, wie sie vor dem Eingriff in chars.js standen. Gelesen wird
+   die übergebene Fassung und nicht die Datei: Der Aufrufer hat sie schon
+   in der Hand, und zwischendurch kann sie sich ändern. */
+function masseLesen(quelle) {
+  const werte = {};
+  vm.createContext(werte);
+  vm.runInContext([fs.readFileSync(DATA, 'utf8'), quelle,
+    ';globalThis.S = FULLSIZE_SCALE; globalThis.F = FULLSIZE_FIT;'
+    + ' globalThis.L = FULLSIZE_LIFT;'].join('\n'), werte);
+  return werte;
+}
+
+/* Ein Ganzkörperbild in die Sicherung schieben und aus dem Ordner
+   nehmen. Zurück kommt der Pfad der Sicherung, sonst nichts. */
+function bildWegraeumen(datei, stempel) {
+  const bild = path.join(FULLSIZE, datei + '.webp');
+  if (!fs.existsSync(bild)) return null;
+  const ziel = path.join(SICHERUNG, `gk-${datei}-${stempel}.webp`);
+  fs.copyFileSync(bild, ziel);
+  fs.unlinkSync(bild);
+  return path.relative(REPO, ziel).replace(/\\/g, '/');
 }
 
 function looksBereich(zeilen) {
@@ -732,14 +1340,34 @@ function neueFassungQuelle(quelle, auftrag) {
      in genau dieser Reihenfolge. */
   let figur = figurBereich(zeilen, bereich, slug);
   const abgeleitet = auftrag.abgeleitet || [];
-  if (aktion !== 'neu' && abgeleitet.length) {
+  /* Der Film der Standardansicht muss beim Entstehen der Liste
+     ausgeschrieben werden: Ohne Liste rechnet die Charakterseite ihn aus
+     dem einzigen Auftritt der Figur aus, mit Liste zählt allein der
+     dritte Wert des Eintrags. Bliebe er leer, fiele das Logo von der
+     Tafel, obwohl niemand etwas am Film geändert hat. */
+  const abgeleitetZeile = ([l, d, f], i) =>
+    fassungZeile(beschriftungRoh(l), d, i === 0 ? (f || auftrag.filmAuto || '') : f);
+
+  /* Eine Liste mit einem einzigen Eintrag hat für sich keinen Zweck:
+     Figuren mit einer Ansicht zeigen einfach ihr Bild, und ihr Film steht
+     in FULLSIZE_STANDARD. Die Liste entsteht deshalb erst ab zwei, mit
+     zwei Ausnahmen: Beim Umbenennen ist die Beschriftung genau das, was
+     gesagt werden soll, und außerhalb der Liste gibt es dafür keinen
+     Platz. Die Fassungstafel der Charakterseite trägt sonst den Namen
+     der Figur, weil sie nichts Besseres weiß. Und wenn eine Variante
+     sich zur eigenen Fassung löst, werden aus einer Fassung zwei, dann
+     braucht auch die erste ihre Zeile. */
+  let blockEntstand = false;
+  if (aktion !== 'neu' && (abgeleitet.length > 1 || aktion === 'umbenennen'
+    || aktion === 'zu-fassung')) {
     if (!figur) {
       zeilen.splice(bereich.ende, 0,
         `  '${slug}': [`,
-        ...abgeleitet.map(([l, d]) => `    ['${beschriftungRoh(l)}', '${d}'],`),
+        ...abgeleitet.map(abgeleitetZeile),
         '  ],');
       bereich.ende += abgeleitet.length + 2;
       figur = figurBereich(zeilen, bereich, slug);
+      blockEntstand = true;
     } else {
       /* Der Block ist da, aber im Ordner liegt mehr. Das Fehlende kommt
          hinten dazu, dort steht es auch in der Anzeige. */
@@ -751,12 +1379,18 @@ function neueFassungQuelle(quelle, auftrag) {
       const fehlend = abgeleitet.filter(([, d]) => !drin.has(d));
       if (fehlend.length) {
         zeilen.splice(figur.ende, 0,
-          ...fehlend.map(([l, d]) => `    ['${beschriftungRoh(l)}', '${d}'],`));
+          ...fehlend.map(([l, d, f]) => fassungZeile(beschriftungRoh(l), d, f)));
         bereich.ende += fehlend.length;
         figur = figurBereich(zeilen, bereich, slug);
       }
     }
   }
+
+  /* Entsteht die Fassungsliste, wandert der Film mit hinein und der
+     Eintrag in FULLSIZE_STANDARD wird überflüssig: Zwei Stellen für
+     dieselbe Auskunft laufen sonst auseinander. */
+  const raus = (ergebnis) => (blockEntstand && !ergebnis.standardFilm
+    ? { ...ergebnis, standardFilm: { slug, film: '' } } : ergebnis);
 
   /* Alle Einträge des Blocks, in ihrer Reihenfolge. */
   const einlesen = () => {
@@ -764,7 +1398,7 @@ function neueFassungQuelle(quelle, auftrag) {
     if (!figur) return liste;
     for (let i = figur.start + 1; i < figur.ende; i += 1) {
       const t = EINTRAG.exec(zeilen[i]);
-      if (t) liste.push({ zeile: i, label: t[1], datei: t[2] });
+      if (t) liste.push({ zeile: i, label: t[1], datei: t[2], film: t[3] || '' });
     }
     return liste;
   };
@@ -779,12 +1413,34 @@ function neueFassungQuelle(quelle, auftrag) {
        Wert, den jemand pflegen müsste. */
     const belegt = new Set(eintraege.filter((e) => e !== meiner).map((e) => e.datei));
     const neueDatei = dateiAusLabel(slug, auftrag.label, belegt);
-    zeilen[meiner.zeile] = `    ['${label}', '${neueDatei}'],`;
-    return {
+    /* Der Film bleibt, wo er war: Umbenannt wird die Beschriftung, nicht
+       die Herkunft der Fassung. */
+    zeilen[meiner.zeile] = fassungZeile(label, neueDatei, meiner.film);
+    return raus({
       quelle: zusammen(),
-      pruefe: { datei: neueDatei, label },
+      pruefe: { datei: neueDatei, label, film: meiner.film },
       umbenennung: neueDatei === auftrag.datei ? null : { alt: auftrag.datei, neu: neueDatei },
-    };
+    });
+  }
+
+  /* Der Film, aus dem die Fassung stammt. Bei Figuren mit Fassungsliste
+     steht er in ihrem Eintrag, bei Figuren mit nur einem Bild in
+     FULLSIZE_STANDARD, und wer nur in einem Titel vorkommt, braucht auch
+     dort nichts. */
+  if (aktion === 'film') {
+    const film = filmRoh(auftrag.film);
+    if (!figur) {
+      const gespeichert = film === auftrag.filmAuto ? '' : film;
+      return {
+        quelle: zusammen(),
+        pruefe: { datei: auftrag.datei, standardFilm: gespeichert },
+        standardFilm: { slug, film: gespeichert },
+      };
+    }
+    const meiner = einlesen().find((e) => e.datei === auftrag.datei);
+    if (!meiner) throw new Error(`${auftrag.datei} steht nicht in der Liste von ${slug}.`);
+    zeilen[meiner.zeile] = fassungZeile(meiner.label, meiner.datei, film);
+    return raus({ quelle: zusammen(), pruefe: { datei: meiner.datei, label: meiner.label, film } });
   }
 
   /* Verschieben und „zum Standard“ sind dasselbe geworden: Standard ist,
@@ -806,10 +1462,14 @@ function neueFassungQuelle(quelle, auftrag) {
     const zeile = zeilen[eintraege[jetzt].zeile];
     zeilen.splice(eintraege[jetzt].zeile, 1);
     zeilen.splice(eintraege[ziel].zeile, 0, zeile);
-    return { quelle: zusammen(), pruefe: { datei: auftrag.datei, stelle: ziel } };
+    return raus({ quelle: zusammen(), pruefe: { datei: auftrag.datei, stelle: ziel } });
   }
 
-  if (aktion === 'loeschen') {
+  /* Löschen und „wird Variante von“ nehmen dieselbe Zeile aus der Liste:
+     Die Fassung steht danach nicht mehr für sich. Ob ihre Bilder dabei in
+     die Sicherung wandern oder an eine andere Fassung, entscheidet sich
+     erst danach an den Dateien. */
+  if (aktion === 'loeschen' || aktion === 'zu-variante') {
     if (!figur) throw new Error(`${slug} hat keine Fassungsliste.`);
     const eintraege = einlesen();
     if (eintraege.length <= 1) throw new Error('Das ist das einzige Bild der Figur.');
@@ -819,12 +1479,41 @@ function neueFassungQuelle(quelle, auftrag) {
     if (rest.length === 1 && rest[0].datei === slug) {
       /* Übrig bliebe nur ein Bild, das ohnehin wie die Figur heißt. Dann
          ist der ganze Block überflüssig: Figuren ohne Eintrag zeigen
-         einfach ihr einzelnes Bild. */
+         einfach ihr einzelnes Bild. Sein Film zieht dabei nach
+         FULLSIZE_STANDARD um, sonst fiele er mit der Liste weg. */
       zeilen.splice(figur.start, figur.ende - figur.start + 1);
-    } else {
-      zeilen.splice(weg.zeile, 1);
+      const bleibt = rest[0].film === auftrag.filmAuto ? '' : rest[0].film;
+      return {
+        quelle: zusammen(),
+        pruefe: { datei: auftrag.datei, label: null },
+        standardFilm: { slug, film: bleibt },
+      };
     }
-    return { quelle: zusammen(), pruefe: { datei: auftrag.datei, label: null } };
+    zeilen.splice(weg.zeile, 1);
+    return raus({ quelle: zusammen(), pruefe: { datei: auftrag.datei, label: null } });
+  }
+
+  /* Eine Variante löst sich zur eigenen Fassung. Das ist ein Eintrag wie
+     beim Anlegen, nur dass sein Bild schon da ist: Es liegt als
+     <Fassung>-<Nummer> im Ordner und heißt gleich nach der neuen
+     Beschriftung. Die Zeile steht direkt hinter der Fassung, aus der sie
+     kommt, denn dort sucht sie, wer sie eben noch als Ziffer gesehen
+     hat. */
+  if (aktion === 'zu-fassung') {
+    if (!label) throw new Error('Die Beschriftung darf nicht leer sein.');
+    if (!figur) throw new Error(`${slug} hat noch keine Fassungsliste.`);
+    const eintraege = einlesen();
+    const eltern = eintraege.find((e) => e.datei === auftrag.stamm);
+    if (!eltern) throw new Error(`${auftrag.stamm} steht nicht in der Liste von ${slug}.`);
+    const belegt = new Set(eintraege.map((e) => e.datei));
+    belegt.add(slug);
+    const datei = dateiAusLabel(slug, auftrag.label, belegt);
+    /* Der Film der Fassung gilt zunächst auch für die gelöste Variante:
+       Es ist dasselbe Bild aus demselben Auftritt. Wer es anders sieht,
+       ändert ihn in der Konsole. */
+    const film = filmRoh(auftrag.film);
+    zeilen.splice(eltern.zeile + 1, 0, fassungZeile(label, datei, film));
+    return raus({ quelle: zusammen(), pruefe: { datei, label, film } });
   }
 
   if (aktion !== 'neu') throw new Error('Unbekannte Aktion: ' + aktion);
@@ -834,43 +1523,372 @@ function neueFassungQuelle(quelle, auftrag) {
   const belegt = new Set(einlesen().map((e) => e.datei));
   if (!figur) belegt.add(slug);
   const datei = dateiAusLabel(slug, auftrag.label, belegt);
-  const neu = `    ['${label}', '${datei}'],`;
+  const film = filmRoh(auftrag.film);
+  const neu = fassungZeile(label, datei, film);
 
   if (figur) {
     zeilen.splice(figur.ende, 0, neu);
   } else {
     /* Erste zusätzliche Fassung: Der Block entsteht mit der
-       Standardansicht an erster Stelle, so verlangt es chars.js. */
-    const standard = beschriftungRoh(auftrag.standardLabel || 'Standard');
+       Standardansicht an erster Stelle, so verlangt es chars.js. Ihre
+       Beschriftung und ihr Film stehen schon in der Anzeige, der Film
+       kommt aus FULLSIZE_STANDARD und wird dort gleich überflüssig. */
+    const erste = abgeleitet[0] || [];
+    const standard = beschriftungRoh(erste[0] || auftrag.standardLabel || 'Standard');
     zeilen.splice(bereich.ende, 0,
       `  '${slug}': [`,
-      `    ['${standard}', '${slug}'],`,
+      fassungZeile(standard, slug, erste[2] || auftrag.filmAuto || ''),
       neu,
       '  ],');
+    blockEntstand = true;
   }
-  return { quelle: zusammen(), pruefe: { datei, label } };
+  return raus({ quelle: zusammen(), pruefe: { datei, label, film } });
+}
+
+
+/* ---------- Varianten einer Fassung ----------
+
+   Von mancher Fassung gibt es mehr als ein brauchbares Bild: dieselbe
+   Rüstung in einer anderen Haltung, von der anderen Seite, mit und ohne
+   Helm. Als zweite Fassung stünden sie falsch, denn Beschriftung, Film
+   und Beschreibung wären bei beiden gleich. Sie stehen deshalb als
+   Varianten hinter einer Fassung, und die Charakterseite schaltet oben
+   an der Profilleiste zwischen ihnen um.
+
+   Geschrieben wird allein die Anzahl (FULLSIZE_VARIANTS in js/chars.js),
+   die Dateinamen folgen ihr: Aus der Fassung wird <Fassung>-1,
+   <Fassung>-2 und so weiter. Die erste Variante entsteht deshalb als
+   Umbenennung des vorhandenen Bildes, die letzte fällt wieder auf den
+   Namen der Fassung zurück.
+
+   Mehr als neun sind nicht vorgesehen: Die Schalter auf der
+   Charakterseite tragen eine Ziffer, und wer zehn Aufnahmen desselben
+   Anzugs hat, hat eher zwei Fassungen als eine. */
+const VARIANTEN_MAX = 9;
+
+function variantenPruefen(quelle, stamm, soll) {
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(
+    [fs.readFileSync(path.join(REPO, 'js', 'data.js'), 'utf8'), quelle,
+      ';globalThis.PROBE = FULLSIZE_VARIANTS;'].join('\n'),
+    ctx, { filename: 'chars-probe.js' });
+  if ((ctx.PROBE[stamm] || 1) !== soll) {
+    throw new Error('Die Zahl der Varianten steht danach nicht in chars.js.');
+  }
+}
+
+function variantenAendern(auftrag) {
+  const D = ladeDaten();
+  const figur = baueFiguren().find((f) => f.slug === auftrag.slug);
+  if (!figur) throw new Error('Unbekannte Figur: ' + auftrag.slug);
+  const ziel = figur.ganzkoerper.find((z) => z.datei === auftrag.datei);
+  if (!ziel) throw new Error(`${auftrag.datei} gehört zu keiner Fassung von ${auftrag.slug}.`);
+  const stamm = ziel.stamm;
+  const jetzt = D.lookVariants(stamm);
+  const anlegen = auftrag.aktion === 'variante-neu';
+
+  if (anlegen && jetzt >= VARIANTEN_MAX) {
+    throw new Error(`Mehr als ${VARIANTEN_MAX} Varianten trägt eine Fassung nicht.`);
+  }
+  if (!anlegen && jetzt < 2) throw new Error('Diese Fassung hat nur dieses eine Bild.');
+
+  const soll = anlegen ? Math.max(2, jetzt + 1) : jetzt - 1;
+  const alt = fs.readFileSync(CHARS, 'utf8');
+  const werte = masseLesen(alt);
+
+  /* Was an Dateien passiert, steht erst als Liste da und wird danach in
+     einem Rutsch ausgeführt: erst chars.js prüfen und schreiben, dann
+     die Bilder anfassen. Umbenannt wird aufsteigend, dann ist der neue
+     Name immer schon frei. */
+  const umzuege = [];       // [von, nach]
+  let weg = null;           // Datei, die aus dem Ordner geht
+  let danach;               // Datei, die hinterher offen sein soll
+
+  if (anlegen) {
+    if (jetzt < 2) umzuege.push([stamm, `${stamm}-1`]);
+    danach = `${stamm}-${soll}`;
+  } else {
+    weg = `${stamm}-${ziel.variante}`;
+    for (let nr = ziel.variante + 1; nr <= jetzt; nr += 1) {
+      umzuege.push([`${stamm}-${nr}`, `${stamm}-${nr - 1}`]);
+    }
+    if (soll < 2) umzuege.push([`${stamm}-1`, stamm]);
+    danach = soll < 2 ? stamm : `${stamm}-${Math.min(ziel.variante, soll)}`;
+  }
+
+  umzuegePruefen(umzuege);
+
+  let stand = alt;
+  const neueZahl = neueVariantenQuelle(stand, stamm, soll);
+  if (neueZahl !== null) stand = neueZahl;
+  if (weg) stand = masseLoeschen(stand, weg);
+  const bericht = [];
+  for (const [von, nach] of umzuege) stand = masseUmziehen(stand, werte, von, nach, bericht);
+
+  variantenPruefen(stand, stamm, soll < 2 ? 1 : soll);
+
+  fs.mkdirSync(SICHERUNG, { recursive: true });
+  const stempel = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  fs.copyFileSync(CHARS, path.join(SICHERUNG, `chars-${stempel}.js`));
+  fs.writeFileSync(CHARS, stand, 'utf8');
+
+  let bildWeg = null;
+  if (weg) {
+    bildWeg = bildWegraeumen(weg, stempel);
+    const menge = ladeMarkiert('ganzkoerper');
+    if (menge.delete(weg)) speichereMarkiert('ganzkoerper', menge);
+    /* Nur der Satz dieser einen Aufnahme. Der Satz der Fassung selbst
+       bleibt, sie hat ja weiterhin Bilder. */
+    notizWeg([weg], stempel);
+  }
+  const mitgewandert = umzuegeAusfuehren(umzuege, stempel, bericht);
+
+  return { datei: danach, varianten: soll < 2 ? 1 : soll, bildWeg, mitgewandert };
+}
+
+/* Die drei Zahlen, die am Bild hängen und nicht an der Fassung. Ohne
+   Eintrag gilt der Normalfall. */
+function masseVon(werte, datei) {
+  return [werte.S[datei] || 1, werte.F[datei] || 1, werte.L[datei] || 0];
+}
+
+/* ---------- Varianten umsortieren ----------
+
+   Welche Aufnahme die erste ist, entscheidet allein der Dateiname: Die
+   Charakterseite zeigt <Fassung>-1 zuerst und zählt von da an weiter.
+   Eine Variante zu verschieben heißt deshalb, zwei Dateien zu tauschen,
+   und getauscht wird über einen dritten Namen, weil beide Plätze schon
+   belegt sind. Er trägt zwei Bindestriche und kann darum mit keinem
+   echten Namen zusammenfallen: alsSlug() macht aus jeder Folge von
+   Sonderzeichen genau einen.
+
+   An der Zahl der Varianten ändert sich dabei nichts und an der
+   Fassungsliste auch nicht. Mit den Bildern wandert nur, was an ihnen
+   hängt: Körpergröße, Bildkorrektur, Schwebe, Offen-Markierung und die
+   Quellenangabe. */
+function variantenSchieben(auftrag) {
+  const D = ladeDaten();
+  const figur = baueFiguren().find((f) => f.slug === auftrag.slug);
+  if (!figur) throw new Error('Unbekannte Figur: ' + auftrag.slug);
+  const ziel = figur.ganzkoerper.find((z) => z.datei === auftrag.datei);
+  if (!ziel) throw new Error(`${auftrag.datei} gehört zu keiner Fassung von ${auftrag.slug}.`);
+  const stamm = ziel.stamm;
+  const anzahl = D.lookVariants(stamm);
+  if (anzahl < 2) throw new Error('Diese Fassung hat nur dieses eine Bild.');
+  const stelle = ziel.variante + (auftrag.aktion === 'variante-hoch' ? -1 : 1);
+  if (stelle < 1 || stelle > anzahl) throw new Error('Weiter geht es in diese Richtung nicht.');
+
+  const hier = `${stamm}-${ziel.variante}`;
+  const dort = `${stamm}-${stelle}`;
+  const zwischen = `${stamm}--tausch`;
+  const umzuege = [[hier, zwischen], [dort, hier], [zwischen, dort]];
+  umzuegePruefen(umzuege);
+
+  const alt = fs.readFileSync(CHARS, 'utf8');
+  const werte = masseLesen(alt);
+  /* Vorher gelesen, denn masseUmziehen() schreibt die Werte mit um. */
+  const vorher = { hier: masseVon(werte, hier), dort: masseVon(werte, dort) };
+  let stand = alt;
+  const bericht = [];
+  for (const [von, nach] of umzuege) stand = masseUmziehen(stand, werte, von, nach, bericht);
+
+  /* Geprüft wird an der neuen Fassung, bevor sie die Datei ersetzt: Die
+     beiden Bilder müssen ihre Maße getauscht haben. */
+  const nachher = masseLesen(stand);
+  for (const [datei, soll] of [[hier, vorher.dort], [dort, vorher.hier]]) {
+    if (masseVon(nachher, datei).some((wert, i) => wert !== soll[i])) {
+      throw new Error(`Die Maße von ${datei}.webp stehen danach nicht, wo sie sollen.`);
+    }
+  }
+
+  fs.mkdirSync(SICHERUNG, { recursive: true });
+  const stempel = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  /* Ohne eigene Maße steht in chars.js nichts über die beiden Bilder, und
+     dann gibt es dort auch nichts zu sichern. */
+  if (stand !== alt) {
+    fs.copyFileSync(CHARS, path.join(SICHERUNG, `chars-${stempel}.js`));
+    fs.writeFileSync(CHARS, stand, 'utf8');
+  }
+  return {
+    datei: dort, varianten: anzahl, variante: stelle,
+    mitgewandert: umzuegeAusfuehren(umzuege, stempel, bericht),
+  };
+}
+
+/* ---------- Fassung und Variante tauschen die Rolle ----------
+
+   Was eine eigene Fassung ist und was nur eine zweite Aufnahme, stellt
+   sich oft erst heraus, wenn beide Bilder nebeneinander stehen: Zwei
+   Tafeln für denselben Anzug sagen zweimal dasselbe, und eine Ziffer an
+   der Profilleiste ist zu wenig für einen anderen Anzug. Beides lässt
+   sich deshalb nachträglich umhängen.
+
+   Die Zeile in FULLSIZE_LOOKS schreibt neueFassungQuelle(), sie fällt
+   weg oder kommt dazu. Hier steht, was daran hängt: die Zahl in
+   FULLSIZE_VARIANTS und die Dateinamen, die ihr folgen. Angehängt wird
+   hinten, und wer sich löst, lässt die Varianten dahinter eine Nummer
+   aufrücken. */
+function umhaengenPruefen(auftrag, figur) {
+  if (!figur) throw new Error('Unbekannte Figur: ' + auftrag.slug);
+  if (auftrag.aktion === 'zu-fassung') {
+    const bild = figur.ganzkoerper.find((z) => z.datei === auftrag.datei);
+    if (!bild) {
+      throw new Error(`${auftrag.datei} gehört zu keiner Fassung von ${auftrag.slug}.`);
+    }
+    if (bild.varianten < 2) {
+      throw new Error('Diese Fassung hat nur dieses eine Bild, sie steht schon für sich.');
+    }
+    return bild;
+  }
+  const meine = figur.ganzkoerper.find((z) => z.stamm === auftrag.datei);
+  const dort = figur.ganzkoerper.find((z) => z.stamm === auftrag.ziel);
+  if (!meine) {
+    throw new Error(`${auftrag.datei} gehört zu keiner Fassung von ${auftrag.slug}.`);
+  }
+  if (!dort) {
+    throw new Error(`${auftrag.ziel} gehört zu keiner Fassung von ${auftrag.slug}.`);
+  }
+  if (meine.stamm === dort.stamm) {
+    throw new Error('Eine Fassung wird keine Variante ihrer selbst.');
+  }
+  const zusammen = meine.varianten + dort.varianten;
+  if (zusammen > VARIANTEN_MAX) {
+    throw new Error(`Zusammen wären das ${zusammen} Bilder, mehr als ${VARIANTEN_MAX} `
+      + 'trägt eine Fassung nicht.');
+  }
+  return meine;
+}
+
+function variantenUmhaengen(auftrag, figur, quelle, pruefe, stempel) {
+  const D = ladeDaten();
+  const werte = masseLesen(quelle);
+  const umzuege = [];
+  const zahlen = [];                 // je Stamm die neue Zahl seiner Bilder
+  let danach;                        // die Datei, die hinterher offen sein soll
+  let nummer;                        // ihre Nummer in der Reihe der Varianten
+  let varianten;
+
+  if (auftrag.aktion === 'zu-variante') {
+    const von = auftrag.datei;
+    const nach = auftrag.ziel;
+    const meine = D.lookVariants(von);
+    const dort = D.lookVariants(nach);
+    /* Die Zielfassung mit ihrem einen Bild bekommt jetzt ihre Nummer:
+       Aus <Fassung>.webp wird <Fassung>-1.webp. */
+    if (dort < 2) umzuege.push([nach, `${nach}-1`]);
+    D.lookVariantFiles(von).forEach((datei, i) => {
+      umzuege.push([datei, `${nach}-${dort + i + 1}`]);
+    });
+    zahlen.push([von, 1], [nach, dort + meine]);
+    danach = `${nach}-${dort + 1}`;
+    nummer = dort + 1;
+    varianten = dort + meine;
+  } else {
+    const bild = figur.ganzkoerper.find((z) => z.datei === auftrag.datei);
+    const stamm = bild.stamm;
+    const anzahl = bild.varianten;
+    umzuege.push([bild.datei, pruefe.datei]);
+    for (let nr = bild.variante + 1; nr <= anzahl; nr += 1) {
+      umzuege.push([`${stamm}-${nr}`, `${stamm}-${nr - 1}`]);
+    }
+    /* Bleibt drüben ein einziges Bild übrig, heißt es wieder wie seine
+       Fassung. */
+    if (anzahl - 1 < 2) umzuege.push([`${stamm}-1`, stamm]);
+    zahlen.push([stamm, anzahl - 1]);
+    danach = pruefe.datei;
+    nummer = 1;
+    varianten = 1;
+  }
+  umzuegePruefen(umzuege);
+
+  let stand = quelle;
+  for (const [wo, wieviele] of zahlen) {
+    const naechste = neueVariantenQuelle(stand, wo, wieviele);
+    if (naechste !== null) stand = naechste;
+  }
+  const bericht = [];
+  for (const [von, nach] of umzuege) stand = masseUmziehen(stand, werte, von, nach, bericht);
+  for (const [wo, wieviele] of zahlen) {
+    variantenPruefen(stand, wo, wieviele < 2 ? 1 : wieviele);
+  }
+
+  fs.writeFileSync(CHARS, stand, 'utf8');
+  return {
+    datei: danach, varianten, variante: nummer,
+    mitgewandert: umzuegeAusfuehren(umzuege, stempel, bericht),
+  };
 }
 
 function fassungAendern(auftrag) {
+  /* Varianten greifen nicht in FULLSIZE_LOOKS ein: Sie hängen an der
+     Datei und stehen in FULLSIZE_VARIANTS. */
+  if (auftrag.aktion === 'variante-neu' || auftrag.aktion === 'variante-weg') {
+    return variantenAendern(auftrag);
+  }
+  if (auftrag.aktion === 'variante-hoch' || auftrag.aktion === 'variante-runter') {
+    return variantenSchieben(auftrag);
+  }
   const alt = fs.readFileSync(CHARS, 'utf8');
   /* Die Liste, wie die Oberfläche sie zeigt: gepflegte Fassungen zuerst,
      danach die reinen Dateien aus dem Ordner. Sie dient als Vorlage,
      falls der Eintrag in FULLSIZE_LOOKS erst entstehen muss. */
-  const figur = baueFiguren().find((f) => f.slug === auftrag.slug);
-  const abgeleitet = figur ? figur.ganzkoerper.map((z) => [z.label, z.datei]) : [];
-  const { quelle, pruefe, umbenennung } = neueFassungQuelle(alt, { ...auftrag, abgeleitet });
+  const figuren = baueFiguren();
+  const figur = figuren.find((f) => f.slug === auftrag.slug);
+  /* Je Fassung eine Zeile und nicht je Bild: In figur.ganzkoerper steht
+     jede Variante für sich, in FULLSIZE_LOOKS gehört aber nur der Stamm
+     hin. Ohne das schriebe der erste Eingriff an einer Figur mit
+     Varianten jede von ihnen als eigene Fassung in die Liste. */
+  const nachStamm = new Map();
+  for (const z of (figur ? figur.ganzkoerper : [])) {
+    const stamm = z.stamm || z.datei;
+    if (!nachStamm.has(stamm)) nachStamm.set(stamm, [z.label, stamm, z.film]);
+  }
+  const abgeleitet = [...nachStamm.values()];
+
+  /* „Wird Variante von“ und „wird eigene Fassung“ hängen an der Zahl der
+     Varianten und nicht an FULLSIZE_LOOKS. Was daran scheitert, fällt
+     deshalb hier durch, bevor eine Zeile geschrieben ist. */
+  const umhaengen = auftrag.aktion === 'zu-variante' || auftrag.aktion === 'zu-fassung';
+  const bild = umhaengen ? umhaengenPruefen(auftrag, figur) : null;
+
+  const { quelle, pruefe, umbenennung, standardFilm } = neueFassungQuelle(alt, {
+    ...auftrag, abgeleitet, filmAuto: (figur && figur.filmAuto) || '',
+    /* Beim Lösen nennt der Auftrag das einzelne Bild, die Zeile in
+       FULLSIZE_LOOKS steht aber unter dem Stamm seiner Fassung. */
+    stamm: bild ? bild.stamm : auftrag.datei,
+  });
+
+  /* Der Film einer Figur ohne Fassungsliste steht in FULLSIZE_STANDARD.
+     Er zieht mit, wenn die Liste entsteht oder wieder wegfällt. */
+  let neuerStand = quelle;
+  if (standardFilm) {
+    const naechste = neueStandardFilmQuelle(neuerStand, standardFilm.slug, standardFilm.film,
+      auftrittsOrdnung(figuren));
+    /* Eine unveränderte Quelle heißt sonst, dass es nichts zu tun gab.
+       Beim Umhängen heißt sie das nicht: Hat die Figur noch keine
+       Fassungsliste, entsteht sie für diesen einen Schritt und fällt mit
+       der angehängten Fassung gleich wieder weg. In FULLSIZE_VARIANTS und
+       im Bilderordner steht die Arbeit dann noch aus. */
+    if (naechste === null && neuerStand === alt && !umhaengen) return { geaendert: false };
+    if (naechste !== null) neuerStand = naechste;
+  }
 
   /* Prüfen, bevor die Datei angefasst wird. */
   const ctx = {};
   vm.createContext(ctx);
   vm.runInContext(
-    [fs.readFileSync(path.join(REPO, 'js', 'data.js'), 'utf8'), quelle,
-      ';globalThis.PROBE = FULLSIZE_LOOKS;'].join('\n'),
+    [fs.readFileSync(path.join(REPO, 'js', 'data.js'), 'utf8'), neuerStand,
+      ';globalThis.PROBE = { looks: FULLSIZE_LOOKS, standard: FULLSIZE_STANDARD };'].join('\n'),
     ctx, { filename: 'chars-probe.js' });
   const entkommen = (text) => text.replace(/\\(['\\])/g, '$1');
-  const liste = ctx.PROBE[auftrag.slug] || [];
+  const liste = ctx.PROBE.looks[auftrag.slug] || [];
   const treffer = liste.find(([, d]) => d === pruefe.datei);
-  if (pruefe.stelle !== undefined) {
+  if (pruefe.standardFilm !== undefined) {
+    if ((ctx.PROBE.standard[auftrag.slug] || '') !== pruefe.standardFilm) {
+      throw new Error('Der Film steht danach nicht in FULLSIZE_STANDARD.');
+    }
+  } else if (pruefe.stelle !== undefined) {
     if (!liste[pruefe.stelle] || liste[pruefe.stelle][1] !== pruefe.datei) {
       throw new Error('Die Fassung steht danach nicht an der erwarteten Stelle.');
     }
@@ -882,60 +1900,86 @@ function fassungAendern(auftrag) {
   } else if (!treffer || treffer[0] !== entkommen(pruefe.label)) {
     throw new Error('Die neue Fassung von chars.js trägt nicht, was sie soll.');
   }
+  if (pruefe.film !== undefined && (!treffer || (treffer[2] || '') !== pruefe.film)) {
+    throw new Error('Die Fassung steht danach nicht bei dem gewählten Film.');
+  }
 
   fs.mkdirSync(SICHERUNG, { recursive: true });
   const stempel = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   fs.copyFileSync(CHARS, path.join(SICHERUNG, `chars-${stempel}.js`));
 
+  /* Die Zeile steht, jetzt folgen ihr die Dateien: Die angehängte Fassung
+     nimmt die Nummern hinter den Bildern der Zielfassung, die gelöste
+     Variante heißt nach ihrer neuen Beschriftung. */
+  if (umhaengen) return variantenUmhaengen(auftrag, figur, neuerStand, pruefe, stempel);
+
   /* Der Dateiname folgt der Beschriftung. Ändert sie sich, wandert das
      Bild mit, dazu Körpergröße, Bildkorrektur, Offen-Markierung und
-     Quellenangabe. FULLSIZE_LOOKS trägt den neuen Namen schon. */
+     Quellenangabe. FULLSIZE_LOOKS trägt den neuen Namen schon.
+
+     Eine Fassung mit Varianten liegt in mehreren Dateien, die alle nach
+     ihr heißen. Dann ziehen sie alle mit, und die Anzahl selbst wandert
+     vom alten Stamm auf den neuen. */
   let mitgewandert = null;
   if (umbenennung) {
-    const werte = {};
-    vm.createContext(werte);
-    vm.runInContext([fs.readFileSync(DATA, 'utf8'), alt,
-      ';globalThis.S = FULLSIZE_SCALE; globalThis.F = FULLSIZE_FIT;'].join('\n'), werte);
-    let quelleMitSkala = quelle;
-    /* Am alten Namen zurücksetzen, am neuen eintragen. Der Standardwert
-       nimmt die alte Zeile heraus. */
-    const umziehen = (wert, schreiber) => {
-      if (!wert) return false;
-      for (const [datei, neuerWert] of [[umbenennung.alt, 1], [umbenennung.neu, wert]]) {
-        const naechste = schreiber(quelleMitSkala, datei, neuerWert);
-        if (naechste !== null) quelleMitSkala = naechste;
+    const D = ladeDaten();
+    const werte = masseLesen(alt);
+    let stand = neuerStand;
+    const bericht = [];
+    const anzahl = D.lookVariants(umbenennung.alt);
+    const paare = anzahl > 1
+      ? D.lookVariantFiles(umbenennung.alt)
+        .map((datei, i) => [datei, `${umbenennung.neu}-${i + 1}`])
+      : [[umbenennung.alt, umbenennung.neu]];
+    if (anzahl > 1) {
+      for (const [stamm, wert] of [[umbenennung.alt, 1], [umbenennung.neu, anzahl]]) {
+        const naechste = neueVariantenQuelle(stand, stamm, wert);
+        if (naechste !== null) stand = naechste;
       }
-      return true;
-    };
-    const mitGroesse = umziehen(werte.S[umbenennung.alt], neueSkalaQuelle);
-    const mitKorrektur = umziehen(werte.F[umbenennung.alt], neueKorrekturQuelle);
-    fs.writeFileSync(CHARS, quelleMitSkala, 'utf8');
-    mitgewandert = dateiUmbenennen(umbenennung.alt, umbenennung.neu, stempel);
-    if (mitGroesse) mitgewandert.push('Körpergröße');
-    if (mitKorrektur) mitgewandert.push('Bildkorrektur');
-    return { datei: umbenennung.neu, umbenannt: { ...umbenennung, mitgewandert } };
+      bericht.push('Varianten');
+    }
+    for (const [von, nach] of paare) stand = masseUmziehen(stand, werte, von, nach, bericht);
+    fs.writeFileSync(CHARS, stand, 'utf8');
+    mitgewandert = [];
+    for (const [von, nach] of paare) {
+      for (const was of dateiUmbenennen(von, nach, stempel)) {
+        if (!mitgewandert.includes(was)) mitgewandert.push(was);
+      }
+    }
+    mitgewandert.push(...bericht);
+    return { datei: paare[0][1], umbenannt: { ...umbenennung, mitgewandert } };
   }
 
   /* Beim Löschen wandern Bild und Größenangaben mit. Sonst stünde die
-     Fassung gleich wieder in der Liste, denn der Ordner wird mitgelesen. */
+     Fassung gleich wieder in der Liste, denn der Ordner wird mitgelesen.
+     Eine Fassung mit Varianten nimmt alle ihre Bilder mit, und ihre
+     Anzahl fällt aus FULLSIZE_VARIANTS. */
   let bildWeg = null;
   if (auftrag.aktion === 'loeschen') {
-    const bild = path.join(FULLSIZE, auftrag.datei + '.webp');
-    if (fs.existsSync(bild)) {
-      const ziel = path.join(SICHERUNG, `gk-${auftrag.datei}-${stempel}.webp`);
-      fs.copyFileSync(bild, ziel);
-      fs.unlinkSync(bild);
-      bildWeg = path.relative(REPO, ziel).replace(/\\/g, '/');
+    const D = ladeDaten();
+    let stand = neuerStand;
+    const weg = [];
+    for (const datei of D.lookVariantFiles(auftrag.datei)) {
+      const gesichert = bildWegraeumen(datei, stempel);
+      if (gesichert) weg.push(gesichert);
+      stand = masseLoeschen(stand, datei);
     }
-    const ohneSkala = neueSkalaQuelle(quelle, auftrag.datei, 1);
-    const ohneMasse = neueKorrekturQuelle(ohneSkala === null ? quelle : ohneSkala,
-      auftrag.datei, 1);
-    fs.writeFileSync(CHARS, ohneMasse === null
-      ? (ohneSkala === null ? quelle : ohneSkala) : ohneMasse, 'utf8');
+    /* Mit der Fassung geht ihr Satz, sonst bliebe er als Waise in
+       js/looks.js stehen. Gemeint sind ihr Stamm und jede Aufnahme,
+       denn beide können einen eigenen tragen. */
+    notizWeg([auftrag.datei, ...D.lookVariantFiles(auftrag.datei)], stempel);
+    const ohneVarianten = neueVariantenQuelle(stand, auftrag.datei, 1);
+    if (ohneVarianten !== null) stand = ohneVarianten;
+    fs.writeFileSync(CHARS, stand, 'utf8');
     const menge = ladeMarkiert('ganzkoerper');
-    if (menge.delete(auftrag.datei)) speichereMarkiert('ganzkoerper', menge);
+    let geraeumt = false;
+    for (const datei of D.lookVariantFiles(auftrag.datei)) {
+      if (menge.delete(datei)) geraeumt = true;
+    }
+    if (geraeumt) speichereMarkiert('ganzkoerper', menge);
+    bildWeg = weg.join(', ') || null;
   } else {
-    fs.writeFileSync(CHARS, quelle, 'utf8');
+    fs.writeFileSync(CHARS, neuerStand, 'utf8');
   }
   return { datei: pruefe.datei, bildWeg };
 }
@@ -999,6 +2043,110 @@ function aliasBereich(zeilen) {
   return { anfang, ende };
 }
 
+/* --- chars.js: CHAR_WORLDS ---
+
+   Welche Klammer am Ende eines Namens eine Welt benennt und welche eine
+   Zeit oder eine Besetzung, steht in CHAR_WORLDS (js/chars.js). Neue
+   Welten kommen aus dem Namensdialog des Studios dazu. */
+
+const WELT_ZEILE = /^\s*(['"])(.*?)\1,\s*$/;
+
+function weltenBereich(zeilen) {
+  const anfang = zeilen.findIndex((z) => z.startsWith('const CHAR_WORLDS = ['));
+  if (anfang === -1) throw new Error('CHAR_WORLDS steht nicht in js/chars.js.');
+  let ende = anfang;
+  while (ende < zeilen.length && zeilen[ende] !== '];') ende += 1;
+  return { anfang, ende };
+}
+
+function weltenLesen(quelle) {
+  const zeilen = quelle.split(/\r?\n/);
+  const bereich = weltenBereich(zeilen);
+  const raus = [];
+  for (let i = bereich.anfang + 1; i < bereich.ende; i += 1) {
+    const t = WELT_ZEILE.exec(zeilen[i]);
+    if (t) raus.push(t[2]);
+  }
+  return raus;
+}
+
+/* Eine Welt trägt keine Klammern: Im Namen steht sie selbst in einer,
+   und eine zweite darin fände splitName() nicht mehr. */
+function pruefeWelt(name) {
+  const sauber = pruefeName(name);
+  if (/[()]/.test(sauber)) throw new Error('Klammern gehen in einer Welt nicht.');
+  if (sauber.length > 40) throw new Error('Der Name der Welt ist zu lang.');
+  return sauber;
+}
+
+function weltAnlegen(name) {
+  const welt = pruefeWelt(name);
+  const quelle = fs.readFileSync(CHARS, 'utf8');
+  if (weltenLesen(quelle).includes(welt)) return { geaendert: false, welt };
+  const zeilen = quelle.split(/\r?\n/);
+  const bereich = weltenBereich(zeilen);
+  /* Ans Ende der Liste, nicht einsortiert: „Erde-838“ und „andere Welt“
+     stehen in keiner Ordnung, die sich fortschreiben ließe. */
+  zeilen.splice(bereich.ende, 0, `  ${inAnfuehrung(welt)},`);
+  const stempel = stempelJetzt();
+  sichereQuelle(CHARS, stempel);
+  fs.writeFileSync(CHARS, zeilen.join(bruchVon(quelle)), 'utf8');
+  return { geaendert: true, welt };
+}
+
+/* Eine Welt wieder aus CHAR_WORLDS nehmen.
+
+   Die Liste entscheidet, wie splitName() eine Klammer am Ende eines
+   Namens liest: als Welt oder als Zeit, Besetzung, Variante. Eine Welt zu
+   streichen, die noch in Namen steht, bedeutete also nicht, dass die
+   Klammer verschwindet, sondern dass sie plötzlich etwas anderes heißt.
+   „Karl Mordo (Erde-838)“ wäre danach keine Figur aus einer anderen
+   Wirklichkeit mehr, sondern eine Variante namens Erde-838.
+
+   Deshalb wird zuerst nachgesehen, wer sie trägt. Ist noch jemand dabei,
+   sagt der Fehler, wer das ist: Die Namen gehören dann zuerst geändert. */
+function weltLoeschen(name) {
+  const welt = pruefeWelt(name);
+  const quelle = fs.readFileSync(CHARS, 'utf8');
+  const zeilen = quelle.split(/\r?\n/);
+  const bereich = weltenBereich(zeilen);
+  let stelle = -1;
+  for (let i = bereich.anfang + 1; i < bereich.ende; i += 1) {
+    const t = WELT_ZEILE.exec(zeilen[i]);
+    if (t && t[2] === welt) { stelle = i; break; }
+  }
+  if (stelle === -1) return { geaendert: false, welt };
+
+  const traeger = weltTraeger(welt);
+  if (traeger.length) {
+    throw new Error(`„${welt}“ steht noch im Namen von `
+      + traeger.slice(0, 4).join(', ')
+      + (traeger.length > 4 ? ` und ${traeger.length - 4} weiteren` : '')
+      + '. Diese Namen zuerst ändern.');
+  }
+
+  zeilen.splice(stelle, 1);
+  const neu = zeilen.join(bruchVon(quelle));
+  /* Prüfen, bevor geschrieben wird: Die Liste muss danach genau diese
+     eine Welt weniger führen. */
+  if (weltenLesen(neu).includes(welt)) {
+    throw new Error('Die Welt steht danach immer noch in CHAR_WORLDS.');
+  }
+  sichereQuelle(CHARS, stempelJetzt());
+  fs.writeFileSync(CHARS, neu, 'utf8');
+  return { geaendert: true, welt };
+}
+
+/* Alle Figuren, deren Name diese Welt in der Klammer trägt. */
+function weltTraeger(welt) {
+  const D = ladeDaten();
+  const raus = [];
+  for (const figur of baueFiguren()) {
+    if (figur.namen.some((n) => D.splitName(n).world === welt)) raus.push(figur.name);
+  }
+  return raus;
+}
+
 /* Alias setzen, ändern, umbenennen oder entfernen. ziel === null nimmt den
    Eintrag heraus, altName benennt den Schlüssel um. */
 function aliasSchreiben(quelle, name, ziel, altName) {
@@ -1044,22 +2192,29 @@ function aliasLesen(quelle, name) {
 
    Der Slug steckt als ganzes Wort in Anführungszeichen in mehreren
    Dateien, und die Dateinamen der Bilder tragen ihn als Präfix. Ersetzt
-   wird deshalb '<alt>' und '<alt>-zusatz', nie ein bloßer Teilstring. */
+   wird deshalb '<alt>' und '<alt>-zusatz', nie ein bloßer Teilstring.
+
+   „fremde“ sind die Schlüssel eigener Figuren, die mit <alt> anfangen
+   (siehe fremdeSchluessel()). Sie bleiben stehen: Wer „gamora“
+   umbenennt, benennt die Gamora von 2014 nicht mit um, weder ihre
+   Zeilen in den Quelldateien noch ihre Bilder. */
 function slugMuster(alt) {
   return new RegExp(`(['"])${alt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(-[a-z0-9-]+)?\\1`, 'g');
 }
 
-function slugErsetzen(text, alt, neu) {
-  return text.replace(slugMuster(alt), (_, q, zusatz) => `${q}${neu}${zusatz || ''}${q}`);
+function slugErsetzen(text, alt, neu, fremde = []) {
+  return text.replace(slugMuster(alt), (ganz, q, zusatz) => (
+    passtZuPraefix(alt + (zusatz || ''), fremde) ? ganz : `${q}${neu}${zusatz || ''}${q}`));
 }
 
-function slugWandern(alt, neu, stempel) {
+function slugWandern(alt, neu, stempel, fremde = []) {
   const bericht = { dateien: [], quellen: [] };
   for (const [name, pfad] of [['js/chars.js', CHARS], ['js/data.js', DATA],
+    ['js/looks.js', LOOKS],
     ['js/profiles.js', PROFILES], ['js/facts.js', FACTS]]) {
     if (!fs.existsSync(pfad)) continue;
     const vorher = fs.readFileSync(pfad, 'utf8');
-    const nachher = slugErsetzen(vorher, alt, neu);
+    const nachher = slugErsetzen(vorher, alt, neu, fremde);
     if (vorher === nachher) continue;
     fs.copyFileSync(pfad, path.join(SICHERUNG, `${path.basename(pfad)}-${stempel}`));
     fs.writeFileSync(pfad, nachher, 'utf8');
@@ -1067,7 +2222,7 @@ function slugWandern(alt, neu, stempel) {
   }
   for (const ordner of [PORTRAITS, FULLSIZE]) {
     for (const datei of webpListe(ordner)) {
-      if (datei !== alt && !datei.startsWith(alt + '-')) continue;
+      if (!passtZuPraefix(datei, [alt]) || passtZuPraefix(datei, fremde)) continue;
       const zielname = neu + datei.slice(alt.length);
       fs.renameSync(path.join(ordner, datei + '.webp'), path.join(ordner, zielname + '.webp'));
       bericht.dateien.push(`${path.basename(ordner)}/${datei} → ${zielname}`);
@@ -1210,6 +2365,10 @@ function nameAendern(slug, alt, neu) {
 function aliasAendern(slug, namen, ziel) {
   const charsAlt = fs.readFileSync(CHARS, 'utf8');
   const dataAlt = fs.readFileSync(DATA, 'utf8');
+  /* Noch vor der ersten Änderung festhalten, welche eigenen Figuren
+     diesen Schlüssel als Präfix tragen. Danach steht in den Quellen
+     schon der neue, und die Frage ließe sich nicht mehr stellen. */
+  const fremde = fremdeSchluessel(slug, reihenfolge(ladeDaten()));
 
   let charsNeu = charsAlt;
   let neuerSlug;
@@ -1249,7 +2408,7 @@ function aliasAendern(slug, namen, ziel) {
   fs.writeFileSync(CHARS, charsNeu, 'utf8');
 
   let wanderung = null;
-  if (neuerSlug !== slug) wanderung = slugWandern(slug, neuerSlug, stempel);
+  if (neuerSlug !== slug) wanderung = slugWandern(slug, neuerSlug, stempel, fremde);
 
   const K = probeLaden(fs.readFileSync(DATA, 'utf8'), fs.readFileSync(CHARS, 'utf8'));
   if (K.charSlug(namen[0]) !== neuerSlug) {
@@ -1312,6 +2471,237 @@ function figurAnlegen(name, alias, filme) {
   return { geaendert: true, slug, name: sauber, filme: filme.length };
 }
 
+/* Welche Dateien wirklich dieser Figur gehören.
+
+   Wem ein Bild gehört, sagt die Besitzregel weiter oben:
+   eigeneDateien(). Wer beim Löschen von „gamora“ stur nach dem Präfix
+   ginge, nähme das Bild der Gamora von 2014 mit. */
+function dateienDerFigur(slug, alleSlugs) {
+  const meine = eigeneDateien(slug, alleSlugs);
+  const raus = { portraits: [], fullsize: [], namen: new Set() };
+  for (const [ordner, pfad] of Object.entries(ORDNER)) {
+    for (const datei of webpListe(pfad)) {
+      if (!meine(datei)) continue;
+      raus[ordner].push(datei);
+      raus.namen.add(datei);
+    }
+  }
+  return { ...raus, meine };
+}
+
+/* Eine Figur ganz aus der Datenbank nehmen.
+
+   Sie hängt an mehr Stellen, als sie entstanden ist: Ihre Auftritte
+   stehen in den Besetzungslisten von js/data.js, ihre Begegnungen
+   daneben, und ihr Schlüssel trägt Bilder, Biografie, Steckbrief,
+   Beziehungen und Fähigkeiten. Wer nur die Auftritte striche, ließe all
+   das als Waise stehen: Die Figur verschwände von der Charakterseite,
+   ihre Zeilen aber blieben in fünf Dateien liegen.
+
+   Deshalb geht hier alles zusammen, in einem Zug und unter einem Schritt
+   im Verlauf. Rückgängig holt die Figur samt Bildern zurück.
+
+   Was von anderen Figuren auf sie zeigte, geht mit: Eine Beziehung zu
+   jemandem, den es nicht mehr gibt, führte auf der Charakterseite ins
+   Leere. */
+function figurLoeschen(slug) {
+  const figur = baueFiguren().find((f) => f.slug === slug);
+  if (!figur) throw new Error('Unbekannte Figur: ' + slug);
+
+  const D = ladeDaten();
+  const ordnung = reihenfolge(D);
+  const bericht = { auftritte: 0, begegnungen: 0, beziehungen: 0, bilder: [], dateien: [] };
+  const eigen = dateienDerFigur(slug, ordnung);
+
+  /* --- js/data.js: Besetzung, Begegnungen, Kurzbiografie, Darsteller --- */
+  let data = fs.readFileSync(DATA, 'utf8');
+  for (const filmTitel of figur.filme) {
+    for (const name of figur.namen) {
+      const schritt = auftrittSchreiben(data, filmTitel, name, false);
+      if (schritt.geaendert) {
+        data = schritt.quelle;
+        bericht.auftritte += 1;
+      }
+    }
+    const sauber = begegnungenSaeubern(data, filmTitel, slug);
+    data = sauber.quelle;
+    bericht.begegnungen += sauber.entfernt;
+  }
+  for (const tabelle of ['BIOS', 'ACTORS']) {
+    const naechste = setzeEintrag(data, tabelle, 'js/data.js', slug, null, ordnung);
+    if (naechste !== null) data = naechste;
+  }
+
+  /* --- js/chars.js: Alias, Ansichten, Fassungen, Größen, Stimme --- */
+  let chars = fs.readFileSync(CHARS, 'utf8');
+  for (const name of figur.namen) chars = aliasSchreiben(chars, name, null, null);
+  for (const tabelle of ['CHAR_LOOKS', 'FULLSIZE_LOOKS', 'FULLSIZE_STANDARD']) {
+    const naechste = setzeEintrag(chars, tabelle, 'js/chars.js', slug, null, ordnung);
+    if (naechste !== null) chars = naechste;
+  }
+  /* Körpergröße und Bildkorrektur stehen je Datei, nicht je Figur: Eine
+     Figur mit sechs Fassungen hat dort bis zu sechs Zeilen. Die Liste der
+     Fassungen liest auch den Ordner mit und führt deshalb Dateien, die
+     einer eigenen Figur gehören, siehe dateienDerFigur(). */
+  for (const fassung of figur.ganzkoerper) {
+    if (!eigen.meine(fassung.datei)) continue;
+    for (const schreiber of [neueSkalaQuelle, neueKorrekturQuelle]) {
+      const naechste = schreiber(chars, fassung.datei, 1);
+      if (naechste !== null) chars = naechste;
+    }
+  }
+  /* Die Zahl der Varianten steht dagegen je Fassung, also je Stamm: Eine
+     Fassung mit drei Bildern hat dort eine Zeile und nicht drei. */
+  for (const stamm of new Set(figur.ganzkoerper.map((z) => z.stamm || z.datei))) {
+    if (!eigen.meine(stamm)) continue;
+    const naechste = neueVariantenQuelle(chars, stamm, 1);
+    if (naechste !== null) chars = naechste;
+  }
+  chars = ohneStimme(chars, slug);
+
+  /* --- js/profiles.js, js/facts.js, js/powers.js --- */
+  const profileAlt = fs.readFileSync(PROFILES, 'utf8');
+  const profileNeu = setzeEintrag(profileAlt, 'PROFILES', 'js/profiles.js', slug, null, ordnung);
+
+  let facts = fs.readFileSync(FACTS, 'utf8');
+  for (const tabelle of ['CHAR_FACTS', 'CHAR_FACTS_EXTRA', 'CHAR_BONDS']) {
+    const naechste = setzeEintrag(facts, tabelle, 'js/facts.js', slug, null, ordnung);
+    if (naechste !== null) facts = naechste;
+  }
+  const fremde = ohneBeziehungenAuf(facts, slug, ordnung);
+  facts = fremde.quelle;
+  bericht.beziehungen = fremde.entfernt;
+
+  let powers = null;
+  if (fs.existsSync(POWERS)) {
+    powers = setzeEintrag(fs.readFileSync(POWERS, 'utf8'),
+      'CHAR_POWERS', 'js/powers.js', slug, null, ordnung);
+  }
+
+  /* --- Probe: laden und nachsehen, bevor eine Datei angefasst wird --- */
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext([data, chars, profileNeu === null ? profileAlt : profileNeu, facts,
+    ';globalThis.P = { PHASES, charSlug, CHAR_LOOKS, FULLSIZE_LOOKS, FULLSIZE_STANDARD,'
+      + ' PROFILES, CHAR_FACTS, CHAR_FACTS_EXTRA, CHAR_BONDS, CHAR_NO_PROFILE };',
+  ].join('\n'), ctx, { filename: 'loeschen-probe.js' });
+  const P = ctx.P;
+  for (const phase of P.PHASES) {
+    for (const film of phase.movies) {
+      for (const name of film.characters || []) {
+        if (P.CHAR_NO_PROFILE.has(name)) continue;
+        if (P.charSlug(name) !== slug) continue;
+        throw new Error(`„${name}“ steht danach immer noch in der Besetzung `
+          + `von ${film.title}. Es wurde nichts geschrieben.`);
+      }
+    }
+  }
+  for (const [was, tabelle] of [['Ansichten', P.CHAR_LOOKS], ['Fassungen', P.FULLSIZE_LOOKS],
+    ['Standardfilm', P.FULLSIZE_STANDARD], ['Biografie', P.PROFILES],
+    ['Steckbrief', P.CHAR_FACTS], ['Steckbrief von Hand', P.CHAR_FACTS_EXTRA],
+    ['Beziehungen', P.CHAR_BONDS]]) {
+    if (tabelle[slug] === undefined) continue;
+    throw new Error(`Der Eintrag bei „${was}“ steht danach immer noch da. `
+      + 'Es wurde nichts geschrieben.');
+  }
+
+  /* --- Schreiben --- */
+  const stempel = stempelJetzt();
+  fs.mkdirSync(SICHERUNG, { recursive: true });
+  for (const [pfad, neu, name] of [[DATA, data, 'js/data.js'], [CHARS, chars, 'js/chars.js'],
+    [PROFILES, profileNeu, 'js/profiles.js'], [FACTS, facts, 'js/facts.js'],
+    [POWERS, powers, 'js/powers.js']]) {
+    if (neu === null || !fs.existsSync(pfad)) continue;
+    if (fs.readFileSync(pfad, 'utf8') === neu) continue;
+    sichereQuelle(pfad, stempel);
+    fs.writeFileSync(pfad, neu, 'utf8');
+    bericht.dateien.push(name);
+  }
+
+  /* --- js/looks.js: die Sätze zu ihren Fassungen --- */
+  const saetze = [];
+  for (const fassung of figur.ganzkoerper) {
+    if (!eigen.meine(fassung.datei)) continue;
+    for (const name of [fassung.datei, fassung.stamm || fassung.datei]) {
+      if (!saetze.includes(name)) saetze.push(name);
+    }
+  }
+  if (saetze.length && notizWeg(saetze, stempel)) bericht.dateien.push('js/looks.js');
+
+  /* --- Bilder: erst in die Sicherung, dann aus dem Ordner --- */
+  for (const [ordner, pfad] of Object.entries(ORDNER)) {
+    for (const datei of eigen[ordner]) {
+      const von = path.join(pfad, datei + '.webp');
+      fs.copyFileSync(von, path.join(SICHERUNG,
+        `${ordner === 'fullsize' ? 'gk-' : ''}${datei}-${stempel}.webp`));
+      fs.unlinkSync(von);
+      bericht.bilder.push(`${ordner}/${datei}.webp`);
+    }
+  }
+
+  /* --- offen.json: die Markierungen der Figur --- */
+  for (const bereich of ['portrait', 'ganzkoerper']) {
+    const menge = ladeMarkiert(bereich);
+    let weg = false;
+    for (const datei of [...menge]) {
+      if (!eigen.meine(datei)) continue;
+      menge.delete(datei);
+      weg = true;
+    }
+    if (weg) speichereMarkiert(bereich, menge);
+  }
+
+  return { geaendert: true, slug, name: figur.ueberschrift, ...bericht };
+}
+
+/* CHAR_VOICE_ONLY ist eine Menge in einer Zeile und kein Block mit
+   Einträgen. Sie fällt deshalb aus dem Muster der übrigen Tabellen. */
+function ohneStimme(quelle, slug) {
+  const zeilen = quelle.split(/\r?\n/);
+  const i = zeilen.findIndex((z) => z.startsWith('const CHAR_VOICE_ONLY = new Set(['));
+  if (i === -1) return quelle;
+  const t = /^const CHAR_VOICE_ONLY = new Set\(\[(.*)\]\);\s*$/.exec(zeilen[i]);
+  if (!t) return quelle;
+  const drin = t[1].trim() ? JSON.parse('[' + t[1].replace(/'/g, '"') + ']') : [];
+  const rest = drin.filter((s) => s !== slug);
+  if (rest.length === drin.length) return quelle;
+  zeilen[i] = `const CHAR_VOICE_ONLY = new Set([${rest.map((s) => `'${s}'`).join(', ')}]);`;
+  return zeilen.join(bruchVon(quelle));
+}
+
+/* Beziehungen anderer Figuren, die auf diesen Schlüssel zeigen. Bleibt
+   danach eine leere Liste übrig, fällt der ganze Eintrag weg. */
+function ohneBeziehungenAuf(quelle, slug, ordnung) {
+  const ZEIGT_AUF = /^\s*\[.*,\s*'(.+?)'\],\s*$/;
+  const block = blockVon(quelle, 'CHAR_BONDS', 'js/facts.js');
+  const bereiche = eintraege(block.zeilen);
+  let entfernt = 0;
+  const leer = [];
+  for (const [fremd, stelle] of bereiche) {
+    let trifft = 0;
+    let bleibt = 0;
+    for (let i = stelle.von + 1; i <= stelle.bis; i += 1) {
+      const t = ZEIGT_AUF.exec(block.zeilen[i]);
+      if (!t) continue;
+      if (t[1] === slug) trifft += 1; else bleibt += 1;
+    }
+    entfernt += trifft;
+    if (trifft && !bleibt) leer.push(fremd);
+  }
+  if (!entfernt) return { quelle, entfernt: 0 };
+  const behalten = block.zeilen.filter((zeile) => {
+    const t = ZEIGT_AUF.exec(zeile);
+    return !t || t[1] !== slug;
+  });
+  let neu = mitBlock(quelle, block, behalten);
+  /* Eine Beziehungsliste ohne Beziehungen ist keine. */
+  for (const fremd of leer) {
+    const naechste = setzeEintrag(neu, 'CHAR_BONDS', 'js/facts.js', fremd, null, ordnung);
+    if (naechste !== null) neu = naechste;
+  }
+  return { quelle: neu, entfernt };
+}
+
 /* Einen Auftritt setzen oder streichen. */
 function auftrittAendern(filmTitel, name, dabei, slug) {
   const dataAlt = fs.readFileSync(DATA, 'utf8');
@@ -1354,8 +2744,8 @@ function auftrittAendern(filmTitel, name, dabei, slug) {
    Marvel-Wikis und gehört services/biography/fetch-facts.py und services/biography/build-facts.py,
    siehe weiter unten. */
 
-const FACT_FELDER = ['origin', 'species', 'height', 'teams', 'status', 'powers'];
-const FACT_LISTEN = new Set(['teams', 'powers']);
+const FACT_FELDER = ['origin', 'species', 'height', 'teams', 'status'];
+const FACT_LISTEN = new Set(['teams']);
 
 /* Was in eine Zeile der Quelldatei geht. Alle fünf Tabellen führen ihre
    Texte einzeilig, ein Umbruch aus dem Textfeld wird deshalb zum
@@ -1478,6 +2868,19 @@ function factZeilen(slug, felder) {
   return raus;
 }
 
+/* js/powers.js schreibt den Namen und den Absatz auf zwei Zeilen, so
+   wie die Datei von Hand geführt wird. */
+function powersZeilen(slug, kraefte) {
+  if (!kraefte.length) return null;
+  const raus = [`  ${jsText(slug, "'")}: [`];
+  for (const [name, text] of kraefte) {
+    raus.push(`    [${jsText(name, "'")},`);
+    raus.push(`      ${jsText(text, "'")}],`);
+  }
+  raus.push('  ],');
+  return raus;
+}
+
 function bondZeilen(slug, paare) {
   if (!paare.length) return null;
   const raus = [`  ${jsText(slug, "'")}: [`];
@@ -1514,6 +2917,9 @@ function texteLesen(slug) {
     wiki: D.CHAR_FACTS[slug] || {},
     hand: D.CHAR_FACTS_EXTRA[slug] || {},
     profil: (D.PROFILES[slug] || []).map(([titel, text]) => [titel, text]),
+    /* Die Kräfte stehen nicht im Steckbrief, sondern in js/powers.js:
+       je Fähigkeit ihr Name und der Absatz dazu. */
+    kraefte: (D.CHAR_POWERS[slug] || []).map(([name, text]) => [name, text]),
     bio: D.BIOS[slug] || '',
     bonds: (D.CHAR_BONDS[slug] || []).map(([label, ziel]) => [label, ziel]),
     actors: D.ACTORS[slug] === undefined ? []
@@ -1525,7 +2931,7 @@ function texteLesen(slug) {
 
 const gleich = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
-/* Alles, was zu einer Figur an Text gehört, in einem Schritt. Drei
+/* Alles, was zu einer Figur an Text gehört, in einem Schritt. Vier
    Dateien sind daran beteiligt, und sie gehören zusammen: Wer die
    Biografie ergänzt und dabei die Kräfte nachträgt, hat einen Gedanken
    gefasst und nicht zwei.
@@ -1544,6 +2950,14 @@ function texteSchreiben(auftrag) {
   for (const [titel, text] of profil) {
     if (!titel) throw new Error('Jeder Abschnitt braucht eine Überschrift.');
     if (!text) throw new Error(`Der Abschnitt „${titel}“ hat keinen Text.`);
+  }
+
+  const kraefte = (auftrag.kraefte || [])
+    .map(([name, text]) => [einzeilig(name), einzeilig(text)])
+    .filter(([name, text]) => name || text);
+  for (const [name, text] of kraefte) {
+    if (!name) throw new Error('Jede Fähigkeit braucht einen Namen.');
+    if (!text) throw new Error(`Die Fähigkeit „${name}“ hat keinen Text.`);
   }
 
   const bonds = (auftrag.bonds || [])
@@ -1595,7 +3009,13 @@ function texteSchreiben(auftrag) {
     bondZeilen(slug, bonds), ordnung);
   if (nachBonds !== null) factsNeu = nachBonds;
 
-  const geaendert = [dataNeu, profilNeu, factsNeu].some((q) => q !== null);
+  /* js/powers.js: die Kräfte mit Namen und Absatz */
+  const powersAlt = fs.readFileSync(POWERS, 'utf8');
+  const powersNeu = setzeEintrag(powersAlt, 'CHAR_POWERS', 'js/powers.js', slug,
+    powersZeilen(slug, kraefte), ordnung);
+
+  const geaendert = [dataNeu, profilNeu, factsNeu, powersNeu]
+    .some((q) => q !== null);
   if (!geaendert) return { geaendert: false };
 
   /* Probe: laden und nachsehen, ob genau das dasteht, was gewollt war. */
@@ -1606,7 +3026,9 @@ function texteSchreiben(auftrag) {
     fs.readFileSync(CHARS, 'utf8'),
     profilNeu === null ? profilAlt : profilNeu,
     factsNeu === null ? factsAlt : factsNeu,
-    ';globalThis.PROBE = { BIOS, ACTORS, PROFILES, CHAR_FACTS_EXTRA, CHAR_BONDS };',
+    powersNeu === null ? powersAlt : powersNeu,
+    ';globalThis.PROBE = { BIOS, ACTORS, PROFILES, CHAR_FACTS_EXTRA, CHAR_BONDS,'
+      + ' CHAR_POWERS };',
   ].join('\n'), ctx, { filename: 'texte-probe.js' });
 
   const P = ctx.PROBE;
@@ -1623,6 +3045,7 @@ function texteSchreiben(auftrag) {
     ['Steckbrief', P.CHAR_FACTS_EXTRA[slug],
       Object.keys(sollHand).length ? sollHand : undefined],
     ['Beziehungen', P.CHAR_BONDS[slug], bonds.length ? bonds : undefined],
+    ['Fähigkeiten', P.CHAR_POWERS[slug], kraefte.length ? kraefte : undefined],
   ];
   for (const [was, ist, soll] of proben) {
     if (!gleich(ist, soll)) {
@@ -1635,13 +3058,182 @@ function texteSchreiben(auftrag) {
   fs.mkdirSync(SICHERUNG, { recursive: true });
   const dateien = [];
   for (const [pfad, neu, name] of [[DATA, dataNeu, 'js/data.js'],
-    [PROFILES, profilNeu, 'js/profiles.js'], [FACTS, factsNeu, 'js/facts.js']]) {
+    [PROFILES, profilNeu, 'js/profiles.js'], [FACTS, factsNeu, 'js/facts.js'],
+    [POWERS, powersNeu, 'js/powers.js']]) {
     if (neu === null) continue;
     sichereQuelle(pfad, stempel);
     fs.writeFileSync(pfad, neu, 'utf8');
     dateien.push(name);
   }
   return { geaendert: true, dateien };
+}
+
+/* ---------- Die Begriffe der Beziehungen ----------
+
+   Die Bezeichnung einer Beziehung ist Freitext, aber sie ist selten neu.
+   „Weggefährte“ steht bei über siebzig Figuren, „Bruder“ bei siebzehn,
+   und wer sie jedes Mal von Hand tippt, hat am Ende „Weggefährte“ und
+   „Wegefährte“ nebeneinander stehen, ohne dass es jemandem auffiele.
+   Deshalb führt das Studio eine Liste, aus der sich ein Begriff neben
+   dem Feld auswählen lässt.
+
+   Sie hat zwei Quellen und wird trotzdem nicht doppelt geführt.
+   Gezählt wird, was in CHAR_BONDS wirklich steht, denn ein benutzter
+   Begriff braucht keinen zweiten Ort. bond-labels.json daneben hält nur
+   die Begriffe, die bei keiner Figur stehen, also gerade erst getippt
+   wurden. Sobald einer davon bei einer Figur landet, fällt er aus der
+   Datei heraus und kommt aus js/facts.js.
+
+   Umbenennen geht quer durch alle Figuren: Der Begriff steht bei jeder
+   einzeln, ein Tippfehler wäre sonst dreißigmal von Hand zu holen.
+   Geschrieben wird dabei Eintrag für Eintrag mit denselben Zeilen wie
+   beim Speichern einer Figur, alles andere in der Datei bleibt Zeichen
+   für Zeichen stehen. */
+const BEGRIFFE = path.join(HIER, 'bond-labels.json');
+
+const BEGRIFF_HINWEIS = 'Bezeichnungen für Beziehungen, die im Porträt-Studio '
+  + 'getippt, aber noch bei keiner Figur benutzt wurden. Was benutzt ist, steht '
+  + 'in CHAR_BONDS in js/facts.js und wird von dort gezählt.';
+
+/* Die freien Begriffe, so wie sie in der Datei stehen. */
+function begriffeFrei() {
+  try {
+    const daten = JSON.parse(fs.readFileSync(BEGRIFFE, 'utf8'));
+    return (daten.begriffe || []).map(einzeilig).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function begriffeFreiSchreiben(liste) {
+  const sortiert = [...new Set(liste)].sort((a, b) => a.localeCompare(b, 'de'));
+  fs.writeFileSync(BEGRIFFE,
+    JSON.stringify({ _hinweis: BEGRIFF_HINWEIS, begriffe: sortiert }, null, 2) + '\n',
+    'utf8');
+}
+
+/* Begriff -> wie oft er bei einer Figur steht. */
+function begriffeBenutzt() {
+  const zahl = new Map();
+  for (const liste of Object.values(ladeDaten().CHAR_BONDS)) {
+    for (const [label] of liste) zahl.set(label, (zahl.get(label) || 0) + 1);
+  }
+  return zahl;
+}
+
+/* Die ganze Liste für das Studio. Ganz oben stehen die frisch getippten,
+   die noch bei keiner Figur stehen: Es sind wenige, sie sind eben erst
+   entstanden, und weiter unten fänden sie sich in zweihundert Begriffen
+   nicht wieder. Darunter die häufigsten, denn nach denen wird am ehesten
+   gegriffen, und bei gleicher Zahl entscheidet das Alphabet. */
+function begriffeListe() {
+  const zahl = begriffeBenutzt();
+  const raus = [...zahl].map(([name, anzahl]) => ({ name, anzahl }));
+  for (const name of begriffeFrei()) {
+    if (!zahl.has(name)) raus.push({ name, anzahl: 0 });
+  }
+  const neu = (b) => (b.anzahl ? 0 : 1);
+  raus.sort((a, b) => neu(b) - neu(a)
+    || b.anzahl - a.anzahl
+    || a.name.localeCompare(b.name, 'de'));
+  return raus;
+}
+
+function begriffPruefen(wort) {
+  const kurz = einzeilig(wort);
+  if (!kurz) throw new Error('Ein Begriff ohne Wort ist keiner.');
+  if (kurz.length > 40) throw new Error('Ein Begriff hat höchstens vierzig Zeichen.');
+  return kurz;
+}
+
+/* Einen getippten Begriff merken. Er steht damit zur Auswahl, noch bevor
+   er bei einer Figur gespeichert ist. */
+function begriffMerken(wort) {
+  const kurz = begriffPruefen(wort);
+  if (begriffeBenutzt().has(kurz)) return { geaendert: false, name: kurz };
+  const frei = begriffeFrei();
+  if (frei.includes(kurz)) return { geaendert: false, name: kurz };
+  begriffeFreiSchreiben([...frei, kurz]);
+  return { geaendert: true, name: kurz };
+}
+
+/* Einen Begriff aus der Liste nehmen, solange er bei keiner Figur steht.
+   Was benutzt ist, verschwindet mit der Beziehung und nicht mit der
+   Liste. */
+function begriffVergessen(wort) {
+  const kurz = begriffPruefen(wort);
+  const anzahl = begriffeBenutzt().get(kurz) || 0;
+  if (anzahl) {
+    throw new Error(`„${kurz}“ steht bei ${anzahl} Figur${anzahl === 1 ? '' : 'en'} `
+      + 'und bleibt deshalb in der Liste.');
+  }
+  const frei = begriffeFrei();
+  if (!frei.includes(kurz)) return { geaendert: false };
+  begriffeFreiSchreiben(frei.filter((b) => b !== kurz));
+  return { geaendert: true };
+}
+
+/* Einen Begriff bei allen Figuren umbenennen. Trägt eine Figur den alten
+   Begriff mehrfach, werden alle Zeilen mitgenommen, und trifft der neue
+   auf einen, den es schon gibt, laufen beide zusammen. Geprüft wird vor
+   dem Schreiben: Die neue Fassung wird geladen und muss den alten
+   Begriff nirgends mehr tragen. */
+function begriffUmbenennen(alt, neu) {
+  const von = begriffPruefen(alt);
+  const nach = begriffPruefen(neu);
+  if (von === nach) return { geaendert: false };
+
+  const D = ladeDaten();
+  const ordnung = reihenfolge(D);
+  const vorher = begriffeBenutzt();
+  const alteQuelle = fs.readFileSync(FACTS, 'utf8');
+  let quelle = alteQuelle;
+  let figuren = 0;
+  let stellen = 0;
+  for (const [slug, liste] of Object.entries(D.CHAR_BONDS)) {
+    const treffer = liste.filter(([label]) => label === von).length;
+    if (!treffer) continue;
+    const paare = liste.map(([label, ziel]) => [label === von ? nach : label, ziel]);
+    const geschrieben = setzeEintrag(quelle, 'CHAR_BONDS', 'js/facts.js', slug,
+      bondZeilen(slug, paare), ordnung);
+    if (geschrieben === null) continue;
+    quelle = geschrieben;
+    figuren += 1;
+    stellen += treffer;
+  }
+
+  /* Der alte Begriff fällt aus der Datei, der neue kommt nur dann
+     hinein, wenn er bei keiner Figur steht: Was benutzt ist, kommt aus
+     js/facts.js und gehört nicht auch noch hierher. */
+  const frei = begriffeFrei();
+  const freiNeu = frei.filter((b) => b !== von && b !== nach);
+  if (!stellen && frei.includes(von) && !vorher.has(nach)) freiNeu.push(nach);
+  const freiGeaendert = !gleich(frei, freiNeu);
+
+  if (quelle === alteQuelle) {
+    if (!freiGeaendert) return { geaendert: false };
+    begriffeFreiSchreiben(freiNeu);
+    return { geaendert: true, figuren: 0, stellen: 0 };
+  }
+
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(quelle + '\n;globalThis.PROBE = { CHAR_BONDS };', ctx,
+    { filename: 'begriff-probe.js' });
+  const jetzt = new Map();
+  for (const liste of Object.values(ctx.PROBE.CHAR_BONDS)) {
+    for (const [label] of liste) jetzt.set(label, (jetzt.get(label) || 0) + 1);
+  }
+  if (jetzt.get(von) || (jetzt.get(nach) || 0) !== (vorher.get(nach) || 0) + stellen) {
+    throw new Error('Die neue Fassung von js/facts.js trägt nicht das Erwartete. '
+      + 'Es wurde nichts geschrieben.');
+  }
+
+  fs.mkdirSync(SICHERUNG, { recursive: true });
+  sichereQuelle(FACTS, stempelJetzt());
+  fs.writeFileSync(FACTS, quelle, 'utf8');
+  if (freiGeaendert) begriffeFreiSchreiben(freiNeu);
+  return { geaendert: true, figuren, stellen };
 }
 
 /* ---------- Der Steckbrief aus den Wikis ----------
@@ -1916,6 +3508,7 @@ function stelleHer(n, teil, stand, praefixe) {
   for (const b of stand.bilder) {
     fs.copyFileSync(path.join(quelle, b.name), path.join(ORDNER[b.ordner], b.datei + '.webp'));
   }
+  bilderVergessen();
 }
 
 function verwerfe(n) {
@@ -1951,6 +3544,11 @@ function mitVerlauf(titel, quellen, praefixe, tun) {
   } catch (fehler) {
     verwerfe(rahmen.n);
     throw fehler;
+  } finally {
+    /* Der Eingriff hat womöglich Bilder angelegt, umbenannt oder
+       weggeräumt. Was danach nach den Figuren fragt, soll den neuen
+       Stand sehen und nicht den von eben. */
+    bilderVergessen();
   }
   if (ergebnis && ergebnis.geaendert === false) {
     verwerfe(rahmen.n);
@@ -1971,6 +3569,8 @@ async function mitVerlaufAsync(titel, quellen, praefixe, tun) {
   } catch (fehler) {
     verwerfe(rahmen.n);
     throw fehler;
+  } finally {
+    bilderVergessen();
   }
   if (ergebnis && ergebnis.geaendert === false) {
     verwerfe(rahmen.n);
@@ -2855,6 +4455,67 @@ function uploadAblegen(daten, name) {
   return id;
 }
 
+/* ---------- Urfassungen ----------
+
+   Beim Ganzkörperbild ist die Fassung ihre eigene Vorlage, und beim
+   Porträt kann das bestehende Bild die Vorlage sein. Speichern schreibt
+   dann in genau die Datei, aus der die Bühne ihre Pixel hat.
+
+   Beim zweiten Speichern stünde dort schon das Ergebnis des ersten, und
+   derselbe Ausschnitt griffe ein zweites Mal zu: Wer den Rahmen nach
+   rechts erweitert, sähe die Figur bei jedem Speichern ein Stück weiter
+   nach links rutschen, obwohl die Vorschau stillsteht. Die Bühne merkt
+   davon nichts, sie hat ihre Vorlage längst im Speicher.
+
+   Deshalb legt der Server die Datei beiseite, bevor er sie das erste Mal
+   überschreibt, und schneidet von da an aus dieser Urfassung. Solange die
+   Bühne dieselben Pixel zeigt, trifft jeder Zuschnitt damit dieselbe
+   Fläche wie der erste, und zweimal dasselbe Speichern ergibt zweimal
+   dieselbe Datei.
+
+   Woran der Server das erkennt, ist die Marke: eine Zahl, die die Bühne
+   neu würfelt, sobald sie eine Vorlage frisch von der Platte lädt. Eine
+   neue Marke heißt, dass die Bühne den gespeicherten Stand sieht, und
+   dann ist die beiseitegelegte Fassung nicht mehr die richtige. */
+
+const GRENZE_URFASSUNGEN = 24;   // ältere fallen mitsamt Datei heraus
+const urfassungen = new Map();   // marke -> { schluessel, pfad }
+
+const urfassungSchluessel = (quelle) => quelle.typ + ':' + quelle.name;
+
+/* Die beiseitegelegte Fassung zu dieser Marke, sofern sie zu derselben
+   Vorlage gehört und noch auf der Platte liegt. */
+function urfassung(quelle) {
+  if (!quelle || !quelle.marke) return null;
+  const eintrag = urfassungen.get(quelle.marke);
+  if (!eintrag || eintrag.schluessel !== urfassungSchluessel(quelle)) return null;
+  if (fs.existsSync(eintrag.pfad)) return eintrag.pfad;
+  urfassungen.delete(quelle.marke);
+  return null;
+}
+
+/* Die Vorlage beiseitelegen, bevor das Ziel sie überschreibt, und den
+   Weg dorthin melden. Ohne Marke gibt es nichts festzuhalten, dann
+   bleibt es beim Pfad der Datei selbst. */
+function bewahreUrfassung(quelle, pfad) {
+  const schon = urfassung(quelle);
+  if (schon) return schon;
+  if (!quelle || !quelle.marke) return pfad;
+  fs.mkdirSync(URFASSUNGEN, { recursive: true });
+  const ziel = path.join(URFASSUNGEN, neueId() + path.extname(pfad));
+  fs.copyFileSync(pfad, ziel);
+  urfassungen.set(quelle.marke, { schluessel: urfassungSchluessel(quelle), pfad: ziel });
+  /* Map hält die Reihenfolge des Eintragens, vorne steht also die
+     älteste. Sie geht mitsamt ihrer Datei, sonst wüchse der Ordner im
+     Temp-Verzeichnis über eine lange Sitzung immer weiter. */
+  while (urfassungen.size > GRENZE_URFASSUNGEN) {
+    const [marke, alt] = urfassungen.entries().next().value;
+    urfassungen.delete(marke);
+    try { fs.unlinkSync(alt.pfad); } catch { /* schon weg, auch recht */ }
+  }
+  return ziel;
+}
+
 /* ---------- Quelle auflösen ----------
 
    Nur Dateien aus den beiden Bildordnern und frisch hochgeladene Bilder
@@ -2872,6 +4533,11 @@ function quellePfad(quelle) {
     if (!/^[a-z0-9-]+$/.test(quelle.name || '')) throw new Error('Ungültige Quelle.');
     const gk = quelle.typ === 'fullsize';
     const pfad = path.join(gk ? FULLSIZE : PORTRAITS, quelle.name + '.webp');
+    /* Hat diese Bühne die Datei schon einmal überschrieben, liegt das,
+       was sie zeigt, beiseite. Von dort kommt es dann auch, sonst
+       rechnete jeder weitere Schnitt auf dem eigenen Ergebnis weiter. */
+    const bewahrt = urfassung(quelle);
+    if (bewahrt) return { pfad: bewahrt, vorlage: quelle.name + '.webp' };
     if (!fs.existsSync(pfad)) {
       throw new Error((gk ? 'Ganzkörperbild fehlt: ' : 'Porträt fehlt: ') + quelle.name);
     }
@@ -2929,6 +4595,8 @@ function sichern(datei, gk) {
 const SICHERUNG_QUELLEN = {
   chars: 'js/chars.js',
   'chars.js': 'js/chars.js',
+  looks: 'js/looks.js',
+  'looks.js': 'js/looks.js',
   'data.js': 'js/data.js',
   'profiles.js': 'js/profiles.js',
   'facts.js': 'js/facts.js',
@@ -3101,15 +4769,40 @@ function sicherungLoeschen({ namen, alle, veraltet }) {
   return { geloescht: weg.length, frei };
 }
 
-/* Die Liste der offenen Porträts neu schreiben. Der Nutzer erwartet sie
-   nach jedem Austausch aktuell, siehe pending-portraits.js nebenan. */
+/* ---------- Die Liste der offenen Porträts ----------
+
+   Sie steht als Textdatei in assets/ersetzen und wird nach jedem
+   Austausch neu geschrieben, siehe pending-portraits.js nebenan.
+
+   Dafür startet ein eigenes Node, und das kostet gemessen knapp drei
+   Zehntelsekunden. Bis hierher wartete jedes gespeicherte Porträt
+   darauf, obwohl aus dem ganzen Lauf nur eine Zeile für die Meldung
+   gebraucht wird: „189 gesamt, 142 ersetzt, 47 offen“.
+
+   Deshalb läuft er jetzt nebenher. Die Antwort trägt die Zeile vom
+   letzten Lauf – die stimmt bis auf das eine Bild, das gerade geschnitten
+   wurde – und wer schnell hintereinander speichert, löst nicht jedes Mal
+   einen neuen Lauf aus: Eine kurze Sammelpause macht daraus einen. */
+let listeZeile = null;
+let listeLaeuft = false;
+let listeNochmal = false;
+let listePause = null;
+
+function listeSchreiben() {
+  if (listeLaeuft) { listeNochmal = true; return; }
+  listeLaeuft = true;
+  execFile(process.execPath, [path.join(HIER, 'pending-portraits.js')],
+    { cwd: REPO, timeout: 60000 }, (fehler, aus) => {
+      listeLaeuft = false;
+      if (!fehler) listeZeile = (aus || '').trim().split('\n')[0];
+      if (listeNochmal) { listeNochmal = false; listeSchreiben(); }
+    });
+}
+
 function listeErneuern() {
-  return new Promise((fertig) => {
-    execFile(process.execPath, [path.join(HIER, 'pending-portraits.js')],
-      { cwd: REPO, timeout: 60000 }, (fehler, aus) => {
-        fertig(fehler ? null : (aus || '').trim().split('\n')[0]);
-      });
-  });
+  clearTimeout(listePause);
+  listePause = setTimeout(listeSchreiben, 250);
+  return listeZeile;
 }
 
 /* ---------- Läuft hier noch die Fassung von vorhin? ----------
@@ -3148,11 +4841,43 @@ function mtime(name) {
   try { return fs.statSync(path.join(HIER, name)).mtimeMs; } catch { return 0; }
 }
 
+/* Ein Zeitpunkt allein rückt auch dann weiter, wenn niemand etwas
+   geändert hat: Der Abgleich von OneDrive fasst Dateien an, ein Editor
+   ebenso. Das Studio lud dann mitten in der Arbeit neu, und ein
+   laufender Zuschnitt verlor dabei seine Anzeige.
+
+   Deshalb entscheidet der Inhalt. Gelesen wird er nur, wenn Zeitpunkt
+   oder Länge sich bewegt haben, sonst steht die Antwort ohnehin fest. */
+const abdruecke = new Map();   // Name -> { mtimeMs, size, hash }
+
+function abdruck(namen) {
+  return namen.map((name) => {
+    const pfad = path.join(HIER, name);
+    let s;
+    try { s = fs.statSync(pfad); } catch { abdruecke.delete(name); return name + ':-'; }
+    const gemerkt = abdruecke.get(name);
+    if (gemerkt && gemerkt.mtimeMs === s.mtimeMs && gemerkt.size === s.size) {
+      return `${name}:${gemerkt.hash}`;
+    }
+    let hash;
+    try {
+      hash = crypto.createHash('sha1').update(fs.readFileSync(pfad)).digest('hex');
+    } catch { abdruecke.delete(name); return name + ':-'; }
+    abdruecke.set(name, { mtimeMs: s.mtimeMs, size: s.size, hash });
+    return `${name}:${hash}`;
+  }).join('|');
+}
+
+/* Wie die Serverdateien beim Start dastanden. Auch hier zählt der
+   Abdruck und nicht der Zeitpunkt, sonst meldete jeder Abgleich von
+   OneDrive, der Server laufe mit veralteten Dateien. */
+const SERVER_ABDRUCK = new Map(SERVERDATEIEN.map((name) => [name, abdruck([name])]));
+
 function standDesStudios() {
   return {
     start: START,
-    serverAlt: SERVERDATEIEN.filter((name) => mtime(name) > START),
-    seite: Math.max(...SEITENDATEIEN.map(mtime)),
+    serverAlt: SERVERDATEIEN.filter((name) => abdruck([name]) !== SERVER_ABDRUCK.get(name)),
+    seite: abdruck(SEITENDATEIEN),
     stil: mtime(STILDATEI),
   };
 }
@@ -3640,11 +5365,16 @@ const server = http.createServer(async (req, res) => {
     if (weg === '/api/figuren') {
       const figuren = baueFiguren();
       return sende(res, 200, {
-        figuren, zaehler: zaehlen(figuren), python: PYTHON_INFO,
+        figuren, welten: ladeDaten().CHAR_WORLDS.slice(),
+        zaehler: zaehlen(figuren), python: PYTHON_INFO,
         engine: ENGINE_INFO, gesicht: GESICHT_INFO, frei: FREI_INFO,
         /* Wie viele Figuren im erzeugten Steckbrief-Block noch fehlen.
            Der Knopf im Reiter Biografie trägt die Zahl. */
         wikiOffen: wikiOffen().length,
+        /* Die Bezeichnungen der Beziehungen, siehe begriffeListe(). Sie
+           kommen mit den Figuren, damit die Auswahl neben dem Feld schon
+           beim ersten Aufschlagen steht. */
+        begriffe: begriffeListe(),
         verlauf: verlaufStand(), stand: standDesStudios(),
       });
     }
@@ -3681,7 +5411,12 @@ const server = http.createServer(async (req, res) => {
 
     /* --- Vorschlag: Kopf beim Porträt, Rand beim Ganzkörperbild --- */
     if (weg === '/api/auto') {
-      const quelle = { typ: url.searchParams.get('typ'), name: url.searchParams.get('name'), id: url.searchParams.get('id') };
+      const quelle = {
+        typ: url.searchParams.get('typ'),
+        name: url.searchParams.get('name'),
+        id: url.searchParams.get('id'),
+        marke: url.searchParams.get('marke'),
+      };
       const { pfad } = quellePfad(quelle);
       const gk = url.searchParams.get('bereich') === 'ganzkoerper';
       const befehl = gk ? 'rand' : 'analyse';
@@ -3710,7 +5445,7 @@ const server = http.createServer(async (req, res) => {
         },
       );
       /* Die Textliste kennt nur die Porträts. */
-      const bericht = auftrag.bereich === 'ganzkoerper' ? null : await listeErneuern();
+      const bericht = auftrag.bereich === 'ganzkoerper' ? null : listeErneuern();
       return sende(res, 200, {
         ok: true,
         markiert: menge.has(auftrag.ziel),
@@ -3728,7 +5463,7 @@ const server = http.createServer(async (req, res) => {
     if (weg === '/api/sicherung/zurueck' && req.method === 'POST') {
       const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
       const ergebnis = sicherungZurueck(auftrag.name);
-      const liste = await listeErneuern();
+      const liste = listeErneuern();
       return sende(res, 200, {
         ok: true, ziel: ergebnis.ziel, liste,
         verlauf: verlaufStand(), zaehler: zaehlen(baueFiguren()),
@@ -3759,7 +5494,7 @@ const server = http.createServer(async (req, res) => {
       const titel = await mitFortschritt(
         auftrag.richtung === 'vor' ? 'Wiederholen' : 'Rückgängig', 'verlauf',
         async () => verlaufGehen(auftrag.richtung === 'vor' ? 'vor' : 'zurueck'));
-      const liste = await listeErneuern();
+      const liste = listeErneuern();
       return sende(res, 200, {
         ok: true, titel, liste, verlauf: verlaufStand(), zaehler: zaehlen(baueFiguren()),
       });
@@ -3781,6 +5516,50 @@ const server = http.createServer(async (req, res) => {
         }
       }
       return sende(res, 200, { filme });
+    }
+
+    /* --- Neue Welt --- */
+    if (weg === '/api/welt' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = mitVerlauf(`Welt angelegt: ${auftrag.name}`,
+        ['js/chars.js'], [], () => weltAnlegen(auftrag.name));
+      return sende(res, 200, {
+        ok: true, ...ergebnis, welten: ladeDaten().CHAR_WORLDS.slice(),
+        verlauf: verlaufStand(),
+      });
+    }
+
+    /* --- Welt wieder streichen --- */
+    if (weg === '/api/welt/loeschen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = mitVerlauf(`Welt gestrichen: ${auftrag.name}`,
+        ['js/chars.js'], [], () => weltLoeschen(auftrag.name));
+      return sende(res, 200, {
+        ok: true, ...ergebnis, welten: ladeDaten().CHAR_WORLDS.slice(),
+        verlauf: verlaufStand(),
+      });
+    }
+
+    /* --- Figur löschen ---
+
+       Der Schritt fasst fünf Quelldateien und alle Bilder der Figur an,
+       deshalb geht er als Ganzes in den Verlauf: Ein Rückgängig holt sie
+       vollständig zurück. */
+    if (weg === '/api/figur/loeschen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const figur = baueFiguren().find((f) => f.slug === auftrag.slug);
+      if (!figur) return sende(res, 400, { fehler: 'Unbekannte Figur: ' + auftrag.slug });
+      const ergebnis = mitVerlauf(`Figur gelöscht: ${figur.ueberschrift}`,
+        ['js/data.js', 'js/chars.js', 'js/looks.js', 'js/profiles.js', 'js/facts.js',
+          'js/powers.js'],
+        [auftrag.slug], () => figurLoeschen(auftrag.slug));
+      return sende(res, 200, {
+        ok: true, ...ergebnis,
+        zaehler: zaehlen(baueFiguren()),
+        liste: listeErneuern(),
+        verlauf: verlaufStand(),
+        stand: standDesStudios(),
+      });
     }
 
     /* --- Neue Figur --- */
@@ -3810,7 +5589,7 @@ const server = http.createServer(async (req, res) => {
         /* Der Schlüsselwechsel benennt Bilder um, deshalb beide Präfixe. */
         const neuerSlug = ziel ? charSlugRoh(ziel) : auftrag.slug;
         ergebnis = mitVerlauf(`Schlüssel geändert: ${auftrag.slug}`,
-          ['js/data.js', 'js/chars.js', 'js/profiles.js', 'js/facts.js'],
+          ['js/data.js', 'js/chars.js', 'js/looks.js', 'js/profiles.js', 'js/facts.js'],
           [auftrag.slug, neuerSlug],
           () => aliasAendern(auftrag.slug, figur.namen, ziel));
       } else {
@@ -3874,7 +5653,42 @@ const server = http.createServer(async (req, res) => {
         ...ergebnis,
         texte: (figuren.find((f) => f.slug === auftrag.slug) || {}).texte || null,
         zaehler: zaehlen(figuren),
+        /* Eine gespeicherte Beziehung verschiebt die Zahlen in der Liste
+           der Begriffe, deshalb geht sie gleich mit zurück. */
+        begriffe: begriffeListe(),
         verlauf: verlaufStand(),
+      });
+    }
+
+    /* --- Die Begriffe der Beziehungen ---
+
+       Lesen, einen neuen merken, einen streichen, einen umbenennen. Nur
+       das Umbenennen fasst js/facts.js an und wird deshalb als einziges
+       ein Schritt im Verlauf. */
+    if (weg === '/api/begriffe' && req.method === 'GET') {
+      return sende(res, 200, { begriffe: begriffeListe() });
+    }
+
+    if (weg === '/api/begriffe' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = begriffMerken(auftrag.name);
+      return sende(res, 200, { ok: true, ...ergebnis, begriffe: begriffeListe() });
+    }
+
+    if (weg === '/api/begriffe/loeschen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = begriffVergessen(auftrag.name);
+      return sende(res, 200, { ok: true, ...ergebnis, begriffe: begriffeListe() });
+    }
+
+    if (weg === '/api/begriffe/umbenennen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = mitVerlauf(
+        `Begriff umbenannt: ${einzeilig(auftrag.alt)} zu ${einzeilig(auftrag.neu)}`,
+        ['js/facts.js', 'tools/portrait-studio/bond-labels.json'], [],
+        () => begriffUmbenennen(auftrag.alt, auftrag.neu));
+      return sende(res, 200, {
+        ok: true, ...ergebnis, begriffe: begriffeListe(), verlauf: verlaufStand(),
       });
     }
 
@@ -3907,28 +5721,110 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    /* --- Fassungen anlegen, umbenennen, verschieben, löschen --- */
+    /* --- Fassungen anlegen, umbenennen, verschieben, löschen, einem
+           Film zuordnen, und ihre Varianten sortieren, anhängen und
+           lösen --- */
     if (weg === '/api/fassung' && req.method === 'POST') {
       const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
       const figuren = baueFiguren();
-      if (!figuren.some((f) => f.slug === auftrag.slug)) {
+      const meine = figuren.find((f) => f.slug === auftrag.slug);
+      if (!meine) {
         return sende(res, 400, { fehler: 'Unbekannte Figur: ' + auftrag.slug });
       }
-      if (auftrag.aktion !== 'neu' && !zielErlaubt(auftrag.datei, 'ganzkoerper')) {
+      /* Geprüft wird gegen die Fassungen genau dieser Figur, und der
+         Stamm zählt mit: Die Eingriffe an einer Fassung nennen ihn, denn
+         eine Fassung mit Varianten liegt unter mehreren Dateinamen und
+         unter ihrem eigenen gar nicht mehr. */
+      const bekannt = auftrag.aktion === 'neu' || meine.ganzkoerper.some(
+        (z) => z.datei === auftrag.datei || z.stamm === auftrag.datei);
+      if (!bekannt) {
         return sende(res, 400, { fehler: 'Unbekannte Fassung: ' + auftrag.datei });
       }
       const wort = {
         neu: 'angelegt', umbenennen: 'umbenannt', verschieben: 'verschoben',
-        standard: 'nach vorn', loeschen: 'gelöscht',
+        standard: 'nach vorn', loeschen: 'gelöscht', film: 'einem Film zugeordnet',
+        'variante-neu': 'um eine Variante erweitert', 'variante-weg': 'um eine Variante gekürzt',
+        'variante-hoch': 'Variante nach vorn', 'variante-runter': 'Variante nach hinten',
+        'zu-variante': 'als Variante angehängt', 'zu-fassung': 'aus einer Variante gelöst',
       }[auftrag.aktion] || auftrag.aktion;
+      /* In den Verlauf geht nur, was der Eingriff auch anfassen kann.
+         Beim Umbenennen zieht die Bilddatei mit, dazu die
+         Offen-Markierung und die Quellenangabe, und beim Löschen wandert
+         das Bild in die Sicherung. Verschieben, Vorreihen und die
+         Filmzuordnung ändern allein eine Zeile in chars.js, siehe
+         dateiUmbenennen() und fassungAendern().
+
+         Das ist kein Feinschliff. Der Schnappschuss kopiert jede genannte
+         Datei, und zwar zweimal, einmal vorher und einmal nachher. Bei
+         einer Figur mit fünf Fassungen war das rund ein Megabyte, das für
+         jedes Verschieben um einen Platz über OneDrive ging. */
+      const wandertMehr = ['umbenennen', 'loeschen', 'variante-neu', 'variante-weg',
+        'variante-hoch', 'variante-runter', 'zu-variante', 'zu-fassung']
+        .includes(auftrag.aktion);
       const ergebnis = mitVerlauf(
         `Fassung ${wort}: ${auftrag.label || auftrag.datei}`,
-        ['js/chars.js', 'tools/portrait-studio/offen.json',
-          'assets/characters/fullsize/CREDITS.md'],
-        [auftrag.slug],
+        wandertMehr
+          ? ['js/chars.js', 'js/looks.js', 'tools/portrait-studio/offen.json',
+            'assets/characters/fullsize/CREDITS.md']
+          : ['js/chars.js'],
+        wandertMehr ? [auftrag.slug] : [],
         () => fassungAendern(auftrag),
       );
-      return sende(res, 200, { ok: true, ...ergebnis, zaehler: zaehlen(baueFiguren()), verlauf: verlaufStand() });
+      /* Die eine Figur geht mit zurück. Vorher holte sich die Oberfläche
+         danach alle vierhundert neu und baute ihre ganze Liste noch
+         einmal auf, nur weil eine Fassung ihren Namen gewechselt hatte:
+         ein Weg über vierhundert Kilobyte für eine Zeile. */
+      const frisch = baueFiguren().find((f) => f.slug === auftrag.slug) || null;
+      return sende(res, 200, {
+        ok: true, ...ergebnis, figur: frisch,
+        zaehler: zaehlen(baueFiguren()), verlauf: verlaufStand(),
+      });
+    }
+
+    /* --- Der Satz zu einer Fassung ---
+
+       Geschrieben wird in js/looks.js, geschlüsselt nach der Fassung und
+       nicht nach der Figur: Eine Figur hat so viele Sätze wie Fassungen.
+       Ein leerer Text nimmt den Eintrag wieder heraus, dann springt auf
+       der Charakterseite die Zusammenfassung des Films ein. */
+    if (weg === '/api/beschreibung' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const meine = baueFiguren().find((f) => f.slug === auftrag.slug);
+      if (!meine) {
+        return sende(res, 400, { fehler: 'Unbekannte Figur: ' + auftrag.slug });
+      }
+      /* Geprüft wird gegen die Fassungen genau dieser Figur, und der
+         Stamm zählt mit: Der Satz gehört der Fassung, nicht der einzelnen
+         Aufnahme, und wird deshalb im Regelfall unter dem Stamm
+         geschrieben. */
+      const ziel = meine.ganzkoerper.find(
+        (z) => z.datei === auftrag.datei || z.stamm === auftrag.datei);
+      if (!ziel) {
+        return sende(res, 400, { fehler: 'Unbekannte Fassung: ' + auftrag.datei });
+      }
+      /* Ein Satz und keine Erzählung: Zeilenumbrüche fallen weg, und was
+         zu lang ist, passt unter der Tafel ohnehin nicht mehr. */
+      const text = String(auftrag.text || '').replace(/\s+/g, ' ').trim();
+      if (text.length > 400) {
+        return sende(res, 400, { fehler: 'Der Satz ist länger als 400 Zeichen.' });
+      }
+      /* Die übrigen Fassungen derselben Figur: An ihnen erkennt der
+         Schreiber, in welche Gruppe von js/looks.js der neue Satz
+         gehört. */
+      const geschwister = meine.ganzkoerper
+        .flatMap((z) => [z.datei, z.stamm]).filter(Boolean);
+      const ergebnis = mitVerlauf(
+        `Beschreibung ${text ? 'gesetzt' : 'gelöscht'}: ${ziel.label}`,
+        ['js/looks.js'], [],
+        /* Die Überschrift einer neuen Gruppe trägt die Welt mit: Gamora
+           und Gamora (2014) stünden sonst zweimal gleich in der Datei. */
+        () => setzeBeschreibung(auftrag.datei, text,
+          meine.welt ? `${meine.name} (${meine.welt})` : meine.name, geschwister),
+      );
+      const frisch = baueFiguren().find((f) => f.slug === auftrag.slug) || null;
+      return sende(res, 200, {
+        ok: true, ...ergebnis, figur: frisch, verlauf: verlaufStand(),
+      });
     }
 
     /* --- Körpergröße und Bildkorrektur setzen --- */
@@ -4008,8 +5904,14 @@ const server = http.createServer(async (req, res) => {
       if (!zielErlaubt(auftrag.ziel, auftrag.bereich)) {
         return sende(res, 400, { fehler: 'Unbekanntes Ziel: ' + auftrag.ziel });
       }
-      const { pfad, vorlage } = quellePfad(auftrag.quelle);
+      const { pfad: quellpfad, vorlage } = quellePfad(auftrag.quelle);
       const zieldatei = path.join(gk ? FULLSIZE : PORTRAITS, auftrag.ziel + '.webp');
+      /* Geht der Schnitt in die Datei zurück, aus der er kommt, wandert
+         sie jetzt beiseite: Die Bühne zeigt noch diese Pixel, und der
+         nächste Schnitt derselben Bühne soll sie wieder treffen. */
+      const pfad = path.resolve(quellpfad) === path.resolve(zieldatei)
+        ? bewahreUrfassung(auftrag.quelle, quellpfad)
+        : quellpfad;
       /* Die Bühne misst ihren Ausschnitt in der gedrehten Fläche, also
          wird hier erst gedreht und dann geschnitten. */
       const winkel = grad(auftrag.winkel);
@@ -4040,8 +5942,15 @@ const server = http.createServer(async (req, res) => {
          und die Größe bleibt, wie sie war. Das Bild ist ja richtig, die
          Zahl daneben nicht, und ein zurückgewiesenes Speichern hülfe hier
          niemandem. */
+      /* Die Schwebe gehört zum Zuschnitt und nicht zu den Reglern: Sie
+         sagt, welcher Anteil der geschnittenen Datei unter der Figur
+         leer ist, und die Bühne hat sie an den durchsichtigen Pixeln
+         gemessen. Deshalb kommt sie hier mit und nicht über /api/skala. */
+      const schwebe = gk
+        ? Math.max(0, Math.min(0.9, runde3(auftrag.schwebe || 0)))
+        : 0;
       const groesse = gk && auftrag.skala !== undefined
-        ? { skala: runde(auftrag.skala), korrektur: runde(auftrag.korrektur ?? 1) }
+        ? { skala: runde(auftrag.skala), korrektur: runde(auftrag.korrektur ?? 1), schwebe }
         : null;
       let groesseFehler = null;
       if (groesse) {
@@ -4071,16 +5980,19 @@ const server = http.createServer(async (req, res) => {
         gk ? 'Ganzkörperbild speichern' : 'Porträt speichern',
         gk ? 'zuschnitt:ganzkoerper' : 'zuschnitt:portrait',
         () => python(args), megapixel(pfad));
+      /* Die Datei liegt jetzt anders da als eben. Ohne das hier meldete
+         die Antwort noch den Zustand von vorher. */
+      bilderVergessen();
       /* Neu geschnitten heißt erledigt: Eine Markierung von Hand hat sich
          damit erübrigt und fällt weg. */
       const menge = ladeMarkiert(auftrag.bereich);
       const warMarkiert = menge.delete(auftrag.ziel);
       if (warMarkiert) speichereMarkiert(auftrag.bereich, menge);
       const gesetzt = setztGroesse
-        && setzeSkala(auftrag.ziel, groesse.skala, groesse.korrektur).geaendert;
+        && setzeSkala(auftrag.ziel, groesse.skala, groesse.korrektur, groesse.schwebe).geaendert;
       verlaufAnhaengen(`${gk ? 'Ganzkörperbild' : 'Porträt'} gespeichert: ${auftrag.ziel}`
         + (gesetzt ? ' samt Größe' : ''), rahmen);
-      const bericht = gk ? null : await listeErneuern();
+      const bericht = gk ? null : listeErneuern();
       return sende(res, 200, {
         ...ergebnis,
         sicherung: sicherungspfad,

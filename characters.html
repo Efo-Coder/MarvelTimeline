@@ -1,5 +1,10 @@
 <!DOCTYPE html>
-<html lang="de">
+<!-- Die Klasse am <html> und nicht am <body>: Der weiße Grund muss schon
+     stehen, bevor der body überhaupt da ist, sonst blitzt zwischen dem
+     dunklen Grundton der Timeline und dieser Seite kurz Schwarz auf. Sie
+     schaltet zugleich das gesamte helle Stylesheet frei (siehe den Block
+     „Charakterseite" in css/style.css). -->
+<html lang="de" class="chars-page">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,7 +13,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23ec1d24'/%3E%3Cpath fill='%23fff' d='M20.3 14H28.3L31.9 39.8H32.1L35.7 14H43.7V50H38.4V22.7H38.3L34.2 50H29.4L25.3 22.7H25.2V50H20.3Z'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script>
     /* Gleiche sanfte Einblendung wie auf der Timeline, siehe index.html */
@@ -24,63 +29,133 @@
 </head>
 <body>
 
-  <canvas id="galaxy" aria-hidden="true"></canvas>
-
   <header class="site-header">
-    <div class="header-side">
-      <a class="brand" href="index.html">
-        <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
-        <span class="brand-text">Timeline</span>
-      </a>
+    <div class="header-bar">
+      <div class="header-side">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
+          <span class="brand-text">Timeline</span>
+        </a>
+      </div>
+
+      <nav id="page-nav" aria-label="Seiten">
+        <a class="page-link" href="index.html">Timeline</a>
+        <a class="page-link" href="films.html">Filme &amp; Serien</a>
+        <a class="page-link active" href="characters.html" aria-current="page">Charaktere</a>
+      </nav>
+
+      <div class="header-side header-side--end"></div>
     </div>
-
-    <nav id="page-nav" aria-label="Seiten">
-      <a class="page-link" href="index.html">Timeline</a>
-      <a class="page-link active" href="characters.html" aria-current="page">Charaktere</a>
-    </nav>
-
-    <div class="header-side header-side--end"></div>
   </header>
 
-  <main class="chars-main">
-    <section class="chars-intro">
+  <!-- Der Kopf der Seite als eigenes Band über die volle Breite, wie das
+       Masthead auf marvel.com/characters: eine dunkle Fläche mit mittig
+       gesetztem Titel, unter der das weiße Raster anfängt. Es steht
+       außerhalb von .chars-main, weil das dort auf Inhaltsbreite begrenzt
+       wäre und das Band bis an beide Fensterränder laufen soll. -->
+  <section class="chars-masthead">
+    <div class="chars-masthead-inner">
       <p class="chars-kicker">Wer im Universum mitspielt</p>
-      <h1 class="chars-title">Charaktere</h1>
+      <h1 class="chars-title">Marvel Charaktere</h1>
       <p class="chars-lead">Jede Figur aus allen Filmen und Serien der Timeline, mit Besetzung, Biografie
       und sämtlichen Auftritten in der Reihenfolge der Handlung.</p>
-    </section>
+    </div>
+  </section>
 
-    <!-- Suche, Phasenfilter und Sortierung. Die Schaltflächen entstehen in
+  <main class="chars-main">
+    <!-- Suche, Phasenfilter und Sortierung, im Aufbau der Filterleiste von
+         marvel.com: oben die Suche als bloße Zeile über einem Strich,
+         darunter die Filter, und ganz unten links die Zahl der Treffer
+         gegenüber der Sortierung rechts. Die Schaltflächen entstehen in
          js/characters.js aus PHASES, damit eine neue Phase in data.js hier
          nichts nachzupflegen braucht. -->
     <div class="chars-tools">
-      <label class="chars-search" for="char-search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"></circle>
-          <path d="M20 20l-3.6-3.6"></path>
-        </svg>
-        <input id="char-search" type="search" placeholder="Figur oder Besetzung suchen" autocomplete="off" aria-label="Figur oder Besetzung suchen">
-        <button type="button" class="chars-clear" id="char-clear" aria-label="Suche löschen" title="Suche löschen">
+      <!-- Suche und Filter teilen sich eine Zeile, wie auf der Vorlage:
+           links die Eingabe unter ihrem kräftigen Strich, ganz rechts der
+           Schalter, der die Phasen aufklappt. -->
+      <div class="chars-searchrow">
+        <label class="chars-search" for="char-search">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18"></path>
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="M20 20l-3.6-3.6"></path>
           </svg>
-        </button>
-      </label>
+          <input id="char-search" type="search" placeholder="Figur oder Besetzung suchen" autocomplete="off" aria-label="Figur oder Besetzung suchen">
+          <button type="button" class="chars-clear" id="char-clear" aria-label="Suche löschen" title="Suche löschen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18"></path>
+            </svg>
+          </button>
+        </label>
 
-      <div class="chars-filters">
-        <div class="chars-group">
-          <span class="chars-group-label">Phase</span>
-          <div class="chars-chips" id="char-phases" role="group" aria-label="Nach Phase filtern"></div>
+        <!-- Der Schalter und sein Menü gehören zusammen: Das Menü hängt
+             an ihm und legt sich beim Aufklappen über das Raster. -->
+        <div class="chars-filter-wrap">
+          <button type="button" class="chars-filter" id="char-filter"
+                  aria-expanded="false" aria-haspopup="true" aria-controls="char-filter-panel">
+            <span class="chars-filter-text">Filter</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 9l7 7 7-7"></path>
+            </svg>
+          </button>
+
+          <div class="chars-filter-panel" id="char-filter-panel" hidden>
+            <div class="chars-group">
+              <span class="chars-group-label">Phase</span>
+              <div class="chars-chips" id="char-phases" role="group" aria-label="Nach Phase filtern"></div>
+            </div>
+
+            <!-- Die Welten, aus denen die Figuren stammen. Auch diese
+                 Schalter entstehen in js/characters.js, und zwar nur für
+                 Welten, in denen wirklich jemand steht: Eine Reihe mit
+                 Erde-838 und daneben fünf leeren Welten wäre eine Auswahl,
+                 die nirgendwohin führt. -->
+            <div class="chars-group">
+              <span class="chars-group-label">Welt</span>
+              <div class="chars-chips chars-chips--worlds" id="char-worlds" role="group" aria-label="Nach Welt filtern"></div>
+            </div>
+
+            <!-- Die Titel der gewählten Phasen. Sie werden in
+                 js/characters.js neu gebaut, sobald sich die Phasenwahl
+                 ändert. Die Liste rollt in sich, und data-lenis-prevent
+                 sorgt dafür, dass sie das auch tut: Ohne die Kennzeichnung
+                 fängt Lenis das Mausrad ab und schiebt die Seite dahinter
+                 weiter, während die Titel stehen bleiben. -->
+            <div class="chars-group chars-group--films">
+              <span class="chars-group-label">Filme</span>
+              <div class="chars-chips chars-chips--films" id="char-movies" role="group" aria-label="Nach Film filtern" data-lenis-prevent></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div class="chars-group">
-          <span class="chars-group-label">Sortierung</span>
-          <div class="chars-chips" id="char-sort" role="group" aria-label="Sortierung"></div>
+      <div class="chars-bottom">
+        <p class="chars-status" id="char-status" role="status"></p>
+
+        <!-- Sortiert wird nach genau einer Reihenfolge, also steht auch nur
+             sie da. Die anderen liegen hinter demselben Aufklappmenü wie die
+             Filter, damit die Zeile unter der Suche nicht zur zweiten
+             Schalterleiste wird. Die Beschriftung des Schalters ist die
+             gewählte Reihenfolge und wechselt mit ihr, siehe
+             js/characters.js. -->
+        <div class="chars-group chars-group--sort">
+          <span class="chars-group-label" id="char-sort-label">Sortieren nach</span>
+          <div class="chars-filter-wrap">
+            <button type="button" class="chars-filter chars-filter--sort" id="char-sort-button"
+                    aria-expanded="false" aria-haspopup="true" aria-controls="char-sort-panel"
+                    aria-labelledby="char-sort-label char-sort-text">
+              <span class="chars-filter-text" id="char-sort-text">A bis Z</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 9l7 7 7-7"></path>
+              </svg>
+            </button>
+
+            <div class="chars-filter-panel chars-filter-panel--sort" id="char-sort-panel" hidden>
+              <div class="chars-chips" id="char-sort" role="group" aria-label="Sortierung"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-
-    <p class="chars-status" id="char-status" role="status"></p>
 
     <ul class="char-grid" id="char-grid"></ul>
   </main>
@@ -90,14 +165,18 @@
     Alle Filmtitel &amp; Logos gehören ihren jeweiligen Rechteinhabern.</p>
   </footer>
 
+  <!-- Ohne die Galaxie: Auf weißem Grund gibt es keinen Nachthimmel, in dem
+       Sterne stehen könnten. Die drei Skripte dafür lädt nur noch die
+       Timeline. -->
   <script src="js/vendor/lenis.min.js"></script>
   <script src="js/data.js"></script>
   <script src="js/profiles.js"></script>
   <script src="js/facts.js"></script>
+  <script src="js/powers.js"></script>
+  <script src="js/connections.js"></script>
   <script src="js/chars.js"></script>
-  <script src="js/galaxy-config.js"></script>
-  <script src="js/galaxy-canvas-2d.js"></script>
-  <script src="js/galaxy.js"></script>
+  <script src="js/looks.js"></script>
+  <script src="js/logo-fit.js"></script>
   <script src="js/characters.js"></script>
 </body>
 </html>

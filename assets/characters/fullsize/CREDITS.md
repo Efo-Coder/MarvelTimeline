@@ -5,8 +5,8 @@ Fanprojekt zu WebP verkleinert. Dank an die jeweiligen Ersteller.
 
 Die Tabelle unten führt die Bilder der ersten beiden Runden. Die
 Nachlieferungen ab dem 26.07.2026 (124 Bilder in der dritten Runde, 65 in
-der vierten, 36 in der fünften, 26 in der sechsten und 13 in der siebten)
-kamen als fertig
+der vierten, 36 in der fünften, 26 in der sechsten, 13 in der siebten und
+35 in der achten) kamen als fertig
 freigestellte PNGs über
 `assets/ersetzen/` herein, ihre Originalquellen sind hier nicht bekannt.
 Auch für sie gilt der Dank an die jeweiligen Ersteller.
@@ -58,8 +58,8 @@ Freistellers eine weiche Vignette.
 | frank-castle-punisher.webp | The Punisher (MCU) PNG transparent | XtremeEmperor | https://www.deviantart.com/xtremeemperor/art/The-Punisher-MCU-PNG-transparent-954833703 |
 | frigga.webp | Frigga png MCU | kevinalexande23 | https://www.deviantart.com/kevinalexande23/art/Frigga-png-MCU-1154137447 |
 | galactus.webp | Galactus (The Fantastic Four: First Steps) | KeyWatkins512 | https://www.deviantart.com/keywatkins512/art/Galactus-The-Fantastic-Four-First-Steps-1196244656 |
-| gamora.webp | Guardians of the Galaxy Vol 2 Gamora PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-Vol-2-Gamora-PNG-679025624 |
-| gamora-vol-3.webp | Guardians of the Galaxy vol 3 Gamora PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-vol-3-Gamora-PNG-958078400 |
+| gamora-guardians-of-the-galaxy-vol-2.webp | Guardians of the Galaxy Vol 2 Gamora PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-Vol-2-Gamora-PNG-679025624 |
+| gamora-2014-guardians-of-the-galaxy-vol-3.webp | Guardians of the Galaxy vol 3 Gamora PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-vol-3-Gamora-PNG-958078400 |
 | goose.webp | Captain Marvel Goose PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Captain-Marvel-Goose-PNG-783105349 |
 | gorr.webp | Gorr the God Butcher (Love and Thunder) - PNG | DHV123 | https://www.deviantart.com/dhv123/art/Gorr-the-God-Butcher-Love-and-Thunder-PNG-920499829 |
 | grandmaster.webp | Thor Ragnarok The Grandmaster PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Thor-Ragnarok-The-Grandmaster-PNG-710189719 |
@@ -131,7 +131,7 @@ Freistellers eine weiche Vignette.
 | quentin-beck-mysterio.webp | Spider-Man Far from Home Mysterio PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Spider-Man-Far-from-Home-Mysterio-PNG-889968314 |
 | raven-darkhoelme-mystique.webp | Mystique Earth-2000 PNG  | HunterC-10 | https://www.deviantart.com/hunterc-10/art/Mystique-Earth-2000-PNG-1177016743 |
 | reed-richards-mister-fantastic.webp | Mister Fantastic Pedro Pascal PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/Mister-Fantastic-Pedro-Pascal-PNG-1155769340 |
-| remy-lebeau-gambit-pose-1.webp | REQUEST Channing Tatum Gambit PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/REQUEST-Channing-Tatum-Gambit-PNG-1037385548 |
+| remy-lebeau-gambit-pose-1-1.webp | REQUEST Channing Tatum Gambit PNG | DocBuffFlash82 | https://www.deviantart.com/docbuffflash82/art/REQUEST-Channing-Tatum-Gambit-PNG-1037385548 |
 | riri-williams.webp | Riri Williams/Ironheart: BPWF PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Riri-Williams-Ironheart-BPWF-PNG-890087080 |
 | riri-williams-what-if.webp | Riri Williams/Ironheart Mk II: BPWF PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Riri-Williams-Ironheart-Mk-II-BPWF-PNG-938693197 |
 | rocket.webp | Guardians of the Galaxy vol 3 Rocket PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Guardians-of-the-Galaxy-vol-3-Rocket-PNG-958078364 |
@@ -164,7 +164,7 @@ Freistellers eine weiche Vignette.
 | thor-endgame.webp | Avengers Endgame Thor PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Avengers-Endgame-Thor-PNG-763863069 |
 | thor-love-and-thunder.webp | Thor Love and Thunder Transparent PNG | PurpleAxell | https://www.deviantart.com/purpleaxell/art/Thor-Love-and-Thunder-Transparent-PNG-918425385 |
 | titania.webp | She Hulk Attorney at Law Titania PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/She-Hulk-Attorney-at-Law-Titania-PNG-937645051 |
-| tony-stark-mark-vi-6.webp | MCU Iron Man PNG (Mark 6) | NachoMan1989 | https://www.deviantart.com/nachoman1989/art/MCU-Iron-Man-PNG-Mark-6-1335480544 |
+| tony-stark-mark-vi.webp | MCU Iron Man PNG (Mark 6) | NachoMan1989 | https://www.deviantart.com/nachoman1989/art/MCU-Iron-Man-PNG-Mark-6-1335480544 |
 | ultron.webp | Marvel Avengers AOU Ultron Prime PNG Transparent | paintpot2 | https://www.deviantart.com/paintpot2/art/Marvel-Avengers-AOU-Ultron-Prime-PNG-Transparent-631224045 |
 | valentina-allegra-de-fontaine.webp | COUNDESSA - Val de Fontaine edit for Thunderbolts* | HawkeyeBR4ZIL | https://www.deviantart.com/hawkeyebr4zil/art/COUNDESSA-Val-de-Fontaine-edit-for-Thunderbolts-1049053803 |
 | valkyrie.webp | Thor Ragnarok Valkyrie PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Thor-Ragnarok-Valkyrie-PNG-694372604 |
@@ -173,7 +173,7 @@ Freistellers eine weiche Vignette.
 | wanda-maximoff.webp | Scarlet Witch Render (WandaVision) | imattheo | https://www.deviantart.com/imattheo/art/Scarlet-Witch-Render-WandaVision-895123851 |
 | wenwu-mandarin.webp | Wenwu/The Mandarin: Shang-Chi PNG2 | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Wenwu-The-Mandarin-Shang-Chi-PNG2-890487131 |
 | wilson-fisk-kingpin.webp | Wilson Fisk/Kingpin: DDBA PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Wilson-Fisk-Kingpin-DDBA-PNG-1017119633 |
-| wong.webp | PNG Wong | MikeMoon1990 | https://www.deviantart.com/mikemoon1990/art/PNG-Wong-1126752757 |
+| wong-doctor-strange.webp | PNG Wong | MikeMoon1990 | https://www.deviantart.com/mikemoon1990/art/PNG-Wong-1126752757 |
 | xialing.webp | Shang-Chi Xialing PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Shang-Chi-Xialing-PNG-890567924 |
 | yelena-belova.webp | Yelena Belova (Black Widow) PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Yelena-Belova-Black-Widow-PNG-831506530 |
 | yon-rogg.webp | Captain Marvel Yon Rogg PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Captain-Marvel-Yon-Rogg-PNG-783105200 |

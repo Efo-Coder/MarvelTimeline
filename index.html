@@ -8,7 +8,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23ec1d24'/%3E%3Cpath fill='%23fff' d='M20.3 14H28.3L31.9 39.8H32.1L35.7 14H43.7V50H38.4V22.7H38.3L34.2 50H29.4L25.3 22.7H25.2V50H20.3Z'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script>
     /* Sanfte Seiten-Einblendung: .js versteckt die Seite nur, wenn JS läuft;
@@ -29,46 +29,57 @@
 
   <canvas id="galaxy" aria-hidden="true"></canvas>
 
+  <!-- Zwei Bänder übereinander: oben der Seitenwechsel wie auf der
+       Charakterseite, darunter ein eigenes Band nur für die Phasen. So
+       steht in der Mitte der oberen Zeile auf beiden Seiten dasselbe,
+       und die sechs Phasen bekommen die ganze Breite für sich. -->
   <header class="site-header">
-    <div class="header-side">
-      <a class="brand" href="#hero">
-        <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
-        <span class="brand-text">Timeline</span>
-      </a>
-    </div>
+    <div class="header-bar">
+      <div class="header-side">
+        <a class="brand" href="#hero">
+          <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
+          <span class="brand-text">Timeline</span>
+        </a>
+      </div>
 
-    <nav id="phase-nav" aria-label="Phasen"></nav>
+      <nav id="page-nav" aria-label="Seiten">
+        <a class="page-link active" href="index.html" aria-current="page">Timeline</a>
+        <a class="page-link" href="films.html">Filme &amp; Serien</a>
+        <a class="page-link" href="characters.html">Charaktere</a>
+      </nav>
 
-    <!-- Einstellungen: reines Hover-Dropdown, komplett in CSS gelöst.
-         Der Button hat bewusst keine Klick-Aktion; er dient nur als
-         Hover-Fläche und als Fokusziel für die Tastaturbedienung. -->
-    <div class="header-side header-side--end">
-      <a class="page-link" href="characters.html">Charaktere</a>
+      <!-- Einstellungen: reines Hover-Dropdown, komplett in CSS gelöst.
+           Der Button hat bewusst keine Klick-Aktion, er dient nur als
+           Hover-Fläche und als Fokusziel für die Tastaturbedienung. -->
+      <div class="header-side header-side--end">
+        <div class="settings has-dropdown" id="settings">
+          <button class="settings-btn" type="button" aria-haspopup="true" aria-label="Einstellungen">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.2"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+          </button>
 
-      <div class="settings has-dropdown" id="settings">
-        <button class="settings-btn" type="button" aria-haspopup="true" aria-label="Einstellungen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="3.2"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
+          <div class="dropdown-menu">
+            <div class="dropdown-panel">
+              <p class="dropdown-heading">Einstellungen</p>
 
-        <div class="dropdown-menu">
-          <div class="dropdown-panel">
-            <p class="dropdown-heading">Einstellungen</p>
-
-            <label class="setting-row" for="toggle-tips">
-              <span class="setting-text">
-                <span class="setting-title">Infoboxen</span>
-                <span class="setting-sub">Details beim Zeigen auf ein Logo</span>
-              </span>
-              <input class="setting-input" type="checkbox" id="toggle-tips" checked>
-              <span class="switch" aria-hidden="true"></span>
-            </label>
+              <label class="setting-row" for="toggle-tips">
+                <span class="setting-text">
+                  <span class="setting-title">Infoboxen</span>
+                  <span class="setting-sub">Details beim Zeigen auf ein Logo</span>
+                </span>
+                <input class="setting-input" type="checkbox" id="toggle-tips" checked>
+                <span class="switch" aria-hidden="true"></span>
+              </label>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Zweites Band, allein für die Phasen. js/main.js füllt es aus PHASES. -->
+    <nav id="phase-nav" aria-label="Phasen"></nav>
   </header>
 
   <main>
@@ -92,7 +103,8 @@
         </div>
         <div class="hero-stage hero-stage-subs">
           <div class="hero-subs">
-            <p class="hero-sub">Alle Kinofilme &amp; Disney+-Serien des offiziellen Marvel Cinematic Universe.<br>Die Zeitskala orientiert sich an der Chronologie der Handlung innerhalb des Universums.</p><p class="hero-sub" style="margin: 2rem; color: #72798d;;"><span class="hero-sub-info">Spoiler-Warnung:</span> Informationen zu den einzelnen Filmen und Serien finden Sie in den jeweiligen Abschnitten und kann in den Einstellungen deaktiviert werden.</p>
+            <p class="hero-sub">Alle Kinofilme &amp; Disney+-Serien des offiziellen Marvel Cinematic Universe.<br>Die Zeitskala orientiert sich an der Chronologie der Handlung innerhalb des Universums.</p>
+            <p class="hero-sub hero-sub-note"><span class="hero-sub-info">Spoiler-Warnung:</span> Informationen zu den einzelnen Filmen und Serien finden Sie in den jeweiligen Abschnitten und kann in den Einstellungen deaktiviert werden.</p>
           </div>
         </div>
       </div>
@@ -122,6 +134,7 @@
   <script src="js/vendor/lenis.min.js"></script>
   <script src="js/data.js"></script>
   <script src="js/chars.js"></script>
+  <script src="js/logo-fit.js"></script>
   <script src="js/galaxy-config.js"></script>
   <script src="js/galaxy-canvas-2d.js"></script>
   <script src="js/galaxy.js"></script>

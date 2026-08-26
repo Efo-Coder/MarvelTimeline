@@ -101,10 +101,12 @@ function sammle(D) {
    abweichenden Fassung mit dem Zusatz aus dem Dateinamen dahinter. */
 function anzeige(e, D) {
   const name = [...e.namen].sort((a, b) => b.length - a.length)[0];
-  const real = D.splitName(name).real;
+  const { real, world } = D.splitName(name);
   if (e.datei === e.slug) return name;
   const zusatz = e.datei.slice(e.slug.length + 1).replace(/-/g, ' ');
-  return `${real} (Fassung: ${zusatz})`;
+  /* Die Welt gehört zur Zeile: Ohne sie stünde „Christine Palmer“ zweimal
+     da, einmal aus der Erde-616 und einmal aus der Erde-838. */
+  return `${real}${world ? ` (${world})` : ''} (Fassung: ${zusatz})`;
 }
 
 function main() {

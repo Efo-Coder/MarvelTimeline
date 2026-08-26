@@ -17,7 +17,12 @@
               stehen, sie gehören zur Figur.
      status   'Am Leben' oder 'Verstorben', gemeint ist der Stand am Ende
               des letzten Auftritts.
-     powers   Kräfte und Ausrüstung als Stichworte, nicht als Satz.
+
+   Kräfte stehen hier nicht mehr. Sie standen früher als Stichworte in
+   CHAR_FACTS_EXTRA und waren zugleich der Rückfall der Tafel
+   „Fähigkeiten“, solange js/powers.js erst einen Teil der Figuren
+   führte. Seit dort jede Figur einen ausgeschriebenen Eintrag hat, wäre
+   diese Liste eine zweite Liste derselben Namen, die auseinanderläuft.
 
    Die Datei hat zwei Teile. CHAR_FACTS zwischen den Marken @wiki:anfang
    und @wiki:ende stammt aus den beiden Marvel-Wikis und wird von
@@ -27,10 +32,8 @@
    der nächste Lauf überschriebe es.
 
    CHAR_FACTS_EXTRA steht daneben und gehört der Handarbeit. Es liegt
-   beim Anzeigen über dem Generat, Feld für Feld, und trägt dreierlei:
+   beim Anzeigen über dem Generat, Feld für Feld, und trägt zweierlei:
 
-     - Kräfte, denn die stehen in keiner der beiden Infoboxen und lassen
-       sich deshalb überhaupt nicht abfragen.
      - Was die Abfrage nicht gefunden hat. Die Marvel Database führt nur
        zu drei Dutzend Figuren eine Körpergröße, bei Nebenfiguren und
        allem ab Phase Fünf steht dort nichts.
@@ -1200,16 +1203,6 @@ const CHAR_FACTS = {
     species: 'Mensch',
     status: 'Am Leben',
   },
-  'armand-duquesne-iii': {
-    origin: 'USA',
-    species: 'Mensch',
-    status: 'Verstorben',
-  },
-  'derek-bishop': {
-    origin: 'USA',
-    species: 'Mensch',
-    status: 'Verstorben',
-  },
   'william-lopez': {
     origin: 'USA',
     species: 'Mensch',
@@ -1250,24 +1243,6 @@ const CHAR_FACTS = {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Polizei New York', 'New York City Live Action Role Players'],
-    status: 'Am Leben',
-  },
-  'orville': {
-    origin: 'USA',
-    species: 'Mensch',
-    teams: ['New York City Live Action Role Players'],
-    status: 'Am Leben',
-  },
-  'missy': {
-    origin: 'USA',
-    species: 'Mensch',
-    teams: ['New York City Live Action Role Players'],
-    status: 'Am Leben',
-  },
-  'caudle': {
-    origin: 'USA',
-    species: 'Mensch',
-    teams: ['Polizei New York'],
     status: 'Am Leben',
   },
   'lucky': {
@@ -1535,7 +1510,7 @@ const CHAR_FACTS = {
     teams: ['MI6'],
     status: 'Am Leben',
   },
-  'praesident-ritson': {
+  'praesident-james-ritson': {
     origin: 'USA',
     species: 'Mensch',
     teams: ['US-Regierung', 'US-Streitkräfte'],
@@ -1715,10 +1690,10 @@ const CHAR_FACTS = {
     status: 'Am Leben',
   },
   'elektra': {
-    origin: 'East Asia',
+    origin: 'Griechenland, gekappte Zeitlinie',
     species: 'Mensch',
     height: '1,70 m',
-    teams: ['Chaste', 'Hand'],
+    teams: ['Widerstand im Void', 'Chaste'],
     status: 'Am Leben',
   },
   'jocasta-angekuendigt': {
@@ -1763,53 +1738,37 @@ const CHAR_FACTS_EXTRA = {
   /* ---------- Phase One ---------- */
   'steve-rogers': {
     species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
-    powers: ['übermenschliche Kraft und Ausdauer', 'Vibranium-Schild', 'altert kaum'],
   },
-  'peggy-carter': {
-    powers: ['Nahkampf und Schusswaffen', 'Feldagentin der SSR', 'Gründerin von S.H.I.E.L.D.'],
-  },
+  'peggy-carter': {},
   'peggy-carter-838': {
     origin: 'Erde-838',
     species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
     teams: ['Illuminati', 'Avengers'],
     status: 'Verstorben',
-    powers: ['Supersoldaten-Serum', 'Schild in den Farben des Union Jack', 'Jetpack'],
   },
-  'bucky-barnes': {
-    powers: ['Supersoldaten-Serum', 'Vibranium-Arm', 'Scharfschütze'],
-  },
+  'bucky-barnes': {},
   'johann-schmidt-red-skull': {
     origin: 'Deutschland',
     species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
     height: '1,88 m',
-    powers: ['unfertiges Supersoldaten-Serum', 'Waffen aus Tesserakt-Energie', 'Wächter des Seelensteins'],
   },
   'howard-stark': {
     height: '1,80 m',
-    powers: ['Erfindergeist', 'Waffen- und Flugtechnik', 'schmiedete das Vibranium-Schild'],
   },
   'abraham-erskine': {
     height: '1,78 m',
-    powers: ['Entwickler des Supersoldaten-Serums', 'Menschenkenntnis'],
   },
   'carol-danvers': {
     height: '1,68 m',
-    powers: ['Energieprojektion', 'Flug', 'Widerstandskraft im All'],
   },
-  'nick-fury': {
-    powers: ['Spionage', 'Führung der Avengers-Initiative', 'Taktik'],
-  },
+  'nick-fury': {},
   'talos': {
     origin: 'Skrullos',
     height: '1,80 m',
-    powers: ['Gestaltwandel', 'Nahkampf', 'Anführer der Skrull-Flüchtlinge'],
   },
-  'yon-rogg': {
-    powers: ['Kree-Kampfausbildung', 'Photonenblaster', 'Ausbilder der Starforce'],
-  },
+  'yon-rogg': {},
   'maria-rambeau': {
     height: '1,78 m',
-    powers: ['Kampfpilotin', 'Nervenstärke', 'Technikverstand'],
   },
   'maria-rambeau-838': {
     origin: 'Erde-838',
@@ -1817,146 +1776,107 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Illuminati'],
     status: 'Verstorben',
     height: '1,78 m',
-    powers: ['Energieprojektion', 'Flug', 'Widerstandskraft im All'],
   },
   'maria-rambeau-binary': {
     origin: 'andere Welt',
     species: 'Mensch',
     status: 'Am Leben',
     height: '1,78 m',
-    powers: ['Heldin ihrer Welt unter dem Namen Binary'],
   },
   'goose': {
     origin: 'unbekannte Welt',
     teams: ['Mar-Vells Labor', 'S.H.I.E.L.D.'],
     height: '0,25 m',
-    powers: ['Tentakel aus dem Rachen', 'Taschendimension im Magen', 'verschluckte den Tesserakt'],
   },
   'supreme-intelligence': {
     species: 'Künstliche Intelligenz der Kree',
-    powers: ['gebündelter Verstand des Kree-Imperiums', 'erscheint als der Mensch, den man verehrt', 'Befehl über die Starforce'],
   },
-  'tony-stark': {
-    powers: ['Iron-Man-Rüstungen', 'Arc-Reaktor', 'Erfindergeist'],
-  },
+  'tony-stark': {},
   'pepper-potts': {
     height: '1,75 m',
-    powers: ['Führung von Stark Industries', 'Rescue-Rüstung', 'zeitweise Extremis'],
   },
-  'james-rhodes': {
-    powers: ['War-Machine-Rüstung', 'schwere Bewaffnung', 'Offizier der Air Force'],
-  },
-  'obadiah-stane': {
-    powers: ['Iron-Monger-Rüstung', 'Stark Industries im Rücken', 'Waffenhandel'],
-  },
+  'james-rhodes': {},
+  'obadiah-stane': {},
   'happy-hogan': {
     teams: ['Stark Industries'],
     height: '1,78 m',
-    powers: ['Personenschutz', 'Boxen', 'Leitung der Stark-Sicherheit'],
   },
   'phil-coulson': {
     origin: 'Manitowoc, Wisconsin',
     height: '1,83 m',
-    powers: ['S.H.I.E.L.D.-Agent', 'Destroyer-Kanone', 'Ruhe in jeder Lage'],
   },
   'raza': {
     height: '1,80 m',
-    powers: ['Befehl über die Zehn Ringe in Afghanistan', 'Arsenal aus Stark-Waffen'],
   },
   'ivan-vanko-whiplash': {
     height: '1,80 m',
-    powers: ['nachgebauter Arc-Reaktor', 'Elektropeitschen', 'Physiker'],
   },
   'justin-hammer': {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Hammer Industries', 'Verteidigungsministerium'],
     status: 'Am Leben',
-    powers: ['Rüstungsunternehmer', 'Hammer-Drohnen', 'Ex-Wife-Rakete'],
   },
   'betty-ross': {
     height: '1,75 m',
     teams: ['Culver University'],
-    powers: ['Zellbiologin', 'Gammaforschung', 'Zugang zu ihrem Vater'],
   },
   'thaddeus-ross': {
     height: '1,85 m',
-    powers: ['Befehl über die US-Armee', 'Verwandlung in Red Hulk', 'Präsident der USA'],
   },
   'emil-blonsky-abomination': {
     species: 'Mensch, verstärkt durch Serum und Gammastrahlung',
-    powers: ['Verwandlung in Abomination', 'Ausbildung bei den Royal Marines', 'übermenschliche Kraft'],
   },
   'samuel-sterns-the-leader': {
     height: '1,73 m',
     teams: ['Culver University'],
-    powers: ['gammaverstärkter Verstand', 'Zellbiologe', 'Pläne über Jahrzehnte'],
   },
   'bruce-banner': {
     teams: ['Avengers', 'Revengers'],
     species: 'Mensch, durch Gammastrahlung verwandelt',
-    powers: ['Verwandlung in Hulk', 'unbegrenzte Kraft', 'Heilung in Sekunden'],
   },
   'thor': {
     height: '1,90 m',
-    powers: ['Donner und Blitz', 'Mjölnir und Stormbreaker', 'jahrtausendealt'],
   },
-  'loki': {
-    powers: ['Illusionen und Gestaltwandel', 'Magie', 'Zeitkontrolle als Hüter'],
-  },
+  'loki': {},
   'jane-foster': {
     height: '1,60 m',
-    powers: ['Astrophysikerin', 'als Mighty Thor Trägerin des Mjölnir', 'Einstein-Rosen-Brücken'],
   },
   'odin': {
     height: '1,83 m',
-    powers: ['Odinkraft', 'Speer Gungnir', 'Herrscher der Neun Reiche'],
   },
   'heimdall': {
     teams: ['Asgard', 'Wächter des Bifröst'],
     height: '1,93 m',
-    powers: ['sieht und hört alles in den Neun Reichen', 'Wächter des Bifröst', 'Schwert Hofund'],
   },
   'sif': {
     teams: ['Asgard', 'Asgardische Armee'],
     height: '1,73 m',
-    powers: ['asgardische Kriegerin', 'Doppelklinge', 'übermenschliche Kraft'],
   },
   'fandral': {
     height: '1,85 m',
-    powers: ['Fechtkunst', 'asgardische Zähigkeit', 'Krieger der Drei'],
   },
   'hogun': {
     height: '1,75 m',
-    powers: ['Streitkolben', 'Nahkampf', 'Krieger der Drei'],
   },
   'volstagg': {
     height: '1,93 m',
-    powers: ['rohe Kraft', 'Axt und Streitkolben', 'Krieger der Drei'],
   },
   'laufey': {
     height: '2,13 m',
-    powers: ['Eis aus bloßer Hand', 'Kälteberührung', 'König von Jötunheim'],
   },
   'destroyer': {
     species: 'Asgardischer Konstrukt',
     origin: 'Asgard',
     height: '2,90 m',
-    powers: ['Feuerstrahl aus dem Visier', 'nahezu unzerstörbar', 'gehorcht nur dem König'],
   },
   'erik-selvig': {
     height: '1,80 m',
-    powers: ['Astrophysiker', 'Kenner der Neun Reiche', 'Bau des Konvergenz-Messgeräts'],
   },
-  'natasha-romanoff': {
-    powers: ['Nahkampf und Spionage', 'Widow-Bites', 'im Roten Raum ausgebildet'],
-  },
-  'clint-barton': {
-    powers: ['Bogen und Trickpfeile', 'Nahkampf', 'trifft immer'],
-  },
+  'natasha-romanoff': {},
+  'clint-barton': {},
   'thanos': {
     height: '2,49 m',
-    powers: ['übermenschliche Kraft', 'Infinity-Handschuh', 'Feldherr'],
   },
   'thanos-2014': {
     origin: 'Titan',
@@ -1964,55 +1884,42 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Black Order'],
     status: 'Verstorben',
     height: '2,49 m',
-    powers: ['übermenschliche Kraft', 'Doppelklingenschwert', 'Feldherr'],
   },
-  'maria-hill': {
-    powers: ['stellvertretende Direktorin von S.H.I.E.L.D.', 'Feldeinsatz und Schusswaffen', 'Logistik'],
-  },
+  'maria-hill': {},
 
   /* ---------- Phase Two ---------- */
   'malekith': {
     height: '1,88 m',
-    powers: ['Herrschaft über den Äther', 'Dunkelelfen-Flotte', 'Anführer der Dunkelelfen'],
   },
   'frigga': {
     height: '1,73 m',
-    powers: ['asgardische Zauberkunst', 'Schwertkampf', 'Königin von Asgard'],
   },
   'the-collector': {
     origin: 'Knowhere',
     height: '1,80 m',
-    powers: ['Sammlung kosmischer Artefakte', 'Wissen über die Infinity-Steine', 'nahezu unsterblich'],
   },
   'aldrich-killian': {
     height: '1,88 m',
-    powers: ['Extremis-Virus', 'Hitze aus bloßer Hand', 'Gründer von A.I.M.'],
   },
   'trevor-slattery': {
     origin: 'Liverpool, England',
     height: '1,73 m',
-    powers: ['Schauspieler', 'Gesicht des falschen Mandarin', 'Bühnenpräsenz'],
   },
   'sam-wilson': {
     height: '1,83 m',
-    powers: ['Flügelanzug', 'Vibranium-Schild', 'Redwing'],
   },
   'alexander-pierce': {
     height: '1,85 m',
-    powers: ['Leitung des Weltsicherheitsrats', 'HYDRA an der Spitze von S.H.I.E.L.D.', 'Projekt Einsicht'],
   },
   'crossbones': {
     height: '1,83 m',
-    powers: ['Nahkampf', 'Panzerhandschuhe', 'STRIKE-Einheit'],
   },
   'pietro-maximoff': {
     species: 'Mensch, verändert durch den Zepterstein',
     height: '1,88 m',
-    powers: ['Überschallgeschwindigkeit', 'schnelle Heilung', 'Nahkampf im Lauf'],
   },
   'wanda-maximoff': {
     height: '1,68 m',
-    powers: ['Chaosmagie', 'Telekinese', 'Realität formen'],
   },
   'wanda-maximoff-838': {
     origin: 'Erde-838',
@@ -2020,15 +1927,12 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Avengers'],
     status: 'Am Leben',
     height: '1,68 m',
-    powers: ['Chaosmagie', 'Telekinese', 'Flug'],
   },
   'peter-quill': {
     height: '1,88 m',
-    powers: ['Element-Blaster', 'Raketenstiefel', 'halb Celestial'],
   },
   'gamora': {
     height: '1,83 m',
-    powers: ['tödlichste Frau der Galaxis', 'Schwert Godslayer', 'kybernetisch verstärkt'],
   },
   'gamora-2014': {
     origin: 'Zen-Whoberi',
@@ -2036,25 +1940,20 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Ravagers', 'Black Order'],
     status: 'Am Leben',
     height: '1,83 m',
-    powers: ['Schwert- und Nahkampf', 'kybernetisch verstärkt', 'Attentäterin des Thanos'],
   },
   'drax': {
     origin: 'Kylos',
     height: '1,96 m',
-    powers: ['übermenschliche Kraft', 'Klingen im Nahkampf', 'nimmt jedes Wort wörtlich'],
   },
   'rocket': {
     species: 'Halfworlder (Waschbär)',
     height: '1,20 m',
-    powers: ['Waffenbau', 'Pilot', 'Taktik'],
   },
   'groot': {
     height: '2,30 m',
-    powers: ['Äste und Ranken wachsen lassen', 'nachwachsend', 'übermenschliche Kraft'],
   },
   'yondu': {
     origin: 'Centauri IV',
-    powers: ['Yaka-Pfeil per Pfiff', 'Anführer der Ravager', 'Nahkampf'],
   },
   'ronan': {
     status: 'Verstorben',
@@ -2062,12 +1961,10 @@ const CHAR_FACTS_EXTRA = {
     origin: 'Hala',
     teams: ['Kree-Imperium', 'Accuser Corps'],
     height: '2,08 m',
-    powers: ['Universalwaffe', 'übermenschliche Kraft', 'Flotte des Kree-Imperiums'],
   },
   'nebula': {
     origin: 'Luphom',
     height: '1,85 m',
-    powers: ['kybernetische Glieder', 'Nahkampf', 'schmerzunempfindlich'],
   },
   'nebula-2014': {
     origin: 'Luphom',
@@ -2075,168 +1972,132 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Black Order'],
     status: 'Verstorben',
     height: '1,85 m',
-    powers: ['kybernetische Glieder', 'Nahkampf', 'Speicher, der sich mit dem eigenen Ich verbindet'],
   },
   'ego': {
     origin: 'eigener Planet',
     teams: ['Celestials'],
     height: '1,88 m',
-    powers: ['Planet als eigener Körper', 'Materie formen', 'nahezu unsterblich'],
   },
   'mantis': {
     origin: 'Egos Planet',
-    powers: ['Gefühle lesen und lenken', 'Schlaf durch Berührung', 'Antennen als Sinnesorgan'],
   },
   'taserface': {
     species: 'Außerirdischer',
     origin: 'unbekannte Welt',
     height: '1,88 m',
-    powers: ['Bordwaffen der Ravager', 'Meuterei gegen Yondu'],
   },
   'stakar-ogord': {
     height: '1,88 m',
-    powers: ['Anführer der hundert Ravager-Clans', 'Energiestrahlen', 'Raumkampf'],
   },
   'ultron': {
     origin: 'Avengers Tower, New York City',
     teams: ['Ultron-Sentinels'],
-    powers: ['überträgt sich in jeden Rechner', 'Vibranium-Körper', 'Roboterarmee'],
   },
   'vision': {
     origin: 'U-Gin Genetics, Seoul',
     height: '1,91 m',
-    powers: ['Geist-Stein', 'Dichte verändern', 'Flug'],
   },
   'scott-lang': {
     height: '1,80 m',
-    powers: ['Pym-Partikel', 'Größe verändern', 'befehligt Ameisen'],
   },
   'hank-pym': {
     height: '1,80 m',
-    powers: ['Erfinder der Pym-Partikel', 'erster Ant-Man', 'Ameisenforschung'],
   },
   'hope-van-dyne': {
     height: '1,73 m',
-    powers: ['Pym-Partikel', 'Flügel und Blaster', 'Nahkampf'],
   },
   'darren-cross': {
     species: 'Mensch, im Quantenreich zu MODOK umgebaut',
     height: '1,78 m',
-    powers: ['Yellowjacket-Anzug', 'Pym-Partikel nachgebaut', 'als MODOK Panzerung und Energiestrahlen'],
   },
   'luis': {
     height: '1,75 m',
-    powers: ['Einbruch und Diebstahl', 'Netzwerk in der ganzen Stadt', 'erzählt jede Geschichte ausführlich'],
   },
 
   /* ---------- Phase Three ---------- */
   't-challa': {
     height: '1,83 m',
-    powers: ['Herzförmiges Kraut', 'Vibranium-Anzug', 'Wakandas Thron'],
   },
   'peter-parker': {
     origin: 'Queens, New York City, New York',
     species: 'Mensch, durch einen Spinnenbiss verändert',
     height: '1,78 m',
-    powers: ['Wandhaftung', 'Spinnensinn', 'Netzschleudern'],
   },
   'peter-parker-maguire': {
     origin: 'New York City',
     species: 'Mensch, durch einen Spinnenbiss verändert',
     status: 'Am Leben',
-    powers: ['Netze aus den Handgelenken', 'Spinnensinn', 'Wandhaftung'],
   },
   'peter-parker-garfield': {
     origin: 'New York City',
     species: 'Mensch, durch einen Spinnenbiss verändert',
     status: 'Am Leben',
-    powers: ['selbstgebaute Netzschleudern', 'Spinnensinn', 'Wandhaftung'],
   },
   'helmut-zemo': {
     height: '1,78 m',
-    powers: ['Offizier der Sokovia-Spezialeinheit', 'Planung über Jahre', 'die zehn Auslösewörter'],
   },
   't-chaka': {
     height: '1,80 m',
-    powers: ['Herzförmiges Kraut', 'Vibranium-Anzug', 'König von Wakanda'],
   },
   'alexei': {
     species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
     origin: 'Sowjetunion',
     teams: ['Thunderbolts', 'Roter Raum', 'Sowjetarmee'],
-    powers: ['sowjetisches Supersoldaten-Serum', 'übermenschliche Kraft', 'unzerstörbarer Schild'],
   },
   'melina-vostokoff': {
     height: '1,70 m',
-    powers: ['Wissenschaftlerin des Roten Raums', 'chemische Gedankenkontrolle', 'im Roten Raum ausgebildet'],
   },
   'taskmaster': {
     origin: 'Russland',
     height: '1,73 m',
-    powers: ['ahmt jede Bewegung nach', 'Schild, Bogen und Schwert', 'Photonenkopie im Helm'],
   },
   'general-dreykov': {
     height: '1,80 m',
-    powers: ['Leitung des Roten Raums', 'Kontrolle über die Witwen', 'Netz aus Schläfern'],
   },
   'rick-mason': {
     height: '1,80 m',
     teams: ['S.H.I.E.L.D.'],
-    powers: ['Beschaffer für Untergetauchte', 'Papiere und Waffen', 'Kontakte in alle Länder'],
   },
   'erik-killmonger': {
     height: '1,80 m',
-    powers: ['Herzförmiges Kraut', 'Vibranium-Anzug', 'Ausbildung bei den Navy SEALs'],
   },
   'shuri': {
     height: '1,70 m',
-    powers: ['Vibranium-Technik', 'Herzförmiges Kraut', 'Erfindergeist'],
   },
   'okoye': {
     height: '1,73 m',
-    powers: ['Vibranium-Speer', 'Generalin der Dora Milaje', 'Nahkampf'],
   },
   'nakia': {
     height: '1,68 m',
-    powers: ['Ringklingen', 'Spionage als War Dog', 'Nahkampf'],
   },
   'm-baku': {
     height: '1,96 m',
-    powers: ['rohe Kraft', 'Keule', 'Anführer der Jabari'],
   },
   'everett-ross': {
     height: '1,73 m',
-    powers: ['CIA-Agent', 'Kampfpilot', 'Verhandlung'],
   },
   'w-kabi': {
     height: '1,83 m',
-    powers: ['Vibranium-Waffen', 'Kriegsnashörner', 'Anführer des Grenzstamms'],
   },
   'zuri': {
     height: '1,88 m',
-    powers: ['Hüter des Herzförmigen Krauts', 'Schamane Wakandas', 'War Dog im Ruhestand'],
   },
   'adrian-toomes-vulture': {
     height: '1,80 m',
-    powers: ['Flügelanzug aus Chitauri-Technik', 'Bergungsunternehmer', 'Waffenhandel'],
   },
   'scorpion': {
     height: '1,80 m',
     teams: ['Sinister Six'],
-    powers: ['Waffenhandel', 'Kontakte im Gefängnis'],
   },
   'ned-leeds': {
     height: '1,75 m',
-    powers: ['Hacken und Programmieren', 'der Mann auf dem Stuhl', 'kurzzeitig Portale'],
   },
   'may-parker': {
     teams: ['F.E.A.S.T.'],
     height: '1,68 m',
-    powers: ['Hilfe für Wohnungslose', 'Rückhalt für Peter', 'der Satz von der großen Verantwortung'],
   },
   'stephen-strange': {
     height: '1,88 m',
-    powers: ['Magie der Mystischen Künste', 'Umhang der Levitation', 'Portale'],
   },
   'defender-strange': {
     origin: 'Erde-617',
@@ -2244,7 +2105,6 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Meister der mystischen Künste'],
     status: 'Verstorben',
     height: '1,88 m',
-    powers: ['Magie der mystischen Künste', 'Oberster Zauberer seiner Erde', 'Portale'],
   },
   'sinister-strange': {
     origin: 'andere Welt',
@@ -2252,16 +2112,13 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Meister der mystischen Künste'],
     status: 'Verstorben',
     height: '1,88 m',
-    powers: ['Magie mit der Kraft des Darkhold', 'drittes Auge', 'Dreamwalking in fremde Körper'],
   },
   'the-ancient-one': {
     origin: 'Kamar-Taj, Nepal',
     height: '1,70 m',
-    powers: ['Mystische Künste', 'Kraft der Dunklen Dimension', 'jahrhundertelanges Leben'],
   },
   'karl-mordo': {
     height: '1,83 m',
-    powers: ['Mystische Künste', 'Stab der Lebenden Tribunale', 'entzieht anderen die Magie'],
   },
   'karl-mordo-838': {
     origin: 'Erde-838',
@@ -2269,275 +2126,218 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Meister der mystischen Künste', 'Illuminati'],
     status: 'Am Leben',
     height: '1,83 m',
-    powers: ['Mystische Künste', 'Schwertkampf', 'Oberster Zauberer seiner Erde'],
   },
   'wong': {
     origin: 'Kamar-Taj, Nepal',
     height: '1,75 m',
-    powers: ['Mystische Künste', 'Portale', 'Hüter des Sanctums'],
   },
   'kaecilius': {
     height: '1,80 m',
-    powers: ['Zauberklingen', 'Raum falten', 'Kraft von Dormammu'],
   },
   'dormammu': {
     origin: 'Dunkle Dimension',
     species: 'Faltine',
     teams: ['Zeloten'],
     height: 'füllt den Himmel',
-    powers: ['Magie der Dunklen Dimension', 'verschlingt ganze Dimensionen', 'unsterblich außerhalb der Zeit'],
   },
   'hela': {
     height: '1,73 m',
-    powers: ['erschafft Klingen aus dem Nichts', 'zieht Kraft aus Asgard', 'Göttin des Todes'],
   },
   'valkyrie': {
     origin: 'Asgard',
     height: '1,73 m',
-    powers: ['asgardische Kriegerin', 'Dragonfang', 'König von Neu-Asgard'],
   },
   'grandmaster': {
     height: '1,80 m',
     teams: ['Elders of the Universe'],
-    powers: ['Herrscher über Sakaar', 'Schmelzstab', 'nahezu unsterblich'],
   },
   'skurge': {
     height: '1,93 m',
-    powers: ['Axt Bloodaxe', 'zwei M16-Gewehre von der Erde', 'Wächter des Bifröst'],
   },
   'surtur': {
     species: 'Feuerdämon',
     origin: 'Muspelheim',
     teams: ['Feuerdämonen von Muspelheim'],
     height: '300 m',
-    powers: ['Krone Twilight', 'Ragnarök', 'Flammenschwert'],
   },
   'topaz': {
     origin: 'Sakaar',
     species: 'Außerirdische',
     teams: ['Sakaaran Guards'],
     status: 'Verstorben',
-    powers: ['Leibwächterin des Grandmasters', 'beste Pilotin von Sakaar', 'Schmelzstab'],
   },
   'janet-van-dyne': {
     height: '1,70 m',
-    powers: ['erste Wasp', 'dreißig Jahre Quantenreich', 'Energie aus dem Quantenreich'],
   },
   'ava-starr': {
     origin: 'S.H.I.E.L.D.-Anlage, Argentinien',
-    powers: ['Phasen durch feste Materie', 'Quantenschwankung im Körper', 'Nahkampf'],
   },
   'yelena-belova': {
     height: '1,65 m',
-    powers: ['Nahkampf und Spionage', 'im Roten Raum ausgebildet', 'Präzisionswaffen'],
   },
 
   /* ---------- Phase Four ---------- */
   'sylvie': {
     height: '1,63 m',
-    powers: ['Verzauberung fremder Gedanken', 'Magie und Gestaltwandel', 'Schwertkampf'],
   },
   'classic-loki': {
     origin: 'Jotunheim',
     species: 'Frostriese',
     teams: ['Kid Lokis Bande'],
     status: 'Verstorben',
-    powers: ['Illusionen von enormer Größe', 'Gestaltwandel', 'Magie'],
   },
   'kid-loki': {
     origin: 'Jotunheim',
     species: 'Frostriese',
     teams: ['Kid Lokis Bande'],
     status: 'Am Leben',
-    powers: ['Schwert Laevateinn', 'Magie', 'König der Leere'],
   },
   'boastful-loki': {
     origin: 'Jotunheim',
     species: 'Frostriese',
     teams: ['Kid Lokis Bande'],
     status: 'Am Leben',
-    powers: ['Magie', 'Nahkampf', 'Geschichten über sich selbst'],
   },
   'alligator-loki': {
     species: 'Alligator',
     teams: ['Kid Lokis Bande'],
     status: 'Am Leben',
-    powers: ['Biss', 'durchschaut andere Lokis'],
   },
   'president-loki': {
     origin: 'Jotunheim',
     species: 'Frostriese',
     teams: ['Loki-Banditen'],
     status: 'Am Leben',
-    powers: ['Magie', 'Armee aus Varianten', 'Taktik'],
   },
   'mobius': {
     height: '1,80 m',
-    powers: ['Analyse von Zeitlinien', 'Zeitstab der TVA', 'Verhörkunst'],
   },
   'ravonna-renslayer': {
     height: '1,70 m',
-    powers: ['Richterin der TVA', 'Zeitstab', 'Nahkampf'],
   },
   'miss-minutes': {
     species: 'Künstliche Intelligenz',
     origin: 'Zitadelle am Ende der Zeit',
     teams: ['TVA'],
-    powers: ['Archiv der gesamten TVA', 'erscheint überall als Hologramm', 'greift in Rechnersysteme ein'],
   },
   'der-da-bleibt': {
     species: 'Mensch (Variante von Nathaniel Richards)',
     origin: 'Erde im 31. Jahrhundert',
     teams: ['TVA'],
     height: '1,80 m',
-    powers: ['Herrschaft über die Heilige Zeitlinie', 'Wissen um jeden kommenden Schritt', 'Zeitstab'],
   },
   'agatha-harkness': {
     species: 'Hexe',
     height: '1,70 m',
-    powers: ['Hexenkunst seit dem 17. Jahrhundert', 'entzieht anderen Hexen die Macht', 'Brosche als Schutz'],
   },
   'monica-rambeau': {
     height: '1,73 m',
-    powers: ['setzt jede Form von Energie um', 'Unsichtbarkeit und Flug', 'Ausbildung bei der S.W.O.R.D.'],
   },
   'darcy-lewis': {
     height: '1,63 m',
-    powers: ['Astrophysikerin', 'Messtechnik im Feld', 'Sinn für das Naheliegende'],
   },
   'jimmy-woo': {
     height: '1,75 m',
-    powers: ['FBI-Agent', 'Zeugenschutz', 'Kartentricks'],
   },
   'shang-chi': {
     teams: ['Ten Rings', 'Ta Lo'],
     height: '1,75 m',
-    powers: ['die Zehn Ringe', 'Kampfkunst von Kindheit an', 'Ausbildung in Ta Lo'],
   },
   'katy': {
     teams: ['Ta Lo'],
     height: '1,65 m',
-    powers: ['Bogenschießen', 'fährt jedes Auto', 'bleibt an der Seite ihres Freundes'],
   },
   'wenwu-mandarin': {
     height: '1,78 m',
-    powers: ['die Zehn Ringe', 'tausend Jahre Kampferfahrung', 'Herrscher über die Zehn Ringe'],
   },
   'xialing': {
     height: '1,68 m',
-    powers: ['Kampfkunst im Selbststudium', 'Rope Dart', 'Führung der Zehn Ringe'],
   },
   'razor-fist': {
     height: '1,80 m',
-    powers: ['Machete statt der rechten Hand', 'Nahkampf', 'Leibwächter von Wenwu'],
   },
-  'john-walker': {
-    powers: ['Supersoldaten-Serum', 'Vibranium-Schild', 'drei Medaillen für Tapferkeit'],
-  },
+  'john-walker': {},
   'karli-morgenthau': {
     height: '1,68 m',
-    powers: ['Supersoldaten-Serum', 'Führung der Flag Smashers', 'Netz aus Helfern in acht Ländern'],
   },
   'sharon-carter': {
     height: '1,70 m',
-    powers: ['S.H.I.E.L.D.-Ausbildung', 'Waffenhandel als Power Broker', 'Nahkampf'],
   },
   'isaiah-bradley': {
     teams: ['US-Armee'],
-    powers: ['Supersoldaten-Serum', 'übermenschliche Kraft', 'dreißig Jahre Haft und Versuche'],
   },
   'quentin-beck-mysterio': {
     height: '1,80 m',
-    powers: ['Drohnen mit Projektionstechnik', 'Illusionen in Stadtgröße', 'ehemaliger Stark-Ingenieur'],
   },
   'michelle-jones-watson': {
     height: '1,73 m',
-    powers: ['Beobachtungsgabe', 'Recherche', 'durchschaut jede Lüge'],
   },
   'sersi': {
     height: '1,73 m',
-    powers: ['verwandelt Materie durch Berührung', 'unsterblich', 'Anführerin der Eternals'],
   },
   'ikaris': {
     height: '1,88 m',
-    powers: ['Augenstrahlen', 'Flug', 'nahezu unverwundbar'],
   },
   'thena': {
     height: '1,75 m',
-    powers: ['erschafft jede Waffe aus kosmischer Energie', 'Kriegerin seit siebentausend Jahren', 'Nahkampf'],
   },
   'kingo': {
     height: '1,78 m',
-    powers: ['Energiegeschosse aus den Händen', 'unsterblich', 'Filmstar in Bollywood'],
   },
   'sprite': {
     height: '1,50 m',
-    powers: ['Illusionen für ganze Menschenmengen', 'unsterblich im Körper eines Kindes', 'Geschichtenerzählerin'],
   },
   'druig': {
     height: '1,80 m',
-    powers: ['lenkt fremde Gedanken', 'unsterblich', 'jahrhundertelange Menschenkenntnis'],
   },
   'makkari': {
     height: '1,73 m',
-    powers: ['Überschallgeschwindigkeit', 'unsterblich', 'Gehörlosigkeit als geschärfter Sinn'],
   },
   'phastos': {
     height: '1,83 m',
-    powers: ['erfindet jede Technik', 'unsterblich', 'formt kosmische Energie zu Werkzeugen'],
   },
   'ajak': {
     height: '1,70 m',
-    powers: ['Heilung durch Berührung', 'Verbindung zu den Celestials', 'Anführerin der Eternals'],
   },
   'gilgamesh': {
     height: '1,78 m',
-    powers: ['goldenes Exoskelett aus kosmischer Energie um Arme und Fäuste', 'der stärkste Eternal seiner Zeit', 'Nahkämpfer aus siebentausend Jahren Übung'],
   },
   'dane-whitman': {
     origin: 'England',
     species: 'Mensch',
     teams: ['Natural History Museum'],
     status: 'Am Leben',
-    powers: ['Historiker und Dozent', 'Erbe der Ebony Blade', 'liest Latein'],
   },
   'green-goblin': {
     height: '1,80 m',
     teams: ['Sinister Six', 'Oscorp'],
-    powers: ['Gleiter und Kürbisbomben', 'übermenschliche Kraft durch sein Serum', 'gespaltene Persönlichkeit'],
   },
   'doc-ock': {
     height: '1,80 m',
     teams: ['Sinister Six'],
-    powers: ['vier verwachsene Metallarme', 'Kernphysiker', 'übermenschliche Kraft'],
   },
   'electro': {
     species: 'Mensch, verwandelt durch elektrische Energie',
     height: '1,83 m',
     teams: ['Sinister Six'],
-    powers: ['Herrschaft über Strom', 'Körper aus Energie', 'saugt jedes Netz leer'],
   },
   'sandman': {
     origin: 'USA',
     species: 'Mensch, verwandelt durch einen Teilchenbeschleuniger',
     teams: ['Sinister Six'],
     status: 'Am Leben',
-    powers: ['Körper aus Sand', 'wächst zum Sandriesen', 'Sandstürme'],
   },
   'curt-connors': {
     species: 'Mensch, verwandelt durch Reptilien-Serum',
     height: '1,80 m',
     teams: ['Sinister Six', 'Oscorp'],
-    powers: ['Verwandlung in den Lizard', 'nachwachsende Glieder', 'Genetiker'],
   },
   'america-chavez': {
     height: '1,63 m',
-    powers: ['öffnet Portale zwischen den Universen', 'übermenschliche Kraft', 'Sternenfäuste'],
   },
   'christine-palmer': {
     height: '1,70 m',
     teams: ['Metro-General Hospital'],
-    powers: ['Notfallchirurgin', 'Ruhe am Operationstisch', 'kennt Strange länger als jeder andere'],
   },
   'christine-palmer-838': {
     origin: 'Erde-838',
@@ -2545,15 +2345,12 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Baxter Foundation'],
     status: 'Am Leben',
     height: '1,70 m',
-    powers: ['Forschung am Multiversum', 'benannte die Erde-838', 'Fesseln aus dem Sand von Nisanti'],
   },
   'charles-xavier-professor-x': {
     height: '1,80 m',
-    powers: ['Telepathie', 'Cerebro', 'Gründer der X-Men'],
   },
   'reed-richards-mister-fantastic': {
     height: '1,88 m',
-    powers: ['dehnt seinen Körper beliebig', 'klügster Kopf seiner Erde', 'Führung der Fantastic Four'],
   },
   'reed-richards-838': {
     origin: 'Erde-838',
@@ -2561,882 +2358,1220 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Fantastic Four', 'Illuminati', 'Baxter Foundation'],
     status: 'Verstorben',
     height: '1,88 m',
-    powers: ['dehnt seinen Körper beliebig', 'klügster Kopf seiner Erde', 'Gründer der Baxter Foundation'],
   },
   'kate-bishop': {
     height: '1,68 m',
-    powers: ['Bogenschießen', 'Fechten', 'Nahkampf'],
   },
   'maya-lopez-echo': {
     height: '1,68 m',
-    powers: ['ahmt jede Bewegung nach', 'Kräfte ihrer Ahnen', 'Nahkampf trotz Gehörlosigkeit'],
   },
   'wilson-fisk-kingpin': {
     height: '1,96 m',
-    powers: ['rohe Körperkraft', 'Verbrecherimperium', 'politischer Einfluss'],
   },
   'eleanor-bishop': {
     height: '1,68 m',
-    powers: ['führt Bishop Security', 'plant kalt und weit voraus', 'schiebt eigene Taten anderen zu'],
   },
   'jack-duquesne': {
     origin: 'Frankreich',
     height: '1,80 m',
-    powers: ['Meister mit jedem Schwert', 'Vermögen aus altem Adel', 'kocht mit Leidenschaft'],
   },
   'kazi-kazimierczak': {
     origin: 'Polen',
-    powers: ['Scharfschütze', 'zweiter Mann der Tracksuit Mafia', 'Doppelspiel für Wilson Fisk'],
   },
-  'armand-duquesne-iii': {
-    powers: ['Vermögen und Verbindungen', 'sammelt Waffen und Kunst', 'misstraut jedem'],
-  },
-  'derek-bishop': {
-    powers: ['führt Bishop Security', 'Schulden bei Wilson Fisk'],
-  },
-  'william-lopez': {
-    powers: ['Anführer der Tracksuit Mafia', 'lehrt seine Tochter das Kämpfen'],
-  },
-  'ivan-banionis': {
-    powers: ['Anführer der Tracksuit Mafia', 'Nahkampf mit allem, was greifbar ist'],
-  },
+  'william-lopez': {},
+  'ivan-banionis': {},
   'tomas': {
     origin: 'Polen',
-    powers: ['Schlägertrupp der Tracksuit Mafia', 'Fahrer und Späher'],
   },
-  'enrique': {
-    powers: ['Schlägertrupp der Tracksuit Mafia'],
-  },
-  'dmitri': {
-    powers: ['Schlägertrupp der Tracksuit Mafia'],
-  },
-  'grills': {
-    powers: ['Feuerwehrmann in New York', 'Rollenspieler mit eigener Rüstung', 'kocht für die Gruppe'],
-  },
-  'wendy-conrad': {
-    powers: ['Polizistin', 'führt die New Yorker Rollenspieler an', 'räumt einen Platz in Minuten'],
-  },
-  'orville': {
-    powers: ['Rollenspieler mit Wikingerhelm', 'bleibt immer in seiner Rolle'],
-  },
-  'missy': {
-    powers: ['näht Kostüme und Anzüge', 'kennt jeden Stoff', 'baut Kate Bishops Anzug'],
-  },
-  'caudle': {
-    powers: ['Detective der New Yorker Polizei'],
-  },
-  'lucky': {
-    powers: ['sieht auf einem Auge', 'findet jede Pizza', 'lässt sich von niemandem abschütteln'],
-  },
-  'matt-murdock-daredevil': {
-    powers: ['geschärfte Sinne', 'Radarsinn', 'Nahkampf'],
-  },
+  'enrique': {},
+  'dmitri': {},
+  'grills': {},
+  'wendy-conrad': {},
+  'lucky': {},
+  'matt-murdock-daredevil': {},
   'wade-wilson-deadpool': {
     species: 'Mutant, verändert durch das Weapon-X-Programm',
     height: '1,88 m',
-    powers: ['heilt jede Wunde', 'zwei Katanas und zwei Pistolen', 'spricht mit dem Publikum'],
   },
   'nicepool': {
     origin: 'andere Welt',
     species: 'Mensch',
     status: 'Verstorben',
-    powers: ['goldene Pistolen', 'gute Laune', 'keine Selbstheilung'],
   },
   'logan-wolverine': {
     height: '1,75 m',
-    powers: ['Adamantium-Klauen', 'heilt jede Wunde', 'geschärfte Sinne'],
   },
   'cassandra-nova': {
     origin: 'Void',
     height: '1,73 m',
-    powers: ['Telepathie und Telekinese', 'Zwillingsschwester von Charles Xavier', 'Herrschaft über die Leere'],
   },
   'mr-paradox': {
     origin: 'TVA',
     height: '1,78 m',
-    powers: ['Leitung einer TVA-Abteilung', 'Zeitreißer', 'Zugriff auf jede Zeitlinie'],
   },
   'dogpool': {
     species: 'Hund',
     origin: 'Void',
     height: '0,30 m',
-    powers: ['heilt jede Wunde', 'beißt jeden Gegner'],
   },
   'blade': {
     origin: 'Detroit, Michigan',
     teams: ['Vampirjäger'],
     height: '1,88 m',
-    powers: ['Kraft eines Vampirs ohne dessen Schwächen', 'Schwert aus Silber', 'Jagd auf Vampire'],
   },
   'marc-spector-steven-grant-moon-knight': {
     height: '1,80 m',
-    powers: ['Rüstung von Khonshu', 'Halbmondklingen', 'mehrere Persönlichkeiten in einem Körper'],
   },
   'layla-el-faouly': {
     height: '1,68 m',
     teams: ['Ennead-Rat'],
-    powers: ['als Scarlet Scarab Rüstung und Flügel', 'Archäologin', 'Nahkampf'],
   },
   'arthur-harrow': {
     height: '1,85 m',
-    powers: ['Stab mit Ammits Waage', 'Sekte in mehreren Ländern', 'ehemaliger Avatar Khonshus'],
   },
   'khonshu': {
     origin: 'Ennead',
     height: '2,60 m',
-    powers: ['ägyptischer Mondgott', 'verschiebt den Nachthimmel', 'wählt sich einen Avatar'],
   },
   'ammit': {
     origin: 'Ennead',
     height: '3,00 m',
-    powers: ['richtet über die Seele vor der Tat', 'ägyptische Göttin', 'Schar von Avataren'],
   },
   'kamala-khan-ms-marvel': {
     species: 'Mensch-Clandestine-Hybrid, Mutantin',
     height: '1,68 m',
-    powers: ['hartes Licht formen', 'Armreif ihrer Urgroßmutter', 'Zugang zur Noor-Dimension'],
   },
   'bruno-carrelli': {
     height: '1,73 m',
-    powers: ['Technik und Physik', 'baut Kamalas Anzug', 'Stipendium in Caltech'],
   },
   'nakia-bahadir': {
     height: '1,65 m',
-    powers: ['Wahlkampf für den Moscheevorstand', 'Rückhalt in der Gemeinde'],
   },
   'kamran': {
     species: 'Mensch-Clandestine-Hybrid',
     height: '1,80 m',
-    powers: ['Energie aus der Noor-Dimension', 'Kraftstöße aus den Händen'],
   },
   'muneeba-khan': {
     species: 'Mensch-Clandestine-Hybrid',
     height: '1,68 m',
     teams: ['Familie Khan'],
-    powers: ['Zusammenhalt der Familie', 'näht Kamalas ersten Anzug'],
   },
   'gorr': {
     species: 'Außerirdischer',
     height: '1,85 m',
     teams: ['Götterschlächter'],
-    powers: ['Necroschwert', 'erschafft Schatten als Diener', 'tötet Götter'],
   },
   'korg': {
     height: '2,44 m',
     teams: ['Revengers', 'Neu-Asgard'],
-    powers: ['Körper aus Stein', 'übermenschliche Kraft', 'Gelassenheit in jeder Lage'],
   },
   'zeus': {
     origin: 'Olymp',
     height: '1,80 m',
-    powers: ['Blitzbündel Thunderbolt', 'Herrscher über den Götterrat', 'nahezu unsterblich'],
   },
   'love': {
     origin: 'Rapus Planet',
     species: 'Außerirdische, von Eternity zurückgeholt',
     teams: ['Thors Familie'],
     status: 'Am Leben',
-    powers: ['kosmische Strahlen aus den Augen', 'übermenschliche Kraft', 'führt Stormbreaker'],
   },
   'jennifer-walters-she-hulk': {
     height: '2,01 m',
     species: 'Mensch, durch Gammablut verwandelt',
-    powers: ['Verwandlung in She-Hulk mit klarem Kopf', 'übermenschliche Kraft', 'Anwältin für Übermenschen'],
   },
   'nikki-ramos': {
     height: '1,60 m',
-    powers: ['Assistentin und Rückhalt', 'Kenntnis der Szene', 'Organisation'],
   },
   'titania': {
     species: 'Mensch, verstärkt',
     height: '1,75 m',
-    powers: ['übermenschliche Kraft', 'Marke mit eigener Produktlinie', 'Ringkampf'],
   },
   'namor': {
     species: 'Talokani',
     origin: 'Talokan',
     height: '1,75 m',
-    powers: ['Flug mit Flügeln an den Fußgelenken', 'übermenschliche Kraft unter Wasser', 'König von Talokan'],
   },
   'koenigin-ramonda': {
     height: '1,73 m',
-    powers: ['Königin von Wakanda', 'Autorität vor dem Stammesrat', 'Verhandlung vor den Vereinten Nationen'],
   },
   'riri-williams': {
     height: '1,68 m',
-    powers: ['selbstgebaute Rüstung', 'Studium am MIT mit fünfzehn', 'Erfindergeist'],
   },
 
   /* ---------- Phase Five ---------- */
   'ouroboros-o-b': {
     height: '1,80 m',
-    powers: ['Technik der gesamten TVA', 'Handbuch aus eigener Feder', 'Temporalwebstuhl'],
   },
   'victor-timely': {
     height: '1,80 m',
     teams: ['Timely Industries'],
-    powers: ['Erfinder im Chicago von 1893', 'Variante von Kang', 'Bauplan des Temporalwebstuhls'],
   },
   'cassie-lang': {
     height: '1,70 m',
     teams: ['Ant-Man-Familie'],
-    powers: ['eigener Pym-Anzug', 'Größe verändern', 'Signal ins Quantenreich gebaut'],
   },
   'kang-der-eroberer': {
     origin: 'Erde im 31. Jahrhundert',
     height: '1,80 m',
-    powers: ['Rüstung mit Energiewaffen', 'Multiversum-Schiff', 'Wissen aus tausend Kriegen'],
   },
   'high-evolutionary': {
     origin: 'Counter-Earth',
     height: '1,88 m',
-    powers: ['erschafft ganze Völker im Labor', 'Energieschilde und Kraftfelder', 'Flotte der Orgocorp'],
   },
   'adam-warlock': {
     origin: 'Sovereign',
     height: '1,88 m',
-    powers: ['Energiestrahlen', 'Flug', 'nahezu unverwundbarer Kokonkörper'],
   },
   'gravik': {
     origin: 'Skrullos',
     height: '1,85 m',
-    powers: ['Gestaltwandel', 'als Super-Skrull die Kräfte mehrerer Helden', 'Führung der Skrull-Rebellen'],
   },
   'g-iah': {
     height: '1,75 m',
-    powers: ['Gestaltwandel', 'als Super-Skrull die Kräfte der Avengers', 'Doppelagentin'],
   },
   'sonya-falsworth': {
     height: '1,70 m',
-    powers: ['Führungsebene des MI6', 'Verhörkunst', 'Netz aus eigenen Quellen'],
   },
-  'praesident-ritson': {
+  'praesident-james-ritson': {
     height: '1,80 m',
-    powers: ['Präsident der USA', 'Oberbefehl über die Streitkräfte'],
   },
   'chula': {
     teams: ['Choctaw', 'US-Post'],
     height: '1,68 m',
-    powers: ['Wissen der Choctaw-Ahnen', 'Heilkunde', 'Zusammenhalt der Familie'],
   },
   'bonnie': {
     height: '1,70 m',
-    powers: ['Bindung an die Gemeinde', 'Rollschuhbahn als Treffpunkt'],
   },
   'henry-lopez': {
     height: '1,80 m',
-    powers: ['Führung des Familienbetriebs', 'Kontakte in beide Welten'],
   },
   'dar-benn': {
     height: '1,75 m',
-    powers: ['zweiter Kree-Armreif', 'Universalwaffe', 'Oberste Anklägerin der Kree'],
   },
   'hank-mccoy-beast': {
     height: '1,78 m',
-    powers: ['übermenschliche Kraft und Beweglichkeit', 'Wissenschaftler von Rang', 'Berater des Präsidenten'],
   },
   'billy-maximoff-wiccan': {
     height: '1,75 m',
-    powers: ['Chaosmagie', 'formt Wirklichkeit mit Worten', 'Sohn von Wanda Maximoff'],
   },
   'rio-vidal': {
     species: 'Kosmische Entität',
     origin: 'jenseits der Straße der Hexen',
     teams: ['Hexenzirkel von Agatha Harkness'],
     height: '1,73 m',
-    powers: ['der Tod in Gestalt einer Hexe', 'grüne Magie', 'nimmt jedes Leben mit einer Berührung'],
   },
   'lilia-calderu': {
     height: '1,63 m',
-    powers: ['Wahrsagerei mit dem Tarot', 'sieht die Zeit nicht der Reihe nach', 'Schutzzauber'],
   },
   'jennifer-kale': {
     height: '1,70 m',
-    powers: ['Trankhexe', 'Kräuterkunde', 'ihre Macht liegt unter einem Fluch'],
   },
   'alice-wu-gulliver': {
     height: '1,78 m',
-    powers: ['Schutzzauber gegen jede Magie', 'Rockmusik als Zauber', 'Personenschutz'],
   },
   'joaquin-torres-falcon': {
     height: '1,78 m',
-    powers: ['Flügelanzug', 'Ausbildung bei der Air Force', 'Aufklärung aus der Luft'],
   },
   'bullseye': {
     origin: 'Portsmouth, New Hampshire',
     height: '1,83 m',
-    powers: ['trifft mit jedem Gegenstand', 'FBI-Scharfschütze', 'Nahkampf'],
   },
   'frank-castle-punisher': {
     height: '1,88 m',
-    powers: ['Ausbildung bei den Marines', 'schweres Arsenal', 'Nahkampf ohne Rücksicht'],
   },
   'vanessa-fisk': {
     height: '1,73 m',
-    powers: ['Führung der Geschäfte ihres Mannes', 'Kunsthandel als Fassade', 'Einfluss auf Fisk'],
   },
   'muse': {
     height: '1,85 m',
     teams: ['Einzelgänger'],
-    powers: ['Kunstwerke aus dem Blut seiner Opfer', 'Nahkampf', 'kennt jeden Winkel der Stadt'],
   },
   'karen-page': {
     origin: 'Fagan Corners, Vermont',
     height: '1,75 m',
-    powers: ['Recherche im Investigativjournalismus', 'Kanzleiarbeit', 'sucht die Wahrheit hinter jeder Akte'],
   },
-  'connor-powell': {
-    powers: ['Polizist im Streifendienst', 'Anti-Vigilanten-Einheit'],
-  },
+  'connor-powell': {},
   'cole-north': {
     height: '1,80 m',
-    powers: ['Polizist der Anti-Vigilanten-Einheit', 'Ermittlungsarbeit'],
   },
   'white-tiger': {
     teams: ['Daredevils Truppe'],
     height: '1,78 m',
-    powers: ['Tigeramulett', 'Kampfkunst', 'übermenschliche Reflexe'],
   },
-  'parker-robbins-the-hood': {
-    powers: ['dämonische Kapuze', 'Unsichtbarkeit und Levitation', 'Bande aus Kleinkriminellen'],
-  },
+  'parker-robbins-the-hood': {},
   'n-a-t-a-l-i-e': {
     species: 'Künstliche Intelligenz',
     origin: 'Chicago, Illinois',
     teams: ['Ironheart-Projekt'],
-    powers: ['Nachbildung von Riris toter Freundin', 'steuert die Rüstung mit', 'Rechenleistung im Gefecht'],
   },
   'ezekiel-stane': {
     teams: ['Stane Industries'],
     height: '1,80 m',
-    powers: ['biomimetische Mechatronik', 'Erfinder wie sein Vater', 'Bunker voll Schwarzmarkttechnik'],
   },
   'mephisto': {
     teams: ['Hölle'],
     origin: 'Hölle',
     height: '1,85 m',
-    powers: ['handelt mit Seelen', 'formt Wirklichkeit für seinen Preis', 'nahezu unsterblich'],
   },
   'bob-sentry': {
     species: 'Mensch, verändert durch das Sentry-Serum',
     height: '1,80 m',
     teams: ['Thunderbolts', 'Projekt Sentry'],
-    powers: ['Kraft von einer Million explodierender Sonnen', 'Flug und Unverwundbarkeit', 'als Void die eigene Dunkelheit'],
   },
   'valentina-allegra-de-fontaine': {
     height: '1,73 m',
-    powers: ['Leitung der CIA', 'wirbt beschädigte Leute an', 'Netz aus Gefälligkeiten'],
   },
 
   /* ---------- Phase Six ---------- */
   'sue-storm-invisible-woman': {
     height: '1,75 m',
-    powers: ['Unsichtbarkeit', 'Kraftfelder', 'Verhandlung für die ganze Erde'],
   },
   'johnny-storm-human-torch': {
     height: '1,83 m',
-    powers: ['Körper in Flammen', 'Flug', 'liest die Sprache der Silver Surfer'],
   },
   'ben-grimm-the-thing': {
     height: '1,96 m',
-    powers: ['Körper aus Gestein', 'übermenschliche Kraft', 'hält jeden Treffer aus'],
   },
   'galactus': {
     species: 'Kosmische Entität',
     origin: 'Taa',
     teams: ['Kosmische Mächte'],
     height: '90 m',
-    powers: ['verschlingt ganze Planeten', 'Macht der Kosmischen Kraft', 'Schiff von der Größe einer Stadt'],
   },
   'silver-surfer': {
     origin: 'Zenn-La',
     teams: ['Herolde von Galactus'],
     height: '1,93 m',
-    powers: ['Kosmische Kraft', 'Surfbrett schneller als Licht', 'sucht Welten für Galactus'],
   },
   'doctor-doom': {
     height: '1,88 m',
     teams: ['Latveria'],
-    powers: ['Rüstung aus Technik und Magie', 'Herrscher über Latveria', 'Verstand auf Augenhöhe mit Reed Richards'],
   },
   'simon-williams': {
     height: '1,88 m',
     teams: ['Schauspielergewerkschaft'],
-    powers: ['Ionenenergie im Körper', 'übermenschliche Kraft', 'Schauspieler in Hollywood'],
   },
   'regisseur-von-kovak': {
     origin: 'Los Angeles, Kalifornien',
     teams: ['Filmbranche'],
     height: '1,80 m',
-    powers: ['Regie einer Neuverfilmung', 'Einfluss auf jede Besetzung'],
   },
   'jessica-jones': {
     height: '1,75 m',
-    powers: ['übermenschliche Kraft', 'Privatdetektivin', 'Sprünge über mehrere Stockwerke'],
   },
   'tarantula': {
     origin: 'Delvadia, Südamerika',
     species: 'Mensch, verstärkt durch ein Serum',
     teams: ['Streitkräfte von Delvadia'],
     status: 'Am Leben',
-    powers: ['übermenschliche Kraft aus einem Serum', 'vergiftete Stacheln an den Stiefeln', 'Kampfsport'],
   },
   'jocasta-angekuendigt': {
     origin: 'unbekannt',
     teams: ['Ultrons Werk'],
     height: '1,80 m',
-    powers: ['Körper aus Metall', 'Gegenstück zu Vision', 'Bewusstsein aus fremder Vorlage'],
   },
   'e-d-i-t-h': {
     origin: 'Tony Starks Werkstatt',
     species: 'Künstliche Intelligenz',
     teams: ['Stark Industries'],
     status: 'Am Leben',
-    powers: ['Zugriff auf Starks Satellitennetz', 'Drohnenflotte', 'sitzt in einer Brille'],
   },
   'erik-lehnsherr-magneto': {
     height: '1,85 m',
-    powers: ['Herrschaft über Magnetfelder', 'formt jedes Metall', 'Überlebender der Lager'],
   },
   'scott-summers-cyclops': {
     height: '1,83 m',
-    powers: ['Energiestrahl aus den Augen', 'Rubinquarz-Visier', 'Feldführung der X-Men'],
   },
   'raven-darkhoelme-mystique': {
     height: '1,78 m',
-    powers: ['nimmt jede Gestalt an', 'Nahkampf', 'Spionage über Jahrzehnte'],
   },
   'kurt-wagner-nightcrawler': {
     height: '1,75 m',
-    powers: ['Teleportation', 'Beweglichkeit eines Akrobaten', 'Schwanz als dritte Hand'],
   },
   'remy-lebeau-gambit': {
     origin: 'New Orleans, Louisiana',
     height: '1,85 m',
-    powers: ['lädt Gegenstände mit Energie auf', 'Spielkarten als Wurfwaffen', 'Kampfstab'],
   },
   'wolfgang-von-strucker': {
     origin: 'Deutschland',
     height: '1,85 m',
-    powers: ['Führung der HYDRA-Zelle in Sokovia', 'Experimente mit Lokis Zepter', 'Menschenversuche'],
   },
-  'laura-barton': {
-    powers: ['frühere Agentin von S.H.I.E.L.D.', 'hält den Rückzugsort der Familie geheim', 'recherchiert für ihren Mann'],
-  },
-  'lila-barton': {
-    powers: ['Bogenschießen beim Vater gelernt'],
-  },
+  'laura-barton': {},
+  'lila-barton': {},
   'bill-foster': {
     height: '1,88 m',
-    powers: ['Wachstum auf über sieben Meter', 'Biochemiker von Rang', 'Pym-Partikel'],
   },
   'ebony-maw': {
     species: 'Außerirdischer',
     origin: 'unbekannte Welt',
     height: '1,88 m',
-    powers: ['Telekinese', 'Manipulation von Materie', 'Redekunst'],
   },
   'ebony-maw-2014': {
     species: 'Außerirdischer',
     teams: ['Black Order'],
     status: 'Verstorben',
-    powers: ['Telekinese', 'Überredung', 'Stimme des Thanos'],
   },
   'corvus-glaive': {
     origin: 'unbekannte Welt',
     height: '1,96 m',
-    powers: ['Klinge, die alles durchschneidet', 'Wiederbelebung durch die Klinge', 'übermenschliche Kraft'],
   },
   'corvus-glaive-2014': {
     species: 'Außerirdischer',
     teams: ['Black Order'],
     status: 'Verstorben',
-    powers: ['Klinge, die alles durchtrennt', 'Nahkampf'],
   },
   'proxima-midnight': {
     origin: 'unbekannte Welt',
     height: '1,88 m',
-    powers: ['zielsuchender Dreizack', 'übermenschliche Schnelligkeit', 'Nahkampf'],
   },
   'proxima-midnight-2014': {
     species: 'Außerirdische',
     teams: ['Black Order'],
     status: 'Verstorben',
-    powers: ['Speer aus einem sterbenden Stern', 'Nahkampf'],
   },
   'cull-obsidian': {
     species: 'Außerirdischer',
     origin: 'unbekannte Welt',
     height: '2,29 m',
-    powers: ['Kettenhammer', 'übermenschliche Kraft', 'nachwachsender Arm'],
   },
   'cull-obsidian-2014': {
     species: 'Außerirdischer',
     teams: ['Black Order'],
     status: 'Verstorben',
-    powers: ['Kettenhammer', 'übermenschliche Kraft'],
   },
   'eitri': {
     species: 'Zwerg',
     origin: 'Nidavellir',
     height: '5 m',
     teams: ['Zwerge von Nidavellir'],
-    powers: ['Schmied von Mjölnir und Stormbreaker', 'Sternenschmiede', 'König der Zwerge'],
   },
   'hunter-b-15': {
     teams: ['Zeitvarianzbehörde', 'Minutemen'],
-    powers: ['Zeitstab', 'Nahkampf', 'Führung einer Jägereinheit'],
   },
   'death-dealer': {
     teams: ['Ten Rings'],
     height: '1,75 m',
-    powers: ['Ausbilder der Ten Rings', 'Doppelklingen', 'Kampfkunst'],
   },
   'ying-li': {
     teams: ['Ta Lo'],
     height: '1,68 m',
-    powers: ['Kraft des Großen Beschützers', 'lenkt Luft und Bewegung', 'Wächterin des Tors'],
   },
   'arnim-zola': {
     origin: 'Schweiz',
     species: 'Mensch, später Bewusstsein auf Magnetband',
     height: '1,65 m',
-    powers: ['Waffenbau aus Tesserakt-Energie', 'Algorithmus zur Vorhersage von Gegnern', 'überlebt als Rechner'],
   },
   'ayesha': {
     origin: 'Sovereign',
     height: '1,80 m',
     teams: ['Sovereign'],
-    powers: ['Herrscherin der Sovereign', 'Zucht ihres Volkes in Kokons', 'Schöpferin von Adam Warlock'],
   },
   'howard-the-duck': {
     origin: 'Duckworld',
     species: 'Duckworldianer',
     height: '0,79 m',
     teams: ['Knowhere', 'Sammlung des Collectors'],
-    powers: ['spricht und trinkt wie ein Mensch', 'Pilot', 'Schusswaffen'],
   },
   'ying-nan': {
     origin: 'Ta Lo',
     teams: ['Ta Lo'],
     height: '1,63 m',
-    powers: ['Kampfkunst von Ta Lo', 'Waffen aus Drachenschuppen', 'Hüterin des Dunklen Tors'],
   },
   'black-bolt': {
     species: 'Inhuman',
     height: '1,88 m',
     teams: ['Illuminati', 'Königsfamilie der Inhumans'],
     status: 'Verstorben',
-    powers: ['zerstörerische Stimme', 'Flug', 'übermenschliche Kraft'],
   },
   'clea': {
     origin: 'Dunkle Dimension',
     species: 'Zauberin der Dunklen Dimension',
     height: '1,77 m',
-    powers: ['Portale zwischen den Dimensionen', 'mystische Künste', 'Nichte von Dormammu'],
   },
   'chester-phillips': {
     height: '1,85 m',
     teams: ['SSR', 'S.H.I.E.L.D.', 'US-Armee'],
-    powers: ['Kommando über die SSR', 'Taktik', 'Mitgründer von S.H.I.E.L.D.'],
   },
   'kurse': {
     origin: 'Svartalfheim',
     species: 'Dunkelelf, zum Kursed umgeformt',
     height: '2,29 m',
-    powers: ['übermenschliche Kraft', 'Armklingen', 'nahezu unverwundbar'],
   },
   'kraglin': {
     origin: 'Xandar',
     species: 'Xandarianer',
     height: '1,80 m',
     teams: ['Guardians of the Galaxy', 'Ravagers'],
-    powers: ['Yaka-Pfeil', 'Pilot', 'Nahkampf'],
   },
   'krugarr': {
     origin: 'unbekannte Welt',
     species: 'Lem',
     teams: ['Ravagers', 'United Ravagers'],
-    powers: ['mystische Künste', 'Portale', 'Energieschilde'],
   },
   'kro': {
     origin: 'Erde',
     species: 'Deviant',
     height: '2,44 m',
     teams: ['Deviants'],
-    powers: ['Kräfte getöteter Eternals', 'Klauen und Ranken', 'Selbstheilung'],
   },
   'rintrah': {
     origin: "R'Vaal",
     species: "R'Vaalianer",
     height: '2,13 m',
     teams: ['Meister der mystischen Künste'],
-    powers: ['mystische Künste', 'Schutzschilde', 'Portale'],
   },
   'rama-tut': {
     origin: 'Altes Ägypten',
     species: 'Mensch aus dem 31. Jahrhundert',
     teams: ['Rat der Kangs'],
-    powers: ['Technik aus der Zukunft', 'Zeitreise', 'Herrschaft über eine Epoche'],
   },
   'white-vision': {
     species: 'Synthezoid ohne Gedankenstein',
     height: '1,91 m',
     teams: ['S.W.O.R.D.'],
-    powers: ['Dichteveränderung', 'Flug', 'Energiestrahl', 'Vibranium-Körper'],
   },
   'aamir-khan': {
     origin: 'Jersey City, New Jersey',
     species: 'Mensch',
     height: '1,80 m',
-    powers: ['keine, Familie der Khans'],
   },
   'sana-ali': {
     origin: 'Karatschi, Pakistan',
     species: 'Mensch',
     height: '1,55 m',
-    powers: ['sieht das Muster aus Sternen', 'Hüterin der Familiengeschichte'],
   },
   'mrs-hart': {
     origin: 'Westview, New Jersey',
     species: 'Mensch',
     height: '1,55 m',
     teams: ['Westview Historical Society', 'Agathas Zirkel'],
-    powers: ['keine, vom Hex in ihre Rolle gezwungen'],
   },
   'juggernaut': {
     origin: 'die Leere',
     species: 'Mutant',
     height: '2,03 m',
     teams: ['Cassandra Novas Gefolge'],
-    powers: ['unaufhaltsamer Ansturm', 'übermenschliche Kraft', 'Helm schützt vor Telepathie'],
   },
   'arishem': {
     origin: 'die Weltenschmiede',
     species: 'Celestial',
     height: 'über 2 km',
     teams: ['Celestials'],
-    powers: ['erschafft Sterne und Arten', 'baut die Eternals', 'richtet über ganze Welten'],
   },
   'tiamut': {
     origin: 'Erdkern',
     species: 'Celestial',
     height: 'über 2 km',
     teams: ['Celestials'],
-    powers: ['kosmische Energie', 'seine Geburt zerreißt Planeten', 'von Sersi versteinert'],
   },
   'nezarr': {
     origin: 'die Weltenschmiede',
     species: 'Celestial',
     height: 'über 2 km',
     teams: ['Celestials'],
-    powers: ['erschafft Welten', 'kosmische Energie'],
   },
   'eros-starfox': {
     origin: 'Titan',
     species: 'Eternal',
     height: '1,78 m',
     teams: ['Eternals von Titan'],
-    powers: ['beeinflusst Gefühle', 'Raumfahrt', 'Bruder des Thanos'],
   },
   'cosmo': {
     origin: 'Sowjetunion, dann Knowhere',
     species: 'Hund',
     teams: ['Guardians of the Galaxy', 'Knowhere'],
-    powers: ['Telekinese', 'Telepathie', 'Raumanzug'],
   },
   'lylla': {
     origin: 'Labor des High Evolutionary',
     species: 'Otter mit Kybernetik',
     teams: ['Batch 89'],
-    powers: ['mechanische Vorderbeine', 'Sprache', 'gibt Rocket seinen Namen'],
   },
   'teefs': {
     origin: 'Labor des High Evolutionary',
     species: 'Walross mit Kybernetik',
     teams: ['Batch 89'],
-    powers: ['Räder statt Flossen', 'Sprache'],
   },
   'floor': {
     origin: 'Labor des High Evolutionary',
     species: 'Kaninchen mit Kybernetik',
     teams: ['Batch 89'],
-    powers: ['Spinnenbeine', 'Sprache'],
   },
   'phyla-vell': {
     origin: 'die Arête',
     species: 'Kree',
     teams: ['Guardians of the Galaxy'],
-    powers: ['Kree-Physiologie', 'im Labor des High Evolutionary aufgewachsen'],
   },
   'der-andere': {
     origin: 'unbekannte Welt',
     species: 'Chitauri',
     teams: ['Schwarzer Orden', 'Chitauri'],
-    powers: ['spricht für Thanos', 'befehligt die Chitauri'],
   },
   'h-e-r-b-i-e': {
     origin: 'Baxter Building, New York',
     species: 'Roboter',
     teams: ['Fantastic Four'],
-    powers: ['Bordrechner', 'ausfahrbare Arme', 'Navigation und Haushalt'],
   },
   'hercules': {
     origin: 'Olymp',
     species: 'Gott',
     height: '1,88 m',
     teams: ['Götter des Olymp'],
-    powers: ['göttliche Kraft', 'goldene Keule', 'Sohn des Zeus'],
   },
   'piledriver': {
     origin: 'USA',
     species: 'Mensch mit asgardischem Vibranium',
     teams: ['Wrecking Crew', 'Intelligencia'],
-    powers: ['übermenschliche Kraft in den Fäusten', 'Nahkampf'],
   },
   'morris': {
     origin: 'Ta Lo',
     species: 'Fabelwesen aus Ta Lo',
     teams: ['Ta Lo'],
-    powers: ['Flug', 'kennt den Weg durch das Nebellabyrinth', 'gesichtslos'],
+  },
+  'der-grosse-beschuetzer': {
+    origin: 'Ta Lo',
+    species: 'Drache',
+    teams: ['Ta Lo'],
+    status: 'Am Leben',
   },
   'veb': {
     origin: 'Quantenraum',
     species: 'Wesen aus dem Quantenraum',
     teams: ['Freiheitskämpfer'],
-    powers: ['Körper ohne Öffnungen', 'Übersetzungsflüssigkeit', 'formbare Masse'],
   },
   'toad': {
     origin: 'die Leere',
     species: 'Mutant',
     teams: ['Cassandra Novas Gefolge'],
-    powers: ['meterlange Zunge', 'Sprungkraft', 'ätzender Speichel'],
   },
   'azazel': {
     origin: 'die Leere',
     species: 'Mutant',
     teams: ['Cassandra Novas Gefolge'],
-    powers: ['Teleportation in roter Rauchwolke', 'Greifschwanz als Stichwaffe', 'Schwertkampf'],
   },
   'elektra': {
     origin: 'Griechenland',
     species: 'Mensch',
     height: '1,65 m',
-    teams: ['Die Hand', 'Chaste'],
-    powers: ['Kampfkunst', 'zwei Sai', 'als Black Sky ausgebildet'],
+    teams: ['Widerstand im Void'],
+  },
+  'blind-al': {
+    origin: 'New York City, New York',
+    species: 'Mensch',
+    teams: ['Wade Wilsons Freundeskreis'],
+    status: 'Am Leben',
+  },
+  'negasonic-teenage-warhead': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutantin',
+    teams: ['X-Men'],
+    status: 'Am Leben',
+  },
+  'yukio': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutantin',
+    teams: ['X-Men'],
+    status: 'Am Leben',
+  },
+  'peter-wisdom': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mensch',
+    teams: ['Drive Max', 'X-Force'],
+    status: 'Am Leben',
+  },
+  'shatterstar': {
+    origin: 'nicht von der Erde',
+    species: 'Außerirdischer',
+    teams: ['X-Force'],
+    status: 'Am Leben',
+  },
+  'headpool': {
+    origin: 'Zombie-Kopf-Universum',
+    species: 'Zombifizierter Mutant',
+    teams: ['Deadpool Corps'],
+    status: 'Zombifiziert',
+  },
+  'callisto': {
+    origin: 'die Leere',
+    species: 'Mutantin',
+    teams: ['Cassandra Novas Gefolge'],
+    status: 'Verstorben',
+  },
+  'quill': {
+    origin: 'die Leere',
+    species: 'Mutantin',
+    teams: ['Cassandra Novas Gefolge'],
+    status: 'Verstorben',
+  },
+  'lady-deathstrike': {
+    origin: 'die Leere',
+    species: 'Mutantin',
+    teams: ['Cassandra Novas Gefolge'],
+    status: 'Unbekannt',
   },
   'throg': {
     origin: 'gekappte Zeitlinie',
     species: 'Asgardier als Frosch',
     height: '12 cm',
-    powers: ['winziger Mjölnir', 'Donnerkraft', 'würdig'],
   },
   'alioth': {
     origin: 'die Leere am Ende der Zeit',
     species: 'Wesen aus reiner Zeitenergie',
     height: 'mehrere Kilometer',
-    powers: ['verschlingt Materie und Zeit', 'unangreifbar', 'Wächter der Leere'],
   },
   'colossus': {
     origin: 'Russland',
     species: 'Mutant',
     height: '2,08 m',
     teams: ['X-Men'],
-    powers: ['Haut aus organischem Stahl', 'übermenschliche Kraft', 'nahezu unverwundbar'],
   },
   'eson': {
     origin: 'unbekannt',
     species: 'Celestial',
     height: 'über 2 km',
     teams: ['Celestials'],
-    powers: ['trägt den Machtstein im Stab', 'löscht ganze Welten', 'kosmische Energie'],
   },
   'jemiah': {
     origin: 'die Weltenschmiede',
     species: 'Celestial',
     height: 'über 2 km',
     teams: ['Celestials'],
-    powers: ['erschafft Welten und Arten', 'kosmische Energie'],
   },
   'j-jonah-jameson': {
     origin: 'New York City, New York',
     species: 'Mensch',
     height: '1,80 m',
     teams: ['TheDailyBugle.net'],
-    powers: ['Reichweite im Netz', 'enthüllt Spider-Mans Identität'],
   },
   'martinex': {
     origin: 'Pluto',
     species: 'Pluvianer',
     height: '1,80 m',
     teams: ['Ravagers', 'United Ravagers'],
-    powers: ['Körper aus Kristall', 'Hitze und Kälte aus den Händen', 'Ravager-Hauptmann'],
   },
   'shocker': {
     origin: 'New York City, New York',
     species: 'Mensch',
     height: '1,85 m',
     teams: ['Adrian Toomes’ Bande'],
-    powers: ['Vibrationshandschuh', 'Chitauri-Technik', 'Nahkampf'],
   },
   'ulysses-klaue': {
     origin: 'Südafrika',
     species: 'Mensch mit Armprothese',
     height: '1,75 m',
     teams: ['Schwarzmarkt', 'Erik Killmongers Plan'],
-    powers: ['Schallkanone im Arm', 'Vibranium-Handel', 'Waffenschmuggel'],
   },
   'jean-grey': {
     origin: 'USA',
     species: 'Mutantin',
     status: 'Am Leben',
-    powers: ['übernimmt fremde Körper', 'Telepathie über weite Strecken', 'Telekinese und psionische Wellen'],
   },
   'sara-grey': {
     origin: 'USA',
     species: 'Mutantin',
     status: 'Verstorben',
-    powers: ['Telepathie', 'übernimmt fremde Körper', 'Sprünge über mehrere Menschen hinweg'],
   },
   'william-metzger': {
     origin: 'USA',
     species: 'Mensch',
     teams: ['Damage Control'],
     status: 'Am Leben',
-    powers: ['Leitung von Damage Control', 'Zugriff auf beschlagnahmte Technik', 'Versuche an Gefangenen'],
   },
   'jean-dewolff': {
     origin: 'New York City, New York',
     species: 'Mensch',
     teams: ['New York City Police Department'],
     status: 'Am Leben',
-    powers: ['Ermittlungen gegen das organisierte Verbrechen', 'Kontakte im gesamten Revier', 'kurzer Draht zu Spider-Man'],
+  },
+  'snow': {
+    origin: 'Japan',
+    species: 'Mensch',
+    teams: ['Hand', 'Department of Damage Control'],
+    status: 'Am Leben',
+  },
+  'ramrod': {
+    origin: 'USA',
+    species: 'Mensch (Cyborg)',
+    status: 'Am Leben',
   },
   'e-v': {
     origin: 'Peter Parkers Werkstatt',
     species: 'Künstliche Intelligenz',
     teams: ['Spider-Mans Anzug'],
     status: 'Am Leben',
-    powers: ['Anzeige im Sichtfeld der Maske', 'Auswertung von Kampfdaten', 'Wartung und Kalibrierung des Anzugs'],
   },
   'paul-rabin': {
     origin: 'USA',
     species: 'Mensch',
     status: 'Am Leben',
-    powers: ['Studium am MIT', 'Freund von MJ', 'nichts von alledem, was um ihn herum passiert'],
   },
   'lonnie-lincoln-tombstone': {
     origin: 'USA',
     species: 'Mensch mit verstärkter Konstitution',
     teams: ['eigene Bande in New York'],
     status: 'Am Leben',
-    powers: ['übermenschliche Kraft', 'sehr widerstandsfähige Haut', 'schnelle Reflexe'],
   },
   'fred-myers-boomerang': {
     origin: 'Australien',
     species: 'Mensch',
     status: 'Am Leben',
-    powers: ['Wurfbumerangs mit verschiedener Wirkung', 'Anzug mit Visier und Halterungen', 'trifft auf große Entfernung'],
+  },
+  'alejandro-montoya-el-aguila': {
+    origin: 'Spanien',
+    species: 'Mensch',
+    teams: ['Abomaste'],
+    status: 'Am Leben',
+  },
+  'alexander-gentry-porcupine': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Abomaste'],
+    status: 'Am Leben',
+  },
+  'dirk-garthwaite-wrecker': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Wrecking Crew', 'Intelligencia', 'Abomaste'],
+    status: 'Am Leben',
+  },
+  'muzzafar-lambert-saracen': {
+    origin: 'Erde',
+    species: 'Vampir',
+    teams: ['Abomaste'],
+    status: 'Am Leben',
+  },
+  'william-taurens-man-bull': {
+    origin: 'USA',
+    species: 'Verstärkter Mensch',
+    teams: ['Abomaste'],
+    status: 'Am Leben',
+  },
+  'craig-hollis-mr-immortal': {
+    origin: 'USA',
+    species: 'Verstärkter Mensch',
+    teams: ['Goodman, Lieber, Kurtzberg & Holliway'],
+    status: 'Am Leben',
+  },
+  'donny-blaze': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Meister der mystischen Künste'],
+    status: 'Am Leben',
+  },
+  'luke-jacobson': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'mallory-book': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Goodman, Lieber, Kurtzberg & Holliway'],
+    status: 'Am Leben',
+  },
+  'skaar': {
+    origin: 'Sakaar',
+    species: 'Mensch-Hybrid',
+    status: 'Am Leben',
+  },
+  'todd-phelps': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Intelligencia'],
+    status: 'Am Leben',
+  },
+  'clown': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Hoods Bande'],
+    status: 'Am Leben',
+  },
+  'jeri-blood': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Hoods Bande'],
+    status: 'Am Leben',
+  },
+  'john-king': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Hoods Bande'],
+    status: 'Verstorben',
+  },
+  'landon': {
+    origin: 'Chicago, USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'ronnie-williams': {
+    origin: 'Chicago, USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'roz-blood': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Hoods Bande'],
+    status: 'Am Leben',
+  },
+  'slug': {
+    origin: 'Madripoor',
+    species: 'Mensch',
+    teams: ['Hoods Bande'],
+    status: 'Am Leben',
+  },
+  'zelma-stanton': {
+    origin: 'Chicago, USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'agent-cleary': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Department of Damage Control'],
+    status: 'Am Leben',
+  },
+  'demarr-davis-doorman': {
+    origin: 'USA',
+    species: 'Verstärkter Mensch',
+    teams: ['Wilcox'],
+    status: 'Am Leben',
+  },
+  'eric-williams': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'janelle-jackson': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Hanover Agency'],
+    status: 'Am Leben',
+  },
+  'martha-williams': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'sanford-williams': {
+    origin: 'USA',
+    species: 'Mensch',
+    status: 'Verstorben',
+  },
+  'cowboypool': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Deadpool Corps', 'Cassandra Novas Gefolge'],
+    status: 'Am Leben',
+  },
+  'johnny-storm-121698': {
+    origin: 'Erde-121698',
+    species: 'Mensch',
+    teams: ['Fantastic Four', 'Resistance'],
+    status: 'Verstorben',
+  },
+  'kidpool': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Deadpool Corps', 'Cassandra Novas Gefolge'],
+    status: 'Am Leben',
+  },
+  'ladypool': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Deadpool Corps', 'Cassandra Novas Gefolge'],
+    status: 'Am Leben',
+  },
+  'laura-x-23': {
+    origin: 'Erde-10005',
+    species: 'Mutant',
+    teams: ['Resistance'],
+    status: 'Am Leben',
+  },
+  'samuraipool': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Deadpool Corps', 'Cassandra Novas Gefolge'],
+    status: 'Am Leben',
+  },
+  'victor-creed-sabretooth': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Cassandra Novas Gefolge'],
+    status: 'Verstorben',
+  },
+  'john-allerdyce-pyro': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Cassandra Novas Gefolge', 'Mr. Paradox\' Truppe'],
+    status: 'Verstorben',
+  },
+  'dave': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['X-Con Security Consultants'],
+    status: 'Am Leben',
+  },
+  'jentorra': {
+    origin: 'Quantenreich',
+    species: 'Bewohnerin des Quantenreichs',
+    teams: ['Freiheitskämpfer'],
+    status: 'Am Leben',
+  },
+  'jim-paxton': {
+    origin: 'San Francisco, USA',
+    species: 'Mensch',
+    teams: ['San Francisco Police Department'],
+    status: 'Am Leben',
+  },
+  'kurt-goreshter': {
+    origin: 'Russland',
+    species: 'Mensch',
+    teams: ['X-Con Security Consultants'],
+    status: 'Am Leben',
+  },
+  'krylar': {
+    origin: 'Quantenreich',
+    species: 'Bewohner des Quantenreichs',
+    teams: ['Freiheitskämpfer', 'Kangs Reich'],
+    status: 'Am Leben',
+  },
+  'maggie-lang': {
+    origin: 'San Francisco, USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'quaz': {
+    origin: 'Quantenreich',
+    species: 'Bewohner des Quantenreichs',
+    teams: ['Freiheitskämpfer'],
+    status: 'Am Leben',
+  },
+  'sonny-burch': {
+    origin: 'San Francisco, USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'aneka': {
+    origin: 'Wakanda',
+    species: 'Mensch',
+    teams: ['Dora Milaje', 'Midnight Angels'],
+    status: 'Am Leben',
+  },
+  'att-lass': {
+    origin: 'Hala',
+    species: 'Kree',
+    teams: ['Starforce', 'Kree-Imperium'],
+    status: 'Am Leben',
+  },
+  'attuma': {
+    origin: 'Talokan',
+    species: 'Talokanil',
+    teams: ['Streitkräfte von Talokan'],
+    status: 'Am Leben',
+  },
+  'ayo': {
+    origin: 'Wakanda',
+    species: 'Mensch',
+    teams: ['Dora Milaje', 'Midnight Angels'],
+    status: 'Am Leben',
+  },
+  'bron-char': {
+    origin: 'Hala',
+    species: 'Kree',
+    teams: ['Starforce', 'Kree-Imperium'],
+    status: 'Am Leben',
+  },
+  'korath-der-verfolger': {
+    origin: 'Hala',
+    species: 'Kree (Kybernetisch verstärkt)',
+    teams: ['Starforce', 'Kree-Imperium', 'Ronans Truppe'],
+    status: 'Verstorben',
+  },
+  'namora': {
+    origin: 'Talokan',
+    species: 'Talokanil',
+    teams: ['Streitkräfte von Talokan'],
+    status: 'Am Leben',
+  },
+  'prinz-yan': {
+    origin: 'Aladna',
+    species: 'Aladneer',
+    teams: ['Königshaus von Aladna'],
+    status: 'Am Leben',
+  },
+  'dimitri-smerdyakov': {
+    origin: 'Russland',
+    species: 'Mensch',
+    teams: ['Nick Furys Truppe'],
+    status: 'Am Leben',
+  },
+  'elder-beast': {
+    origin: 'Berg Wundagore',
+    species: 'Dämonisches Wesen',
+    teams: ['Chthons Wächter'],
+    status: 'Am Leben',
+  },
+  'franklin-richards': {
+    origin: 'Erde-828',
+    species: 'Mensch',
+    teams: ['Fantastic Four'],
+    status: 'Am Leben',
+  },
+  'giganto': {
+    origin: 'Erde-828',
+    species: 'Deviant',
+    status: 'Am Leben',
+  },
+  'harvey-elder-mole-man': {
+    origin: 'Subterranea',
+    species: 'Mensch',
+    teams: ['Union von Subterranea'],
+    status: 'Am Leben',
+  },
+  'rachel-rozman': {
+    origin: 'Erde-828',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'eli-bradley': {
+    origin: 'Baltimore, USA',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'flash-thompson': {
+    origin: 'New York, USA',
+    species: 'Mensch',
+    teams: ['Midtown School of Science and Technology'],
+    status: 'Am Leben',
+  },
+  'kareem-red-dagger': {
+    origin: 'Karatschi, Pakistan',
+    species: 'Mensch',
+    teams: ['Orden der Roten Dolche'],
+    status: 'Am Leben',
+  },
+  'karun-patel': {
+    origin: 'Indien',
+    species: 'Mensch',
+    status: 'Am Leben',
+  },
+  'liz-allan': {
+    origin: 'New York, USA',
+    species: 'Mensch',
+    teams: ['Midtown School of Science and Technology'],
+    status: 'Am Leben',
+  },
+  'miek': {
+    origin: 'Sakaar',
+    species: 'Sakaaranerin',
+    teams: ['Revolution von Sakaar', 'Asgardianer'],
+    status: 'Am Leben',
+  },
+  'pagon': {
+    origin: 'Skrullos',
+    species: 'Skrull',
+    teams: ['Skrull-Widerstand'],
+    status: 'Verstorben',
+  },
+  'pip-der-troll': {
+    origin: 'Laxidazia',
+    species: 'Laxidazianer',
+    status: 'Am Leben',
+  },
+  'tanngrisnir-und-tanngnjostr': {
+    origin: 'Indigarr',
+    species: 'Indigarrianische Ziegenböcke',
+    status: 'Am Leben',
+  },
+  'taweret': {
+    origin: 'Ägypten',
+    species: 'Ennead',
+    teams: ['Ennead'],
+    status: 'Am Leben',
+  },
+  'varra-priscilla-davis': {
+    origin: 'Skrullos',
+    species: 'Skrull',
+    teams: ['Skrull-Widerstand', 'S.H.I.E.L.D.'],
+    status: 'Am Leben',
+  },
+  'georges-batroc': {
+    origin: 'Frankreich',
+    species: 'Mensch',
+    teams: ['Französische Fremdenlegion', 'LAF', 'Flag Smashers'],
+    status: 'Verstorben',
+  },
+  'immortus': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mensch',
+    teams: ['Rat der Kangs'],
+    status: 'Am Leben',
+  },
+  'mel': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['O.X.E.'],
+    status: 'Am Leben',
+  },
+  'mr-charles': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['CIA'],
+    status: 'Am Leben',
+  },
+  'scarlet-centurion': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mensch',
+    teams: ['Rat der Kangs'],
+    status: 'Am Leben',
+  },
+  'tyler-hayward': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['S.W.O.R.D.'],
+    status: 'Am Leben',
+  },
+  'leila-taylor': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Regierung der Vereinigten Staaten'],
+    status: 'Am Leben',
+  },
+  'curtis-hoyle': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Selbsthilfegruppe für Veteranen'],
+    status: 'Am Leben',
+  },
+  'ma-gnucci': {
+    origin: 'New York City, New York',
+    species: 'Mensch',
+    teams: ['Familie Gnucci'],
+    status: 'Am Leben',
+  },
+  'franklin-nelson-foggy': {
+    origin: 'New York, USA',
+    species: 'Mensch',
+    teams: ['Nelson und Murdock'],
+    status: 'Verstorben',
+  },
+  'heather-glenn': {
+    origin: 'New York, USA',
+    species: 'Mensch',
+    teams: ['Verwaltung von Bürgermeister Fisk'],
+    status: 'Am Leben',
+  },
+  'luke-cage': {
+    origin: 'Savannah, USA',
+    species: 'Verstärkter Mensch',
+    teams: ['Defenders', 'Harlem\'s Paradise'],
+    status: 'Am Leben',
+  },
+  'yusuf-khan': {
+    origin: 'Karatschi, Pakistan',
+    species: 'Mensch',
+    teams: ['New York Mutual Bank'],
+    status: 'Am Leben',
   },
 };
 
@@ -3455,11 +3590,17 @@ const CHAR_FACTS_EXTRA = {
 const CHAR_BONDS = {
   'wade-wilson-deadpool': [
     ['Weggefährte', 'logan-wolverine'],
-    ['Weitere Fassung', 'nicepool'],
+    ['Variante', 'nicepool'],
     ['Hund', 'dogpool'],
+    ['Variante', 'ladypool'],
+    ['Variante', 'cowboypool'],
+    ['Variante', 'kidpool'],
+    ['Variante', 'samuraipool'],
+    ['Mitstreiter', 'blade'],
+    ['Weggefährte', 'colossus'],
   ],
   'nicepool': [
-    ['Andere Fassung', 'wade-wilson-deadpool'],
+    ['Hauptfassung', 'wade-wilson-deadpool'],
     ['Hund', 'dogpool'],
   ],
   'maria-rambeau': [
@@ -3474,6 +3615,9 @@ const CHAR_BONDS = {
   ],
   'reed-richards-mister-fantastic': [
     ['Fassung der Erde-838', 'reed-richards-838'],
+    ['Sohn', 'franklin-richards'],
+    ['Werk', 'h-e-r-b-i-e'],
+    ['Gegner', 'galactus'],
   ],
   'steve-rogers': [
     ['Bester Freund', 'bucky-barnes'],
@@ -3482,6 +3626,7 @@ const CHAR_BONDS = {
     ['Mentor', 'abraham-erskine'],
     ['Erzfeind', 'johann-schmidt-red-skull'],
     ['Gegenspieler', 'tony-stark'],
+    ['Befehlshaber', 'chester-phillips'],
   ],
   'tony-stark': [
     ['Vater', 'howard-stark'],
@@ -3492,6 +3637,9 @@ const CHAR_BONDS = {
     ['Ziehvater', 'obadiah-stane'],
     ['Gegenspieler', 'steve-rogers'],
     ['Erzfeind', 'thanos'],
+    ['Rivale', 'justin-hammer'],
+    ['Erzfeind', 'ivan-vanko-whiplash'],
+    ['Erzfeind', 'aldrich-killian'],
   ],
   'thor': [
     ['Bruder', 'loki'],
@@ -3501,38 +3649,43 @@ const CHAR_BONDS = {
     ['Große Liebe', 'jane-foster'],
     ['Treuester Freund', 'heimdall'],
     ['Weggefährte', 'bruce-banner'],
+    ['Weggefährtin', 'miek'],
+    ['Ziegenböcke', 'tanngrisnir-und-tanngnjostr'],
+    ['Schmied', 'eitri'],
+    ['Erzfeind', 'gorr'],
   ],
   'loki': [
-    ['Weitere Fassungen', 'kid-loki'],
+    ['Varianten', 'kid-loki'],
     ['Bruder', 'thor'],
     ['Ziehvater', 'odin'],
     ['Leiblicher Vater', 'laufey'],
     ['Ziehmutter', 'frigga'],
     ['Variante', 'sylvie'],
     ['Freund', 'mobius'],
+    ['Schwester', 'hela'],
   ],
   'classic-loki': [
-    ['Andere Fassung', 'loki'],
+    ['Hauptfassung', 'loki'],
     ['König', 'kid-loki'],
     ['Bezwinger', 'alioth'],
   ],
   'kid-loki': [
-    ['Andere Fassung', 'loki'],
+    ['Hauptfassung', 'loki'],
     ['Gefolgsmann', 'classic-loki'],
     ['Verräter', 'boastful-loki'],
     ['Gegenspieler', 'president-loki'],
   ],
   'boastful-loki': [
-    ['Andere Fassung', 'loki'],
+    ['Hauptfassung', 'loki'],
     ['Verratener König', 'kid-loki'],
     ['Auftraggeber', 'president-loki'],
   ],
   'alligator-loki': [
-    ['Andere Fassung', 'loki'],
+    ['Hauptfassung', 'loki'],
     ['König', 'kid-loki'],
   ],
   'president-loki': [
-    ['Andere Fassung', 'loki'],
+    ['Hauptfassung', 'loki'],
     ['Gegenspieler', 'kid-loki'],
     ['Komplize', 'boastful-loki'],
   ],
@@ -3542,6 +3695,7 @@ const CHAR_BONDS = {
     ['Weggefährte', 'thor'],
     ['Gegenspieler', 'emil-blonsky-abomination'],
     ['Nichte', 'jennifer-walters-she-hulk'],
+    ['Sohn', 'skaar'],
   ],
   'natasha-romanoff': [
     ['Schwester', 'yelena-belova'],
@@ -3555,9 +3709,10 @@ const CHAR_BONDS = {
     ['Weggefährte', 'sam-wilson'],
     ['Gegenspieler', 'helmut-zemo'],
     ['Rivale', 'john-walker'],
+    ['Peiniger', 'arnim-zola'],
   ],
   'peter-parker': [
-    ['Weitere Fassung', 'peter-parker-maguire'],
+    ['Variante', 'peter-parker-maguire'],
     ['Mentor', 'tony-stark'],
     ['Große Liebe', 'michelle-jones-watson'],
     ['Bester Freund', 'ned-leeds'],
@@ -3565,15 +3720,19 @@ const CHAR_BONDS = {
     ['Erzfeind', 'green-goblin'],
     ['Gegenspieler', 'adrian-toomes-vulture'],
     ['Ausbilder', 'happy-hogan'],
+    ['Ermittler', 'agent-cleary'],
+    ['Fahrer', 'dimitri-smerdyakov'],
+    ['Mitschüler', 'flash-thompson'],
+    ['Erzfeind', 'quentin-beck-mysterio'],
   ],
   'peter-parker-maguire': [
     ['Jüngste Fassung', 'peter-parker'],
-    ['Weitere Fassung', 'peter-parker-garfield'],
+    ['Variante', 'peter-parker-garfield'],
     ['Erzfeind', 'green-goblin'],
   ],
   'peter-parker-garfield': [
     ['Jüngste Fassung', 'peter-parker'],
-    ['Weitere Fassung', 'peter-parker-maguire'],
+    ['Variante', 'peter-parker-maguire'],
     ['Erzfeind', 'electro'],
   ],
   'wanda-maximoff': [
@@ -3583,25 +3742,31 @@ const CHAR_BONDS = {
     ['Sohn', 'billy-maximoff-wiccan'],
     ['Gegenspielerin', 'agatha-harkness'],
     ['Gegenspieler', 'stephen-strange'],
+    ['Gegner', 'tyler-hayward'],
+    ['Wächter', 'elder-beast'],
+    ['Peiniger', 'wolfgang-von-strucker'],
   ],
   'wanda-maximoff-838': [
-    ['Andere Fassung', 'wanda-maximoff'],
+    ['Hauptfassung', 'wanda-maximoff'],
   ],
   'stephen-strange': [
-    ['Weitere Fassung', 'defender-strange'],
+    ['Variante', 'defender-strange'],
     ['Lehrerin', 'the-ancient-one'],
     ['Weggefährte', 'wong'],
     ['Große Liebe', 'christine-palmer'],
     ['Gegenspieler', 'karl-mordo'],
     ['Schützling', 'america-chavez'],
+    ['Gegenspieler', 'kaecilius'],
+    ['Erzfeind', 'dormammu'],
+    ['Weggefährtin', 'clea'],
   ],
   'defender-strange': [
-    ['Andere Fassung', 'stephen-strange'],
+    ['Hauptfassung', 'stephen-strange'],
     ['Verratene Freundin', 'america-chavez'],
   ],
   'sinister-strange': [
-    ['Andere Fassung', 'stephen-strange'],
-    ['Weitere Fassung', 'defender-strange'],
+    ['Hauptfassung', 'stephen-strange'],
+    ['Variante', 'defender-strange'],
     ['Unerreichbare Liebe', 'christine-palmer'],
   ],
   'sam-wilson': [
@@ -3610,6 +3775,7 @@ const CHAR_BONDS = {
     ['Rivale', 'john-walker'],
     ['Partner', 'joaquin-torres-falcon'],
     ['Vorbild', 'isaiah-bradley'],
+    ['Erzfeind', 'georges-batroc'],
   ],
   'peter-quill': [
     ['Große Liebe', 'gamora'],
@@ -3625,7 +3791,7 @@ const CHAR_BONDS = {
     ['Große Liebe', 'peter-quill'],
   ],
   'gamora-2014': [
-    ['Andere Fassung', 'gamora'],
+    ['Hauptfassung', 'gamora'],
     ['Vater', 'thanos-2014'],
     ['Schwester', 'nebula-2014'],
     ['Verehrer', 'peter-quill'],
@@ -3645,6 +3811,7 @@ const CHAR_BONDS = {
     ['Bester Freund', 'groot'],
     ['Schöpfer', 'high-evolutionary'],
     ['Weggefährte', 'peter-quill'],
+    ['Gefährtin', 'lylla'],
   ],
   'groot': [
     ['Bester Freund', 'rocket'],
@@ -3656,6 +3823,8 @@ const CHAR_BONDS = {
     ['Große Liebe', 'nakia'],
     ['Generalin', 'okoye'],
     ['Erzfeind', 'erik-killmonger'],
+    ['Bester Freund', 'w-kabi'],
+    ['Mentor', 'zuri'],
   ],
   'shuri': [
     ['Bruder', 't-challa'],
@@ -3669,16 +3838,25 @@ const CHAR_BONDS = {
     ['Mentor', 'hank-pym'],
     ['Freund', 'luis'],
     ['Erzfeind', 'kang-der-eroberer'],
+    ['Frühere Ehe', 'maggie-lang'],
+    ['Freund', 'dave'],
+    ['Freund', 'kurt-goreshter'],
+    ['Verbündete', 'jentorra'],
+    ['Verbündeter', 'quaz'],
+    ['Bewährungshelfer', 'jimmy-woo'],
   ],
   'hope-van-dyne': [
     ['Vater', 'hank-pym'],
     ['Mutter', 'janet-van-dyne'],
     ['Große Liebe', 'scott-lang'],
+    ['Gegner', 'sonny-burch'],
   ],
   'clint-barton': [
     ['Beste Freundin', 'natasha-romanoff'],
     ['Schützling', 'kate-bishop'],
     ['Gegenspielerin', 'maya-lopez-echo'],
+    ['Hund', 'lucky'],
+    ['Freund', 'grills'],
   ],
   'carol-danvers': [
     ['Beste Freundin', 'maria-rambeau'],
@@ -3686,6 +3864,10 @@ const CHAR_BONDS = {
     ['Mentor und Gegner', 'yon-rogg'],
     ['Verbündeter', 'talos'],
     ['Gegenspielerin', 'dar-benn'],
+    ['Starforce', 'att-lass'],
+    ['Starforce', 'bron-char'],
+    ['Ehemann', 'prinz-yan'],
+    ['Gegnerin', 'supreme-intelligence'],
   ],
   'nick-fury': [
     ['Verbündete', 'carol-danvers'],
@@ -3693,6 +3875,7 @@ const CHAR_BONDS = {
     ['Freund', 'talos'],
     ['Erzfeind', 'gravik'],
     ['Gegenspieler', 'alexander-pierce'],
+    ['Ehefrau', 'varra-priscilla-davis'],
   ],
   'thanos': [
     ['Fassung von 2014', 'thanos-2014'],
@@ -3700,6 +3883,10 @@ const CHAR_BONDS = {
     ['Ziehtochter', 'nebula'],
     ['Handlanger', 'ronan'],
     ['Erzfeind', 'tony-stark'],
+    ['Gefolgsmann', 'ebony-maw'],
+    ['Gefolgsmann', 'corvus-glaive'],
+    ['Gefolgsfrau', 'proxima-midnight'],
+    ['Gefolgsmann', 'cull-obsidian'],
   ],
   'thanos-2014': [
     ['Späteres Ich', 'thanos'],
@@ -3708,27 +3895,28 @@ const CHAR_BONDS = {
     ['Bezwinger', 'tony-stark'],
   ],
   'ebony-maw-2014': [
-    ['Andere Fassung', 'ebony-maw'],
+    ['Hauptfassung', 'ebony-maw'],
     ['Herr', 'thanos-2014'],
   ],
   'corvus-glaive-2014': [
-    ['Andere Fassung', 'corvus-glaive'],
+    ['Hauptfassung', 'corvus-glaive'],
     ['Ehefrau', 'proxima-midnight-2014'],
     ['Herr', 'thanos-2014'],
   ],
   'proxima-midnight-2014': [
-    ['Andere Fassung', 'proxima-midnight'],
+    ['Hauptfassung', 'proxima-midnight'],
     ['Ehemann', 'corvus-glaive-2014'],
     ['Herr', 'thanos-2014'],
   ],
   'cull-obsidian-2014': [
-    ['Andere Fassung', 'cull-obsidian'],
+    ['Hauptfassung', 'cull-obsidian'],
     ['Herr', 'thanos-2014'],
   ],
   'vision': [
     ['Große Liebe', 'wanda-maximoff'],
     ['Schöpfer', 'tony-stark'],
     ['Schöpfer', 'ultron'],
+    ['Bekannte', 'jocasta-angekuendigt'],
   ],
   'james-rhodes': [
     ['Bester Freund', 'tony-stark'],
@@ -3736,45 +3924,48 @@ const CHAR_BONDS = {
   'pepper-potts': [
     ['Ehemann', 'tony-stark'],
     ['Vertrauter', 'happy-hogan'],
+    ['Gegner', 'aldrich-killian'],
   ],
   'yelena-belova': [
     ['Schwester', 'natasha-romanoff'],
     ['Ziehvater', 'alexei'],
     ['Ziehmutter', 'melina-vostokoff'],
     ['Weggefährte', 'bob-sentry'],
+    ['Erzfeind', 'general-dreykov'],
   ],
   'peggy-carter': [
     ['Fassung der Erde-838', 'peggy-carter-838'],
     ['Große Liebe', 'steve-rogers'],
     ['Verbündeter', 'howard-stark'],
     ['Großnichte', 'sharon-carter'],
+    ['Befehlshaber', 'chester-phillips'],
   ],
   'peggy-carter-838': [
-    ['Andere Fassung', 'peggy-carter'],
+    ['Hauptfassung', 'peggy-carter'],
     ['Mörderin', 'wanda-maximoff'],
     ['Weggefährte', 'karl-mordo-838'],
   ],
   'maria-rambeau-838': [
-    ['Andere Fassung', 'maria-rambeau'],
+    ['Hauptfassung', 'maria-rambeau'],
     ['Mörderin', 'wanda-maximoff'],
     ['Weggefährtin', 'peggy-carter-838'],
   ],
   'maria-rambeau-binary': [
-    ['Andere Fassung', 'maria-rambeau'],
+    ['Hauptfassung', 'maria-rambeau'],
     ['Kollege', 'hank-mccoy-beast'],
   ],
   'reed-richards-838': [
-    ['Andere Fassung', 'reed-richards-mister-fantastic'],
+    ['Hauptfassung', 'reed-richards-mister-fantastic'],
     ['Mörderin', 'wanda-maximoff'],
     ['Mitarbeiterin', 'christine-palmer-838'],
   ],
   'karl-mordo-838': [
-    ['Andere Fassung', 'karl-mordo'],
+    ['Hauptfassung', 'karl-mordo'],
     ['Gegenspieler', 'stephen-strange'],
     ['Weggefährtin', 'peggy-carter-838'],
   ],
   'christine-palmer-838': [
-    ['Andere Fassung', 'christine-palmer'],
+    ['Hauptfassung', 'christine-palmer'],
     ['Arbeitgeber', 'reed-richards-838'],
     ['Verbündeter', 'stephen-strange'],
   ],
@@ -3789,23 +3980,36 @@ const CHAR_BONDS = {
     ['Vertraute', 'karen-page'],
     ['Gegenspieler', 'bullseye'],
     ['Weggefährte', 'frank-castle-punisher'],
+    ['Beziehung', 'heather-glenn'],
+    ['Bester Freund', 'franklin-nelson-foggy'],
+    ['Gegenspieler', 'agent-cleary'],
+    ['Schneider', 'luke-jacobson'],
+    ['Weggefährte', 'luke-cage'],
+    ['Mandant', 'white-tiger'],
+    ['Mitstreiterin', 'jessica-jones'],
   ],
   'wilson-fisk-kingpin': [
     ['Erzfeind', 'matt-murdock-daredevil'],
     ['Ehefrau', 'vanessa-fisk'],
     ['Handlanger', 'bullseye'],
     ['Ziehtochter', 'maya-lopez-echo'],
+    ['Geschäftspartner', 'mr-charles'],
   ],
   'kamala-khan-ms-marvel': [
     ['Vorbild', 'carol-danvers'],
     ['Mutter', 'muneeba-khan'],
     ['Bester Freund', 'bruno-carrelli'],
     ['Freundin', 'nakia-bahadir'],
+    ['Vater', 'yusuf-khan'],
+    ['Ermittler', 'agent-cleary'],
+    ['Verbündeter', 'kareem-red-dagger'],
+    ['Großmutter', 'sana-ali'],
   ],
   'monica-rambeau': [
     ['Mutter', 'maria-rambeau'],
     ['Patentante', 'carol-danvers'],
     ['Freundin', 'wanda-maximoff'],
+    ['Vorgesetzter', 'tyler-hayward'],
   ],
   'john-walker': [
     ['Vorgänger', 'steve-rogers'],
@@ -3821,11 +4025,13 @@ const CHAR_BONDS = {
     ['Vater', 'wenwu-mandarin'],
     ['Schwester', 'xialing'],
     ['Beste Freundin', 'katy'],
+    ['Mutter', 'ying-li'],
   ],
   'marc-spector-steven-grant-moon-knight': [
     ['Gott', 'khonshu'],
     ['Ehefrau', 'layla-el-faouly'],
     ['Erzfeind', 'arthur-harrow'],
+    ['Geleiterin', 'taweret'],
   ],
   'love': [
     ['Vater', 'gorr'],
@@ -3848,6 +4054,11 @@ const CHAR_BONDS = {
   'jean-dewolff': [
     ['Verbündeter', 'peter-parker'],
   ],
+  'snow': [
+    ['Gegner', 'peter-parker'],
+    ['Vorgesetzter', 'william-metzger'],
+    ['Beherrscherin', 'jean-grey'],
+  ],
   'e-v': [
     ['Erbauer', 'peter-parker'],
   ],
@@ -3855,4 +4066,1496 @@ const CHAR_BONDS = {
     ['Freundin', 'michelle-jones-watson'],
     ['Freund', 'ned-leeds'],
   ],
-};
+  'happy-hogan': [
+    ['Chef', 'tony-stark'],
+    ['Vertraute', 'pepper-potts'],
+    ['Schützling', 'peter-parker'],
+    ['Weggefährte', 'james-rhodes'],
+  ],
+  'howard-stark': [
+    ['Sohn', 'tony-stark'],
+    ['Weggefährte', 'steve-rogers'],
+    ['Weggefährtin', 'peggy-carter'],
+    ['Kollege', 'abraham-erskine'],
+  ],
+  'thaddeus-ross': [
+    ['Tochter', 'betty-ross'],
+    ['Gejagter', 'bruce-banner'],
+    ['Handlanger', 'emil-blonsky-abomination'],
+    ['Gegenspieler', 'steve-rogers'],
+    ['Gegenspieler', 'sam-wilson'],
+    ['Sicherheitschefin', 'leila-taylor'],
+  ],
+  'betty-ross': [
+    ['Vater', 'thaddeus-ross'],
+    ['Geliebter', 'bruce-banner'],
+    ['Gegenspieler', 'emil-blonsky-abomination'],
+  ],
+  'emil-blonsky-abomination': [
+    ['Vorgesetzter', 'thaddeus-ross'],
+    ['Gegenspieler', 'bruce-banner'],
+    ['Mandantin', 'jennifer-walters-she-hulk'],
+    ['Mitgefangener', 'wong'],
+    ['Gruppe', 'alejandro-montoya-el-aguila'],
+    ['Gruppe', 'alexander-gentry-porcupine'],
+    ['Gruppe', 'muzzafar-lambert-saracen'],
+    ['Gruppe', 'william-taurens-man-bull'],
+  ],
+  'samuel-sterns-the-leader': [
+    ['Gegenspieler', 'bruce-banner'],
+    ['Gegenspieler', 'thaddeus-ross'],
+    ['Gegenspieler', 'sam-wilson'],
+  ],
+  'may-parker': [
+    ['Neffe', 'peter-parker'],
+    ['Vertrauter', 'happy-hogan'],
+    ['Bekannter', 'ned-leeds'],
+    ['Gegenspieler', 'green-goblin'],
+  ],
+  'ned-leeds': [
+    ['Bester Freund', 'peter-parker'],
+    ['Freundin', 'michelle-jones-watson'],
+    ['Mitschüler', 'flash-thompson'],
+  ],
+  'michelle-jones-watson': [
+    ['Freund', 'peter-parker'],
+    ['Freund', 'ned-leeds'],
+    ['Bekannter', 'happy-hogan'],
+  ],
+  'j-jonah-jameson': [
+    ['Gegenspieler', 'peter-parker'],
+    ['Kronzeuge', 'quentin-beck-mysterio'],
+  ],
+  'scorpion': [
+    ['Gegenspieler', 'peter-parker'],
+    ['Weggefährte', 'adrian-toomes-vulture'],
+  ],
+  'e-d-i-t-h': [
+    ['Erbauer', 'tony-stark'],
+    ['Erbe', 'peter-parker'],
+    ['Missbraucht von', 'quentin-beck-mysterio'],
+  ],
+  'heimdall': [
+    ['Weggefährte', 'thor'],
+    ['König', 'odin'],
+    ['Gegenspieler', 'loki'],
+    ['Weggefährtin', 'sif'],
+  ],
+  'odin': [
+    ['Sohn', 'thor'],
+    ['Ziehsohn', 'loki'],
+    ['Ehefrau', 'frigga'],
+    ['Tochter', 'hela'],
+    ['Erzfeind', 'surtur'],
+    ['Erzfeind', 'laufey'],
+  ],
+  'frigga': [
+    ['Ehemann', 'odin'],
+    ['Sohn', 'thor'],
+    ['Ziehsohn', 'loki'],
+    ['Mörder', 'kurse'],
+  ],
+  'sif': [
+    ['Weggefährte', 'thor'],
+    ['Weggefährte', 'heimdall'],
+    ['Weggefährte', 'fandral'],
+    ['Weggefährte', 'volstagg'],
+    ['Weggefährte', 'hogun'],
+  ],
+  'fandral': [
+    ['Weggefährte', 'thor'],
+    ['Weggefährtin', 'sif'],
+    ['Weggefährte', 'volstagg'],
+    ['Weggefährte', 'hogun'],
+  ],
+  'hogun': [
+    ['Weggefährte', 'thor'],
+    ['Weggefährtin', 'sif'],
+    ['Weggefährte', 'fandral'],
+    ['Weggefährte', 'volstagg'],
+  ],
+  'volstagg': [
+    ['Weggefährte', 'thor'],
+    ['Weggefährtin', 'sif'],
+    ['Weggefährte', 'fandral'],
+    ['Weggefährte', 'hogun'],
+  ],
+  'erik-selvig': [
+    ['Kollegin', 'jane-foster'],
+    ['Kollegin', 'darcy-lewis'],
+    ['Weggefährte', 'thor'],
+    ['Beherrscht von', 'loki'],
+  ],
+  'darcy-lewis': [
+    ['Mentorin', 'jane-foster'],
+    ['Kollege', 'erik-selvig'],
+    ['Bekannter', 'thor'],
+    ['Ehemann', 'jimmy-woo'],
+  ],
+  'johann-schmidt-red-skull': [
+    ['Erzfeind', 'steve-rogers'],
+    ['Wissenschaftler', 'arnim-zola'],
+    ['Gegenspielerin', 'peggy-carter'],
+  ],
+  'arnim-zola': [
+    ['Vorgesetzter', 'johann-schmidt-red-skull'],
+    ['Gegenspieler', 'steve-rogers'],
+    ['Werk', 'bucky-barnes'],
+  ],
+  'alexander-pierce': [
+    ['Gegenspieler', 'steve-rogers'],
+    ['Vorgesetzter', 'nick-fury'],
+    ['Werkzeug', 'bucky-barnes'],
+  ],
+  'crossbones': [
+    ['Erzfeind', 'steve-rogers'],
+    ['Vorgesetzter', 'alexander-pierce'],
+    ['Gegenspielerin', 'wanda-maximoff'],
+  ],
+  'isaiah-bradley': [
+    ['Nachfolger', 'sam-wilson'],
+    ['Bekannter', 'bucky-barnes'],
+    ['Enkel', 'eli-bradley'],
+  ],
+  'joaquin-torres-falcon': [
+    ['Mentor', 'sam-wilson'],
+    ['Bekannter', 'isaiah-bradley'],
+  ],
+  'valentina-allegra-de-fontaine': [
+    ['Anwerbung', 'yelena-belova'],
+    ['Anwerbung', 'john-walker'],
+    ['Anwerbung', 'bob-sentry'],
+    ['Vorgesetzter', 'thaddeus-ross'],
+    ['Assistentin', 'mel'],
+  ],
+  'goose': [
+    ['Halterin', 'carol-danvers'],
+    ['Vertrauter', 'nick-fury'],
+    ['Halterin', 'maria-rambeau'],
+  ],
+  'ronan': [
+    ['Gegenspieler', 'peter-quill'],
+    ['Auftraggeber', 'thanos'],
+    ['Handlangerin', 'nebula'],
+    ['Gegnerin', 'gamora'],
+    ['Gefolgsmann', 'korath-der-verfolger'],
+  ],
+  'der-andere': [
+    ['Herr', 'thanos'],
+    ['Bote an', 'loki'],
+    ['Bote an', 'ronan'],
+  ],
+  'the-collector': [
+    ['Kunde', 'peter-quill'],
+    ['Bruder', 'grandmaster'],
+    ['Sammlerstück', 'howard-the-duck'],
+  ],
+  'howard-the-duck': [
+    ['Sammler', 'the-collector'],
+    ['Weggefährte', 'peter-quill'],
+  ],
+  'yondu': [
+    ['Ziehsohn', 'peter-quill'],
+    ['Erster Offizier', 'kraglin'],
+    ['Ehemaliger Anführer', 'stakar-ogord'],
+    ['Gegenspieler', 'ego'],
+    ['Meuterer', 'taserface'],
+  ],
+  'stakar-ogord': [
+    ['Verstoßener', 'yondu'],
+    ['Weggefährte', 'martinex'],
+  ],
+  'martinex': [
+    ['Anführer', 'stakar-ogord'],
+    ['Weggefährte', 'yondu'],
+  ],
+  'ayesha': [
+    ['Gegenspieler', 'peter-quill'],
+    ['Sohn', 'adam-warlock'],
+    ['Gegenspieler', 'rocket'],
+    ['Söldner', 'yondu'],
+    ['Verbündeter', 'high-evolutionary'],
+  ],
+  'ultron': [
+    ['Erbauer', 'tony-stark'],
+    ['Erbauer', 'bruce-banner'],
+    ['Schöpfung', 'vision'],
+    ['Verbündete', 'wanda-maximoff'],
+    ['Verbündeter', 'pietro-maximoff'],
+    ['Schöpfung', 'jocasta-angekuendigt'],
+  ],
+  'pietro-maximoff': [
+    ['Zwillingsschwester', 'wanda-maximoff'],
+    ['Verbündeter', 'ultron'],
+    ['Weggefährte', 'clint-barton'],
+    ['Peiniger', 'wolfgang-von-strucker'],
+  ],
+  'ulysses-klaue': [
+    ['Gegenspieler', 't-challa'],
+    ['Weggefährte', 'erik-killmonger'],
+    ['Gegenspielerin', 'okoye'],
+    ['Gegenspieler', 'everett-ross'],
+  ],
+  'laura-barton': [
+    ['Ehemann', 'clint-barton'],
+    ['Sohn', 'cooper-barton'],
+    ['Tochter', 'lila-barton'],
+    ['Sohn', 'nathaniel-barton'],
+  ],
+  'cooper-barton': [
+    ['Vater', 'clint-barton'],
+    ['Mutter', 'laura-barton'],
+    ['Schwester', 'lila-barton'],
+    ['Bruder', 'nathaniel-barton'],
+  ],
+  'lila-barton': [
+    ['Vater', 'clint-barton'],
+    ['Mutter', 'laura-barton'],
+    ['Bruder', 'cooper-barton'],
+    ['Bruder', 'nathaniel-barton'],
+  ],
+  'nathaniel-barton': [
+    ['Vater', 'clint-barton'],
+    ['Mutter', 'laura-barton'],
+    ['Bruder', 'cooper-barton'],
+    ['Schwester', 'lila-barton'],
+  ],
+  'jack-duquesne': [
+    ['Verlobte', 'eleanor-bishop'],
+    ['Stieftochter', 'kate-bishop'],
+  ],
+  'darren-cross': [
+    ['Mentor', 'hank-pym'],
+    ['Erzfeind', 'scott-lang'],
+    ['Gegnerin', 'hope-van-dyne'],
+    ['Dienstherr', 'kang-der-eroberer'],
+  ],
+  'luis': [
+    ['Bester Freund', 'scott-lang'],
+    ['Freund', 'dave'],
+    ['Freund', 'kurt-goreshter'],
+  ],
+  'ava-starr': [
+    ['Ziehvater', 'bill-foster'],
+    ['Gegenspieler', 'scott-lang'],
+    ['Helferin', 'janet-van-dyne'],
+    ['Weggefährtin', 'yelena-belova'],
+  ],
+  'helmut-zemo': [
+    ['Gegenspieler', 'steve-rogers'],
+    ['Gegenspieler', 'tony-stark'],
+    ['Bekannter', 'bucky-barnes'],
+    ['Bekannter', 'sam-wilson'],
+  ],
+  't-chaka': [
+    ['Sohn', 't-challa'],
+    ['Tochter', 'shuri'],
+    ['Ehefrau', 'koenigin-ramonda'],
+    ['Neffe', 'erik-killmonger'],
+  ],
+  'koenigin-ramonda': [
+    ['Sohn', 't-challa'],
+    ['Tochter', 'shuri'],
+    ['Ehemann', 't-chaka'],
+    ['Vertraute', 'okoye'],
+    ['Gegenspieler', 'namor'],
+  ],
+  'erik-killmonger': [
+    ['Cousin', 't-challa'],
+    ['Onkel', 't-chaka'],
+    ['Weggefährte', 'ulysses-klaue'],
+  ],
+  'the-ancient-one': [
+    ['Schüler', 'stephen-strange'],
+    ['Schüler', 'karl-mordo'],
+    ['Bibliothekar', 'wong'],
+    ['Abtrünniger Schüler', 'kaecilius'],
+  ],
+  'mobius': [
+    ['Vertrauter', 'loki'],
+    ['Vorgesetzte', 'ravonna-renslayer'],
+    ['Weggefährtin', 'hunter-b-15'],
+    ['Bekannte', 'sylvie'],
+  ],
+  'alioth': [
+    ['Wächter für', 'der-da-bleibt'],
+    ['Bezwungen von', 'sylvie'],
+    ['Bezwungen von', 'loki'],
+  ],
+  'der-da-bleibt': [
+    ['Mörderin', 'sylvie'],
+    ['Besucher', 'loki'],
+    ['Wächter', 'alioth'],
+    ['Variante', 'victor-timely'],
+    ['Schöpfung', 'miss-minutes'],
+  ],
+  'mrs-hart': [
+    ['Nachbarin', 'wanda-maximoff'],
+    ['Nachbarin', 'agatha-harkness'],
+  ],
+  'bruno-carrelli': [
+    ['Beste Freundin', 'kamala-khan-ms-marvel'],
+    ['Freundin', 'nakia-bahadir'],
+    ['Bekannte', 'muneeba-khan'],
+  ],
+  'frank-castle-punisher': [
+    ['Weggefährte', 'matt-murdock-daredevil'],
+    ['Gegenspieler', 'wilson-fisk-kingpin'],
+    ['Weggefährte', 'curtis-hoyle'],
+  ],
+  'charles-xavier-professor-x': [
+    ['Schüler', 'hank-mccoy-beast'],
+    ['Weggefährte', 'reed-richards-838'],
+    ['Weggefährtin', 'peggy-carter-838'],
+    ['Gegenspielerin', 'wanda-maximoff'],
+    ['Freund und Gegner', 'erik-lehnsherr-magneto'],
+    ['Schüler', 'scott-summers-cyclops'],
+    ['Ziehschwester', 'raven-darkhoelme-mystique'],
+    ['Schüler', 'kurt-wagner-nightcrawler'],
+  ],
+  'hank-mccoy-beast': [
+    ['Mentor', 'charles-xavier-professor-x'],
+  ],
+  'remy-lebeau-gambit': [
+    ['Mitstreiterin', 'elektra'],
+    ['Weggefährte', 'logan-wolverine'],
+    ['Weggefährte', 'wade-wilson-deadpool'],
+  ],
+  'bob-sentry': [
+    ['Vertraute', 'yelena-belova'],
+    ['Erschaffen von', 'valentina-allegra-de-fontaine'],
+    ['Weggefährte', 'bucky-barnes'],
+    ['Weggefährte', 'john-walker'],
+  ],
+  'sue-storm-invisible-woman': [
+    ['Ehemann', 'reed-richards-mister-fantastic'],
+    ['Bruder', 'johnny-storm-human-torch'],
+    ['Weggefährte', 'ben-grimm-the-thing'],
+    ['Sohn', 'franklin-richards'],
+    ['Friedensschluss', 'harvey-elder-mole-man'],
+  ],
+  'johnny-storm-human-torch': [
+    ['Schwester', 'sue-storm-invisible-woman'],
+    ['Schwager', 'reed-richards-mister-fantastic'],
+    ['Weggefährte', 'ben-grimm-the-thing'],
+    ['Hauptfassung', 'johnny-storm-121698'],
+    ['Neffe', 'franklin-richards'],
+  ],
+  'ben-grimm-the-thing': [
+    ['Bester Freund', 'reed-richards-mister-fantastic'],
+    ['Weggefährtin', 'sue-storm-invisible-woman'],
+    ['Weggefährte', 'johnny-storm-human-torch'],
+    ['Gegner', 'giganto'],
+    ['Bekannte', 'rachel-rozman'],
+  ],
+  'doctor-doom': [
+    ['Erzfeind', 'reed-richards-mister-fantastic'],
+    ['Gefangener', 'franklin-richards'],
+  ],
+  'johnny-storm-121698': [
+    ['Mitstreiterin', 'elektra'],
+    ['Hauptfassung', 'johnny-storm-human-torch'],
+  ],
+  'ladypool': [
+    ['Hauptfassung', 'wade-wilson-deadpool'],
+  ],
+  'cowboypool': [
+    ['Hauptfassung', 'wade-wilson-deadpool'],
+  ],
+  'kidpool': [
+    ['Hauptfassung', 'wade-wilson-deadpool'],
+  ],
+  'samuraipool': [
+    ['Hauptfassung', 'wade-wilson-deadpool'],
+  ],
+  'maggie-lang': [
+    ['Frühere Ehe', 'scott-lang'],
+    ['Tochter', 'cassie-lang'],
+    ['Ehemann', 'jim-paxton'],
+  ],
+  'cassie-lang': [
+    ['Mutter', 'maggie-lang'],
+    ['Stiefvater', 'jim-paxton'],
+  ],
+  'jim-paxton': [
+    ['Ehefrau', 'maggie-lang'],
+    ['Stieftochter', 'cassie-lang'],
+  ],
+  'eli-bradley': [
+    ['Großvater', 'isaiah-bradley'],
+  ],
+  'yusuf-khan': [
+    ['Tochter', 'kamala-khan-ms-marvel'],
+    ['Ehefrau', 'muneeba-khan'],
+    ['Sohn', 'aamir-khan'],
+  ],
+  'muneeba-khan': [
+    ['Ehemann', 'yusuf-khan'],
+  ],
+  'aamir-khan': [
+    ['Vater', 'yusuf-khan'],
+  ],
+  'franklin-richards': [
+    ['Vater', 'reed-richards-mister-fantastic'],
+    ['Mutter', 'sue-storm-invisible-woman'],
+    ['Onkel', 'johnny-storm-human-torch'],
+    ['Beschützerin', 'h-e-r-b-i-e'],
+  ],
+  'skaar': [
+    ['Vater', 'bruce-banner'],
+  ],
+  'ronnie-williams': [
+    ['Tochter', 'riri-williams'],
+  ],
+  'riri-williams': [
+    ['Mutter', 'ronnie-williams'],
+    ['Gegner', 'john-king'],
+    ['Bekannter', 'landon'],
+    ['Freundin', 'zelma-stanton'],
+    ['Schöpfung', 'n-a-t-a-l-i-e'],
+    ['Gegner', 'ezekiel-stane'],
+  ],
+  'varra-priscilla-davis': [
+    ['Ehemann', 'nick-fury'],
+  ],
+  'laura-x-23': [
+    ['Mitstreiterin', 'elektra'],
+    ['Vater', 'logan-wolverine'],
+  ],
+  'logan-wolverine': [
+    ['Tochter', 'laura-x-23'],
+    ['Halbbruder', 'victor-creed-sabretooth'],
+    ['Mitstreiter', 'blade'],
+    ['Weggefährte', 'colossus'],
+  ],
+  'victor-creed-sabretooth': [
+    ['Halbbruder', 'logan-wolverine'],
+    ['Mitstreiter', 'john-allerdyce-pyro'],
+  ],
+  'namora': [
+    ['Gefolgsherr', 'namor'],
+  ],
+  'namor': [
+    ['Vertraute', 'namora'],
+    ['Berater', 'attuma'],
+  ],
+  'attuma': [
+    ['Gefolgsherr', 'namor'],
+  ],
+  'aneka': [
+    ['Gefährtin', 'ayo'],
+  ],
+  'ayo': [
+    ['Gefährtin', 'aneka'],
+  ],
+  'heather-glenn': [
+    ['Beziehung', 'matt-murdock-daredevil'],
+  ],
+  'franklin-nelson-foggy': [
+    ['Bester Freund', 'matt-murdock-daredevil'],
+  ],
+  'curtis-hoyle': [
+    ['Weggefährte', 'frank-castle-punisher'],
+  ],
+  'todd-phelps': [
+    ['Widersacherin', 'jennifer-walters-she-hulk'],
+    ['Handlanger', 'dirk-garthwaite-wrecker'],
+    ['Anwältin', 'mallory-book'],
+  ],
+  'jennifer-walters-she-hulk': [
+    ['Widersacher', 'todd-phelps'],
+    ['Ausgesöhnt', 'dirk-garthwaite-wrecker'],
+    ['Kollegin', 'mallory-book'],
+    ['Schneider', 'luke-jacobson'],
+  ],
+  'liz-allan': [
+    ['Vater', 'adrian-toomes-vulture'],
+    ['Mitschüler', 'flash-thompson'],
+  ],
+  'adrian-toomes-vulture': [
+    ['Tochter', 'liz-allan'],
+  ],
+  'agent-cleary': [
+    ['Ermittelt gegen', 'peter-parker'],
+    ['Ermittelt gegen', 'kamala-khan-ms-marvel'],
+    ['Gegenspieler', 'matt-murdock-daredevil'],
+    ['Ermittelt gegen', 'demarr-davis-doorman'],
+  ],
+  'leila-taylor': [
+    ['Vorgesetzter', 'thaddeus-ross'],
+  ],
+  'alejandro-montoya-el-aguila': [
+    ['Gruppenleiter', 'emil-blonsky-abomination'],
+    ['Dauerstreit', 'william-taurens-man-bull'],
+  ],
+  'william-taurens-man-bull': [
+    ['Dauerstreit', 'alejandro-montoya-el-aguila'],
+    ['Gruppenleiter', 'emil-blonsky-abomination'],
+  ],
+  'alexander-gentry-porcupine': [
+    ['Gruppenleiter', 'emil-blonsky-abomination'],
+  ],
+  'muzzafar-lambert-saracen': [
+    ['Gruppenleiter', 'emil-blonsky-abomination'],
+    ['Teegefährte', 'dirk-garthwaite-wrecker'],
+  ],
+  'dirk-garthwaite-wrecker': [
+    ['Teegefährte', 'muzzafar-lambert-saracen'],
+    ['Ausgesöhnt', 'jennifer-walters-she-hulk'],
+    ['Auftraggeber', 'todd-phelps'],
+  ],
+  'craig-hollis-mr-immortal': [
+    ['Anwältin', 'mallory-book'],
+  ],
+  'mallory-book': [
+    ['Mandant', 'craig-hollis-mr-immortal'],
+    ['Kollegin', 'jennifer-walters-she-hulk'],
+    ['Kollegin', 'nikki-ramos'],
+    ['Mandant', 'todd-phelps'],
+  ],
+  'nikki-ramos': [
+    ['Kollegin', 'mallory-book'],
+  ],
+  'luke-jacobson': [
+    ['Kundin', 'jennifer-walters-she-hulk'],
+    ['Kunde', 'matt-murdock-daredevil'],
+  ],
+  'donny-blaze': [
+    ['Lehrer', 'wong'],
+  ],
+  'wong': [
+    ['Ehemaliger Schüler', 'donny-blaze'],
+  ],
+  'att-lass': [
+    ['Befehlshaber', 'yon-rogg'],
+    ['Kameradin', 'carol-danvers'],
+  ],
+  'yon-rogg': [
+    ['Starforce', 'att-lass'],
+    ['Starforce', 'bron-char'],
+    ['Starforce', 'korath-der-verfolger'],
+    ['Dienstherrin', 'supreme-intelligence'],
+  ],
+  'bron-char': [
+    ['Befehlshaber', 'yon-rogg'],
+    ['Kameradin', 'carol-danvers'],
+  ],
+  'korath-der-verfolger': [
+    ['Befehlshaber', 'ronan'],
+    ['Befehlshaber', 'yon-rogg'],
+    ['Gegner', 'drax'],
+  ],
+  'drax': [
+    ['Gegner', 'korath-der-verfolger'],
+  ],
+  'georges-batroc': [
+    ['Erzfeind', 'sam-wilson'],
+    ['Auftraggeberin', 'sharon-carter'],
+  ],
+  'sharon-carter': [
+    ['Söldner', 'georges-batroc'],
+  ],
+  'clown': [
+    ['Anführer', 'parker-robbins-the-hood'],
+  ],
+  'parker-robbins-the-hood': [
+    ['Bande', 'clown'],
+    ['Bande', 'slug'],
+    ['Bande', 'jeri-blood'],
+    ['Bande', 'roz-blood'],
+    ['Cousin', 'john-king'],
+    ['Gegnerin', 'zelma-stanton'],
+    ['Dienstherr', 'mephisto'],
+  ],
+  'slug': [
+    ['Anführer', 'parker-robbins-the-hood'],
+  ],
+  'jeri-blood': [
+    ['Schwester', 'roz-blood'],
+    ['Anführer', 'parker-robbins-the-hood'],
+  ],
+  'roz-blood': [
+    ['Bruder', 'jeri-blood'],
+    ['Anführer', 'parker-robbins-the-hood'],
+  ],
+  'john-king': [
+    ['Cousin', 'parker-robbins-the-hood'],
+    ['Gegnerin', 'riri-williams'],
+  ],
+  'landon': [
+    ['Bekannte', 'riri-williams'],
+  ],
+  'zelma-stanton': [
+    ['Freundin', 'riri-williams'],
+    ['Gegner', 'parker-robbins-the-hood'],
+  ],
+  'dave': [
+    ['Freund', 'luis'],
+    ['Freund', 'scott-lang'],
+    ['Freund', 'kurt-goreshter'],
+  ],
+  'kurt-goreshter': [
+    ['Freund', 'luis'],
+    ['Freund', 'scott-lang'],
+    ['Freund', 'dave'],
+  ],
+  'sonny-burch': [
+    ['Gegnerin', 'hope-van-dyne'],
+  ],
+  'jentorra': [
+    ['Mitstreiter', 'quaz'],
+    ['Verbündeter', 'scott-lang'],
+  ],
+  'quaz': [
+    ['Anführerin', 'jentorra'],
+    ['Verbündeter', 'scott-lang'],
+  ],
+  'krylar': [
+    ['Frühere Liebe', 'janet-van-dyne'],
+    ['Dienstherr', 'kang-der-eroberer'],
+  ],
+  'janet-van-dyne': [
+    ['Frühere Liebe', 'krylar'],
+  ],
+  'kang-der-eroberer': [
+    ['Statthalter', 'krylar'],
+    ['Rat der Kangs', 'immortus'],
+  ],
+  'immortus': [
+    ['Mitvorsitz', 'scarlet-centurion'],
+    ['Mitvorsitz', 'rama-tut'],
+    ['Verbannt', 'kang-der-eroberer'],
+  ],
+  'scarlet-centurion': [
+    ['Mitvorsitz', 'immortus'],
+    ['Mitvorsitz', 'rama-tut'],
+  ],
+  'rama-tut': [
+    ['Mitvorsitz', 'immortus'],
+    ['Mitvorsitz', 'scarlet-centurion'],
+  ],
+  'dimitri-smerdyakov': [
+    ['Vorgesetzter', 'talos'],
+    ['Beschattet', 'peter-parker'],
+  ],
+  'talos': [
+    ['Mitarbeiter', 'dimitri-smerdyakov'],
+  ],
+  'flash-thompson': [
+    ['Mitschüler', 'peter-parker'],
+    ['Mitschüler', 'ned-leeds'],
+    ['Mitschülerin', 'liz-allan'],
+  ],
+  'giganto': [
+    ['Gegner', 'ben-grimm-the-thing'],
+  ],
+  'harvey-elder-mole-man': [
+    ['Friedensschluss', 'sue-storm-invisible-woman'],
+  ],
+  'rachel-rozman': [
+    ['Bekannter', 'ben-grimm-the-thing'],
+  ],
+  'eric-williams': [
+    ['Bruder', 'simon-williams'],
+    ['Mutter', 'martha-williams'],
+    ['Vater', 'sanford-williams'],
+  ],
+  'simon-williams': [
+    ['Bruder', 'eric-williams'],
+    ['Mutter', 'martha-williams'],
+    ['Vater', 'sanford-williams'],
+    ['Agentin', 'janelle-jackson'],
+    ['Regisseur', 'regisseur-von-kovak'],
+  ],
+  'martha-williams': [
+    ['Sohn', 'eric-williams'],
+    ['Sohn', 'simon-williams'],
+    ['Ehemann', 'sanford-williams'],
+  ],
+  'sanford-williams': [
+    ['Sohn', 'eric-williams'],
+    ['Ehefrau', 'martha-williams'],
+    ['Sohn', 'simon-williams'],
+  ],
+  'janelle-jackson': [
+    ['Klient', 'simon-williams'],
+    ['Agentur', 'trevor-slattery'],
+  ],
+  'trevor-slattery': [
+    ['Agentin', 'janelle-jackson'],
+    ['Auftraggeber', 'aldrich-killian'],
+    ['Freund', 'morris'],
+  ],
+  'demarr-davis-doorman': [
+    ['Ermittler', 'agent-cleary'],
+  ],
+  'mel': [
+    ['Vorgesetzte', 'valentina-allegra-de-fontaine'],
+  ],
+  'miek': [
+    ['Weggefährte', 'korg'],
+    ['Weggefährte', 'thor'],
+  ],
+  'korg': [
+    ['Weggefährtin', 'miek'],
+  ],
+  'tanngrisnir-und-tanngnjostr': [
+    ['Halter', 'thor'],
+  ],
+  'taweret': [
+    ['Geleit', 'marc-spector-steven-grant-moon-knight'],
+    ['Ennead', 'khonshu'],
+  ],
+  'khonshu': [
+    ['Ennead', 'taweret'],
+    ['Gegner', 'arthur-harrow'],
+    ['Ennead', 'ammit'],
+  ],
+  'tyler-hayward': [
+    ['Untergebene', 'monica-rambeau'],
+    ['Gegnerin', 'wanda-maximoff'],
+    ['Schöpfung', 'white-vision'],
+  ],
+  'white-vision': [
+    ['Auftraggeber', 'tyler-hayward'],
+  ],
+  'mr-charles': [
+    ['Geschäftspartner', 'wilson-fisk-kingpin'],
+  ],
+  'luke-cage': [
+    ['Weggefährte', 'matt-murdock-daredevil'],
+  ],
+  'pagon': [
+    ['Anführer', 'gravik'],
+    ['Mitstreiterin', 'g-iah'],
+  ],
+  'gravik': [
+    ['Stellvertreter', 'pagon'],
+  ],
+  'g-iah': [
+    ['Mitstreiter', 'pagon'],
+  ],
+  'pip-der-troll': [
+    ['Weggefährte', 'eros-starfox'],
+  ],
+  'eros-starfox': [
+    ['Weggefährte', 'pip-der-troll'],
+  ],
+  'prinz-yan': [
+    ['Ehefrau', 'carol-danvers'],
+  ],
+  'kareem-red-dagger': [
+    ['Verbündete', 'kamala-khan-ms-marvel'],
+  ],
+  'karun-patel': [
+    ['Dienstherr', 'kingo'],
+  ],
+  'kingo': [
+    ['Kammerdiener', 'karun-patel'],
+  ],
+  'elder-beast': [
+    ['Dient', 'wanda-maximoff'],
+  ],
+  'john-allerdyce-pyro': [
+    ['Dienstherrin', 'cassandra-nova'],
+    ['Auftraggeber', 'mr-paradox'],
+    ['Mitstreiter', 'victor-creed-sabretooth'],
+  ],
+  'cassandra-nova': [
+    ['Gegnerin', 'elektra'],
+    ['Handlanger', 'john-allerdyce-pyro'],
+    ['Gefolgsmann', 'juggernaut'],
+    ['Gefolgsmann', 'toad'],
+    ['Gefolgsmann', 'azazel'],
+  ],
+  'mr-paradox': [
+    ['Zuträger', 'john-allerdyce-pyro'],
+  ],
+  'abraham-erskine': [
+    ['Schützling', 'steve-rogers'],
+    ['Gegenspieler', 'johann-schmidt-red-skull'],
+    ['Vorgesetzter', 'chester-phillips'],
+    ['Kollege', 'howard-stark'],
+  ],
+  'chester-phillips': [
+    ['Untergebener', 'steve-rogers'],
+    ['Untergebene', 'peggy-carter'],
+    ['Wissenschaftler', 'abraham-erskine'],
+    ['Verbündeter', 'howard-stark'],
+    ['Gefangener', 'arnim-zola'],
+  ],
+  'supreme-intelligence': [
+    ['Statthalter', 'yon-rogg'],
+    ['Gegnerin', 'carol-danvers'],
+  ],
+  'obadiah-stane': [
+    ['Ziehsohn', 'tony-stark'],
+    ['Geschäftspartner', 'howard-stark'],
+    ['Handlanger', 'raza'],
+    ['Gegnerin', 'pepper-potts'],
+    ['Sohn', 'ezekiel-stane'],
+  ],
+  'raza': [
+    ['Auftraggeber', 'obadiah-stane'],
+    ['Gefangener', 'tony-stark'],
+  ],
+  'ivan-vanko-whiplash': [
+    ['Erzfeind', 'tony-stark'],
+    ['Auftraggeber', 'justin-hammer'],
+    ['Gegenspieler', 'james-rhodes'],
+  ],
+  'justin-hammer': [
+    ['Rivale', 'tony-stark'],
+    ['Handlanger', 'ivan-vanko-whiplash'],
+    ['Agentin', 'natasha-romanoff'],
+  ],
+  'laufey': [
+    ['Sohn', 'loki'],
+    ['Erzfeind', 'odin'],
+    ['Gegner', 'thor'],
+  ],
+  'destroyer': [
+    ['Wächter für', 'odin'],
+    ['Werkzeug', 'loki'],
+    ['Gegner', 'thor'],
+  ],
+  'malekith': [
+    ['Erzfeind', 'thor'],
+    ['Gefolgsmann', 'kurse'],
+    ['Gegner', 'odin'],
+    ['Gegnerin', 'jane-foster'],
+  ],
+  'kurse': [
+    ['Herr', 'malekith'],
+    ['Opfer', 'frigga'],
+    ['Gegner', 'thor'],
+  ],
+  'aldrich-killian': [
+    ['Erzfeind', 'tony-stark'],
+    ['Gegnerin', 'pepper-potts'],
+    ['Handlanger', 'trevor-slattery'],
+    ['Gegenspieler', 'james-rhodes'],
+  ],
+  'eson': [
+    ['Chronist', 'the-collector'],
+    ['Artgenosse', 'arishem'],
+    ['Artgenosse', 'tiamut'],
+  ],
+  'ego': [
+    ['Sohn', 'peter-quill'],
+    ['Dienerin', 'mantis'],
+    ['Zuträger', 'yondu'],
+    ['Gegnerin', 'gamora'],
+  ],
+  'taserface': [
+    ['Ehemaliger Anführer', 'yondu'],
+    ['Mitstreiter', 'kraglin'],
+    ['Auftraggeberin', 'ayesha'],
+    ['Gegner', 'rocket'],
+  ],
+  'krugarr': [
+    ['Weggefährte', 'stakar-ogord'],
+    ['Weggefährte', 'martinex'],
+    ['Weggefährte', 'yondu'],
+  ],
+  'wolfgang-von-strucker': [
+    ['Versuchsobjekt', 'wanda-maximoff'],
+    ['Versuchsobjekt', 'pietro-maximoff'],
+    ['Mörder', 'ultron'],
+    ['Gegenspieler', 'tony-stark'],
+  ],
+  'melina-vostokoff': [
+    ['Ziehtochter', 'natasha-romanoff'],
+    ['Ziehtochter', 'yelena-belova'],
+    ['Ehemann', 'alexei'],
+    ['Erzfeind', 'general-dreykov'],
+  ],
+  'general-dreykov': [
+    ['Tochter', 'taskmaster'],
+    ['Agentin', 'natasha-romanoff'],
+    ['Agentin', 'yelena-belova'],
+    ['Gegnerin', 'melina-vostokoff'],
+  ],
+  'w-kabi': [
+    ['Bester Freund', 't-challa'],
+    ['Große Liebe', 'okoye'],
+    ['Verbündeter', 'erik-killmonger'],
+    ['Mörder', 'ulysses-klaue'],
+  ],
+  'zuri': [
+    ['Schützling', 't-challa'],
+    ['Vertrauter', 't-chaka'],
+    ['Mörder', 'erik-killmonger'],
+  ],
+  'shocker': [
+    ['Anführer', 'adrian-toomes-vulture'],
+    ['Mitstreiter', 'scorpion'],
+    ['Gegner', 'peter-parker'],
+  ],
+  'kaecilius': [
+    ['Lehrerin', 'the-ancient-one'],
+    ['Herr', 'dormammu'],
+    ['Gegenspieler', 'stephen-strange'],
+    ['Gegner', 'karl-mordo'],
+  ],
+  'dormammu': [
+    ['Handlanger', 'kaecilius'],
+    ['Bezwungen von', 'stephen-strange'],
+  ],
+  'hela': [
+    ['Bruder', 'thor'],
+    ['Bruder', 'loki'],
+    ['Vater', 'odin'],
+    ['Gefolgsmann', 'skurge'],
+    ['Gegnerin', 'valkyrie'],
+  ],
+  'grandmaster': [
+    ['Champion', 'bruce-banner'],
+    ['Rechte Hand', 'topaz'],
+    ['Untergebene', 'valkyrie'],
+    ['Gegenspieler', 'thor'],
+  ],
+  'topaz': [
+    ['Dienstherr', 'grandmaster'],
+    ['Gegnerin', 'valkyrie'],
+    ['Gegner', 'thor'],
+  ],
+  'skurge': [
+    ['Dienstherrin', 'hela'],
+    ['Vorgänger', 'heimdall'],
+    ['Gegner', 'thor'],
+  ],
+  'surtur': [
+    ['Erzfeind', 'odin'],
+    ['Erweckt von', 'loki'],
+    ['Gegner', 'thor'],
+  ],
+  'bill-foster': [
+    ['Früherer Partner', 'hank-pym'],
+    ['Ziehtochter', 'ava-starr'],
+    ['Bekannter', 'scott-lang'],
+  ],
+  'ebony-maw': [
+    ['Herr', 'thanos'],
+    ['Mitstreiter', 'corvus-glaive'],
+    ['Mitstreiterin', 'proxima-midnight'],
+    ['Mitstreiter', 'cull-obsidian'],
+    ['Gegenspieler', 'stephen-strange'],
+  ],
+  'corvus-glaive': [
+    ['Herr', 'thanos'],
+    ['Mitstreiterin', 'proxima-midnight'],
+    ['Mitstreiter', 'ebony-maw'],
+    ['Mitstreiter', 'cull-obsidian'],
+    ['Bezwungen von', 'vision'],
+  ],
+  'proxima-midnight': [
+    ['Herr', 'thanos'],
+    ['Mitstreiter', 'corvus-glaive'],
+    ['Mitstreiter', 'ebony-maw'],
+    ['Mitstreiter', 'cull-obsidian'],
+    ['Gegnerin', 'wanda-maximoff'],
+  ],
+  'cull-obsidian': [
+    ['Herr', 'thanos'],
+    ['Mitstreiter', 'ebony-maw'],
+    ['Mitstreiter', 'corvus-glaive'],
+    ['Mitstreiterin', 'proxima-midnight'],
+    ['Bezwungen von', 'bruce-banner'],
+  ],
+  'eitri': [
+    ['Kunde', 'thor'],
+    ['Auftraggeber', 'odin'],
+    ['Mörder', 'thanos'],
+  ],
+  'throg': [
+    ['Variante', 'thor'],
+    ['Bekannter', 'loki'],
+  ],
+  'hunter-b-15': [
+    ['Vorgesetzte', 'ravonna-renslayer'],
+    ['Kollege', 'mobius'],
+  ],
+  'ouroboros-o-b': [
+    ['Freund', 'loki'],
+    ['Freund', 'mobius'],
+    ['Leser', 'victor-timely'],
+  ],
+  'victor-timely': [
+    ['Variante', 'der-da-bleibt'],
+    ['Vorbild', 'ouroboros-o-b'],
+    ['Verbündete', 'ravonna-renslayer'],
+    ['Bekannter', 'loki'],
+  ],
+  'jimmy-woo': [
+    ['Kollegin', 'monica-rambeau'],
+    ['Kollegin', 'darcy-lewis'],
+    ['Vorgesetzter', 'tyler-hayward'],
+    ['Ermittelt gegen', 'scott-lang'],
+  ],
+  'razor-fist': [
+    ['Dienstherr', 'wenwu-mandarin'],
+    ['Mitstreiter', 'death-dealer'],
+    ['Verbündete', 'xialing'],
+    ['Gegner', 'shang-chi'],
+  ],
+  'ying-li': [
+    ['Ehemann', 'wenwu-mandarin'],
+    ['Sohn', 'shang-chi'],
+    ['Tochter', 'xialing'],
+    ['Schwester', 'ying-nan'],
+  ],
+  'morris': [
+    ['Freund', 'trevor-slattery'],
+    ['Weggefährte', 'shang-chi'],
+    ['Weggefährtin', 'katy'],
+  ],
+  'karli-morgenthau': [
+    ['Gegenspieler', 'sam-wilson'],
+    ['Gegner', 'john-walker'],
+    ['Mörderin', 'sharon-carter'],
+    ['Gegner', 'bucky-barnes'],
+  ],
+  'quentin-beck-mysterio': [
+    ['Erzfeind', 'peter-parker'],
+    ['Arbeitgeber', 'tony-stark'],
+    ['Belogener Verbündeter', 'talos'],
+    ['Sprachrohr', 'j-jonah-jameson'],
+  ],
+  'kro': [
+    ['Gegnerin', 'sersi'],
+    ['Opfer', 'ajak'],
+    ['Opfer', 'gilgamesh'],
+    ['Gegnerin', 'thena'],
+  ],
+  'arishem': [
+    ['Schöpfung', 'sersi'],
+    ['Schöpfung', 'ikaris'],
+    ['Artgenosse', 'tiamut'],
+    ['Artgenosse', 'nezarr'],
+    ['Artgenosse', 'jemiah'],
+  ],
+  'tiamut': [
+    ['Schöpfer', 'arishem'],
+    ['Artgenosse', 'nezarr'],
+    ['Artgenosse', 'jemiah'],
+    ['Gegnerin', 'sersi'],
+  ],
+  'nezarr': [
+    ['Herr', 'arishem'],
+    ['Artgenosse', 'tiamut'],
+    ['Artgenosse', 'jemiah'],
+  ],
+  'jemiah': [
+    ['Herr', 'arishem'],
+    ['Artgenosse', 'tiamut'],
+    ['Artgenosse', 'nezarr'],
+  ],
+  'electro': [
+    ['Erzfeind', 'peter-parker-garfield'],
+    ['Gegner', 'peter-parker'],
+    ['Mitstreiter', 'doc-ock'],
+    ['Mitstreiter', 'green-goblin'],
+  ],
+  'curt-connors': [
+    ['Erzfeind', 'peter-parker-garfield'],
+    ['Gegner', 'peter-parker'],
+    ['Mitstreiter', 'electro'],
+    ['Mitstreiter', 'sandman'],
+  ],
+  'black-bolt': [
+    ['Illuminati', 'charles-xavier-professor-x'],
+    ['Illuminati', 'reed-richards-838'],
+    ['Illuminati', 'peggy-carter-838'],
+    ['Illuminati', 'karl-mordo-838'],
+    ['Illuminati', 'maria-rambeau-838'],
+    ['Gegnerin', 'wanda-maximoff'],
+  ],
+  'rintrah': [
+    ['Mitstreiter', 'wong'],
+    ['Mitstreiter', 'stephen-strange'],
+    ['Gegnerin', 'wanda-maximoff'],
+  ],
+  'clea': [
+    ['Weggefährte', 'stephen-strange'],
+  ],
+  'william-lopez': [
+    ['Tochter', 'maya-lopez-echo'],
+    ['Ziehsohn', 'kazi-kazimierczak'],
+    ['Mörder', 'clint-barton'],
+    ['Bruder', 'henry-lopez'],
+  ],
+  'ivan-banionis': [
+    ['Anführerin', 'maya-lopez-echo'],
+    ['Anführer', 'kazi-kazimierczak'],
+    ['Bande', 'tomas'],
+    ['Bande', 'enrique'],
+    ['Gegner', 'clint-barton'],
+  ],
+  'tomas': [
+    ['Anführerin', 'maya-lopez-echo'],
+    ['Anführer', 'kazi-kazimierczak'],
+    ['Bande', 'ivan-banionis'],
+    ['Bande', 'dmitri'],
+    ['Gegnerin', 'kate-bishop'],
+  ],
+  'enrique': [
+    ['Anführerin', 'maya-lopez-echo'],
+    ['Anführer', 'kazi-kazimierczak'],
+    ['Bande', 'tomas'],
+    ['Bande', 'dmitri'],
+    ['Gegner', 'clint-barton'],
+  ],
+  'dmitri': [
+    ['Anführerin', 'maya-lopez-echo'],
+    ['Anführer', 'kazi-kazimierczak'],
+    ['Bande', 'ivan-banionis'],
+    ['Bande', 'enrique'],
+    ['Gegnerin', 'kate-bishop'],
+  ],
+  'grills': [
+    ['Freund', 'clint-barton'],
+    ['Mitstreiterin', 'wendy-conrad'],
+    ['Bekannte', 'kate-bishop'],
+  ],
+  'wendy-conrad': [
+    ['Mitstreiter', 'grills'],
+    ['Bekannter', 'clint-barton'],
+    ['Bekannte', 'kate-bishop'],
+  ],
+  'lucky': [
+    ['Halter', 'clint-barton'],
+    ['Halterin', 'kate-bishop'],
+    ['Bekannte', 'laura-barton'],
+  ],
+  'dogpool': [
+    ['Halter', 'wade-wilson-deadpool'],
+    ['Früherer Halter', 'nicepool'],
+    ['Weggefährte', 'logan-wolverine'],
+  ],
+  'blade': [
+    ['Mitstreiterin', 'elektra'],
+    ['Mitstreiter', 'wade-wilson-deadpool'],
+    ['Mitstreiter', 'logan-wolverine'],
+    ['Mitstreiterin', 'laura-x-23'],
+    ['Mitstreiter', 'remy-lebeau-gambit'],
+    ['Gegnerin', 'cassandra-nova'],
+  ],
+  'juggernaut': [
+    ['Dienstherrin', 'cassandra-nova'],
+    ['Mitstreiter', 'toad'],
+    ['Mitstreiter', 'azazel'],
+    ['Gegner', 'wade-wilson-deadpool'],
+  ],
+  'toad': [
+    ['Dienstherrin', 'cassandra-nova'],
+    ['Mitstreiter', 'juggernaut'],
+    ['Mitstreiter', 'azazel'],
+    ['Mitstreiter', 'john-allerdyce-pyro'],
+  ],
+  'azazel': [
+    ['Dienstherrin', 'cassandra-nova'],
+    ['Mitstreiter', 'toad'],
+    ['Mitstreiter', 'juggernaut'],
+  ],
+  'colossus': [
+    ['Weggefährte', 'wade-wilson-deadpool'],
+    ['Mitstreiter', 'logan-wolverine'],
+  ],
+  'layla-el-faouly': [
+    ['Ehemann', 'marc-spector-steven-grant-moon-knight'],
+    ['Göttin', 'taweret'],
+    ['Gegner', 'arthur-harrow'],
+    ['Gott', 'khonshu'],
+  ],
+  'arthur-harrow': [
+    ['Göttin', 'ammit'],
+    ['Erzfeind', 'marc-spector-steven-grant-moon-knight'],
+    ['Gegnerin', 'layla-el-faouly'],
+    ['Gegner', 'khonshu'],
+  ],
+  'ammit': [
+    ['Avatar', 'arthur-harrow'],
+    ['Ennead', 'khonshu'],
+    ['Ennead', 'taweret'],
+  ],
+  'nakia-bahadir': [
+    ['Beste Freundin', 'kamala-khan-ms-marvel'],
+    ['Freund', 'bruno-carrelli'],
+    ['Bekannter', 'kamran'],
+  ],
+  'kamran': [
+    ['Verbündete', 'kamala-khan-ms-marvel'],
+    ['Bekannte', 'nakia-bahadir'],
+    ['Gegner', 'agent-cleary'],
+  ],
+  'sana-ali': [
+    ['Enkelin', 'kamala-khan-ms-marvel'],
+    ['Tochter', 'muneeba-khan'],
+    ['Enkel', 'aamir-khan'],
+  ],
+  'gorr': [
+    ['Erzfeind', 'thor'],
+    ['Tochter', 'love'],
+    ['Gegnerin', 'jane-foster'],
+    ['Gegnerin', 'valkyrie'],
+  ],
+  'hercules': [
+    ['Vater', 'zeus'],
+  ],
+  'piledriver': [
+    ['Bande', 'dirk-garthwaite-wrecker'],
+    ['Gegnerin', 'jennifer-walters-she-hulk'],
+  ],
+  'veb': [
+    ['Weggefährte', 'scott-lang'],
+    ['Weggefährtin', 'cassie-lang'],
+    ['Mitstreiterin', 'jentorra'],
+    ['Mitstreiter', 'quaz'],
+  ],
+  'high-evolutionary': [
+    ['Schöpfung', 'rocket'],
+    ['Schöpfung', 'lylla'],
+    ['Schöpfung', 'teefs'],
+    ['Schöpfung', 'floor'],
+    ['Verbündete', 'ayesha'],
+    ['Gegner', 'peter-quill'],
+  ],
+  'adam-warlock': [
+    ['Schöpferin', 'ayesha'],
+    ['Gegner', 'peter-quill'],
+    ['Gegner', 'rocket'],
+    ['Mitstreiter', 'groot'],
+  ],
+  'lylla': [
+    ['Gefährtin', 'rocket'],
+    ['Weggefährte', 'teefs'],
+    ['Weggefährtin', 'floor'],
+    ['Schöpfer', 'high-evolutionary'],
+  ],
+  'teefs': [
+    ['Weggefährte', 'rocket'],
+    ['Weggefährtin', 'lylla'],
+    ['Weggefährtin', 'floor'],
+    ['Schöpfer', 'high-evolutionary'],
+  ],
+  'floor': [
+    ['Weggefährte', 'rocket'],
+    ['Weggefährtin', 'lylla'],
+    ['Weggefährte', 'teefs'],
+    ['Schöpfer', 'high-evolutionary'],
+  ],
+  'phyla-vell': [
+    ['Mitstreiter', 'rocket'],
+    ['Mitstreiter', 'groot'],
+    ['Mitstreiter', 'kraglin'],
+    ['Weggefährte', 'cosmo'],
+  ],
+  'praesident-james-ritson': [
+    ['Vertrauter', 'james-rhodes'],
+    ['Bekannter', 'nick-fury'],
+    ['Gegner', 'gravik'],
+  ],
+  'chula': [
+    ['Enkelin', 'maya-lopez-echo'],
+    ['Verwandte', 'bonnie'],
+    ['Bekannter', 'henry-lopez'],
+  ],
+  'bonnie': [
+    ['Cousine', 'maya-lopez-echo'],
+    ['Großmutter', 'chula'],
+    ['Onkel', 'henry-lopez'],
+  ],
+  'henry-lopez': [
+    ['Nichte', 'maya-lopez-echo'],
+    ['Bruder', 'william-lopez'],
+    ['Gegner', 'wilson-fisk-kingpin'],
+  ],
+  'rio-vidal': [
+    ['Geliebte', 'agatha-harkness'],
+    ['Gejagter', 'billy-maximoff-wiccan'],
+    ['Weggefährtin', 'lilia-calderu'],
+    ['Weggefährtin', 'jennifer-kale'],
+  ],
+  'agatha-harkness': [
+    ['Geliebte', 'rio-vidal'],
+    ['Weggefährte', 'billy-maximoff-wiccan'],
+    ['Weggefährtin', 'lilia-calderu'],
+    ['Weggefährtin', 'jennifer-kale'],
+    ['Weggefährtin', 'alice-wu-gulliver'],
+    ['Nachbarin', 'mrs-hart'],
+  ],
+  'lilia-calderu': [
+    ['Weggefährtin', 'agatha-harkness'],
+    ['Weggefährtin', 'jennifer-kale'],
+    ['Weggefährtin', 'alice-wu-gulliver'],
+    ['Schützling', 'billy-maximoff-wiccan'],
+  ],
+  'jennifer-kale': [
+    ['Weggefährtin', 'agatha-harkness'],
+    ['Weggefährtin', 'lilia-calderu'],
+    ['Weggefährtin', 'alice-wu-gulliver'],
+    ['Weggefährte', 'billy-maximoff-wiccan'],
+  ],
+  'alice-wu-gulliver': [
+    ['Mörderin', 'agatha-harkness'],
+    ['Weggefährtin', 'lilia-calderu'],
+    ['Weggefährtin', 'jennifer-kale'],
+    ['Weggefährte', 'billy-maximoff-wiccan'],
+  ],
+  'billy-maximoff-wiccan': [
+    ['Weggefährtin', 'agatha-harkness'],
+    ['Gegnerin', 'rio-vidal'],
+    ['Weggefährtin', 'lilia-calderu'],
+    ['Weggefährtin', 'jennifer-kale'],
+  ],
+  'bullseye': [
+    ['Erzfeind', 'matt-murdock-daredevil'],
+    ['Opfer', 'franklin-nelson-foggy'],
+    ['Gegnerin', 'karen-page'],
+    ['Gegner', 'frank-castle-punisher'],
+  ],
+  'vanessa-fisk': [
+    ['Ehemann', 'wilson-fisk-kingpin'],
+    ['Gegner', 'matt-murdock-daredevil'],
+    ['Bekannte', 'karen-page'],
+  ],
+  'muse': [
+    ['Erzfeind', 'matt-murdock-daredevil'],
+    ['Gegner', 'wilson-fisk-kingpin'],
+  ],
+  'karen-page': [
+    ['Frühere Liebe', 'matt-murdock-daredevil'],
+    ['Freund', 'franklin-nelson-foggy'],
+    ['Vertrauter', 'frank-castle-punisher'],
+    ['Gegner', 'wilson-fisk-kingpin'],
+  ],
+  'connor-powell': [
+    ['Dienstherr', 'wilson-fisk-kingpin'],
+    ['Kollege', 'cole-north'],
+    ['Gegner', 'matt-murdock-daredevil'],
+  ],
+  'cole-north': [
+    ['Kollege', 'connor-powell'],
+    ['Ermittelt gegen', 'matt-murdock-daredevil'],
+    ['Dienstherr', 'wilson-fisk-kingpin'],
+  ],
+  'white-tiger': [
+    ['Anwalt', 'matt-murdock-daredevil'],
+    ['Gegner', 'wilson-fisk-kingpin'],
+  ],
+  'jessica-jones': [
+    ['Mitstreiter', 'matt-murdock-daredevil'],
+    ['Gegner', 'wilson-fisk-kingpin'],
+  ],
+  'elektra': [
+    ['Mitstreiter', 'blade'],
+    ['Mitstreiter', 'remy-lebeau-gambit'],
+    ['Mitstreiterin', 'laura-x-23'],
+    ['Mitstreiter', 'johnny-storm-121698'],
+    ['Gegnerin', 'cassandra-nova'],
+  ],
+  'n-a-t-a-l-i-e': [
+    ['Erbauerin', 'riri-williams'],
+    ['Gegner', 'parker-robbins-the-hood'],
+  ],
+  'ezekiel-stane': [
+    ['Vater', 'obadiah-stane'],
+    ['Gegnerin', 'riri-williams'],
+    ['Auftraggeber', 'parker-robbins-the-hood'],
+  ],
+  'mephisto': [
+    ['Handlanger', 'parker-robbins-the-hood'],
+    ['Gegnerin', 'riri-williams'],
+  ],
+  'galactus': [
+    ['Herold', 'silver-surfer'],
+    ['Gegner', 'reed-richards-mister-fantastic'],
+    ['Auserwählter', 'franklin-richards'],
+  ],
+  'silver-surfer': [
+    ['Herr', 'galactus'],
+    ['Gegnerin', 'sue-storm-invisible-woman'],
+    ['Verbündeter', 'johnny-storm-human-torch'],
+  ],
+  'h-e-r-b-i-e': [
+    ['Erbauer', 'reed-richards-mister-fantastic'],
+    ['Weggefährtin', 'sue-storm-invisible-woman'],
+    ['Schützling', 'franklin-richards'],
+  ],
+  'regisseur-von-kovak': [
+    ['Hauptdarsteller', 'simon-williams'],
+    ['Darsteller', 'trevor-slattery'],
+    ['Agentin', 'janelle-jackson'],
+  ],
+  'lonnie-lincoln-tombstone': [
+    ['Gegner', 'peter-parker'],
+  ],
+  'fred-myers-boomerang': [
+    ['Gegner', 'peter-parker'],
+  ],
+  'tarantula': [
+    ['Gegner', 'peter-parker'],
+  ],
+  'jocasta-angekuendigt': [
+    ['Schöpfer', 'ultron'],
+    ['Bekannter', 'vision'],
+  ],
+  'erik-lehnsherr-magneto': [
+    ['Freund und Gegner', 'charles-xavier-professor-x'],
+    ['Weggefährtin', 'raven-darkhoelme-mystique'],
+    ['Gegner', 'scott-summers-cyclops'],
+  ],
+  'scott-summers-cyclops': [
+    ['Mentor', 'charles-xavier-professor-x'],
+    ['Mitstreiter', 'hank-mccoy-beast'],
+    ['Mitstreiter', 'kurt-wagner-nightcrawler'],
+    ['Gegner', 'erik-lehnsherr-magneto'],
+  ],
+  'raven-darkhoelme-mystique': [
+    ['Ziehbruder', 'charles-xavier-professor-x'],
+    ['Weggefährte', 'erik-lehnsherr-magneto'],
+    ['Sohn', 'kurt-wagner-nightcrawler'],
+  ],
+  'kurt-wagner-nightcrawler': [
+    ['Mutter', 'raven-darkhoelme-mystique'],
+    ['Mentor', 'charles-xavier-professor-x'],
+    ['Mitstreiter', 'scott-summers-cyclops'],
+  ],
+  'mantis': [
+    ['Dienstherr', 'ego'],
+  ],
+  'okoye': [
+    ['Große Liebe', 'w-kabi'],
+  ],
+  'hank-pym': [
+    ['Früherer Partner', 'bill-foster'],
+  ],
+  'wenwu-mandarin': [
+    ['Ehefrau', 'ying-li'],
+  ],
+  'xialing': [
+    ['Mutter', 'ying-li'],
+  ],
+  'ying-nan': [
+    ['Schwester', 'ying-li'],
+  ],
+  'sersi': [
+    ['Schöpfer', 'arishem'],
+  ],
+  'ikaris': [
+    ['Schöpfer', 'arishem'],
+  ],
+  'zeus': [
+    ['Sohn', 'hercules'],
+  ],
+  'maya-lopez-echo': [
+    ['Vater', 'william-lopez'],
+    ['Großmutter', 'chula'],
+    ['Cousine', 'bonnie'],
+    ['Onkel', 'henry-lopez'],
+  ],
+  'kate-bishop': [
+    ['Hund', 'lucky'],
+  ],
+};;;

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!-- Zwei Klassen am <html>, beide gebraucht:
+
+     chars-page schaltet das helle Marvel-Design frei (siehe den Block
+     „Charakterseite“ in css/style.css). Es hieß so, als die Charakterseite
+     die einzige helle Seite war, und trägt heute beide: weißer Grund,
+     dunkle Kopfleiste, dasselbe Rot, dasselbe Kopfband. Die Klasse steht
+     am <html> und nicht am <body>, damit das Weiß schon vor dem ersten
+     gezeichneten Bild steht und zwischen dem dunklen Grundton der Timeline
+     und dieser Seite kein Schwarz aufblitzt.
+
+     films-page kommt für das dazu, was nur hier gilt: die Reihen der
+     Plakate und deren Kacheln. -->
+<html lang="de" class="chars-page films-page">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Filme &amp; Serien – MCU Timeline</title>
+  <meta name="description" content="Alle Filme und Serien des Marvel Cinematic Universe als Plakatreihen: empfohlen, in chronologischer Reihenfolge, nach Kinostart und nach Phasen.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23ec1d24'/%3E%3Cpath fill='%23fff' d='M20.3 14H28.3L31.9 39.8H32.1L35.7 14H43.7V50H38.4V22.7H38.3L34.2 50H29.4L25.3 22.7H25.2V50H20.3Z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    /* Gleiche sanfte Einblendung wie auf der Timeline, siehe index.html */
+    document.documentElement.classList.add('js');
+    window.addEventListener('DOMContentLoaded', function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          document.body.classList.add('page-ready');
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-bar">
+      <div class="header-side">
+        <a class="brand" href="index.html">
+          <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
+          <span class="brand-text">Timeline</span>
+        </a>
+      </div>
+
+      <nav id="page-nav" aria-label="Seiten">
+        <a class="page-link" href="index.html">Timeline</a>
+        <a class="page-link active" href="films.html" aria-current="page">Filme &amp; Serien</a>
+        <a class="page-link" href="characters.html">Charaktere</a>
+      </nav>
+
+      <div class="header-side header-side--end"></div>
+    </div>
+  </header>
+
+  <!-- Dasselbe Kopfband wie auf der Charakterseite: eine dunkle Fläche über
+       die volle Breite mit mittigem Titel, unter der das weiße Raster
+       anfängt. Es steht außerhalb von .chars-main, weil das dort auf
+       Inhaltsbreite begrenzt wäre und das Band bis an beide Fensterränder
+       laufen soll. -->
+  <section class="chars-masthead">
+    <div class="chars-masthead-inner">
+      <p class="chars-kicker">Woraus das Universum besteht</p>
+      <h1 class="chars-title">Filme &amp; Serien</h1>
+      <p class="chars-lead">Jeder Titel der Timeline als Plakat, in Reihen sortiert: empfohlen,
+      nach der Handlung, nach dem Kinostart und Phase für Phase. Ein Klick öffnet Stab,
+      Besetzung und Handlung.</p>
+    </div>
+  </section>
+
+  <!-- Die Reihen entstehen in js/films.js aus PHASES. Eine neue Phase in
+       data.js bringt hier also von selbst ihre eigene Reihe mit. -->
+  <main class="chars-main film-main" id="film-rows"></main>
+
+  <footer class="site-footer">
+    <p>Es handelt sich um ein Fanprojekt und ist nicht mit Marvel Studios oder The Walt Disney Company verbunden.<br>
+    Alle Filmtitel, Plakate &amp; Logos gehören ihren jeweiligen Rechteinhabern.</p>
+  </footer>
+
+  <!-- Ohne die Galaxie und ohne die Steckbriefe: Auf weißem Grund gibt es
+       keinen Nachthimmel, und die Kacheln zeigen nur, was in data.js
+       neben dem Titel steht. -->
+  <script src="js/vendor/lenis.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/credits.js"></script>
+  <script src="js/chars.js"></script>
+  <script src="js/logo-fit.js"></script>
+  <script src="js/films.js"></script>
+</body>
+</html>

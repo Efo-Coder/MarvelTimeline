@@ -141,6 +141,12 @@
   --fuehrung-stark: 74, 222, 128;
   --fuehrung-schwach: 124, 149, 169;
 
+  /* Wie breit der Rahmen der Charakterseite zu seiner Höhe steht. Die
+     Zahl gehört der Seite und steht als --frame-ratio in css/style.css;
+     hier steht sie noch einmal, weil das Studio deren Datei nicht lädt.
+     Wer sie dort ändert, ändert sie hier und in RAHMEN_SEITEN mit. */
+  --frame-ratio: 1.1;
+
   /* Grund der Vorschau, umschaltbar über die drei Knöpfe darüber */
   --vorschau-dunkel: #050c17;
   --vorschau-hell: #e4eef5;
@@ -570,6 +576,17 @@ h1, h2 {
   box-shadow: none;
 }
 
+/* Was nicht rückholbar aussehen soll, trägt Rot. Erst bei Berührung:
+   Ein dauerhaft roter Knopf schriee die ganze Zeit, und das ist keine
+   Auskunft, sondern Lärm. */
+.knopf.gefahr:hover:not(:disabled) {
+  color: var(--gefahr);
+  border-color: var(--gefahr);
+  background: color-mix(in srgb, var(--gefahr) 14%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gefahr) 18%, transparent),
+              0 0 14px color-mix(in srgb, var(--gefahr) 22%, transparent);
+}
+
 /* Der eine große Knopf der Oberfläche, das Speichern. Er trägt als
    einziger die Anzeigeschrift und einen Schein, damit klar ist, wo der
    Weg jeder Figur endet. */
@@ -653,8 +670,10 @@ h1, h2 {
 .suchfeld input,
 .dialog-feld input,
 .namenszeile input,
+.namenszeile select,
 .dialog-feld select,
-.referenz-feld select {
+.referenz-feld select,
+.fassung-film select {
   border: 1px solid var(--linie);
   border-radius: 0;
   background: rgba(var(--bg-rgb), 0.6);
@@ -669,8 +688,10 @@ h1, h2 {
 .suchfeld input:not([type=range]):focus,
 .dialog-feld input:not([type=range]):focus,
 .namenszeile input:not([type=range]):focus,
+.namenszeile select:focus,
 .dialog-feld select:focus,
-.referenz-feld select:focus {
+.referenz-feld select:focus,
+.fassung-film select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
@@ -1496,6 +1517,24 @@ input[type=range]:focus-visible {
    eine Lücke zwischen dem Namen und den Knöpfen stehen. */
 .rolle:empty { display: none; }
 
+/* Aus welcher Wirklichkeit die Figur stammt. Sie steht neben der Rolle
+   und trägt einen Rahmen: Die Rolle sagt, wer die Figur ist, die Welt
+   sagt, wo sie herkommt, und das sind zwei verschiedene Angaben. */
+.welt {
+  margin: 0;
+  padding: 0.12rem 0.42rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  font-family: var(--font-hud);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--accent-hell);
+}
+
+.welt:empty { display: none; }
+
 /* Name und Rolle stehen auf einer gemeinsamen Schriftlinie, die Knöpfe
    nicht. Sie sind Bedienung und kein Text, auf der Grundlinie der großen
    Überschrift hingen sie an deren Unterkante. Zentriert stehen sie auf
@@ -1619,10 +1658,57 @@ input[type=range]:focus-visible {
 .chip .punkt { width: 6px; height: 6px; }
 .chip-upload { border-style: dashed; }
 
+/* ---------- Varianten einer Fassung ----------
+
+   Eine Fassung kann in mehreren Bildern vorliegen: dieselbe Rüstung in
+   einer anderen Haltung, von der anderen Seite (FULLSIZE_VARIANTS in
+   js/chars.js). In der Reihe steht sie trotzdem nur einmal, ihre Bilder
+   hängen als Ziffern hinter dem Chip – genauso wie sie auf der
+   Charakterseite als Ziffern an der Profilleiste hängen.
+
+   Chip und Ziffern liegen dabei aneinander, ohne Fuge und ohne doppelte
+   Linie: Sie sind ein Bedienelement und sollen auch wie eines aussehen.
+   Der Kasten hält sie beim Umbrechen der Reihe zusammen. */
+.chip-gruppe { display: inline-flex; }
+
+.chip-gruppe .chip { border-right-width: 0; }
+
+.chip-variante {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.26rem 0.4rem;
+  border: 1px solid var(--linie);
+  border-right-width: 0;
+  background: rgba(var(--bg-rgb), 0.5);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+
+.chip-gruppe > :last-child { border-right-width: 1px; }
+
+.chip-variante:hover { color: var(--text); border-color: var(--linie-hell); }
+
+.chip-variante.an {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-color: var(--accent);
+  color: var(--accent-hell);
+}
+
+.chip-variante .punkt { width: 5px; height: 5px; }
+
 /* Verwaltung der Fassungen, direkt unter ihren Chips. Kleiner als die
    Chips selbst, denn sie ordnet nur, was darüber steht. */
+/* Zwölf Knöpfe passen nicht in jede Fensterbreite. Bricht die Leiste um,
+   stehen die hinteren eine Zeile tiefer, statt dass die vorderen
+   zusammengedrückt werden. */
 .fassung-leiste {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.2rem;
   margin-top: 0.45rem;
   padding-top: 0.45rem;
@@ -1652,10 +1738,137 @@ input[type=range]:focus-visible {
 
 .fassung-leiste button:disabled { opacity: 0.3; cursor: not-allowed; }
 
+/* Der Knopf, dessen Auftrag gerade läuft. Die übrigen bleiben bedienbar:
+   Wer eine Fassung umbenennt, soll ihre Stelle ändern können, ohne auf
+   das Schreiben in chars.js zu warten. Der Puls sagt, dass etwas
+   unterwegs ist, ohne dass irgendetwas dabei wandert. */
+.fassung-leiste button.laeuft {
+  color: var(--accent-hell);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  animation: fassung-puls 1.1s ease-in-out infinite;
+}
+
+@keyframes fassung-puls {
+  0%, 100% { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  50% { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fassung-leiste button.laeuft { animation: none; }
+}
+
 .fassung-leiste button.gefahr:hover:not(:disabled) {
   color: var(--gefahr);
   border-color: color-mix(in srgb, var(--gefahr) 55%, transparent);
   background: color-mix(in srgb, var(--gefahr) 10%, transparent);
+}
+
+/* Der Film der gewählten Fassung, eine Zeile unter der Leiste: links die
+   Aufschrift wie überall, daneben das Logo des Films und die Wahl. */
+.fassung-film {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fassung-film select {
+  max-width: 220px;
+  height: 22px;
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.fassung-film select:disabled { opacity: 0.4; }
+
+/* Das Logo steht auf einer eigenen kleinen Fläche, wie auf der
+   Fassungstafel der Charakterseite. Die Dateien sind hell auf
+   durchsichtig, deshalb liegt eine dunkle Platte darunter. */
+.film-logo {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 22px;
+  padding: 0 0.2rem;
+  border: 1px solid var(--linie);
+  background: rgba(var(--bg-rgb), 0.6);
+}
+
+.film-logo img {
+  max-width: 100%;
+  max-height: 16px;
+  object-fit: contain;
+}
+
+.film-hinweis {
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+/* Der Satz zur Fassung, eine Zeile unter dem Film. Anders als dort
+   wird hier geschrieben, deshalb ein Feld über die ganze Breite und
+   darunter sein Knopf. Die Aufschrift bleibt gesperrt wie überall, der
+   Satz selbst läuft als Fließtext. */
+.fassung-text {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fassung-text textarea {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  resize: vertical;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--linie);
+  border-radius: 0;
+  background: rgba(var(--bg-rgb), 0.6);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.5;
+}
+
+.fassung-text textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+              inset 0 0 12px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.fassung-text ::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, transparent);
+  opacity: 1;
+}
+
+.fassung-text-fuss {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Wie viel vom Satz noch passt. Feste Ziffernbreite, sonst zappelt die
+   Zeile bei jedem Tastendruck. */
+.beschreibung-zaehler {
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== Werkbank =======================================================
@@ -2030,13 +2243,25 @@ input[type=range]:focus-visible {
 /* ---------- Vorschau der Ganzkörperbilder ----------
 
    Der Rahmen der Charakterseite im Kleinen, nach .char-figure-frame in
-   css/style.css. Die Maße stehen dort in rem, hier in Prozent der
-   Breite, damit das Verhältnis beim Verkleinern erhalten bleibt: Der
-   echte Rahmen ist 1381 zu 578 Pixel groß bei 16 Pixel Polsterung. */
+   css/style.css. Die Maße stehen in Prozent der Breite, damit das
+   Verhältnis beim Verkleinern erhalten bleibt.
+
+   Das Seitenverhältnis ist --frame-ratio aus css/style.css: In der Höhe
+   gibt die Bühne der Seite ein festes Maß vor, in der Breite dieses
+   Vielfache davon. Die Spalte, in der die Figur auf der Seite steht, ist
+   breiter oder schmaler, je nach Fenster – für die Größe der Figur zählt
+   sie nicht mehr, und deshalb steht sie auch hier nicht. Früher stand
+   hier 1381 zu 578, ein Fenster von 2560 Pixeln also, und die Vorschau
+   zeigte die Figur um ein Vielfaches zu breit umrahmt.
+
+   Höher als 14rem wird der Rahmen nicht: Bei 1.1 zu 1 nähme er sonst
+   die ganze Spalte ein, und darunter stehen noch die Regler. */
 .gk-rahmen {
   position: relative;
   width: 100%;
-  aspect-ratio: 1381 / 578;
+  max-width: calc(14rem * var(--frame-ratio));
+  margin-inline: auto;
+  aspect-ratio: var(--frame-ratio);
   padding: 1.16%;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, rgba(var(--text-rgb), 0.14));
@@ -2074,7 +2299,12 @@ input[type=range]:focus-visible {
 
 /* Die Ebene füllt den Rahmen ohne Polsterung, das Bild steht unten
    mittig darin und schöpft sie nur so weit aus, wie FULLSIZE_SCALE es
-   erlaubt. Beides genau wie .char-figure-layer und .char-figure-frame img. */
+   erlaubt. Beides genau wie .char-figure-layer und .char-figure-frame img.
+
+   --figure-lift ist der Anteil der Datei, der unter der Figur leer ist.
+   Er zählt nur in der Höhe und rechnet die Datei um genau diesen Anteil
+   größer, damit die Figur darin ihre Größe behält. Über den Rahmen
+   hinaus geht sie dabei nicht, dafür sorgt das min(1, …). */
 .gk-ebene {
   position: absolute;
   inset: 1.16%;
@@ -2089,7 +2319,8 @@ input[type=range]:focus-visible {
   width: auto;
   height: auto;
   max-width: calc(100% * var(--figure-scale, 1) * 0.82);
-  max-height: calc(100% * var(--figure-scale, 1) * 0.82);
+  max-height: calc(100%
+    * min(1, var(--figure-scale, 1) * 0.82 / (1 - var(--figure-lift, 0))));
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.65));
 }
 
@@ -2104,6 +2335,16 @@ input[type=range]:focus-visible {
   font-family: var(--font-hud);
   font-variant-numeric: tabular-nums;
 }
+
+/* Die Ablesung der Schwebe steht enger an den Reglern als der Fuß
+   darunter und rückt ein Stück ein: Sie gehört zu ihnen und ist doch
+   keiner. */
+.schwebe-zeile {
+  margin-top: 0.35rem;
+  padding-left: 0.1rem;
+}
+
+.schwebe-zeile[hidden] { display: none; }
 
 .skala-feld {
   display: flex;
@@ -2151,7 +2392,9 @@ input[type=range]:focus-visible {
 
 /* Über 1.22 zeigt der Rahmen nichts mehr, so weit ist er dann voll. */
 .skala-fuss .gk-hinweis.zuviel,
-.skala-fuss .gk-hinweis.zuviel b { color: var(--warn); }
+.skala-fuss .gk-hinweis.zuviel b,
+.schwebe-zeile.zuviel,
+.schwebe-zeile.zuviel b { color: var(--warn); }
 
 .gk-alt { margin-top: 0.6rem; }
 .gk-alt .wahl-titel { margin-bottom: 0.25rem; }
@@ -2306,6 +2549,11 @@ input[type=range]:focus-visible {
 
 .dialog.breit { width: min(640px, 94vw); }
 
+/* Die Namenszeile trägt hier vier Dinge nebeneinander: Realname,
+   Heldenname, Welt und den Knopf. Bei 640 Pixeln bliebe für die beiden
+   Namen kaum Platz. */
+#figur-dialog { width: min(780px, 96vw); }
+
 .dialog::backdrop {
   background: rgba(var(--bg-rgb), 0.72);
   backdrop-filter: blur(2px);
@@ -2440,6 +2688,68 @@ input[type=range]:focus-visible {
   font-family: var(--font-hud);
 }
 
+/* Die bekannten Welten als Reihe: kantig wie alles hier, jede für sich
+   anklickbar. Ein Klick setzt sie ins Feld darüber, von dort geht sie
+   entweder wieder hinaus oder gar nicht. */
+.weltliste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: -0.3rem 0 0.9rem;
+}
+
+.weltliste button {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--linie);
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.weltliste button:hover {
+  color: var(--accent-hell);
+  border-color: var(--linie-hell);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.weltliste button.an {
+  color: var(--accent-hell);
+  border-color: var(--accent);
+}
+
+.weltliste:empty::after {
+  content: 'Es gibt noch keine Welt.';
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+/* Das Löschen steht abgesetzt am Fuß des Dialogs, hinter einer Linie:
+   Es gehört nicht in die Reihe der Felder darüber, die eine Figur
+   pflegen. */
+.gefahrenzone {
+  margin-top: 1.1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--gefahr) 30%, transparent);
+}
+
+.gefahrenzone .feld-titel { color: color-mix(in srgb, var(--gefahr) 70%, var(--muted)); }
+
+/* Was beim Löschen mitgeht, Zeile für Zeile. */
+.weg-liste {
+  margin: 0 0 0.9rem;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.weg-liste li::marker { color: var(--gefahr); }
+
 .feld-titel {
   display: block;
   margin-bottom: 0.3rem;
@@ -2464,6 +2774,22 @@ input[type=range]:focus-visible {
 /* Der Knopf ist so hoch wie das Feld daneben, nicht so hoch wie seine
    eigene Beschriftung. Sonst steht er als kleinerer Kasten in der Zeile. */
 .namenszeile .knopf { flex: none; align-self: stretch; padding: 0 0.7rem; }
+
+/* Die Welt steht als Auswahl neben den Namen, schmaler als sie: Dort
+   steht ein Name, hier ein Kennzeichen. Auf schmalen Fenstern rutscht sie
+   mit dem Knopf in die nächste Zeile, statt die Namen zu quetschen. */
+.namenszeile { flex-wrap: wrap; }
+
+.namenszeile input { min-width: 8rem; }
+
+.namenszeile .weltwahl {
+  flex: none;
+  width: 9.5rem;
+  padding: 0.45rem 0.4rem;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
 
 /* Der Slash zwischen Realname und Heldenname. Er steht genau so in
    js/data.js, mit Leerzeichen davor und danach, deshalb ist er hier fest
@@ -2866,12 +3192,38 @@ input[type=range]:focus-visible {
 
 /* Titel, Zahl, Schiene und Zeile stehen darüber. Ohne eigene Lage lägen
    sie unter der Leinwand, denn die ist gestellt und sie sind es nicht. */
+.fortschritt-laeufe,
 .fortschritt-kopf,
 .fortschritt-schiene,
 .fortschritt-schritt {
   position: relative;
   z-index: 1;
 }
+
+/* Läuft mehr als eine Arbeit, stehen ihre Balken untereinander im selben
+   Kasten, getrennt durch eine Linie. Der Kasten wächst dabei nach oben,
+   seine untere Kante bleibt stehen. */
+.fortschritt-laeufe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.fortschritt-lauf + .fortschritt-lauf {
+  padding-top: 0.6rem;
+  border-top: 1px solid color-mix(in srgb, var(--linie) 70%, transparent);
+}
+
+/* Eine einzelne Arbeit ist der Normalfall, und dort trägt die Zeile
+   darunter zwei Zeilen Platz, damit der Kasten nicht springt. Stehen
+   mehrere übereinander, wäre das viel leerer Raum: Dann bekommt jede nur
+   so viel Höhe, wie ihr Text braucht. */
+.fortschritt-lauf:not(:only-child) .fortschritt-schritt {
+  min-height: 0;
+  margin-top: 0.3rem;
+}
+
+.fortschritt-lauf:not(:only-child) .fortschritt-titel { font-size: 1rem; }
 
 /* Läuft etwas, rückt die Meldung darüber. */
 .fortschritt:not([hidden]) ~ .toast { bottom: 7.4rem; }
@@ -3232,6 +3584,137 @@ input[type=range]:focus-visible {
    „Bucky Barnes“. Das Verhältnis der Breiten folgt dem. */
 .bond-zeile input { flex: 4; min-width: 0; }
 .bond-zeile select { flex: 5; min-width: 0; }
+
+/* Der Pfeil, der die Begriffe aufschlägt. Er sitzt an der Bezeichnung
+   und nicht zwischen den beiden Feldern, deshalb rückt er an sie heran. */
+.bond-begriffe {
+  flex: none;
+  width: 22px;
+  height: 26px;
+  margin-left: -0.3rem;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.bond-begriffe:hover,
+.bond-begriffe:focus-visible { color: var(--accent-hell); }
+
+/* Das Feld selbst hängt am Fenster, seine Stelle setzt studio.js. */
+.begriff-feld {
+  position: fixed;
+  z-index: 40;
+  max-width: 22rem;
+  max-height: 19rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--linie-hell);
+  background: var(--flaeche-hoch);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6),
+              0 0 26px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.begriff-zeile { display: flex; align-items: stretch; }
+.begriff-zeile + .begriff-zeile { border-top: 1px solid var(--linie); }
+
+/* Der Begriff selbst nimmt die ganze Zeile, die Zeichen daneben stehen
+   am Rand. So trifft der Klick, der ihn holen will, überall. */
+.begriff-wahl {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.3rem 0.4rem 0.7rem;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.begriff-wahl b {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Wie oft der Begriff schon steht, in der Festbreitenschrift wie jede
+   Zahl im Studio. */
+.begriff-wahl i {
+  margin-left: auto;
+  flex: none;
+  font: 500 0.62rem/1 var(--font-hud);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.begriff-zeile:hover,
+.begriff-zeile.an { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.begriff-zeile.an { box-shadow: inset 2px 0 0 var(--accent); }
+.begriff-zeile:hover .begriff-wahl,
+.begriff-zeile.an .begriff-wahl { color: var(--accent-hell); }
+
+/* Umbenennen und Streichen stehen blass am Rand und werden erst
+   deutlich, wenn der Zeiger auf der Zeile steht. Ihr Platz bleibt
+   trotzdem belegt, sonst rückte die Zeile darunter zur Seite. */
+.begriff-taste {
+  flex: none;
+  width: 26px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.35;
+  cursor: pointer;
+}
+
+.begriff-zeile:hover .begriff-taste,
+.begriff-zeile.an .begriff-taste,
+.begriff-taste:focus-visible { opacity: 1; }
+.begriff-taste:hover { color: var(--accent-hell); }
+.begriff-taste.gefahr:hover { color: var(--gefahr); }
+
+/* Die Zeile, während der Begriff einen neuen Namen bekommt. */
+.begriff-zeile.taufe { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+/* Das Feld steht außerhalb der Tafel und erbt deren Fassung nicht, siehe
+   den Abschnitt Felder weiter oben. Es bekommt sie deshalb hier. */
+.begriff-taufe {
+  flex: 1;
+  min-width: 0;
+  margin: 0.25rem 0 0.25rem 0.4rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--linie);
+  border-radius: 0;
+  background: rgba(var(--bg-rgb), 0.6);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.begriff-taufe:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent),
+              inset 0 0 12px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.begriff-leer {
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
 
 /* ===== Symbole ========================================================
 

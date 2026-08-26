@@ -45,60 +45,10 @@
     return node;
   }
 
-  /* ---------- Logo-Normalisierung ----------
-
-     Logo-Dateien kommen mit unterschiedlichen Seitenverhältnissen und
-     unterschiedlich viel transparentem Rand. Würden alle auf Boxbreite
-     skaliert, wirkten breite Logos kleiner als kompakte. Deshalb wird
-     jedes Logo auf die gleiche sichtbare Fläche gebracht wie die
-     Referenz iron-man.webp – die gilt als Standardgröße.
-
-     Der sichtbare Inhalt (Alpha-Bounding-Box) wird per Canvas vermessen;
-     ist das nicht erlaubt (Aufruf über file://), zählt ersatzweise die
-     ganze Bilddatei als Inhalt. */
-
-  // (990/1080)² / (990/176): sichtbare Fläche von iron-man.webp, wenn die
-  // Datei die Box exakt füllt – gemessen in Anteilen der Boxbreite.
-  const LOGO_REF_AREA = 0.1494;
-
-  function measureAlphaBox(img) {
-    try {
-      const scale = Math.min(1, 200 / img.naturalWidth);
-      const w = Math.max(1, Math.round(img.naturalWidth * scale));
-      const h = Math.max(1, Math.round(img.naturalHeight * scale));
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      ctx.drawImage(img, 0, 0, w, h);
-      const alpha = ctx.getImageData(0, 0, w, h).data;
-      let minX = w, maxX = -1, minY = h, maxY = -1;
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          if (alpha[(y * w + x) * 4 + 3] > 16) {
-            if (x < minX) minX = x;
-            if (x > maxX) maxX = x;
-            if (y < minY) minY = y;
-            if (y > maxY) maxY = y;
-          }
-        }
-      }
-      if (maxX < 0) return null;
-      return {
-        w: (maxX - minX + 1) / w * img.naturalWidth,
-        h: (maxY - minY + 1) / h * img.naturalHeight,
-      };
-    } catch (err) {
-      return null;
-    }
-  }
-
-  function normalizeLogo(img) {
-    const box = measureAlphaBox(img) || { w: img.naturalWidth, h: img.naturalHeight };
-    const ratio = box.w / box.h;
-    const frac = Math.sqrt(LOGO_REF_AREA * ratio) * (img.naturalWidth / box.w);
-    img.style.width = Math.min(frac, 1) * 100 + '%';
-  }
+  /* Alle Logos stehen mit derselben sichtbaren Fläche da, gemessen an der
+     Breite ihres Kastens. Die Rechnung dahinter steht in js/logo-fit.js,
+     die Charakterseite benutzt dieselbe. */
+  const normalizeLogo = (img) => LogoFit.toWidth(img);
 
   /* ---------- Aufbau ---------- */
 
@@ -773,6 +723,9 @@
 
   const charName = el('p', 'tip-title');
   charName.id = 'char-title';
+  /* Die Welt steht als eigene Angabe unter dem Namen und nicht als
+     Klammer dahinter, genauso wie auf der Charakterseite. */
+  const charWorld = el('p', 'char-welt');
   const charRoles = el('p', 'tip-date');
 
   /* Besetzung aus ACTORS (js/data.js). Steht als eigene Zeile unter den
@@ -790,7 +743,7 @@
   charActions.append(charClose);
 
   const charText = el('div', 'char-headtext');
-  charText.append(charName, charRoles, charCast);
+  charText.append(charName, charWorld, charRoles, charCast);
   const charHead = el('div', 'modal-head char-head');
   charHead.append(charPortrait, charText, charActions);
 
@@ -813,7 +766,10 @@
   let charOpener = null;   // Pille, von der aus geöffnet wurde
 
   function fillChar(char) {
-    charName.textContent = splitName(char.names[0]).real;
+    const { real, world } = splitName(char.names[0]);
+    charName.textContent = real;
+    charWorld.textContent = world;
+    charWorld.hidden = !world;
     const roles = [];
     for (const name of char.names) {
       const role = splitName(name).role;
@@ -1174,11 +1130,18 @@
      Übergänge ruhig: Auch ein kräftiger Mausrad-Schwung durchläuft eine
      Blende dann über mehrere hundert Pixel Scrollweg statt sie im
      Vorbeiflug zu überspringen. Die kurzen Lücken dazwischen verhindern,
-     dass zwei Stufen halbtransparent übereinander stehen. */
+     dass zwei Stufen halbtransparent übereinander stehen.
+
+     Die Fenster sind auf den kürzeren Track (350vh statt 460vh, siehe
+     .hero-track) nachgezogen. Weggefallen ist vor allem das Warten: Der
+     Titel steht nur noch eine Achtel Viewporthöhe, bevor er zu gehen
+     beginnt, vorher war es fast eine halbe. Die Blenden selbst laufen
+     weiter über 42 bis 55 Viewportprozent Scrollweg, also über vier
+     Fünftel ihrer früheren Länge und damit genauso ruhig wie vorher. */
   const heroStages = [
-    { node: hero.querySelector('.hero-stage-title'),  fadeIn: null,         fadeOut: [0.12, 0.32] },
-    { node: hero.querySelector('.hero-stage-kicker'), fadeIn: [0.36, 0.53], fadeOut: [0.58, 0.75] },
-    { node: hero.querySelector('.hero-stage-subs'),   fadeIn: [0.79, 0.94], fadeOut: null },
+    { node: hero.querySelector('.hero-stage-title'),  fadeIn: null,         fadeOut: [0.05, 0.27] },
+    { node: hero.querySelector('.hero-stage-kicker'), fadeIn: [0.30, 0.51], fadeOut: [0.55, 0.76] },
+    { node: hero.querySelector('.hero-stage-subs'),   fadeIn: [0.79, 0.96], fadeOut: null },
   ];
   for (const s of heroStages) s.shown = -1;
 

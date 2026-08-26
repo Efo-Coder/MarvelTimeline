@@ -144,6 +144,7 @@ try {
       <div class="arbeit-titel">
         <h2 id="figur-name"></h2>
         <p id="figur-rolle" class="rolle"></p>
+        <p id="figur-welt" class="welt"></p>
         <div class="figur-knoepfe">
           <button type="button" id="figur-bearbeiten" class="knopf leise" data-symbol="namen"
                   title="Namen und Schlüssel der Figur ändern">Namen …</button>
@@ -175,8 +176,61 @@ try {
                   data-hilfe="Eine Stelle nach hinten"></button>
           <button type="button" data-tat="standard" data-symbol="standard"
                   data-hilfe="Diese Fassung wird die Standardansicht, die bisherige bleibt als Fassung erhalten">Zum Standard</button>
+          <!-- Varianten: ein zweites Bild derselben Fassung, keine zweite
+               Fassung. Die Dateien heißen dann &lt;Fassung&gt;-1,
+               &lt;Fassung&gt;-2, und die Charakterseite schaltet oben an
+               der Profilleiste zwischen ihnen um. -->
+          <button type="button" data-tat="variante-neu" data-symbol="variante-neu"
+                  data-hilfe="Ein weiteres Bild derselben Fassung. Die Dateien heißen danach &lt;Fassung&gt;-1, &lt;Fassung&gt;-2, auf der Charakterseite stehen sie als Schalter an der Profilleiste">Variante +</button>
+          <button type="button" data-tat="variante-weg" class="gefahr" data-symbol="variante-weg"
+                  data-hilfe="Dieses Bild aus der Fassung nehmen. Die Varianten dahinter rücken nach vorn">Variante −</button>
+          <button type="button" data-tat="variante-hoch" data-symbol="variante-hoch"
+                  aria-label="Variante eine Stelle nach vorn"
+                  data-hilfe="Dieses Bild eine Stelle nach vorn. Es tauscht mit seinem Nachbarn den Platz, Variante 1 steht auf der Charakterseite zuerst"></button>
+          <button type="button" data-tat="variante-runter" data-symbol="variante-runter"
+                  aria-label="Variante eine Stelle nach hinten"
+                  data-hilfe="Dieses Bild eine Stelle nach hinten. Es tauscht mit seinem Nachbarn den Platz"></button>
+          <!-- Umhängen: Was als eigene Fassung angelegt wurde, ist
+               manchmal doch nur eine zweite Aufnahme derselben, und was
+               als Variante mitläuft, manchmal doch ein eigener Anzug. -->
+          <button type="button" data-tat="zu-variante" data-symbol="zu-variante"
+                  data-hilfe="Diese Fassung als Variante an eine andere anhängen. Sie verliert dabei ihre eigene Tafel und steht danach als Ziffer an der Profilleiste">Zur Variante …</button>
+          <button type="button" data-tat="zu-fassung" data-symbol="zu-fassung"
+                  data-hilfe="Dieses Bild aus der Fassung lösen. Es bekommt eine eigene Beschriftung und eine eigene Tafel in der Fassungsliste">Zur Fassung …</button>
           <button type="button" data-tat="loeschen" class="gefahr" data-symbol="loeschen"
                   data-hilfe="Fassung entfernen">Löschen</button>
+        </div>
+
+        <!-- Aus welchem Film die gewählte Fassung stammt. Die Wahl
+             schreibt sofort: bei Figuren mit Fassungsliste als dritter
+             Wert in FULLSIZE_LOOKS, bei Figuren mit nur einem Bild in
+             FULLSIZE_STANDARD. Daraus nimmt die Charakterseite das Logo
+             auf der Fassungstafel und den Titel neben der Bühne. -->
+        <div class="fassung-film" id="fassung-film" hidden
+             title="Der Film, aus dem die gezeigte Fassung stammt, nicht jeder Film, in dem sie vorkommt. Die Charakterseite setzt sein Logo auf die Fassungstafel und schreibt Titel und Jahr neben die Bühne.">
+          <label for="film-wahl">Film</label>
+          <span class="film-logo" id="film-logo" hidden><img alt=""></span>
+          <select id="film-wahl"></select>
+          <span class="film-hinweis" id="film-hinweis"></span>
+        </div>
+
+        <!-- Der Satz, den die Charakterseite unter die Fassungstafel
+             schreibt. Er gehört der Fassung und nicht der Figur: Auch die
+             Standardansicht einer Figur mit nur einem Bild ist eine
+             Fassung und hat ihren eigenen (FULLSIZE_NOTES in
+             js/looks.js). Ein leeres Feld nimmt den Eintrag wieder
+             heraus, dann steht dort die Zusammenfassung des Films. -->
+        <div class="fassung-text" id="fassung-beschreibung" hidden
+             title="Ein Satz zur gezeigten Fassung: woher der Anzug stammt, wozu er gebaut wurde, in welchem Zustand die Figur darin steckt. Die Charakterseite schreibt ihn unter die Fassungstafel.">
+          <label for="beschreibung-feld">Beschreibung</label>
+          <textarea id="beschreibung-feld" rows="2" maxlength="400"
+                    placeholder="Ein Satz zu dieser Fassung"></textarea>
+          <div class="fassung-text-fuss">
+            <button type="button" id="beschreibung-ok" class="knopf leise"
+                    data-symbol="uebernehmen" disabled>Übernehmen</button>
+            <span class="beschreibung-zaehler" id="beschreibung-zaehler"></span>
+            <span class="film-hinweis" id="beschreibung-hinweis"></span>
+          </div>
         </div>
       </div>
 
@@ -342,6 +396,11 @@ try {
                     title="Bildkorrektur zurück auf den Wert aus chars.js"></button>
           </div>
 
+          <!-- Gemessen, nicht eingestellt: Wie viel des Ausschnitts unter
+               der Figur leer ist, sieht das Studio an den durchsichtigen
+               Pixeln. Die Zeile steht nur da, wenn die Figur schwebt. -->
+          <p class="gk-hinweis schwebe-zeile" id="d-schwebe" hidden></p>
+
           <div class="skala-fuss">
             <p class="gk-hinweis" id="d-wirkung">Im Rahmen: <b>1.00</b></p>
             <button type="button" id="skala-speichern" class="knopf leise" disabled
@@ -436,6 +495,7 @@ try {
             <p class="feld-hinweis">
               Leer heißt: Es gilt, was der Wiki-Abruf gefunden hat, blass daneben.
               Was hier steht, liegt darüber und kommt nach CHAR_FACTS_EXTRA.
+              Die Kräfte gehen eigene Wege und landen in CHAR_POWERS.
             </p>
 
             <div class="steck-zeile">
@@ -474,8 +534,8 @@ try {
             </div>
 
             <div class="steck-liste">
-              <label for="t-powers">Kräfte <i>eine je Zeile, Stichworte statt Sätze</i></label>
-              <textarea id="t-powers" rows="4" data-feld="powers"></textarea>
+              <label for="t-powers">Kräfte <i>je Fähigkeit ein Block: oben der Name, darunter der Absatz</i></label>
+              <textarea id="t-powers" rows="10" data-feld="kraefte"></textarea>
             </div>
           </div>
 
@@ -485,6 +545,12 @@ try {
               Nur was eine eigene Bezeichnung verdient. Die Richtung steht aus Sicht
               dieser Figur. Alle weiteren Begegnungen entstehen von allein aus den
               gemeinsamen Filmen.
+            </p>
+            <p class="feld-hinweis">
+              Der Pfeil neben der Bezeichnung schlägt die Begriffe auf, die schon
+              benutzt sind, und Tippen filtert sie. Ein neuer Begriff kommt beim
+              Verlassen des Feldes von selbst dazu. Das Stiftzeichen benennt einen
+              Begriff bei allen Figuren zugleich um.
             </p>
             <div class="bond-liste" id="bond-liste"></div>
             <button type="button" id="bond-neu" class="knopf leise" data-symbol="neu">Beziehung</button>
@@ -556,6 +622,19 @@ try {
             Ausschnitt, damit der neue Zuschnitt neben dem steht, was bisher auf der
             Seite ist. Sie steht auf „Ohne“, bis eine Fassung gewählt ist, und was
             von Hand gewählt ist, bleibt bis zur nächsten Figur stehen.</li>
+        <li>Der <b>Film</b> unter der Fassungsleiste sagt, aus welchem Auftritt die
+            gewählte Fassung stammt. Die Charakterseite setzt sein Logo auf die
+            Fassungstafel und schreibt Titel und Jahr neben die Bühne. Gemeint ist
+            der Film, der die Fassung zeigt, nicht jeder, in dem sie vorkommt.
+            Figuren, die nur in einem Titel vorkommen, brauchen die Wahl nicht:
+            Dort steht der Film schon da.</li>
+        <li><b>Variante +</b> legt ein weiteres Bild derselben Fassung an, keine
+            zweite Fassung: aus <code>&lt;Fassung&gt;.webp</code> wird
+            <code>&lt;Fassung&gt;-1.webp</code>, die neue heißt
+            <code>&lt;Fassung&gt;-2.webp</code>. Die Bilder hängen danach als
+            Ziffern am Chip, und auf der Charakterseite steht die Wahl oben an
+            der Profilleiste. <b>Variante −</b> nimmt eine wieder heraus, die
+            dahinter rücken nach vorn.</li>
         <li>Im Ganzkörper-Betrieb sagt <b>Körpergröße</b>, wie groß die Figur ist, und
             <b>Bildkorrektur</b>, wie weit dieses eine Bild davon abweicht. Beides
             zusammen ergibt, wie hoch sie im Rahmen steht.</li>
@@ -575,6 +654,11 @@ try {
             ausführliche Biografie, die Kurzfassung für die Timeline, der
             Steckbrief, die Beziehungen und die Besetzung. Ein Speichern schreibt
             js/profiles.js, js/facts.js und js/data.js in einem Schritt.</li>
+        <li>Bei den <b>Beziehungen</b> schlägt der Pfeil neben der Bezeichnung
+            alle Begriffe auf, die schon benutzt sind, mit der Zahl ihrer
+            Beziehungen dahinter. Tippen filtert sie, ein neues Wort kommt beim
+            Verlassen des Feldes von selbst in die Liste, und das Stiftzeichen
+            benennt einen Begriff bei allen Figuren zugleich um.</li>
         <li><b>Wiki neu</b> holt Spezies, Status, Zugehörigkeit, Größe und
             Geburtsort einer Figur aus den beiden Marvel-Wikis. Die Angaben von
             Hand liegen darüber und bleiben davon unberührt.</li>
@@ -621,6 +705,11 @@ try {
     </div>
 
     <label class="dialog-feld">
+      <span>Welt, nur bei Figuren aus einer anderen Wirklichkeit</span>
+      <select id="neu-welt"></select>
+    </label>
+
+    <label class="dialog-feld">
       <span>Kürzel für den Schlüssel (CHAR_ALIAS), freiwillig</span>
       <input id="neu-alias" type="text" maxlength="60" autocomplete="off"
              placeholder="leer = aus dem Namen">
@@ -654,9 +743,31 @@ try {
       Studio setzt sie beim Speichern wieder zusammen. Wer keinen
       Heldennamen hat, lässt das rechte Feld leer.
     </p>
+    <p class="dialog-text">
+      Die Welt dahinter sagt, aus welcher Wirklichkeit die Figur stammt.
+      Sie hängt im Namen als Klammer am Ende und steht auf der
+      Charakterseite in einer eigenen Zeile unter dem Namen. Wer aus der
+      Hauptwirklichkeit kommt, lässt sie leer.
+    </p>
 
     <span class="feld-titel">Namen</span>
     <div class="namensliste" id="namensliste"></div>
+
+    <div class="dialog-feld">
+      <span>Welten für die Auswahl (CHAR_WORLDS in js/chars.js)</span>
+      <div class="namenszeile">
+        <input id="welt-neu" type="text" maxlength="40" autocomplete="off"
+               placeholder="Erde-199999">
+        <button type="button" class="knopf" id="welt-hinzu" disabled
+                data-symbol="uebernehmen">Hinzufügen</button>
+        <!-- Streichen geht nur bei einer Welt, die keine Figur mehr
+             trägt. Der Server sagt sonst, wer noch daran hängt. -->
+        <button type="button" class="knopf gefahr" id="welt-weg" disabled
+                data-symbol="loeschen">Streichen</button>
+      </div>
+    </div>
+    <p class="dialog-hinweis">Ein Klick auf eine Welt setzt sie ins Feld.</p>
+    <div class="weltliste" id="welt-bekannt"></div>
 
     <div class="dialog-feld">
       <span>Kürzel für den Schlüssel (CHAR_ALIAS), gilt für alle Namen dieser Figur</span>
@@ -670,9 +781,40 @@ try {
     <p class="dialog-hinweis" id="figur-slug"></p>
     <p class="dialog-warnung" id="figur-warnung" hidden></p>
 
+    <!-- Die Figur ganz aus der Datenbank nehmen. Sie steht in fünf
+         Dateien und trägt ihre Bilder, deshalb steht der Knopf für sich
+         und nicht zwischen den anderen. -->
+    <div class="gefahrenzone">
+      <span class="feld-titel">Figur löschen</span>
+      <p class="dialog-text" id="loeschen-text"></p>
+      <button type="button" class="knopf gefahr" id="figur-loeschen"
+              data-symbol="loeschen">Figur löschen</button>
+    </div>
+
     <menu class="dialog-knoepfe">
       <button type="submit" value="zu" class="knopf leise"
               data-symbol="schliessen">Schließen</button>
+    </menu>
+  </form>
+</dialog>
+
+<!-- Rückfrage vor dem Löschen einer Figur -->
+<dialog id="weg-dialog" class="dialog">
+  <form method="dialog">
+    <h2>Figur löschen</h2>
+    <p class="dialog-text" id="weg-text"></p>
+    <ul class="weg-liste" id="weg-liste"></ul>
+    <p class="dialog-text">
+      <b>Rückgängig</b> holt alles zurück, solange das Studio läuft. Die
+      Bilder liegen danach zusätzlich in
+      <b>tools/portrait-studio/.sicherung</b>.
+    </p>
+
+    <menu class="dialog-knoepfe">
+      <button type="submit" value="abbrechen" class="knopf leise"
+              data-symbol="schliessen">Abbrechen</button>
+      <button type="submit" value="ok" class="knopf gefahr" id="weg-ok"
+              data-symbol="loeschen">Endgültig löschen</button>
     </menu>
   </form>
 </dialog>
@@ -801,6 +943,23 @@ try {
       <input id="fassung-label" type="text" maxlength="40" autocomplete="off">
     </label>
 
+    <!-- An welche Fassung angehängt wird. Die Wahl steht nur beim
+         Umhängen da: Die Bilder heißen danach nach dieser Fassung und
+         zählen hinter ihren eigenen weiter. Was dabei herauskommt, steht
+         im Hinweis darunter. -->
+    <label class="dialog-feld" id="fassung-zielfeld" hidden>
+      <span>Fassung</span>
+      <select id="fassung-zielwahl"></select>
+    </label>
+
+    <!-- Der Film der neuen Fassung. Er lässt sich später jederzeit in der
+         Konsole ändern, hier steht er, weil beim Anlegen ohnehin klar ist,
+         woher die Fassung kommt. -->
+    <label class="dialog-feld" id="fassung-filmfeld">
+      <span>Film</span>
+      <select id="fassung-filmwahl"></select>
+    </label>
+
     <p class="dialog-hinweis" id="fassung-datei" hidden></p>
 
     <p class="dialog-warnung" id="fassung-fehler" hidden></p>
@@ -926,15 +1085,34 @@ try {
   <!-- Die Stränge hinter der Anzeige, gezeichnet in strands.js. Sie
        laufen nur, solange der Kasten offen ist. -->
   <canvas id="fortschritt-straenge" class="fortschritt-straenge" aria-hidden="true"></canvas>
-  <div class="fortschritt-kopf">
-    <span id="fortschritt-titel" class="fortschritt-titel"></span>
-    <span id="fortschritt-zahl" class="fortschritt-zahl">0 %</span>
-  </div>
-  <div class="fortschritt-schiene">
-    <div id="fortschritt-balken" class="fortschritt-balken"></div>
-  </div>
-  <p id="fortschritt-schritt" class="fortschritt-schritt"></p>
+  <!-- Eine Zeile je laufender Arbeit. Der Server arbeitet mehrere
+       nebeneinander ab, und dann soll auch von jeder zu sehen sein, wie
+       weit sie ist: Vorher zeigte der Kasten immer nur die jüngste, und
+       ein Zuschnitt, über den eine Gesichtssuche sprang, sah aus, als
+       wäre er verloren gegangen. Gebaut werden die Zeilen in
+       studio.js aus der Vorlage darunter. -->
+  <div id="fortschritt-laeufe" class="fortschritt-laeufe"></div>
 </div>
+
+<template id="fortschritt-zeile">
+  <div class="fortschritt-lauf">
+    <div class="fortschritt-kopf">
+      <span class="fortschritt-titel"></span>
+      <span class="fortschritt-zahl">0 %</span>
+    </div>
+    <div class="fortschritt-schiene">
+      <div class="fortschritt-balken"></div>
+    </div>
+    <p class="fortschritt-schritt"></p>
+  </div>
+</template>
+
+<!-- Die Begriffe der Beziehungen. Ein Feld für alle Zeilen: Es tritt
+     neben die, an der gerade gearbeitet wird, und hängt am Fenster und
+     nicht an der Tafel, sonst schnitte deren rollender Kasten es ab.
+     Gefüllt wird es in studio.js. -->
+<div id="begriff-feld" class="begriff-feld" role="listbox"
+     aria-label="Begriffe der Beziehungen" hidden></div>
 
 <div id="toast" class="toast" hidden></div>
 
