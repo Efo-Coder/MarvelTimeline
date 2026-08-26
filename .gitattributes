@@ -1,0 +1,39 @@
+# Zeilenenden: eine Regel für alle, damit Diffs klein bleiben.
+#
+# Eine Textdatei markiert das Ende jeder Zeile mit unsichtbaren Zeichen.
+# Windows nimmt dafür zwei (CR und LF), Linux und macOS nur eines (LF).
+# Liegt dieselbe Datei einmal so und einmal so vor, hält Git jede Zeile
+# für geändert, und aus einer Änderung an drei Zeilen wird ein Diff über
+# die ganze Datei.
+#
+# Vorher war das hier gemischt: css/style.css, js/chars.js, js/looks.js
+# und das Bild-Studio hatten CRLF, der Rest LF. Die Einstellung
+# core.autocrlf=true auf diesem Rechner hat beim Auschecken zusätzlich
+# CRLF erzwungen, was bei jedem `git add` die Meldung "LF will be
+# replaced by CRLF" gebracht hat.
+#
+# text=auto sagt: Git erkennt Textdateien selbst und legt sie im Repo
+# grundsätzlich mit LF ab. eol=lf sagt zusätzlich, dass auch das
+# Arbeitsverzeichnis LF bekommt. Damit stimmen Repo und Festplatte
+# überein, core.autocrlf greift für dieses Repo nicht mehr, und die
+# Meldung ist weg. Node, der Browser, Python und VS Code kommen unter
+# Windows mit LF alle zurecht.
+* text=auto eol=lf
+
+# Ausnahme: Batch-Dateien liest cmd.exe, und der erwartet CRLF. Bei
+# Labels und mehrzeiligen Blöcken kann er über reine LF stolpern.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binärdateien: nicht anfassen und nicht als Text vergleichen. Ohne das
+# würde Git in einer .webp oder .mp4 zufällige CR-Bytes für Zeilenenden
+# halten und die Datei beim Umwandeln zerstören.
+*.webp binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.mp4  binary
+*.woff  binary
+*.woff2 binary
