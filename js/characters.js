@@ -1474,30 +1474,13 @@
        Figur, siehe .char-stage-emblem. */
     const scene = el('div', 'char-stage-scene');
     scene.setAttribute('aria-hidden', 'true');
-    const bandTop = el('div', 'stage-band top');
-    const bandBottom = el('div', 'stage-band bottom');
-    bandTop.append(el('span'));
-    bandBottom.append(el('span'));
-    scene.append(el('div', 'stage-slash'), bandTop, bandBottom,
-      el('div', 'stage-ticks'));
+    scene.append(
+      el('div', 'stage-slash'),        // die große helle Diagonale
+      el('div', 'stage-wedge'),        // der dunkle Keil unter der Figur
+      el('div', 'stage-shards'),       // die Splitter entlang seiner Kante
+      el('div', 'stage-ticks top'),    // die Striche in der oberen Ecke
+      el('div', 'stage-ticks side'));  // und die am rechten Rand
     figure.append(scene);
-
-    /* Der Name als Muster in den Bändern. Gezeigt wird der Heldenname,
-       wie ihn die Vorlage groß hinschreibt, und nur ersatzweise der
-       bürgerliche: Wer kein Held ist, steht unter seinem eigenen Namen
-       da und nicht unter dem der Figur, deren Wappen er erbt.
-
-       Wie oft er nebeneinander steht, rechnet sich aus seiner Länge: Ein
-       kurzer Name muss öfter wiederholt werden als ein langer, um
-       dieselbe Breite zu füllen. 180 Zeichen decken auch das breiteste
-       Fenster ab, was darüber hinausgeht, schneidet das Band weg. */
-    const bandName = ((item.roles && item.roles[0]) || item.real || '').toUpperCase();
-    if (bandName) {
-      const oft = Math.max(4, Math.ceil(180 / (bandName.length + 3)));
-      const muster = new Array(oft).fill(bandName).join(' ');
-      bandTop.firstElementChild.textContent = muster;
-      bandBottom.firstElementChild.textContent = muster;
-    }
 
     const frame = el('div', 'char-figure-frame');
     const stack = el('span', 'char-figure-stack');
@@ -1658,10 +1641,27 @@
       const name = emblemFor(item.char.slug, filmSlug);
       if (name === emblemNow) return;
       emblemNow = name;
-      emblem.innerHTML = emblemSvg(name);
+
       const tint = emblemTint(name);
       figure.style.setProperty('--stage-dark', tint[0]);
       figure.style.setProperty('--stage-light', tint[1]);
+
+      /* Erst das gezeichnete Zeichen, damit sofort etwas dasteht. */
+      emblem.className = 'char-stage-emblem';
+      emblem.style.removeProperty('--emblem-src');
+      emblem.innerHTML = emblemSvg(name);
+
+      /* Gibt es zu dem Zeichen eine Vorlage unter assets/emblems, tritt
+         sie an seine Stelle (siehe emblemFile in js/emblems.js). Der
+         Rückruf kommt erst nach dem Laden, deshalb die Prüfung auf
+         emblemNow: Wer inzwischen weitergeblättert hat, soll nicht das
+         Zeichen von vorhin nachgereicht bekommen. */
+      emblemFile(name, src => {
+        if (emblemNow !== name) return;
+        emblem.innerHTML = '';
+        emblem.style.setProperty('--emblem-src', 'url("' + src + '")');
+        emblem.className = 'char-stage-emblem from-file';
+      });
     }
 
     /* ---------- Mitte: das Ganzkörperbild ---------- */

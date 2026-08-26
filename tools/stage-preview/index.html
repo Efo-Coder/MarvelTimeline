@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kantenformen der Bühne</title>
+<style>
+  :root {
+    --dark: #8f1420;
+    --light: #c8102e;
+    --tilt: -21deg;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem 2.5rem 5rem;
+    background: #14161a;
+    color: #e8eaee;
+    font: 15px/1.6 'Segoe UI', system-ui, sans-serif;
+  }
+  h1 { font-size: 1.5rem; margin: 0 0 .3rem; letter-spacing: .02em; }
+  .hinweis { color: #8d94a2; margin: 0 0 2rem; max-width: 52rem; }
+  .hinweis code { background: #222630; padding: .1rem .35rem; border-radius: 3px; }
+
+  .farbwahl { margin-bottom: 2rem; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+  .farbwahl button {
+    border: 1px solid #333a46; background: #1c2029; color: #cfd4dd;
+    padding: .45rem .9rem; font: inherit; font-size: .85rem; cursor: pointer;
+  }
+  .farbwahl button.an { background: #2f3644; color: #fff; border-color: #4a5364; }
+
+  .karte { margin-bottom: 2.6rem; }
+  .kopf { display: flex; align-items: baseline; gap: .8rem; margin-bottom: .5rem; }
+  .nummer {
+    font-weight: 700; font-size: 1.1rem; color: #fff;
+    background: #2f3644; padding: .1rem .6rem;
+  }
+  .titel { font-weight: 600; }
+  .was { color: #8d94a2; font-size: .88rem; }
+
+  /* Die Bühne im echten Maß: 32rem hoch wie --stage-h auf der Seite. */
+  .buehne {
+    position: relative;
+    height: 32rem;
+    background: linear-gradient(180deg, #fff, #f2f2f2);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .buehne::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(115% 92% at 50% 62%, transparent 32%, rgba(21,21,21,.07) 100%);
+  }
+  /* Ein Platzhalter dort, wo auf der echten Bühne die Figur steht. */
+  .figur {
+    position: absolute; left: 50%; top: 12%; transform: translateX(-50%);
+    width: 11rem; height: 76%;
+    background: rgba(30,34,44,.82);
+    clip-path: polygon(38% 0, 62% 0, 68% 14%, 86% 30%, 80% 56%, 68% 50%,
+      70% 100%, 56% 100%, 52% 62%, 48% 62%, 44% 100%, 30% 100%,
+      32% 50%, 20% 56%, 14% 30%, 32% 14%);
+  }
+  .schild {
+    position: absolute; right: 3%; top: 32%; width: 22%;
+    color: #1b1e24; font-size: .8rem; line-height: 1.5;
+  }
+  .schild b { display: block; font-size: 1.5rem; letter-spacing: -.01em; }
+
+  .keil { position: absolute; left: 0; right: 0; bottom: 0; background: var(--dark); }
+  .slash {
+    position: absolute; left: -30%; right: -30%; top: 34%; height: 200%;
+    transform: rotate(var(--tilt)); transform-origin: 50% 0;
+    background: color-mix(in srgb, var(--light) 7%, transparent);
+  }
+</style>
+</head>
+<body>
+
+<h1>Wie soll die schräge Kante aussehen?</h1>
+<p class="hinweis">
+  Sechs Formen für den dunklen Keil unter der Figur, alle in echter
+  Bühnengröße. Der graue Umriss steht da, wo auf der Seite die Figur steht.
+  Sag mir einfach die Nummer, dann baue ich genau die ein. Wenn keine
+  passt, sag was daran fehlt.
+</p>
+
+<div class="farbwahl">
+  <span style="color:#8d94a2;font-size:.88rem">Farbe zum Ausprobieren:</span>
+  <button class="an" data-d="#8f1420" data-l="#c8102e">Iron Man</button>
+  <button data-d="#12325e" data-l="#1f5fa8">Captain America</button>
+  <button data-d="#1f5124" data-l="#3f8a3a">Hulk</button>
+  <button data-d="#2a1b47" data-l="#5b3d94">Black Panther</button>
+  <button data-d="#22283a" data-l="#5a6488">Moon Knight</button>
+</div>
+
+<div id="liste"></div>
+
+<script>
+/* Jede Form ist ein clip-path für den Keil. Die Höhe steht daneben,
+   weil eine steile Zacke ein hohes Element braucht. */
+const FORMEN = [
+  {
+    titel: 'Glatte Diagonale',
+    was: 'eine gerade Kante, die zur Spitze ansteigt und rechts wieder abfällt',
+    hoch: '11.5rem',
+    pfad: '0 100%, 0 74%, 32% 100%, 64% 6%, 70% 6%, 90% 100%',
+  },
+  {
+    titel: 'Gebirge',
+    was: 'viele kleine Zacken, gleichmäßig verteilt (das ist der jetzige Stand)',
+    hoch: '12rem',
+    pfad: '0 100%, 0 86%, 14% 64%, 21% 79%, 38% 40%, 45% 55%, 60% 12%, '
+        + '66% 4%, 71% 4%, 76% 44%, 83% 30%, 88% 72%, 93% 58%, 100% 100%',
+  },
+  {
+    titel: 'Blitz, wenige harte Knicke',
+    was: 'drei lange steile Segmente mit scharfen Rücksprüngen dazwischen',
+    hoch: '15rem',
+    pfad: '0 100%, 0 92%, 26% 40%, 17% 44%, 47% 8%, 38% 30%, 68% 0%, '
+        + '73% 0%, 79% 56%, 90% 34%, 100% 96%, 100% 100%',
+  },
+  {
+    titel: 'Riss',
+    was: 'eine Kante, die wie gebrochenes Glas verläuft, mit ungleichen Stufen',
+    hoch: '14rem',
+    pfad: '0 100%, 0 88%, 11% 70%, 15% 82%, 31% 46%, 36% 60%, 44% 34%, '
+        + '52% 42%, 63% 6%, 69% 2%, 74% 38%, 78% 26%, 85% 64%, 91% 50%, '
+        + '96% 82%, 100% 100%',
+  },
+  {
+    titel: 'Doppelzacke',
+    was: 'zwei ausgeprägte Spitzen statt einer, dazwischen ein tiefer Einschnitt',
+    hoch: '14rem',
+    pfad: '0 100%, 0 84%, 20% 26%, 27% 34%, 34% 74%, 44% 66%, 62% 2%, '
+        + '68% 2%, 74% 48%, 82% 36%, 89% 78%, 100% 92%, 100% 100%',
+  },
+  {
+    titel: 'Flacher Blitz',
+    was: 'derselbe Zickzack, aber niedriger, damit er die Figur weniger überlagert',
+    hoch: '8.5rem',
+    pfad: '0 100%, 0 78%, 22% 24%, 15% 40%, 45% 8%, 37% 34%, 66% 0%, '
+        + '72% 0%, 78% 50%, 88% 28%, 100% 88%, 100% 100%',
+  },
+];
+
+const liste = document.getElementById('liste');
+FORMEN.forEach((form, i) => {
+  const karte = document.createElement('div');
+  karte.className = 'karte';
+  karte.innerHTML = `
+    <div class="kopf">
+      <span class="nummer">${i + 1}</span>
+      <span class="titel">${form.titel}</span>
+      <span class="was">${form.was}</span>
+    </div>
+    <div class="buehne">
+      <div class="slash"></div>
+      <div class="keil" style="height:${form.hoch};clip-path:polygon(${form.pfad})"></div>
+      <div class="figur"></div>
+      <div class="schild"><b>MARK LXXXV</b>Tony Stark<br><br>
+        Der fünfundachtzigste und letzte Anzug begleitete Stark durch den
+        Zeitraub und die Schlacht um die Erde.</div>
+    </div>`;
+  liste.append(karte);
+});
+
+document.querySelectorAll('.farbwahl button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.farbwahl button').forEach(x => x.classList.remove('an'));
+    b.classList.add('an');
+    document.documentElement.style.setProperty('--dark', b.dataset.d);
+    document.documentElement.style.setProperty('--light', b.dataset.l);
+  });
+});
+</script>
+</body>
+</html>

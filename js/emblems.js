@@ -635,3 +635,47 @@ function emblemSvg(name) {
 function emblemTint(name) {
   return EMBLEM_TINT[name] || EMBLEM_TINT['marvel'];
 }
+
+/* ---------- Vorlagen statt gezeichneter Zeichen ----------
+
+   Die Umrisse oben sind von Hand gezeichnet und sehen auch danach aus.
+   Wer ein besseres Zeichen hat, legt es als Vorlage ab und lässt
+   tools/emblems/build-emblems.py eine Maske daraus machen; die liegt
+   dann unter assets/emblems/<name>.webp und tritt an die Stelle des
+   gezeichneten.
+
+   Welche Masken es gibt, steht nirgends geschrieben: Die Bühne
+   probiert es einfach und merkt sich das Ergebnis. Das erspart eine
+   Liste, die bei jeder neuen Datei mitgepflegt werden müsste, und
+   kostet pro Zeichen einen einzigen Versuch für die ganze Sitzung.
+
+   Der Rückruf kommt nur, wenn es die Datei gibt. Bis dahin steht das
+   gezeichnete Zeichen da, und wenn es keine Datei gibt, bleibt es
+   stehen. */
+const EMBLEM_FILE_STATE = new Map();
+
+function emblemFileSrc(name) {
+  return 'assets/emblems/' + name + '.webp';
+}
+
+function emblemFile(name, wennDa) {
+  const stand = EMBLEM_FILE_STATE.get(name);
+  if (stand === false) return;
+  if (stand === true) { wennDa(emblemFileSrc(name)); return; }
+
+  /* Noch nicht geprüft, oder gerade in Prüfung. Im zweiten Fall hängt
+     sich dieser Aufruf an die laufende Prüfung an, statt eine zweite
+     anzustoßen. */
+  if (stand && stand.warten) { stand.warten.push(wennDa); return; }
+
+  const warten = [wennDa];
+  EMBLEM_FILE_STATE.set(name, { warten });
+
+  const probe = new Image();
+  probe.onload = () => {
+    EMBLEM_FILE_STATE.set(name, true);
+    warten.forEach(ruf => ruf(emblemFileSrc(name)));
+  };
+  probe.onerror = () => EMBLEM_FILE_STATE.set(name, false);
+  probe.src = emblemFileSrc(name);
+}

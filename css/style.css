@@ -3945,26 +3945,31 @@ a.char-film { text-decoration: none; }
 /* ---------- Die Kulisse hinter der Figur ----------
 
    Nachgebaut nach den Heldentafeln, die Marvel zu einzelnen Figuren
-   zeichnet: heller Grund, oben und unten ein angeschnittenes Band mit dem
-   Namen als Muster, unten rechts ein dunkler Keil, und hinter der Figur
-   das Wappen, das zu ihr gehört.
+   zeichnet: heller Grund, eine große Diagonale quer darüber, unter der
+   Figur ein dunkler Keil, an dessen Kante einzelne Splitter abgesprengt
+   sind, dazu Striche in den Ecken. Hinter allem das Wappen der Figur.
 
-   Alles daran hängt an zwei Farben und einem Zeichen, die js/emblems.js
-   zur Figur liefert und die die Bühne als --stage-dark, --stage-light und
-   als SVG gesetzt bekommt. Steht dort nichts, bleibt das Rot der Marke
-   stehen und die Bühne sieht aus wie zuvor, nur mit Bändern.
+   Zwei Farben tragen das Ganze, die js/emblems.js zur Figur liefert und
+   die die Bühne als --stage-dark und --stage-light gesetzt bekommt.
+   Steht dort nichts, bleibt das Rot der Marke stehen.
 
-   Die Szene liegt eine Ebene tiefer als die Kulisse (-2 gegen -1): So
-   legt sich deren Abdunklung über Bänder und Wappen und bindet beides an
-   die Fläche, statt daneben zu liegen. */
+   Die Winkel stehen in Grad und nicht in Prozent: Die Bühne ist auf
+   einem breiten Fenster dreimal so breit wie hoch und auf einem schmalen
+   fast quadratisch. Eine Kante, die in Prozent beschrieben ist, wäre
+   dort steil und hier flach. Alles Schräge dreht deshalb über transform
+   und behält seinen Winkel, egal wie breit die Bühne gerade ist.
+
+   Die Szene liegt eine Ebene tiefer als die Vignette (-2 gegen -1): So
+   legt sich deren Abdunklung darüber und bindet Keil und Wappen an die
+   Fläche, statt sie darauf zu legen. */
 .char-stage {
   --stage-dark: #8c1017;
   --stage-light: #e62429;
-  /* Wie hoch die Bänder oben und unten stehen und wie weit ihre Kante
-     dabei fällt. Beides in rem: Die Bühne ist bei jeder Figur gleich
-     hoch, ein Anteil brächte hier nichts. */
-  --band-h: 2.2rem;
-  --band-skew: 2.6rem;
+  /* Die Neigung, in der auf dieser Bühne alles Schräge liegt. Sie ist
+     steiler als die 7 Grad der Fassungswahl und die 18 der Profilleiste,
+     weil eine Kante quer über die ganze Fläche sonst als waagerecht
+     gelesen wird. */
+  --stage-tilt: -21deg;
 }
 
 .char-stage-scene {
@@ -3975,88 +3980,125 @@ a.char-film { text-decoration: none; }
   overflow: hidden;
 }
 
-/* Die beiden Bänder. Ihre Kante ist die Schräge, die auf dieser Seite
-   überall läuft: von links oben nach rechts unten, hier über die volle
-   Breite um --band-skew fallend.
+/* Die große Diagonale. Sie teilt die helle Fläche in zwei Töne und ist
+   das, was der Bühne überhaupt eine Richtung gibt.
 
-   Der Name darin ist kein Text zum Lesen, sondern ein Muster: derselbe
-   Name so oft nebeneinander, wie die Breite hergibt, hohl gesetzt und so
-   blass, dass er die Figur davor nicht stört. Vorlesegeräte bekommen ihn
-   nicht zu hören, das Band trägt aria-hidden. */
-.stage-band {
-  position: absolute;
-  left: -1px;
-  right: -1px;
-  height: calc(var(--band-h) + var(--band-skew));
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.stage-band.top {
-  top: 0;
-  background: color-mix(in srgb, var(--stage-light) 12%, transparent);
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--band-skew)), 0 100%);
-  align-items: flex-start;
-  padding-top: 0.55rem;
-}
-
-/* Unten steht das Band voll in der dunklen Farbe: Es ist der Keil, den
-   die Vorlage unter die Figur legt. Damit die Zeile darüber nicht darauf
-   zu stehen kommt, bleibt es flach – siehe --band-h. */
-.stage-band.bottom {
-  bottom: 0;
-  background: var(--stage-dark);
-  clip-path: polygon(0 var(--band-skew), 100% 0, 100% 100%, 0 100%);
-  align-items: flex-end;
-  padding-bottom: 0.5rem;
-}
-
-.stage-band span {
-  font-family: var(--font-impact);
-  font-size: 1.45rem;
-  font-style: italic;
-  line-height: 1;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding-left: 1.4rem;
-}
-
-/* Oben hohl auf hellem Grund, unten hohl auf dem dunklen Keil: zweimal
-   derselbe Zug, einmal in der Farbe der Figur, einmal in Weiß. */
-.stage-band.top span {
-  color: transparent;
-  -webkit-text-stroke: 1px color-mix(in srgb, var(--stage-dark) 34%, transparent);
-}
-
-.stage-band.bottom span {
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.38);
-}
-
-/* Der lange Schrägstrich quer über die Fläche. Er nimmt der weißen Bühne
-   die Leere, ohne etwas zu behaupten: ein Hauch der hellen Farbe, von
-   der linken unteren Ecke nach rechts oben. */
+   Gebaut ist sie als übergroßes gedrehtes Rechteck und nicht als
+   clip-path in Prozent: So bleibt ihr Winkel derselbe, ob die Bühne
+   1200 Pixel breit ist oder 2500. Die Übergröße sorgt dafür, dass sie
+   die gedrehte Fläche noch in jeder Ecke abdeckt. */
 .stage-slash {
   position: absolute;
-  inset: 0;
-  background: color-mix(in srgb, var(--stage-light) 5%, transparent);
-  clip-path: polygon(0 100%, 38% 100%, 100% 22%, 100% 0, 70% 0);
+  left: -30%;
+  right: -30%;
+  top: 34%;
+  height: 200%;
+  transform: rotate(var(--stage-tilt));
+  transform-origin: 50% 0;
+  background: color-mix(in srgb, var(--stage-light) 7%, transparent);
+  /* Auch ihre Oberkante zackt. Weil das Element gedreht ist, sind die
+     Zacken im clip-path waagerecht beschrieben und stehen erst nach der
+     Drehung schräg. Die Werte sind Bruchteile der Elementhöhe, und die
+     ist doppelt so hoch wie die Bühne - deshalb bleiben sie klein. */
+  clip-path: polygon(
+    0 3%, 12% 0.6%, 19% 3.4%, 34% 0.4%, 41% 3%,
+    58% 0.2%, 65% 2.6%, 81% 0%, 88% 2.4%, 100% 0.8%,
+    100% 100%, 0 100%);
 }
 
-/* Die drei kurzen Striche in der oberen rechten Ecke, wie sie die
-   Vorlage dort setzt. */
+/* Der dunkle Keil unter der Figur.
+
+   Er steigt von links unten hinter der Figur auf, hat dort seine Spitze
+   und fällt rechts davon wieder zum Boden ab. Dass er vor der
+   Filmspalte endet, ist Absicht: Liefe er weiter, stünde die rechte
+   Spalte mit ihrem Text auf dunklem Grund.
+
+   Die Prozentwerte im clip-path beschreiben nur, wo die Punkte liegen,
+   nicht wie steil die Kante wird - deshalb ist das Element mit 11,5rem
+   so hoch angesetzt: Auf der Strecke von 32 bis 64 Prozent der Breite
+   steigt es über fast seine ganze Höhe an, und das ergibt auf jedem
+   üblichen Fenster einen Winkel um die 20 Grad. */
+.stage-wedge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 12rem;
+  background: var(--stage-dark);
+  /* Die Kante ist kein Strich, sondern ein Blitz: Sie steigt in
+     Segmenten an, knickt dazwischen zurück und schlägt kurz vor der
+     Filmspalte in die Spitze aus. Rechts davon fällt sie in zwei
+     weiteren Zacken zum Boden ab.
+
+     Die Zahlen sind Punkte eines Linienzugs von links nach rechts.
+     Jedes zweite Paar zieht zurück, und genau das macht den Zacken. */
+  clip-path: polygon(
+    0 100%,
+    0 86%,
+    14% 64%,
+    21% 79%,
+    38% 40%,
+    45% 55%,
+    60% 12%,
+    66% 4%,
+    71% 4%,
+    76% 44%,
+    83% 30%,
+    88% 72%,
+    93% 58%,
+    100% 100%);
+}
+
+/* Die Splitter, die von der Kante des Keils abgesprengt sind: kurze
+   Striche in seinem Winkel, gestaffelt und verschieden lang, damit die
+   Kante nicht als eine durchgezogene Linie liest.
+
+   Sie liegen als gedrehtes Band über der Kante und sind mit einem
+   Streifenmuster gefüllt. Weil das Band selbst schon im Winkel der
+   Kante liegt, laufen die Streifen darin parallel zu ihr. */
+.stage-shards {
+  position: absolute;
+  left: 30%;
+  bottom: 3.5rem;
+  width: 26rem;
+  height: 9rem;
+  transform: rotate(var(--stage-tilt));
+  transform-origin: 0 100%;
+  background: repeating-linear-gradient(to bottom,
+    var(--stage-dark) 0 0.32rem,
+    transparent 0.32rem 1.5rem);
+  opacity: 0.5;
+  clip-path: polygon(0 100%, 100% 100%, 100% 0, 62% 44%, 22% 62%);
+}
+
+/* Die Striche in der oberen rechten Ecke und am rechten Rand. Sie
+   stehen steiler als alles andere, wie die Kratzer, die die Vorlage
+   dort setzt. */
 .stage-ticks {
   position: absolute;
-  top: calc(var(--band-h) + var(--band-skew) + 4.5rem);
+  background: repeating-linear-gradient(to bottom,
+    color-mix(in srgb, var(--stage-dark) 45%, transparent) 0 0.22rem,
+    transparent 0.22rem 1.35rem);
+  transform: rotate(-58deg);
+}
+
+.stage-ticks.top {
+  top: -1rem;
+  right: 4rem;
+  width: 9rem;
+  height: 7rem;
+  transform-origin: 100% 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 42% 62%);
+}
+
+.stage-ticks.side {
+  bottom: 8rem;
   right: -2rem;
-  width: 13rem;
-  height: 4.2rem;
-  background: repeating-linear-gradient(108deg,
-    color-mix(in srgb, var(--stage-dark) 20%, transparent) 0 3px,
-    transparent 3px 26px);
-  clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+  width: 7rem;
+  height: 5rem;
+  transform-origin: 100% 100%;
+  opacity: 0.7;
+  clip-path: polygon(0 100%, 100% 100%, 100% 0, 56% 40%);
 }
 
 /* Das Wappen hinter der Figur. Es hängt in der Figurenspalte und nicht
@@ -4081,6 +4123,23 @@ a.char-film { text-decoration: none; }
   z-index: 0;
   pointer-events: none;
   color: var(--stage-light);
+}
+
+/* Kommt das Zeichen aus einer Vorlage statt aus einem gezeichneten
+   Umriss, trägt die Datei nur die Form und keine Farbe: Sie liegt als
+   Maske über einer Fläche in der Farbe der Figur (siehe
+   tools/emblems/build-emblems.py). */
+.char-stage-emblem.from-file {
+  background: currentColor;
+  opacity: 0.2;
+  -webkit-mask-image: var(--emblem-src);
+  mask-image: var(--emblem-src);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .char-stage-emblem svg {
@@ -6429,8 +6488,9 @@ html.films-page .chars-masthead {
     /* Unter der Figur endet der Text am Fuß der Bühne, und dort liegt
        der dunkle Keil. Ohne diesen Abstand stünde die Zeile mit dem Film
        in dunkler Schrift auf dunklem Grund. Nebeneinander gibt es das
-       Problem nicht: Dort steht der Text auf halber Höhe. */
-    padding-bottom: calc(var(--band-h) + var(--band-skew) - 0.6rem);
+       Problem nicht: Dort steht der Text auf halber Höhe, und der Keil
+       knickt vor seiner Spalte ohnehin nach unten ab. */
+    padding-bottom: 3.4rem;
   }
 
   /* Einspaltig füllt die Figur die Bühne, und das Zeichen hat keine
@@ -6611,7 +6671,7 @@ html.films-page .chars-masthead {
      Ansicht weiter oben schon freihält. */
   .char-stage-info {
     padding-top: 0;
-    padding-bottom: calc(var(--band-h) + var(--band-skew) - 0.6rem);
+    padding-bottom: 3.4rem;
   }
 
   /* Einspaltig ist die Bühne schmaler als das Zeichen hoch: In voller
