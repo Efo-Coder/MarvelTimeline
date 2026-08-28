@@ -1402,42 +1402,95 @@
      Fläche jetzt frei. */
   /* ---------- Die Kulisse der Bühne ----------
 
-     Zwei dunkle Flächen, die einander gegenüberliegen, und zwischen
-     ihnen die helle Fläche mit den Splittern: lange, sehr spitze
-     Scherben, die parallel zu den großen Kanten liegen.
+     Nach der Vorlage: ein flacher dunkler Grund, darüber eine sehr große
+     helle Fläche mit einem kaum sichtbaren kühlen Verlauf, und dazwischen
+     nichts als scharfe schräge Kanten. Die helle Fläche nimmt den ganzen
+     oberen Bereich und einen großen Teil der Mitte ein, ihre Unterkante
+     ist eine lange Diagonale nach rechts unten. Vom Grund bleiben nur
+     zwei Stücke: das große Dreieck unten links und eine kleine Kerbe in
+     der rechten oberen Ecke. Auf der hellen Fläche liegen lange, sehr
+     spitze Splitter wie Lichtreflexe auf Glas.
 
-     Alle Kanten haben dieselbe Neigung, gut 28 Grad. Damit die auf
-     jeder Bühnenbreite dieselbe bleibt, ist die Kulisse eine Zeichnung
-     mit festem Koordinatensystem und keine Kette von Prozentwerten:
-     2400 auf 800 sind die Maße, in denen die Formen entworfen sind, und
-     slice legt sie über die Bühne, ohne sie zu verziehen. Ist die Bühne
-     flacher als 3:1, schneidet sie oben und unten etwas ab, ist sie
-     höher, links und rechts. Die Winkel stehen in beiden Fällen.
+     Warum die Zeichnung in Promille rechnet und nicht in festen Maßen:
+     Die Bühne ist auf einem Fernseher 3,5 mal so breit wie hoch, auf
+     einem Telefon nur ein Drittel so breit wie hoch. Eine Zeichnung mit
+     festem Seitenverhältnis müsste an den Enden dieser Spanne entweder
+     die halbe Breite abschneiden, dann fehlten die Ecken, oder sie
+     zöge die dunklen Flächen unter die Schrift. Mit dem Koordinatennetz
+     0 bis 1000 auf beiden Achsen und preserveAspectRatio="none" steht
+     jeder Punkt dagegen immer an derselben Stelle der Bühne, und das
+     Bild sitzt auf jeder Breite so wie in der Vorlage. Bezahlt wird das
+     mit der Neigung: Sie ist auf einer breiten Bühne flacher als auf
+     einer schmalen. Das fällt an einer glatten Fläche nicht auf, ein
+     abgeschnittener Splitter fiele auf.
 
-     Die Farben kommen aus --stage-dark und --stage-light, die
-     js/emblems.js zur Figur liefert. */
-  const STAGE_SCENE = '<svg class="stage-art" viewBox="0 0 2400 800"'
-    + ' preserveAspectRatio="xMidYMid slice" aria-hidden="true">'
-    /* Die große dunkle Fläche unten links. Ihre Kante tritt am linken
-       Rand ein und läuft in gut 20 Grad nach rechts unten aus der
-       Fläche heraus - dieselbe Neigung wie alles andere hier. */
-    + '<path class="dunkel" d="M0 288 1366 800 0 800Z"/>'
-    /* Die zweite oben rechts, gegenüberliegend und parallel dazu. */
-    + '<path class="dunkel" d="M1704 0 2400 261 2400 0Z"/>'
-    /* Die Splitter auf der hellen Fläche: lange, sehr spitze Scherben,
-       die etwas steiler liegen als die großen Kanten. Genau dieser
-       Unterschied lässt sie abgesprengt aussehen und nicht parallel
-       verlegt. */
-    + '<path class="splitter" d="M0 176 946 546 0 210Z"/>'
-    + '<path class="splitter" d="M16 316 272 418 24 340Z"/>'
-    + '<path class="splitter" d="M238 392 332 432 244 410Z"/>'
-    + '<path class="splitter" d="M1632 42 2104 262 1642 76Z"/>'
-    + '<path class="splitter" d="M2132 128 2400 254 2138 150Z"/>'
-    /* Und zwei, die auf der dunklen Fläche liegen. Dort sind sie hell
+     Zwei Zeichnungen und nicht eine, weil die Bühne unter 1250 px ihre
+     Spalten neu ordnet: Der Text steht dann nicht mehr rechts neben der
+     Figur, sondern unter ihr über die ganze Breite. Die dunklen Flächen
+     müssen dorthin ausweichen, wo keine Schrift steht, und das ist oben.
+     Welche der beiden im Bild ist, entscheidet das Stylesheet.
+
+     Die Farben stehen im Stylesheet, siehe .stage-art. */
+  const STAGE_SCENE_BREIT = '<svg class="stage-art breit" viewBox="0 0 1000 1000"'
+    + ' preserveAspectRatio="none" aria-hidden="true">'
+    + '<defs><linearGradient id="stage-band-breit" x1="0" y1="0" x2="0.45" y2="1">'
+    + '<stop offset="0" class="oben"/><stop offset="1" class="unten"/>'
+    + '</linearGradient></defs>'
+    + '<rect class="grund" width="1000" height="1000"/>'
+    /* Das helle Band: oben links herein, über den ganzen oberen Rand bis
+       zur Kerbe in der rechten Ecke, durch sie hindurch zum rechten Rand,
+       hinunter in die rechte untere Ecke und über die lange Diagonale
+       zurück nach links. Was es freilässt, ist der Grund.
+
+       Die Kerbe reicht bis 120 von 1000 und nicht tiefer, weil darunter
+       das Logo des Films steht. Dessen Datei ist die dunkle Fassung für
+       hellen Grund (assets/logos/dark, siehe setFilmLogo), auf dunklem
+       Grund wäre etwa das von Echo nicht mehr zu sehen. Wie viel Platz
+       die Ecke hat, ist nachgemessen: LogoFit setzt jedes Logo auf
+       dieselbe Höhe, ein breites wird dabei flach und ein hohes schmal,
+       und über die Linie dieser Kerbe reicht keines. */
+    + '<path class="flaeche" fill="url(#stage-band-breit)"'
+    + ' d="M0 0 870 0 1000 120 1000 1000 865 1000 0 418Z"/>'
+    /* Die Schnitte in der Kerbe, eine Spur dunkler als der Grund, dazu
+       ein heller Span darin und eine sehr blasse Fläche, die aus der Ecke
+       nach rechts unten läuft. */
+    + '<path class="tiefer" d="M900 0 1000 96 1000 56Z"/>'
+    + '<path class="tiefer" d="M870 0 952 76 916 0Z"/>'
+    + '<path class="span" d="M916 18 992 78 992 66Z"/>'
+    + '<path class="span leise" d="M880 40 1000 240 1000 170Z"/>'
+    /* Links die Reflexe: erst die große, kaum sichtbare Fläche, dann der
+       lange Splitter, der sich an die Diagonale legt, dann ein kurzer. */
+    + '<path class="splitter leise" d="M0 96 650 534 0 320Z"/>'
+    + '<path class="splitter" d="M0 290 430 620 0 418Z"/>'
+    + '<path class="splitter" d="M125 462 210 496 125 484Z"/>'
+    /* Und zwei auf dem dunklen Grund unten links. Dort sind sie hell
        statt dunkel, sonst wären sie nicht zu sehen. */
-    + '<path class="span" d="M0 372 366 512 0 402Z"/>'
-    + '<path class="span" d="M2242 44 2400 106 2246 62Z"/>'
+    + '<path class="span" d="M14 438 210 560 14 458Z"/>'
+    + '<path class="span leise" d="M0 596 300 726 0 626Z"/>'
     + '</svg>';
+
+  /* Dieselbe Sprache für die schmale Bühne: eine lange Kante, die von
+     links oben nach rechts unten läuft, darüber der Grund, darunter die
+     helle Fläche. Die Schrift steht hier unten und bekommt deshalb die
+     ganze untere Hälfte hell. */
+  const STAGE_SCENE_SCHMAL = '<svg class="stage-art schmal" viewBox="0 0 1000 1000"'
+    + ' preserveAspectRatio="none" aria-hidden="true">'
+    + '<defs><linearGradient id="stage-band-schmal" x1="0" y1="0" x2="0.35" y2="1">'
+    + '<stop offset="0" class="oben"/><stop offset="1" class="unten"/>'
+    + '</linearGradient></defs>'
+    + '<rect class="grund" width="1000" height="1000"/>'
+    + '<path class="flaeche" fill="url(#stage-band-schmal)"'
+    + ' d="M0 100 1000 380 1000 1000 0 1000Z"/>'
+    + '<path class="tiefer" d="M560 0 1000 246 1000 150Z"/>'
+    + '<path class="tiefer" d="M250 0 470 84 360 0Z"/>'
+    + '<path class="span" d="M600 40 950 156 600 62Z"/>'
+    + '<path class="span leise" d="M0 26 380 140 0 48Z"/>'
+    + '<path class="splitter" d="M0 100 700 296 0 240Z"/>'
+    + '<path class="splitter" d="M120 320 260 366 120 342Z"/>'
+    + '<path class="splitter leise" d="M640 330 1000 470 1000 410Z"/>'
+    + '</svg>';
+
+  const STAGE_SCENE = STAGE_SCENE_BREIT + STAGE_SCENE_SCHMAL;
 
   const STAGE_EMBLEM = '<svg viewBox="0 0 400 400" aria-hidden="true">'
     + '<path class="burst" d="M200 30 236.4 112.2 320.2 79.8 287.8 163.6 370 200'
@@ -1505,12 +1558,12 @@
 
     /* ---------- Die Kulisse ----------
 
-       Hinter allem liegt die Szene: die beiden Bänder mit dem Namen als
-       Muster, der lange Schrägstrich und die Striche in der Ecke. Sie
-       steht bei jeder Figur gleich, nur ihre beiden Farben wechseln, und
-       die setzt setStage() weiter unten. Das Wappen selbst hängt nicht
-       hier, sondern in der Figurenspalte: Dort steht es genau hinter der
-       Figur, siehe .char-stage-emblem. */
+       Hinter allem liegt die Szene: der dunkle Grund, die große helle
+       Fläche darüber und die Splitter darauf, siehe STAGE_SCENE. Sie
+       steht bei jeder Figur in denselben Farben. Was von der Figur noch
+       durchkommt, ist das Wappen, und das hängt nicht hier, sondern in
+       der Figurenspalte: Dort steht es genau hinter der Figur, siehe
+       .char-stage-emblem. */
     const scene = el('div', 'char-stage-scene');
     scene.setAttribute('aria-hidden', 'true');
     scene.innerHTML = STAGE_SCENE;
@@ -1666,8 +1719,8 @@
        der Figur nach. Gemalt wird nur, wenn sich etwas ändert, sonst
        baute jeder Klick auf dieselbe Fassung das SVG neu.
 
-       Fehlt die Datei emblems.js, bleibt die Bühne, wie sie war: Die
-       Bänder stehen dann im Rot der Marke, das im CSS voreingestellt
+       Fehlt die Datei emblems.js, bleibt die Bühne, wie sie war: Das
+       Wappen stünde dann im Rot der Marke, das im CSS voreingestellt
        ist, und der Wappenplatz bleibt leer. */
     let emblemNow = null;
     function setStage(filmSlug) {
@@ -1676,9 +1729,10 @@
       if (name === emblemNow) return;
       emblemNow = name;
 
-      const tint = emblemTint(name);
-      figure.style.setProperty('--stage-dark', tint[0]);
-      figure.style.setProperty('--stage-light', tint[1]);
+      /* Nur noch der helle Ton der Figur, und der färbt allein das
+         Wappen. Die Kulisse selbst steht seit der Vorlage bei jeder
+         Figur in denselben kühlen Grautönen. */
+      figure.style.setProperty('--stage-light', emblemTint(name)[1]);
 
       /* Erst das gezeichnete Zeichen, damit sofort etwas dasteht. */
       emblem.className = 'char-stage-emblem';

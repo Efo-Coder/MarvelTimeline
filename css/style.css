@@ -3919,55 +3919,51 @@ a.char-film { text-decoration: none; }
   padding-top: calc(var(--mode-space, 0rem) + 1.2rem);
   /* Ohne eigenen Rand: Den trägt das Profil um alle drei Tafeln,
      siehe .char-full-profile. */
-  background: linear-gradient(180deg, #fff, var(--m-wash));
+  background: var(--stage-grund);
   overflow: hidden;
-}
-
-/* Die Kulisse: ein Rand, der leicht abdunkelt, damit die Mitte heller
-   bleibt als die Ecken. Früher lag hier auch ein blasses Raster. Es nahm
-   der weißen Fläche mehr Ruhe, als es ihr Tiefe gab, und ist deshalb
-   wieder heraus.
-
-   z-index: -1 und nicht 0: Damit liegt es hinter allem, was in der Bühne
-   steht, auch hinter dem Text nicht positionierter Kinder. Vor den Grund
-   der Bühne selbst kommt es trotzdem, dafür sorgt deren isolation. */
-.char-stage::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(115% 92% at 50% 62%,
-      transparent 32%, rgba(21, 21, 21, 0.07) 100%);
 }
 
 /* ---------- Die Kulisse hinter der Figur ----------
 
-   Nachgebaut nach der Vorlage: zwei dunkle Flächen, die einander
-   gegenüberliegen, dazwischen die helle Fläche, und darin lange spitze
-   Splitter, die parallel zu den großen Kanten laufen. Die Formen selbst
+   Nachgebaut nach der Vorlage: ein flacher dunkler Grund, darüber die
+   sehr große helle Fläche mit einem kaum merklichen kühlen Verlauf, und
+   darauf lange spitze Splitter wie Lichtreflexe auf Glas. Die Formen
    stehen als Zeichnung in js/characters.js (STAGE_SCENE), hier stehen
    nur ihre Farben.
 
-   Warum eine Zeichnung und keine clip-path-Kette: Prozentwerte
-   beschreiben Punkte, nicht Winkel. Dieselbe Kante wäre auf einer
-   Bühne von 2500 Pixeln flach und auf einer von 1100 steil. Die
-   Zeichnung hat ein festes Koordinatensystem, und preserveAspectRatio
-   legt sie über die Bühne, ohne die Winkel anzutasten.
+   Warum eine Zeichnung und keine clip-path-Kette: Eine Kette aus
+   Prozentwerten beschreibt zwar dieselben Punkte, aber jede Kante wäre
+   ein eigener Wert, und schon eine geänderte Höhe verzöge das ganze
+   Gefüge. Die Zeichnung hält alle Punkte in einem Netz zusammen.
 
-   Die Szene liegt eine Ebene tiefer als die Vignette (-2 gegen -1): So
-   legt sich deren Abdunklung darüber und bindet die Flächen an die
-   Bühne, statt sie darauf zu legen. */
+   --stage-light bleibt stehen, obwohl die Kulisse es nicht mehr braucht:
+   Das Wappen hinter der Figur färbt sich danach, und nur dort trägt die
+   Bühne noch die Farbe der Figur. Der Grund selbst ist bei jeder Figur
+   derselbe, so steht es in der Vorlage. */
 .char-stage {
-  --stage-dark: #8c1017;
   --stage-light: #e62429;
+
+  /* Der flache Grund, ohne jede Textur. */
+  --stage-grund: #303746;
+  /* Die Aussparungen in der rechten oberen Ecke, eine Spur tiefer als
+     der Grund, damit sie als Schnitt zu erkennen sind und nicht als
+     zweite Farbe. */
+  --stage-tiefer: #2a303e;
+  /* Die helle Fläche, oben und unten. Der Weg dazwischen ist so kurz,
+     dass der Verlauf eher zu ahnen als zu sehen ist. */
+  --stage-hell-oben: #f1f2f6;
+  --stage-hell-unten: #d8dbe3;
+  /* Die Splitter: auf der hellen Fläche etwas kühler und dunkler als
+     sie, auf dem dunklen Grund heller. Beide bleiben nah an ihrem
+     Untergrund, sie sollen wie Reflexe wirken und nicht wie Formen. */
+  --stage-schliff: rgba(180, 195, 205, 0.25);
+  --stage-glanz: rgba(220, 225, 232, 0.35);
 }
 
 .char-stage-scene {
   position: absolute;
   inset: 0;
-  z-index: -2;
+  z-index: -1;
   pointer-events: none;
   overflow: hidden;
 }
@@ -3978,26 +3974,23 @@ a.char-film { text-decoration: none; }
   display: block;
 }
 
-/* Die großen Flächen stehen nicht in der reinen Farbe der Figur,
-   sondern in einem sehr dunklen Grundton, dem sie beigemischt ist. In
-   voller Sättigung wäre die Fläche ein Farbfeld; so ist sie das, was
-   die Vorlage zeigt: fast schwarz, aber mit dem Ton der Figur darin. */
-.stage-art .dunkel {
-  fill: color-mix(in srgb, var(--stage-dark) 52%, #1b1f27);
-}
+/* Zwei Zeichnungen für zwei Aufteilungen der Bühne, siehe STAGE_SCENE.
+   Im Bild ist immer nur eine, die andere ist ausgeblendet. */
+.stage-art.schmal { display: none; }
 
-/* Die Splitter stehen zwischen beidem: dunkler als der Grund, damit sie
-   überhaupt zu sehen sind, und weit heller als die großen Flächen,
-   damit sie wie abgesprengt wirken und nicht wie eine dritte Fläche. */
-.stage-art .splitter {
-  fill: color-mix(in srgb, var(--stage-dark) 22%, transparent);
-}
+.stage-art .grund { fill: var(--stage-grund); }
+.stage-art .tiefer { fill: var(--stage-tiefer); }
+.stage-art .oben { stop-color: var(--stage-hell-oben); }
+.stage-art .unten { stop-color: var(--stage-hell-unten); }
 
-/* Die Splitter, die auf einer dunklen Fläche liegen. Dort ist Dunkel
-   auf Dunkel nichts, also stehen sie hell. */
-.stage-art .span {
-  fill: color-mix(in srgb, var(--stage-light) 34%, transparent);
-}
+/* Splitter auf der hellen Fläche und Splitter auf dem dunklen Grund. */
+.stage-art .splitter { fill: var(--stage-schliff); }
+.stage-art .span { fill: var(--stage-glanz); }
+
+/* Die großen, sehr flächigen unter ihnen. Sie tragen keine eigene Farbe,
+   sie nehmen ihrer Klasse nur die Hälfte der Deckung: So bleibt eine
+   Fläche über die halbe Bühne eine Ahnung und wird kein Feld. */
+.stage-art .leise { opacity: 0.45; }
 
 /* Das Wappen hinter der Figur. Es hängt in der Figurenspalte und nicht
    in der Szene, damit es genau hinter der Figur steht und nicht neben
@@ -4020,7 +4013,13 @@ a.char-film { text-decoration: none; }
   transform: translate(-50%, -53%);
   z-index: 0;
   pointer-events: none;
-  color: var(--stage-light);
+  /* Nicht in der reinen Farbe der Figur, sondern zur Hälfte im Ton der
+     Kulisse. Auf der roten Bühne von früher lag die Farbe im Grund und
+     das Wappen sank darin ein. Der Grund ist jetzt kühl und grau, und
+     ein reines Rot darauf wäre kein Hintergrund mehr, sondern ein
+     zweiter Gegenstand neben der Figur. */
+  color: color-mix(in srgb, var(--stage-light) 50%, #7d8698);
+  --wappen-deckung: 0.14;
 }
 
 /* Kommt das Zeichen aus einer Vorlage statt aus einem gezeichneten
@@ -4029,7 +4028,7 @@ a.char-film { text-decoration: none; }
    tools/emblems/build-emblems.py). */
 .char-stage-emblem.from-file {
   background: currentColor;
-  opacity: 0.2;
+  opacity: var(--wappen-deckung);
   -webkit-mask-image: var(--emblem-src);
   mask-image: var(--emblem-src);
   -webkit-mask-size: contain;
@@ -4044,7 +4043,7 @@ a.char-film { text-decoration: none; }
   width: 100%;
   height: 100%;
   display: block;
-  opacity: 0.2;
+  opacity: var(--wappen-deckung);
 }
 
 /* Die Farben in der Maske. Weiß steht dort für sichtbar, Schwarz für
@@ -6366,6 +6365,13 @@ html.films-page .chars-masthead {
      bleibt das Maß auch hier, und Fähigkeiten und Daten rechnen über
      --panel-h mit. */
   .char-full-profile { --stage-h: 26rem; }
+
+  /* Ab hier steht der Text unter der Figur statt neben ihr, und zwar
+     über die ganze Breite. Die Kulisse wechselt deshalb auf ihre zweite
+     Zeichnung: Die dunklen Flächen liegen dort oben, wo nur die Figur
+     steht, und die untere Hälfte bleibt hell für die Schrift. */
+  .stage-art.breit { display: none; }
+  .stage-art.schmal { display: block; }
 
   .char-stage {
     /* Kleinere Tafeln, und die Spalte misst sich an ihnen statt an einem
