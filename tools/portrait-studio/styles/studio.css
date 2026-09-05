@@ -1603,16 +1603,27 @@ input[type=range]:focus-visible {
 .konsole:has(#fassung-leiste:not([hidden])) #ziel-block { flex: 1 1 0; }
 .konsole:has(#fassung-leiste:not([hidden])) .quellen-block { flex: 0 0 auto; }
 
+/* Die Überschriften der Oberfläche tragen den Akzent, wie die der
+   Dialoge: Sie führen einen Abschnitt an. Grau bleibt, was erklärt, also
+   die Hinweise darunter und die Beschriftungen der Steckbrieffelder, die
+   ihrerseits unter einer eigenen Überschrift stehen. */
 .wahl-titel {
   display: block;
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent);
   margin-bottom: 0.4rem;
   white-space: nowrap;
 }
+
+/* Die Zeilen aus Beschriftung und Bedienelement: Film, Beschreibung und
+   die Referenz über der Bühne. Sie erben ihre Farbe sonst vom Kasten,
+   der grau ist, weil in ihm auch Hinweise stehen. */
+.fassung-film > label,
+.fassung-text > label,
+.referenz-feld > label { color: var(--accent); }
 
 .chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 
@@ -1706,20 +1717,55 @@ input[type=range]:focus-visible {
 /* Zwölf Knöpfe passen nicht in jede Fensterbreite. Bricht die Leiste um,
    stehen die hinteren eine Zeile tiefer, statt dass die vorderen
    zusammengedrückt werden. */
+/* Die Knöpfe tragen einen Rahmen für den Zeiger und einen Innenabstand
+   dahinter. Beides schob ihre Aufschrift nach rechts, und die Leiste
+   setzte damit ein Stück später an als der Titel und die Chips darüber.
+   Die ganze Leiste rückt deshalb um genau diesen Betrag zurück, dann
+   steht das erste Zeichen jeder Zeile auf derselben Kante wie alles
+   andere im Block. Der Wert steht einmal da und wird beim Knopf wieder
+   gelesen, sonst liefe die Kante beim nächsten Nachjustieren
+   auseinander. */
 .fassung-leiste {
+  --knopf-rand: 0.45rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.2rem;
   margin-top: 0.45rem;
+  margin-left: calc(-1 * (var(--knopf-rand) + 1px));
   padding-top: 0.45rem;
+  position: relative;
+}
+
+/* Die Trennlinie gehört dem Block und nicht der Leiste, sie bleibt
+   deshalb stehen, wo sie stand, statt mit nach links zu wandern. */
+.fassung-leiste::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: calc(var(--knopf-rand) + 1px);
+  right: 0;
   border-top: 1px dotted var(--linie);
+}
+
+/* Die Überschrift der Leiste, im Kleid des Film-Labels weiter unten:
+   Beide sind Abschnitte innerhalb desselben Blocks und sollen sich gleich
+   lesen. Über die volle Breite drängt sie die Knöpfe in die Zeile
+   darunter. Den Rückzug der Leiste holt sie sich wieder, denn sie hat
+   keinen Innenabstand, der auszugleichen wäre. */
+.fassung-leiste .leiste-titel {
+  flex-basis: 100%;
+  margin: 0 0 0.1rem calc(var(--knopf-rand) + 1px);
+  color: var(--accent);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .fassung-leiste button {
   height: 22px;
   display: grid;
   place-items: center;
-  padding: 0 0.45rem;
+  padding: 0 var(--knopf-rand);
   border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
@@ -1768,6 +1814,7 @@ input[type=range]:focus-visible {
 .fassung-film {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.4rem;
   margin-top: 0.35rem;
   color: var(--muted);
@@ -1775,6 +1822,13 @@ input[type=range]:focus-visible {
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+
+/* Film ist die Überschrift des Abschnitts und steht deshalb über ihm,
+   nicht davor. Über die volle Breite drängt das Wort alles Weitere in
+   die Zeile darunter, wo Logo, Auswahl und Hinweis zusammenstehen. Der
+   Hinweis gehört zur Auswahl, er sagt ja, wohin ihr Film geschrieben
+   wird. */
+.fassung-film > label { flex-basis: 100%; }
 
 .fassung-film select {
   max-width: 220px;
@@ -2595,6 +2649,15 @@ input[type=range]:focus-visible {
    Dateinamen bleibt eine Zeile. */
 .dialog-feld > span:not(.dateiname) { display: block; margin-bottom: 0.3rem; }
 
+/* Was über einem Feld steht, ist die Überschrift seines Abschnitts und
+   trägt denselben Akzent wie .feld-titel. Damit gilt in jedem Dialog
+   dieselbe Ordnung: Der Akzent führt einen Abschnitt an, das Grau
+   erklärt ihn.
+
+   Die Skala unter einem Regler ist keine Überschrift, sondern die
+   Beschriftung seiner beiden Enden, und bleibt deshalb draußen. */
+.dialog-feld > span:not(.dateiname):not(.reglerskala) { color: var(--accent); }
+
 .dialog-feld input,
 .namenszeile input {
   width: 100%;
@@ -2609,7 +2672,7 @@ input[type=range]:focus-visible {
 .dialog-feld > label {
   display: block;
   margin-bottom: 0.3rem;
-  color: var(--muted);
+  color: var(--accent);
 }
 
 .dialog-feld > label b {
@@ -2690,15 +2753,37 @@ input[type=range]:focus-visible {
 
 /* Die bekannten Welten als Reihe: kantig wie alles hier, jede für sich
    anklickbar. Ein Klick setzt sie ins Feld darüber, von dort geht sie
-   entweder wieder hinaus oder gar nicht. */
-.weltliste {
+   entweder wieder hinaus oder gar nicht.
+
+   Die Reihe bleibt einzeilig und rollt seitlich, statt umzubrechen: Mit
+   jeder neuen Welt wüchse der Dialog sonst um eine Zeile und schöbe alles
+   darunter weiter nach unten. Die Rolle selbst trägt die Ränder, damit
+   die Pfeile daneben auf derselben Höhe sitzen. */
+.weltrolle {
   display: flex;
-  flex-wrap: wrap;
+  align-items: stretch;
   gap: 0.3rem;
   margin: -0.3rem 0 0.9rem;
 }
 
+.weltliste {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 0.3rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  /* Die Leiste bleibt unsichtbar, gerollt wird über die Pfeile, das Rad
+     oder die Tastatur. Die zweite Zeile ist für Chrome, das die erste
+     erst seit Kurzem kennt. */
+  scrollbar-width: none;
+}
+
+.weltliste::-webkit-scrollbar { display: none; }
+
 .weltliste button {
+  flex: none;
+  white-space: nowrap;
   padding: 0.25rem 0.5rem;
   border: 1px solid var(--linie);
   border-radius: 0;
@@ -2728,16 +2813,57 @@ input[type=range]:focus-visible {
   color: var(--muted);
 }
 
+/* Die beiden Pfeile außen. Sie tragen dasselbe Kleid wie die Welten
+   dazwischen, nur schmaler und ohne Aufschrift, damit die Reihe als ein
+   Stück liest und nicht als Reihe mit zwei fremden Knöpfen daneben. */
+.weltrolle-pfeil {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  padding: 0;
+  border: 1px solid var(--linie);
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+
+.weltrolle-pfeil:hover:not(:disabled) {
+  color: var(--accent-hell);
+  border-color: var(--linie-hell);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/* Am Ende der Reihe bleibt der Pfeil stehen und wird blass, statt zu
+   verschwinden: Sonst rückte die Reihe bei jedem Rollen um seine Breite
+   hin und her. */
+.weltrolle-pfeil:disabled {
+  color: color-mix(in srgb, var(--muted) 40%, transparent);
+  border-color: color-mix(in srgb, var(--linie) 50%, transparent);
+  cursor: default;
+}
+
 /* Das Löschen steht abgesetzt am Fuß des Dialogs, hinter einer Linie:
    Es gehört nicht in die Reihe der Felder darüber, die eine Figur
-   pflegen. */
+   pflegen.
+
+   Unten braucht die Zone denselben Abstand wie oben. Ihr letztes Kind ist
+   der Knopf, und der trägt keinen eigenen Rand, sonst klebte er an der
+   Linie der Knopfleiste darunter. */
 .gefahrenzone {
   margin-top: 1.1rem;
   padding-top: 0.9rem;
+  padding-bottom: 0.9rem;
   border-top: 1px solid color-mix(in srgb, var(--gefahr) 30%, transparent);
 }
 
-.gefahrenzone .feld-titel { color: color-mix(in srgb, var(--gefahr) 70%, var(--muted)); }
+/* In der Gefahrenzone tritt das Rot an die Stelle des Akzents, in
+   derselben Stärke: Sonst stünde ausgerechnet die Überschrift über dem
+   Löschen blasser da als jede andere. */
+.gefahrenzone .feld-titel { color: var(--gefahr); }
 
 /* Was beim Löschen mitgeht, Zeile für Zeile. */
 .weg-liste {
@@ -2750,13 +2876,18 @@ input[type=range]:focus-visible {
 
 .weg-liste li::marker { color: var(--gefahr); }
 
+/* Die Überschrift eines Abschnitts, nicht die Beschriftung eines Feldes.
+   Sie trägt deshalb den Akzent und nicht das gedämpfte Grau: In
+   .dialog-feld stehen die Feldbeschriftungen in derselben Größe und
+   Sperrung, ohne den Farbunterschied läsen sich beide gleich und der
+   Abschnitt hätte keinen sichtbaren Anfang. */
 .feld-titel {
   display: block;
   margin-bottom: 0.3rem;
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent);
 }
 
 /* Ein Name je Zeile, mit eigenem Übernehmen */
@@ -3890,7 +4021,7 @@ button.mit-symbol {
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent);
 }
 
 .galaxie-gruppe-marke::before {
@@ -4066,6 +4197,194 @@ button.mit-symbol {
   text-transform: uppercase;
 }
 
+/* ---------- Embleme ----------
+
+   Dieselbe Aufteilung wie die Biografie: links die Arbeit, rechts eine
+   schmale Tafel, die erklärt, was dabei geschieht. Der Unterschied
+   steckt in der Mitte. Dort steht keine Bühne, sondern eine Strecke aus
+   drei Feldern, und zwischen ihnen ein Pfeil: Vorlage, freigestellt,
+   Maske. Was in der Strecke hängen bleibt, sieht man am leeren Feld. */
+
+.emblem-bank {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 0.8rem;
+}
+
+.emblem-marke {
+  font: 0.72rem/1 var(--font-hud);
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+/* Die Knöpfe im Kopf rücken nach rechts, der Name bleibt links stehen. */
+.emblem-tafel .panel-kopf > .knopf:first-of-type { margin-left: auto; }
+
+.emblem-strecke {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr) 22px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.9rem;
+}
+
+.emblem-schritt {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.emblem-schritt figcaption {
+  font: 0.66rem/1 var(--font-hud);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.emblem-feld {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--linie);
+  overflow: hidden;
+}
+
+/* Das Karo zeigt, was durchsichtig ist. Es steht hinter der Vorlage und
+   hinter dem Freigestellten, denn dort ist die Durchsicht die Sache,
+   um die es geht. */
+.emblem-feld.karo {
+  background:
+    conic-gradient(var(--karo-hell) 0 25%, var(--karo-dunkel) 0 50%,
+                   var(--karo-hell) 0 75%, var(--karo-dunkel) 0)
+    0 0 / 18px 18px;
+}
+
+/* Die Maske trägt keine Farbe, sie ist weiß und sonst nichts. Deshalb
+   liegt hinter ihr der Grund der Erscheinungsbühne und kein Karo: So
+   steht sie da, wie sie später wirkt. */
+.emblem-feld.buehne { background: var(--tief); }
+
+.emblem-feld img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.emblem-leer {
+  margin: 0;
+  padding: 0 0.6rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.emblem-mass {
+  margin: 0;
+  min-height: 1.1em;
+  font: 0.68rem/1.2 var(--font-hud);
+  color: var(--muted);
+}
+
+/* Der Pfeil zwischen den Feldern. Gezeichnet aus zwei Rändern, damit er
+   die Kantigkeit der übrigen Oberfläche mitmacht und keine Rundung
+   hereinbringt. */
+.emblem-pfeil {
+  justify-self: center;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid var(--linie-hell);
+  border-right: 1px solid var(--linie-hell);
+  transform: rotate(45deg);
+}
+
+.emblem-ablage {
+  margin: 0 0.9rem;
+  padding: 0.5rem;
+  text-align: center;
+  border: 1px dashed var(--linie);
+  font-size: 0.74rem;
+  color: var(--muted);
+  transition: border-color 0.14s ease, color 0.14s ease;
+}
+
+.emblem-ablage.an {
+  border-color: var(--accent);
+  color: var(--accent-hell);
+}
+
+.emblem-fuss {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.emblem-lesart {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emblem-taten {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.emblem-info {
+  margin: 0;
+  flex-basis: 100%;
+  min-height: 1.1em;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.emblem-hilfe-feld {
+  padding: 0.9rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.emblem-schritte {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.emblem-schritte b { color: var(--text); font-weight: 600; }
+
+/* Der Listeneintrag eines Zeichens trägt kein Gesicht, sondern eine
+   Maske oder eine Vorlage. Beide stehen frei und vertragen die dunkle
+   Füllung der übrigen Einträge nicht, die sie wie ein Loch aussehen
+   ließe. */
+.eintrag-zeichen img {
+  object-fit: contain;
+  background: var(--tief);
+}
+
+.eintrag-zeichen .eintrag-name {
+  font-family: var(--font-hud);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
 @media (max-width: 900px) {
   .galaxie-raster { grid-template-columns: minmax(0, 1fr); }
   .galaxie-spalte { max-height: 40vh; }
@@ -4077,6 +4396,7 @@ button.mit-symbol {
   .werkbank { grid-template-columns: minmax(0, 1fr) 262px; }
   .werkbank.gk { grid-template-columns: minmax(0, 1fr) 380px; }
   .biografie-bank { grid-template-columns: minmax(0, 1fr) 330px; }
+  .emblem-bank { grid-template-columns: minmax(0, 1fr) 280px; }
   .vorschau-gross { --pv: 155px; }
   .filme { max-width: 28ch; }
 }

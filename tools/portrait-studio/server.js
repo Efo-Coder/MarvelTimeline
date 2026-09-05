@@ -690,11 +690,17 @@ function zahl(wert) {
   return String(Math.round(wert * 100) / 100);
 }
 
-/* Zwei Nachkommastellen, mehr trägt weder der Regler noch chars.js. */
+/* Zwei Nachkommastellen für die Körpergröße: 0.01 sind knapp zwei
+   Zentimeter an einem erwachsenen Menschen, feiner ist an einer Figur
+   nichts abzulesen. */
 const runde = (wert) => Math.round(Number(wert) * 100) / 100;
 
-/* Die Schwebe ist gemessen und nicht geregelt, und sie steht im Nenner:
-   Bei 0.9 wären zwei Stellen schon ein Zehntel Größe. Deshalb hier drei. */
+/* Drei Nachkommastellen für alles, was den Rahmen fein einstellt.
+
+   Die Schwebe steht im Nenner: Bei 0.9 wären zwei Stellen schon ein
+   Zehntel Größe. Die Bildkorrektur wird am Bild ausgemessen und nicht
+   geschätzt, und ein Hundertstel ist im Rahmen der Seite schon gut vier
+   Pixel. In fullsizeScale() (js/chars.js) stehen ohnehin drei Stellen. */
 const runde3 = (wert) => Math.round(Number(wert) * 1000) / 1000;
 const zahl3 = (wert) => String(runde3(wert));
 
@@ -799,7 +805,7 @@ function neueKorrekturQuelle(quelle, datei, korrektur) {
     const t = WERT_ZEILE.exec(z);
     return t && t[1] === datei;
   });
-  const zeile = `  '${datei}': ${zahl(korrektur)},`;
+  const zeile = `  '${datei}': ${zahl3(korrektur)},`;
 
   if (korrektur === 1) {
     if (vorhanden === -1) return null;              // war schon Standard
@@ -1053,7 +1059,7 @@ function setzeSkala(datei, skala, korrektur, schwebe) {
   /* Der Normalfall steht in keiner der Listen: bei den beiden Reglern
      die 1, bei der Schwebe die 0. */
   const proben = [['Körpergröße', skala, ctx.PROBE.skala, 1, runde],
-    ['Bildkorrektur', korrektur, ctx.PROBE.korrektur, 1, runde]];
+    ['Bildkorrektur', korrektur, ctx.PROBE.korrektur, 1, runde3]];
   if (schwebe !== undefined) proben.push(['Schwebe', schwebe, ctx.PROBE.schwebe, 0, runde3]);
   for (const [name, wert, tabelle, standard, genau] of proben) {
     const soll = wert === standard ? undefined : genau(wert);
@@ -3727,6 +3733,9 @@ const DAUER_VORGABE = {
   verlauf: 1500,
   'wiki:holen': 1300,           // je Figur
   'wiki:bauen': 26000,
+  'emblem-frei': 7000,          // je Megapixel der Vorlage
+  'emblem-bauen': 1500,         // je Zeichen
+  'emblem-ablegen': 200,        // eine Datei kopieren
 };
 
 /* Nichts unter null und nichts über einer Stunde: Das eine ist keine
@@ -4439,6 +4448,255 @@ async function freistellen(quelle, modell, feinschliff, saum) {
   } finally {
     freiLaeuft = false;
   }
+}
+
+/* ---------- Embleme ----------
+
+   Hinter jeder Figur steht auf der Erscheinungsbühne ein großes, blasses
+   Zeichen. Gezeichnet ist es als SVG-Umriss in js/emblems.js, und wer
+   ein besseres hat, legt eine Vorlage ab und lässt eine Maske daraus
+   bauen. Die tritt dann an die Stelle des gezeichneten, siehe
+   emblemFile() dort.
+
+   Der Weg dahin geht über zwei Skripte in tools/emblems, und beide
+   bleiben dort die maßgebliche Fassung. Das Studio ruft sie nur auf, so
+   wie es auch Real-ESRGAN aufruft, statt ihren Inhalt ein zweites Mal zu
+   führen:
+
+     cutout-emblems.py   nimmt den flachen Grund weg und setzt den
+                         Alphakanal. Ohne ihn müsste build-emblems.py
+                         über die Helligkeit gehen, und das geht bei
+                         dunklen Zeichen schief.
+
+     build-emblems.py    macht daraus die Maske: 512 auf 512, weiß,
+                         beschnitten und quadratisch gerahmt. Die Farbe
+                         wirft es weg, denn die Bühne färbt selbst.
+
+   Beide rechnen mit derselben schlanken Umgebung wie crop-image.py, sie
+   brauchen nur Pillow, numpy und OpenCV. Ein eigenes Python wie beim
+   Freistellen der Porträts ist hier nicht nötig, es läuft kein Modell. */
+
+const EMBLEM_ORDNER = path.join(REPO, 'assets', 'emblems');
+const EMBLEM_QUELLE = path.join(EMBLEM_ORDNER, 'source');
+const EMBLEM_SICHERUNG = path.join(EMBLEM_ORDNER, '.sicherung');
+const EMBLEM_BAU_SKRIPT = path.join(REPO, 'tools', 'emblems', 'build-emblems.py');
+const EMBLEM_FREI_SKRIPT = path.join(REPO, 'tools', 'emblems', 'cutout-emblems.py');
+
+/* Wie python() weiter oben, nur für ein beliebiges Skript. Die Antwort
+   ist die letzte Zeile auf stdout und immer JSON. */
+function emblemSkript(skript, args) {
+  return new Promise((fertig, scheitern) => {
+    if (!PYTHON) return scheitern(new Error(PYTHON_INFO.grund));
+    execFile(PYTHON, [skript, ...args],
+      { timeout: 180000, maxBuffer: 8 * 1024 * 1024 }, (fehler, aus, err) => {
+        const zeile = (aus || '').trim().split('\n').pop();
+        let daten = null;
+        try { daten = JSON.parse(zeile); } catch { /* gleich unten */ }
+        /* Nur eine Zeichenkette meldet, dass der Aufruf gescheitert ist.
+           Ein Skript darf unter demselben Wort auch eine Liste führen,
+           und eine leere Liste ist in JavaScript wahr. */
+        if (daten && typeof daten.fehler === 'string') {
+          return scheitern(new Error(daten.fehler));
+        }
+        if (fehler) return scheitern(new Error((err || fehler.message).trim()));
+        if (!daten) {
+          return scheitern(new Error('Unlesbare Antwort von '
+            + path.basename(skript) + ': ' + zeile));
+        }
+        fertig(daten);
+      });
+  });
+}
+
+function emblemName(name) {
+  if (!/^[a-z0-9-]+$/.test(name || '')) throw new Error('Ungültiger Emblemname.');
+  return name;
+}
+
+/* Der Stand aller Zeichen. Die Zeitstempel kommen mit, denn Vorlage und
+   Maske stehen im Browser als Bild und müssen sich nach dem Bauen von
+   selbst erneuern. */
+async function emblemStand() {
+  const antwort = await emblemSkript(EMBLEM_BAU_SKRIPT, ['--liste', '--json']);
+  return antwort.zeichen.map((z) => {
+    const maske = path.join(EMBLEM_ORDNER, z.name + '.webp');
+    const vorlage = z.vorlage ? path.join(EMBLEM_QUELLE, z.vorlage) : null;
+    return {
+      ...z,
+      vorlageStand: vorlage && fs.existsSync(vorlage) ? fs.statSync(vorlage).mtimeMs : 0,
+      maskeStand: z.maske && fs.existsSync(maske) ? fs.statSync(maske).mtimeMs : 0,
+    };
+  });
+}
+
+/* Freistellen als Vorschau, noch ohne etwas abzulegen. Das Ergebnis
+   liegt als hochgeladenes Bild und lässt sich damit anzeigen wie jede
+   andere Vorlage auch. */
+/* Die abgelegte Vorlage eines Zeichens als Quelle. Sie liegt anders als
+   ein Porträt nicht unter einem festen Namen: assets/emblems/source
+   nimmt jedes lesbare Format, und welches es geworden ist, weiß nur der
+   Ordner. */
+function emblemQuellPfad(name) {
+  emblemName(name);
+  if (fs.existsSync(EMBLEM_QUELLE)) {
+    for (const datei of fs.readdirSync(EMBLEM_QUELLE)) {
+      const teil = path.parse(datei);
+      if (teil.name === name) return { pfad: path.join(EMBLEM_QUELLE, datei), vorlage: datei };
+    }
+  }
+  throw new Error('Für ' + name + ' liegt keine Vorlage.');
+}
+
+async function emblemFreistellen(quelle, lesart, erzwingen) {
+  /* Zwei Quellen kommen in Frage: das eben Hochgeladene und die schon
+     abgelegte Vorlage. Die zweite ist der Fall, für den es den Knopf
+     gibt, denn von allein läuft das Freistellen nur beim Ablegen. */
+  const { pfad, vorlage } = quelle && quelle.typ === 'emblem'
+    ? emblemQuellPfad(quelle.name) : quellePfad(quelle);
+
+  /* Das Skript meldet keine Zwischenstände, es rechnet in einem Zug.
+     Deshalb der einfache Balken, der an der Schätzung entlangläuft und
+     kurz vor dem Ende wartet. Gemessen wird je Megapixel: Eine Vorlage
+     mit 1080 auf 1920 braucht ein Vielfaches einer mit 736 im Quadrat. */
+  return mitFortschritt('Freistellen', 'emblem-frei', async () => {
+    fs.mkdirSync(UPLOADS, { recursive: true });
+    const ziel = path.join(UPLOADS, neueId() + '.png');
+    const bericht = await emblemSkript(EMBLEM_FREI_SKRIPT,
+      ['frei', '--bild', pfad, '--ziel', ziel, '--lesart', lesart,
+        '--erzwingen', erzwingen ? '1' : '0']);
+
+    const id = neueId();
+    const name = vorlage.replace(/\.[^.]+$/, '') + '-frei.png';
+    hochgeladen.set(id, { pfad: ziel, name });
+    return { id, name, ...bericht };
+  }, megapixel(pfad));
+}
+
+/* Die Vorlage ablegen und gleich die Maske bauen. Was dort lag, wandert
+   vorher nach .sicherung: assets/emblems steht nicht unter Versionierung,
+   ein Überschreiben wäre sonst nicht zurückzuholen. */
+async function emblemUebernehmen(name, quelle) {
+  emblemName(name);
+  const { pfad } = quellePfad(quelle);
+
+  /* Vorweg fragen und nicht erst beim Bauen: Sonst läge die Vorlage
+     schon im Repo, wenn die Sperre zuschlägt, und das Zeichen stünde mit
+     neuer Vorlage und alter Maske da. */
+  if (emblemLaeuft) throw new Error('Es wird schon gebaut, kurz warten.');
+
+  /* Zwei Abschnitte, weil es zwei Dinge sind: Die Vorlage wandert ins
+     Repo, und daraus entsteht die Maske. Das Ablegen ist ein Kopieren
+     und gleich vorbei, das Bauen rechnet. Getrennt gemessen laufen
+     beide Schätzungen auseinander, statt sich zu vermischen. */
+  const lauf = laufStarten('Übernehmen', [
+    { schluessel: 'emblem-ablegen', einheiten: 1, name: 'Vorlage wird abgelegt' },
+    { schluessel: 'emblem-bauen', einheiten: 1, name: 'Maske wird gebaut' },
+  ]);
+
+  try {
+    fs.mkdirSync(EMBLEM_QUELLE, { recursive: true });
+    const ziel = path.join(EMBLEM_QUELLE, name + '.png');
+
+    let gesichert = null;
+    if (fs.existsSync(ziel)) {
+      fs.mkdirSync(EMBLEM_SICHERUNG, { recursive: true });
+      gesichert = `${name}-${stempelJetzt()}.png`;
+      fs.copyFileSync(ziel, path.join(EMBLEM_SICHERUNG, gesichert));
+    }
+
+    /* Andere Endungen desselben Namens müssen weg, sonst liegen zwei
+       Vorlagen für ein Zeichen da und build-emblems.py nimmt die
+       alphabetisch erste. */
+    for (const datei of fs.readdirSync(EMBLEM_QUELLE)) {
+      const teil = path.parse(datei);
+      if (teil.name === name && teil.ext.toLowerCase() !== '.png') {
+        fs.unlinkSync(path.join(EMBLEM_QUELLE, datei));
+      }
+    }
+
+    fs.copyFileSync(pfad, ziel);
+    lauf.weiter();
+    const gebaut = await emblemBauen([name], lauf);
+    lauf.fertig();
+    return { gesichert, ...gebaut };
+  } catch (fehler) {
+    lauf.abbrechen();
+    throw fehler;
+  }
+}
+
+/* Wie viele Vorlagen daliegen. Das ist die Einheit des Bauens: „Alle
+   bauen“ mit fünfundzwanzig Zeichen dauert fünfundzwanzigmal so lang
+   wie eines, und ohne diese Zahl schätzte der Balken beide gleich. */
+/* Ob gerade gebaut wird. Wie freiLaeuft beim Freistellen der Porträts:
+   Der Server ist einer, und zwei Läufe schrieben einander in die Datei. */
+let emblemLaeuft = false;
+
+function emblemVorlagenZahl() {
+  if (!fs.existsSync(EMBLEM_QUELLE)) return 1;
+  return Math.max(1, fs.readdirSync(EMBLEM_QUELLE)
+    .filter((f) => /\.(png|webp|jpe?g|gif|bmp)$/i.test(f)).length);
+}
+
+/* Bauen, entweder für einzelne Namen oder für alles, was daliegt.
+
+   Läuft schon ein Balken, hängt sich das Bauen dort als Abschnitt ein,
+   statt einen zweiten danebenzustellen: Übernehmen ist ein Vorgang und
+   nicht zwei, auch wenn es zwei Schritte hat. */
+async function emblemBauen(namen, lauf) {
+  const args = (namen || []).map(emblemName);
+  const einheiten = args.length || emblemVorlagenZahl();
+
+  /* Zwei Läufe zugleich schrieben in dieselben Dateien. „Alle bauen“
+     dauert lang genug, dass ein zweiter Klick dazwischenkommt, und beim
+     Übernehmen liefe er gegen die Vorlage, die gerade abgelegt wird. */
+  if (emblemLaeuft) throw new Error('Es wird schon gebaut, kurz warten.');
+  emblemLaeuft = true;
+
+  const arbeit = async () => {
+    const antwort = await emblemSkript(EMBLEM_BAU_SKRIPT,
+      args.length ? [...args, '--json'] : ['--alle', '--json']);
+    /* Ist gar nichts gebaut worden, war es kein Lauf mit Ausschuss,
+       sondern ein gescheiterter. Dann trägt die Meldung besser den Grund
+       als die Zahl. */
+    const daneben = antwort.misslungen || [];
+    if (daneben.length && !antwort.gebaut.length) throw new Error(daneben[0].grund);
+    return antwort;
+  };
+
+  try {
+    /* Läuft schon ein Balken, gehört das Bauen als Abschnitt hinein und
+       bekommt keinen eigenen: Übernehmen ist ein Vorgang, nicht zwei. */
+    if (lauf) return await arbeit();
+    return await mitFortschritt(args.length ? 'Maske bauen' : 'Alle Masken bauen',
+      'emblem-bauen', arbeit, einheiten);
+  } finally {
+    emblemLaeuft = false;
+  }
+}
+
+/* Die Vorlage wieder herausnehmen. Die Maske geht mit, sonst stünde sie
+   weiter auf der Bühne und ließe sich nicht mehr erklären. */
+function emblemVorlageWeg(name) {
+  emblemName(name);
+  const weg = [];
+  fs.mkdirSync(EMBLEM_SICHERUNG, { recursive: true });
+  for (const [ordner, endungen] of [[EMBLEM_QUELLE, null], [EMBLEM_ORDNER, ['.webp']]]) {
+    if (!fs.existsSync(ordner)) continue;
+    for (const datei of fs.readdirSync(ordner)) {
+      const teil = path.parse(datei);
+      if (teil.name !== name) continue;
+      if (endungen && !endungen.includes(teil.ext.toLowerCase())) continue;
+      const quelle = path.join(ordner, datei);
+      if (!fs.statSync(quelle).isFile()) continue;
+      fs.copyFileSync(quelle, path.join(EMBLEM_SICHERUNG,
+        `${name}-${stempelJetzt()}${teil.ext}`));
+      fs.unlinkSync(quelle);
+      weg.push(path.relative(REPO, quelle).split(path.sep).join('/'));
+    }
+  }
+  if (!weg.length) throw new Error('Für ' + name + ' liegt keine Vorlage.');
+  return { weg };
 }
 
 /* ---------- Hochgeladene Bilder ---------- */
@@ -5409,6 +5667,39 @@ const server = http.createServer(async (req, res) => {
         auftrag.feinschliff !== false, Number.isFinite(saum) ? saum : 1));
     }
 
+    /* --- Embleme ---
+
+       Der Stand kommt aus build-emblems.py selbst, damit es nur eine
+       Stelle gibt, die weiß, welche Namen die Bühne kennt. */
+    if (weg === '/api/embleme') {
+      return sende(res, 200, { zeichen: await emblemStand() });
+    }
+
+    if (weg === '/api/emblem/freistellen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const lesart = auftrag.lesart === 'scheibe' ? 'scheibe' : 'zeichnung';
+      return sende(res, 200, await emblemFreistellen(auftrag.quelle, lesart,
+        auftrag.erzwingen === true));
+    }
+
+    if (weg === '/api/emblem/uebernehmen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = await emblemUebernehmen(auftrag.name, auftrag.quelle);
+      return sende(res, 200, { ...ergebnis, zeichen: await emblemStand() });
+    }
+
+    if (weg === '/api/emblem/bauen' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = await emblemBauen(auftrag.namen || []);
+      return sende(res, 200, { ...ergebnis, zeichen: await emblemStand() });
+    }
+
+    if (weg === '/api/emblem/vorlage-weg' && req.method === 'POST') {
+      const auftrag = JSON.parse((await koerper(req)).toString('utf8'));
+      const ergebnis = emblemVorlageWeg(auftrag.name);
+      return sende(res, 200, { ...ergebnis, zeichen: await emblemStand() });
+    }
+
     /* --- Vorschlag: Kopf beim Porträt, Rand beim Ganzkörperbild --- */
     if (weg === '/api/auto') {
       const quelle = {
@@ -5834,7 +6125,7 @@ const server = http.createServer(async (req, res) => {
         return sende(res, 400, { fehler: 'Unbekanntes Ganzkörperbild: ' + auftrag.datei });
       }
       const skala = runde(auftrag.skala);
-      const korrektur = auftrag.korrektur === undefined ? 1 : runde(auftrag.korrektur);
+      const korrektur = auftrag.korrektur === undefined ? 1 : runde3(auftrag.korrektur);
       if (!(skala >= 0.2 && skala <= 1.22)) {
         return sende(res, 400, { fehler: 'Die Körpergröße liegt zwischen 0.2 und 1.22.' });
       }
@@ -5843,7 +6134,7 @@ const server = http.createServer(async (req, res) => {
       }
       /* Im Rahmen zählt das Produkt, und für das gilt derselbe Bereich:
          Darunter verschwindet die Figur, darüber ist der Rahmen voll. */
-      const wirkung = runde(skala * korrektur);
+      const wirkung = runde3(skala * korrektur);
       if (!(wirkung >= 0.2 && wirkung <= 1.22)) {
         return sende(res, 400, { fehler: `Körpergröße mal Bildkorrektur ergibt ${wirkung}. `
           + 'Im Rahmen sind 0.2 bis 1.22 möglich.' });
@@ -5950,11 +6241,11 @@ const server = http.createServer(async (req, res) => {
         ? Math.max(0, Math.min(0.9, runde3(auftrag.schwebe || 0)))
         : 0;
       const groesse = gk && auftrag.skala !== undefined
-        ? { skala: runde(auftrag.skala), korrektur: runde(auftrag.korrektur ?? 1), schwebe }
+        ? { skala: runde(auftrag.skala), korrektur: runde3(auftrag.korrektur ?? 1), schwebe }
         : null;
       let groesseFehler = null;
       if (groesse) {
-        const wirkt = runde(groesse.skala * groesse.korrektur);
+        const wirkt = runde3(groesse.skala * groesse.korrektur);
         if (!(groesse.skala >= 0.2 && groesse.skala <= 1.22)
           || !(groesse.korrektur >= 0.4 && groesse.korrektur <= 1.6)
           || !(wirkt >= 0.2 && wirkt <= 1.22)) {

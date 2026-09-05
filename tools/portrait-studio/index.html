@@ -38,6 +38,7 @@ try {
     <button type="button" data-bereich="portrait" class="an">Porträts</button>
     <button type="button" data-bereich="ganzkoerper">Ganzkörper</button>
     <button type="button" data-bereich="biografie">Biografie</button>
+    <button type="button" data-bereich="emblem">Embleme</button>
   </div>
   <p id="zaehler" class="zaehler">lädt …</p>
 
@@ -113,7 +114,7 @@ try {
   <!-- ---------- Liste aller Figuren ---------- -->
   <aside class="spalte-liste" id="spalte-liste">
     <div class="panel-kopf">
-      <span class="panel-marke">Figuren</span>
+      <span class="panel-marke" id="listen-marke">Figuren</span>
     </div>
     <div class="suchfeld">
       <input id="suche" type="search" placeholder="Figur, Rolle oder Dateiname" autocomplete="off">
@@ -164,6 +165,7 @@ try {
         <span class="wahl-titel" id="ziel-titel">Porträt</span>
         <div class="chips" id="ziele"></div>
         <div class="fassung-leiste" id="fassung-leiste" hidden>
+          <span class="leiste-titel">Bearbeiten</span>
           <button type="button" data-tat="neu" data-symbol="neu"
                   data-hilfe="Neue Fassung anlegen">Neu</button>
           <button type="button" data-tat="umbenennen" data-symbol="umbenennen"
@@ -386,15 +388,21 @@ try {
           </div>
 
           <div class="skala-feld">
-            <label class="regler" title="Feinkorrektur nur für dieses Bild. Sprungpose, wehender Umhang oder Sockel machen die Datei höher als die Figur, dann steht sie im Rahmen zu klein. Die Körpergröße bleibt davon unberührt.">
+            <label class="regler" title="Feinkorrektur nur für dieses Bild. Sprungpose, wehender Umhang oder Sockel machen die Datei höher als die Figur, dann steht sie im Rahmen zu klein. Die Körpergröße bleibt davon unberührt. Ein Schritt sind 0.1 Prozent, mit den Pfeiltasten also weniger als ein halber Pixel im Rahmen der Seite.">
               Bildkorrektur
-              <input type="range" id="korrektur" min="0.4" max="1.6" step="0.01" value="1">
-              <b id="d-korrektur">100 %</b>
+              <input type="range" id="korrektur" min="0.4" max="1.6" step="0.001" value="1">
+              <b id="d-korrektur">100.0 %</b>
             </label>
             <button type="button" id="korrektur-zurueck" class="knopf leise zurueck"
                     data-symbol="zuruecksetzen"
                     title="Bildkorrektur zurück auf den Wert aus chars.js"></button>
           </div>
+
+          <!-- Was die beiden Regler in Wirklichkeit ergeben: wie hoch die
+               Figur im Rahmen der Charakterseite steht, in Pixeln dieser
+               Seite. Daran lässt sich die Bildkorrektur nachmessen, statt
+               nur an einem Prozentwert zu drehen. -->
+          <p class="gk-hinweis" id="d-hoehe" hidden></p>
 
           <!-- Gemessen, nicht eingestellt: Wie viel des Ausschnitts unter
                der Figur leer ist, sieht das Studio an den durchsichtigen
@@ -577,6 +585,144 @@ try {
           <button type="button" id="texte-speichern" class="knopf gross" disabled
                   data-symbol="speichern">Speichern</button>
           <p id="texte-info" class="speicher-info"></p>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- Die Werkbank der Embleme. Sie tritt an die Stelle der Bühne, so
+         wie es die Biografie auch tut: Hier wird nichts zugeschnitten,
+         hier läuft eine Strecke von drei Schritten ab, und jeder davon
+         ist ein Bild, das man ansehen können muss.
+
+         Vorlage, freigestellt, Maske. Der mittlere Schritt ist der, den
+         man beurteilen muss, denn das Innere der Zeichen trägt bei
+         diesen Vorlagen denselben Schwarzwert wie ihr Grund. Welche der
+         beiden Lesarten stimmt, sieht man nur am Bild. -->
+    <div class="emblem-bank" id="emblem-bank" hidden>
+
+      <section class="tafel emblem-tafel">
+        <div class="panel-kopf">
+          <span class="panel-marke">Zeichen</span>
+          <span class="emblem-marke" id="emblem-marke"></span>
+          <button type="button" id="emblem-hochladen" class="knopf leise" data-symbol="hochladen"
+                  title="Eine Vorlage vom Rechner wählen. Ablegen und Einfügen geht auch.">Vorlage …</button>
+          <button type="button" id="emblem-weg" class="knopf leise gefahr" data-symbol="loeschen"
+                  title="Vorlage und Maske dieses Zeichens entfernen. Beide wandern vorher nach assets/emblems/.sicherung, und auf der Bühne steht danach wieder der gezeichnete Umriss aus js/emblems.js.">Vorlage entfernen</button>
+        </div>
+
+        <div class="emblem-strecke" id="emblem-strecke">
+          <figure class="emblem-schritt">
+            <figcaption>Vorlage</figcaption>
+            <div class="emblem-feld karo">
+              <img id="emblem-bild-vorlage" alt="">
+              <p class="emblem-leer">keine Vorlage</p>
+            </div>
+            <p class="emblem-mass" id="emblem-mass-vorlage"></p>
+          </figure>
+
+          <span class="emblem-pfeil" aria-hidden="true"></span>
+
+          <figure class="emblem-schritt">
+            <figcaption>Freigestellt</figcaption>
+            <div class="emblem-feld karo">
+              <img id="emblem-bild-frei" alt="">
+              <p class="emblem-leer">noch nicht freigestellt</p>
+            </div>
+            <p class="emblem-mass" id="emblem-mass-frei"></p>
+          </figure>
+
+          <span class="emblem-pfeil" aria-hidden="true"></span>
+
+          <figure class="emblem-schritt">
+            <figcaption>Maske</figcaption>
+            <!-- Der Grund ist der der Erscheinungsbühne, und die Maske
+                 steht weiß darauf. Genau so liegt sie in der Datei: Die
+                 Farbe kommt auf der Seite dazu. -->
+            <div class="emblem-feld buehne">
+              <img id="emblem-bild-maske" alt="">
+              <p class="emblem-leer">noch nicht gebaut</p>
+            </div>
+            <p class="emblem-mass" id="emblem-mass-maske"></p>
+          </figure>
+        </div>
+
+        <div class="emblem-ablage" id="emblem-ablage">Vorlage hier ablegen</div>
+        <input type="file" id="emblem-datei" accept="image/*" hidden>
+
+        <div class="tafel-fuss emblem-fuss">
+          <div class="emblem-lesart" id="emblem-lesart"
+               title="Das Innere der Scheibe trägt denselben Schwarzwert wie der Grund. An der Farbe ist beides nicht zu unterscheiden, nur an der Form.">
+            <span class="wahl-titel">Lesart</span>
+            <div class="chips">
+              <button type="button" class="chip an" data-lesart="zeichnung"
+                      data-hilfe="Nur die gemalten Striche bleiben stehen, das Innere wird durchsichtig. So will die Bühne es haben.">Zeichnung</button>
+              <button type="button" class="chip" data-lesart="scheibe"
+                      data-hilfe="Was der Ring umschließt, bleibt deckend. Für Zeichen, deren Fläche wirklich gefüllt ist.">Scheibe</button>
+            </div>
+          </div>
+
+          <!-- Von allein läuft das Freistellen nur beim Ablegen einer
+               Vorlage, und auch dann nicht, wenn sie schon einen
+               Alphakanal mitbringt. Dieser Knopf holt es nach: für eine
+               längst abgelegte Vorlage und für eine, die freigestellt
+               aussieht, es aber schlecht ist. -->
+          <div class="emblem-taten">
+            <button type="button" id="emblem-freistellen" class="knopf leise" disabled
+                    data-symbol="freistellen"
+                    title="Stellt die gezeigte Vorlage frei, auch wenn sie schon einen Alphakanal mitbringt. Der alte fällt dabei weg, gerechnet wird neu aus den Farben gegen den Grund in den Ecken.">Freistellen</button>
+            <button type="button" id="emblem-uebernehmen" class="knopf gross" disabled
+                    data-symbol="uebernehmen"
+                    title="Legt die freigestellte Vorlage nach assets/emblems/source und baut die Maske. Was dort lag, wandert vorher nach .sicherung.">Übernehmen und bauen</button>
+            <button type="button" id="emblem-bauen" class="knopf leise" disabled
+                    data-symbol="nachziehen"
+                    title="Baut die Maske aus der abgelegten Vorlage neu, ohne etwas auszutauschen.">Maske neu bauen</button>
+          </div>
+
+          <p class="emblem-info" id="emblem-info"></p>
+        </div>
+      </section>
+
+      <aside class="tafel emblem-hilfe">
+        <div class="panel-kopf">
+          <span class="panel-marke">Der Weg</span>
+          <button type="button" id="emblem-alle" class="knopf leise" data-symbol="starten"
+                  title="Baut die Masken aller abgelegten Vorlagen neu. Nützlich, wenn sich am Bauer selbst etwas geändert hat.">Alle bauen</button>
+        </div>
+
+        <div class="emblem-hilfe-feld">
+          <p class="werkzeug-info">
+            Hinter jeder Figur steht auf der Erscheinungsbühne ein großes, blasses
+            Zeichen. Gezeichnet ist es als Umriss in js/emblems.js, und eine gebaute
+            Maske tritt an seine Stelle. Welche Namen es gibt, sagt dieselbe Datei.
+          </p>
+
+          <ol class="emblem-schritte">
+            <li>
+              <b>Vorlage</b> ablegen. Ein Bild mit flachem Grund, meist ein schwarzes
+              Quadrat mit einem runden Zeichen darin. Farbig, roh, gern auch als JPG.
+            </li>
+            <li>
+              <b>Freistellen</b> läuft von selbst und setzt den Alphakanal.
+              tools/emblems/cutout-emblems.py rechnet das ohne Modell, denn der Grund
+              ist eine einzige Farbe.
+            </li>
+            <li>
+              <b>Lesart</b> prüfen. Bringt eine Vorlage schon einen Alphakanal mit,
+              wird sie unverändert genommen und dieser Schritt entfällt.
+            </li>
+            <li>
+              <b>Übernehmen</b> legt sie nach assets/emblems/source und lässt
+              tools/emblems/build-emblems.py die Maske bauen: 512 auf 512, weiß,
+              beschnitten und quadratisch gerahmt.
+            </li>
+          </ol>
+
+          <p class="werkzeug-info">
+            Die Maske trägt nur die Form. Ihre Farbe bekommt sie auf der Seite, und
+            die wechselt mit der Figur. Deshalb steht sie hier weiß auf dem Grund der
+            Bühne und nicht so, wie die Vorlage gemalt war.
+          </p>
         </div>
       </aside>
 
@@ -767,7 +913,19 @@ try {
       </div>
     </div>
     <p class="dialog-hinweis">Ein Klick auf eine Welt setzt sie ins Feld.</p>
-    <div class="weltliste" id="welt-bekannt"></div>
+    <!-- Die Welten stehen in einer Zeile und rollen seitlich. Sie umbrachen
+         früher über mehrere Zeilen und schoben mit jeder neuen Welt die
+         Gefahrenzone weiter nach unten. Die Pfeile stehen außen und nur
+         dann da, wenn die Reihe wirklich breiter ist als ihr Platz. Aus
+         der Tabreihenfolge bleiben sie heraus: Wer mit der Tastatur geht,
+         läuft ohnehin durch die Welten selbst und rollt dabei mit. -->
+    <div class="weltrolle">
+      <button type="button" class="weltrolle-pfeil" id="welt-links" tabindex="-1"
+              hidden data-symbol="links" title="Nach links rollen"></button>
+      <div class="weltliste" id="welt-bekannt"></div>
+      <button type="button" class="weltrolle-pfeil" id="welt-rechts" tabindex="-1"
+              hidden data-symbol="rechts" title="Nach rechts rollen"></button>
+    </div>
 
     <div class="dialog-feld">
       <span>Kürzel für den Schlüssel (CHAR_ALIAS), gilt für alle Namen dieser Figur</span>

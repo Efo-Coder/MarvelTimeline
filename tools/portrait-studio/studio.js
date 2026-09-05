@@ -40,7 +40,7 @@ function melde(text, schlecht) {
 /* ---------- Zustand ---------- */
 
 const S = {
-  bereich: 'portrait',   // 'portrait', 'ganzkoerper' oder 'biografie'
+  bereich: 'portrait',   // 'portrait', 'ganzkoerper', 'biografie' oder 'emblem'
   figuren: [],
   welten: [],          // CHAR_WORLDS aus js/chars.js, siehe zerlegeNamen()
   zaehler: null,
@@ -85,6 +85,16 @@ const S = {
   texteStand: '',      // dasselbe als Abdruck, daran hängt „geändert?“
   begriffe: [],        // Bezeichnungen der Beziehungen: [{ name, anzahl }]
   wikiOffen: 0,        // Figuren ohne Eintrag im erzeugten Steckbrief-Block
+
+  /* Embleme. „zeichen“ ist der Stand aller Namen aus EMBLEM_ART, wie ihn
+     build-emblems.py meldet. Die drei Felder darunter gehören zu dem
+     Zeichen, das gerade offen ist, und leben nur bis zum nächsten. */
+  zeichen: [],         // [{ name, vorlage, maske, vorlageStand, maskeStand }]
+  zeichenWahl: null,   // Name des offenen Zeichens
+  zeichenLesart: 'zeichnung',
+  zeichenRoh: null,    // { id, name }: die eben abgelegte Vorlage
+  zeichenFrei: null,   // { id, name, ... }: dieselbe, freigestellt
+  zeichenErzwungen: false, // ob der letzte Lauf den Alphakanal überging
 };
 
 const view = { k: 1, ox: 0, oy: 0 };
@@ -144,6 +154,12 @@ const AUSKUNFT = {
 const quadrat = () => S.bereich === 'portrait';
 const ganz = () => S.bereich === 'ganzkoerper';
 const texte = () => S.bereich === 'biografie';
+
+/* Die Embleme sind der einzige Bereich ohne Figuren. In der Liste stehen
+   die Namen aus EMBLEM_ART in js/emblems.js, und die Werkbank zeigt keine
+   Bühne, sondern die drei Schritte vom Bild zur Maske. Siehe den
+   Abschnitt „Embleme“ weiter unten. */
+const zeichen = () => S.bereich === 'emblem';
 
 /* Die Vorlage ist das bestehende Porträt selbst. Es liegt dann nicht als
    Schablone daneben, sondern auf der Bühne, und lässt sich neu
@@ -435,7 +451,7 @@ function hoereFortschritt() {
    Die Adresse merkt sich Bereich und Figur. Das Kürzel vor dem Schlüssel
    sagt, welcher Bereich gemeint ist; die Porträts sind der Normalfall und
    tragen keines. */
-const MARKE = { portrait: '', ganzkoerper: 'gk:', biografie: 'bio:' };
+const MARKE = { portrait: '', ganzkoerper: 'gk:', biografie: 'bio:', emblem: 'em:' };
 
 async function start() {
   hoereFortschritt();
@@ -474,7 +490,13 @@ async function start() {
 
     zeigeZaehler(true);
     baueListe();
-    if (marke && S.figuren.some((f) => f.slug === marke)) waehleFigur(marke);
+    if (zeichen()) {
+      ladeZeichen().then(() => {
+        if (marke && S.zeichen.some((z) => z.name === marke)) waehleZeichen(marke);
+      });
+    } else if (marke && S.figuren.some((f) => f.slug === marke)) {
+      waehleFigur(marke);
+    }
 
     if (!S.python.ok) {
       const p = $('python-hinweis');
@@ -613,6 +635,16 @@ function zeigeZaehler(aufbau) {
       ['Angefangen', z.bio.alt, 'warn'],
       ['Ohne Text', z.bio.fehlt, 'fehlt'],
     ],
+    /* Bei den Zeichen zählt nicht die Figur, sondern der Name aus
+       EMBLEM_ART. „Gebaut“ heißt: Eine Maske liegt unter
+       assets/emblems und tritt auf der Bühne an die Stelle des
+       gezeichneten Umrisses. */
+    emblem: () => [
+      ['Zeichen', S.zeichen.length, ''],
+      ['Gebaut', S.zeichen.filter((z) => z.maske).length, 'gut'],
+      ['Nur Vorlage', S.zeichen.filter((z) => z.vorlage && !z.maske).length, 'warn'],
+      ['Gezeichnet', S.zeichen.filter((z) => !z.vorlage && !z.maske).length, 'fehlt'],
+    ],
   }[S.bereich]();
 
   /* Die Tafeln werden nicht neu geschrieben, sondern wiederverwendet, je
@@ -662,17 +694,31 @@ const FILTER_FEHLT = {
   portrait: ['Ohne Bild', 'Nur Figuren, denen die Porträtdatei fehlt'],
   ganzkoerper: ['Ohne Bild', 'Nur Figuren, denen das Ganzkörperbild fehlt'],
   biografie: ['Ohne Text', 'Nur Figuren ohne einen einzigen Abschnitt in js/profiles.js'],
+  emblem: ['Ohne Vorlage', 'Nur Zeichen, für die noch keine Vorlage abgelegt ist'],
 };
 
 function richteBereichEin() {
   const gk = ganz();
   const bio = texte();
+  const em = zeichen();
 
-  /* Die Werkbank und die Konsole darüber gehören den Bildern. Im
-     Textbetrieb treten beide ab, es gibt weder Ziel noch Vorlage. */
-  document.querySelector('.werkbank').hidden = bio;
+  /* Die Werkbank und die Konsole darüber gehören den Bildern einer Figur.
+     Der Textbetrieb und die Zeichen haben beides nicht, sie stellen eine
+     eigene Bank an dieselbe Stelle. */
+  document.querySelector('.werkbank').hidden = bio || em;
   $('biografie-bank').hidden = !bio;
-  document.querySelector('.konsole').hidden = bio;
+  $('emblem-bank').hidden = !em;
+  document.querySelector('.konsole').hidden = bio || em;
+  /* Der Kopf über der Bank nennt die offene Figur. Die Zeichen haben
+     keine, ihr Name steht in der Bank selbst. */
+  document.querySelector('.arbeit-kopf').hidden = em;
+
+  /* Die linke Spalte führt im Emblembereich keine Figuren. Ihre
+     Aufschriften sagen das auch, sonst suchte man dort nach Rollen und
+     Dateinamen, die es gar nicht gibt. */
+  $('listen-marke').textContent = em ? 'Zeichen' : 'Figuren';
+  $('suche').placeholder = em ? 'Name des Zeichens' : 'Figur, Rolle oder Dateiname';
+  document.querySelector('.listenfuss').hidden = em;
 
   document.querySelector('.werkbank').classList.toggle('gk', gk);
   $('vorschau-portrait').hidden = gk;
@@ -712,8 +758,19 @@ function wechsleBereich(bereich) {
   referenzVonHand = false;
   for (const b of $('bereich').children) b.classList.toggle('an', b.dataset.bereich === bereich);
   richteBereichEin();
-  zeigeZaehler(true);
   baueListe();
+
+  /* Die Zeichen kennen keine Figur. Was offen war, bleibt es beim
+     Zurückkommen, und beim ersten Mal steht die Bank leer da. */
+  if (zeichen()) {
+    ladeZeichen().then(() => {
+      if (S.zeichenWahl) waehleZeichen(S.zeichenWahl);
+      else zeigeLeerZeichen();
+    });
+    return;
+  }
+
+  zeigeZaehler(true);
   if (S.figur) waehleFigur(S.figur.slug);
   else filtern();
 }
@@ -849,10 +906,12 @@ function rolleZuVorwahl(knopf) {
 /* Die Pfeiltasten laufen über das, was gerade dasteht, nicht über alle
    Figuren: Was Suche oder Filter ausblenden, wird übersprungen. */
 function sichtbareFiguren() {
-  return S.figuren.filter((f) => f._knopf && !f._knopf.parentElement.hidden);
+  const alle = zeichen() ? S.zeichen : S.figuren;
+  return alle.filter((f) => f._knopf && !f._knopf.parentElement.hidden);
 }
 
 function baueListe() {
+  if (zeichen()) return baueZeichenListe();
   const liste = $('liste');
   if (listenBlick) listenBlick.disconnect();
   vorwahlKnopf = null;
@@ -921,6 +980,7 @@ function baueListe() {
 }
 
 function filtern() {
+  if (zeichen()) return filtereZeichen();
   const suche = S.suche.trim().toLowerCase();
   for (const figur of S.figuren) {
     const zustand = figurZustand(figur);
@@ -1820,11 +1880,10 @@ function messen() {
    der Ausschnitt ein kleiner Teil der Vorlage. Beim Ganzkörperbild füllt
    er sie fast, da genügt ein schmaler Rand.
 
-   Liegt der Rahmen über der Bühne, wird nicht der Ausschnitt eingepasst,
-   sondern der Rahmen. Das dreht die Bewegung um: Der Rahmen steht dann
-   fest und die Figur wächst und schrumpft darin, sobald die Regler sich
-   bewegen. Genau so verhält sich die Vorschau rechts, nur eben in
-   Arbeitsgröße und mit anfassbarem Ausschnitt.
+   Liegt der Rahmen über der Bühne, wird nicht der Ausschnitt allein
+   eingepasst, sondern der Platz, den der Rahmen um ihn herum braucht,
+   siehe blickHoehe(). Wie groß die Bühne zeichnet, hängt damit am
+   Ausschnitt und sonst an nichts.
 
    Ohne "erzwingen" bleibt die Ansicht, solange der Ausschnitt bequem
    sichtbar ist. Sonst würde sie nach jedem Loslassen der Maus springen.
@@ -1836,11 +1895,7 @@ function passeAnsichtAn(erzwingen) {
   if (erzwingen) S.ansichtManuell = false;
   if (S.ansichtManuell && !erzwingen) return;
   const r = S.rect;
-  /* Liegt der Rahmen über der Bühne, gehört er mit ins Bild: Sonst stünde
-     seine Oberkante gerade bei den kleinen Figuren weit über dem oberen
-     Bühnenrand, und das ist die Linie, um die es geht. */
-  const rahmen = !quadrat() && S.rahmen ? rahmenMasse() : null;
-  const zeigHoehe = rahmen ? rahmen.hoehe : r.hoehe;
+  const zeigHoehe = blickHoehe();
   const unten = r.y + r.hoehe;
   if (!erzwingen) {
     const qx = vx(r.x);
@@ -2071,6 +2126,22 @@ function rahmenMasse() {
     anteil: r.hoehe * (1 - schwebe) / hoehe };
 }
 
+/* Wonach die Bühne einpasst. Mit Rahmen gehört seine Oberkante mit ins
+   Bild, sonst stünde sie gerade bei den kleinen Figuren weit über dem
+   oberen Bühnenrand, und das ist die Linie, um die es geht.
+
+   Gerechnet wird sie aber mit den Standardwerten und nicht mit den
+   Reglern: Sonst zöge jeder Zug an Körpergröße oder Bildkorrektur den
+   Zoom der Bühne mit, und die Figur bliebe darin gleich groß, während
+   die Zahlen ringsum sich ändern. Umgekehrt ist es richtig herum: Der
+   Zoom bleibt stehen, und die Rahmenlinien wandern. */
+function blickHoehe() {
+  const r = S.rect;
+  if (quadrat() || !S.rahmen) return r.hoehe;
+  return Math.max(r.hoehe / dateiAnteil(1, 1, schwebeJetzt()),
+    r.breite / (RAHMEN_SEITEN * RAHMEN_LUFT));
+}
+
 /* Die Referenz in diesem Rahmen, gerechnet wie auf der Seite: Ihre Höhe
    folgt ihren eigenen Werten samt ihrer eigenen Schwebe, und wird sie
    dabei breiter als der Rahmen, begrenzt ihn die Breite. Dieselben
@@ -2169,11 +2240,16 @@ function maleRahmen(mass) {
   ctx.textAlign = 'right';
   ctx.fillText('Bodenlinie des Rahmens', breite - 6, boden - 5);
   /* Oben rechts sitzt der Zoomkasten. Liegt die Oberkante in seiner Höhe,
-     wechselt ihre Beschriftung unter die Linie und nach links. */
+     wechselt ihre Beschriftung unter die Linie und nach links. Bei einer
+     klein gestellten Figur wandert die Linie ganz über die Bühne hinaus;
+     dann bleibt die Zahl am oberen Rand stehen und sagt dazu, wo die
+     Linie liegt. */
   const eng = oben < 46;
+  const weg = oben < 0;
   ctx.textAlign = eng ? 'left' : 'right';
-  ctx.fillText(`Rahmenoberkante, die Figur füllt ${Math.round(mass.anteil * 100)} %`,
-    eng ? 6 : breite - 6, eng ? oben + 13 : oben - 5);
+  ctx.fillText(`Rahmenoberkante${weg ? ' über der Bühne' : ''}, `
+    + `die Figur füllt ${Math.round(mass.anteil * 100)} %`,
+    eng ? 6 : breite - 6, eng ? Math.max(13, oben + 13) : oben - 5);
   ctx.restore();
 }
 
@@ -2492,6 +2568,18 @@ function vorschauPortrait() {
   $('pv-mass').textContent = mass && S.bild ? `Datei, ${mass.breite} px` : '';
 }
 
+/* Die Bildkorrektur läuft in Tausendsteln, ein Schritt ist also ein
+   Zehntel Prozent. So steht sie auch da, sonst zeigte die Zahl neben dem
+   Regler bei jedem zweiten Schritt denselben Wert. */
+const prozent = (wert) => (wert * 100).toFixed(1) + ' %';
+
+/* Der Rahmen der Charakterseite in Pixeln dieser Seite: --stage-h steht
+   in css/style.css auf 32rem. Die Zahl macht aus den beiden Reglern ein
+   Maß, das sich nachmessen lässt, und sagt zugleich, wie fein sie
+   greifen: Ein Schritt der Bildkorrektur sind gut vier Zehntel Pixel,
+   auf einem üblichen Schirm also gut ein Zehntelmillimeter. */
+const SEITEN_RAHMEN = 512;
+
 /* Was der Rahmen am Ende zeigt: Körpergröße mal Bildkorrektur, gedeckelt
    wie fullsizeScale() in js/chars.js. Bei 1.22 ist der Rahmen voll. */
 function wirkung(skala, korrektur) {
@@ -2507,39 +2595,59 @@ function wirkung(skala, korrektur) {
 function frischeSkalaFelder() {
   const alteSkala = (S.ziel && S.ziel.skala) || 1;
   const alteKorrektur = (S.ziel && S.ziel.korrektur) || 1;
-  const roh = Math.round(S.skala * S.korrektur * 100) / 100;
+  /* Drei Stellen wie in fullsizeScale(): Zwei verschluckten die feinen
+     Schritte der Bildkorrektur, und neben dem Regler stünde eine Zahl,
+     die sich beim Ziehen nicht rührt. */
+  const roh = Math.round(S.skala * S.korrektur * 1000) / 1000;
   $('d-skala').textContent = S.skala.toFixed(2);
-  $('d-korrektur').textContent = Math.round(S.korrektur * 100) + ' %';
+  $('d-korrektur').textContent = prozent(S.korrektur);
 
   const zahl = document.createElement('b');
-  zahl.textContent = roh.toFixed(2);
+  zahl.textContent = roh.toFixed(3);
   const hinweis = $('d-wirkung');
   hinweis.replaceChildren('Im Rahmen: ', zahl);
   const moeglich = roh >= 0.2 && roh <= 1.22;
   if (roh > 1.22) hinweis.append(', mehr als 1.22 zeigt der Rahmen nicht.');
   else if (roh < 0.2) hinweis.append(', weniger als 0.2 geht im Rahmen unter.');
   else if (S.korrektur !== 1) hinweis.append(` (${S.skala.toFixed(2)} mal `
-    + `${Math.round(S.korrektur * 100)} %)`);
+    + `${prozent(S.korrektur)})`);
   hinweis.classList.toggle('zuviel', !moeglich);
+
+  /* Der Realwert zu den beiden Reglern: wie hoch die Figur damit im
+     Rahmen der Charakterseite steht. Gerechnet wird sie wie dort, samt
+     der Kante, die zuerst anstößt, deshalb kommt die Zahl aus
+     rahmenMasse() und nicht noch einmal aus der Formel. */
+  const rahmen = S.rect ? rahmenMasse() : null;
+  const hoehenZeile = $('d-hoehe');
+  hoehenZeile.hidden = !rahmen;
+  if (rahmen) {
+    const px = document.createElement('b');
+    /* Eine Nachkommastelle, damit jeder Schritt des Reglers zu sehen
+       ist: Auf ganze Pixel gerundet stünde bei zwei Schritten dieselbe
+       Zahl, und der Regler wirkte wieder grob. */
+    px.textContent = (SEITEN_RAHMEN * rahmen.anteil).toFixed(1) + ' px';
+    hoehenZeile.replaceChildren('Auf der Seite steht die Figur ', px,
+      ` hoch, der Rahmen misst ${SEITEN_RAHMEN}.`);
+  }
 
   /* Die Schwebe steht daneben als Ablesung und nicht als Regler: Sie
      wird am Ausschnitt gemessen und nicht eingestellt. Sichtbar ist sie
      nur, wenn es sie gibt, sonst stünde bei jeder stehenden Figur eine
      Zeile mit einer Null. */
   const schwebe = schwebeJetzt();
-  const zeile = $('d-schwebe');
-  zeile.hidden = schwebe <= 0;
+  const schwebeZeile = $('d-schwebe');
+  schwebeZeile.hidden = schwebe <= 0;
   if (schwebe > 0) {
     const anteil = document.createElement('b');
     anteil.textContent = Math.round(schwebe * 100) + ' %';
-    zeile.replaceChildren('Schwebe: ', anteil, ' der Datei sind unter der Figur leer');
+    schwebeZeile.replaceChildren('Schwebe: ', anteil, ' der Datei sind unter der Figur leer');
     /* Voll ist der Rahmen, wenn die Datei ihn ganz ausfüllt. Von da an
        hebt weiteres Ziehen die Figur nicht mehr, sondern macht sie
        kleiner. */
     if (dateiAnteil(S.skala, S.korrektur, schwebe) >= 1) {
-      zeile.append('. Der Rahmen ist voll, weiter steigt sie nicht.');
+      schwebeZeile.append('. Der Rahmen ist voll, weiter steigt sie nicht.');
     }
-    zeile.classList.toggle('zuviel', dateiAnteil(S.skala, S.korrektur, schwebe) >= 1);
+    schwebeZeile.classList.toggle('zuviel', dateiAnteil(S.skala, S.korrektur, schwebe) >= 1);
   }
 
   const knopf = $('skala-speichern');
@@ -2824,7 +2932,7 @@ async function speichern() {
     + (antwort.verkleinert ? ' Die Vorlage war größer als der Bestand und wurde verkleinert.' : '')
     + (g && g.geaendert
       ? ` Körpergröße ${g.skala.toFixed(2)}`
-        + (g.korrektur === 1 ? '' : `, Bildkorrektur ${Math.round(g.korrektur * 100)} %`)
+        + (g.korrektur === 1 ? '' : `, Bildkorrektur ${prozent(g.korrektur)}`)
         + (g.schwebe ? `, Schwebe ${Math.round(g.schwebe * 100)} %` : '')
         + ' stehen in chars.js.'
       : '')
@@ -3835,7 +3943,12 @@ function zeigeFigurDialog() {
 function frischeWelten() {
   const feld = $('welt-bekannt');
   const eingabe = $('welt-neu').value.trim();
+  /* Die Reihe wird neu gebaut, steht danach aber wieder an derselben
+     Stelle: Ein Klick auf eine weit rechts liegende Welt risse sie sonst
+     an den Anfang zurück, und der Getroffene wäre aus dem Bild. */
+  const stand = feld.scrollLeft;
   feld.textContent = '';
+  let gewaehlt = null;
   for (const welt of S.welten) {
     const knopf = document.createElement('button');
     knopf.type = 'button';
@@ -3847,10 +3960,41 @@ function frischeWelten() {
       frischeWelten();
       $('welt-neu').focus();
     });
+    if (welt === eingabe) gewaehlt = knopf;
     feld.append(knopf);
   }
+  feld.scrollLeft = stand;
+  /* Was im Feld steht, soll auch zu sehen sein. Getippt wandert die
+     Auswahl durch die ganze Reihe, und 'nearest' rückt nur dann etwas,
+     wenn die Welt wirklich draußen liegt. */
+  if (gewaehlt) gewaehlt.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  weltRollstand();
   $('welt-hinzu').disabled = !eingabe || S.welten.includes(eingabe);
   $('welt-weg').disabled = !S.welten.includes(eingabe);
+}
+
+/* Die beiden Pfeile neben der Reihe. Sie stehen nur da, solange die Reihe
+   überhaupt breiter ist als ihr Platz, und der einzelne ist nur zu haben,
+   solange an seiner Seite noch etwas liegt. Gemessen wird in Pixeln, und
+   die kommen bei gerollten Kästen gebrochen heraus: Der Rest von einem
+   Pixel ist kein Rollweg mehr. */
+function weltRollstand() {
+  const feld = $('welt-bekannt');
+  const rest = feld.scrollWidth - feld.clientWidth;
+  const rollbar = rest > 1;
+  const links = $('welt-links');
+  const rechts = $('welt-rechts');
+  links.hidden = rechts.hidden = !rollbar;
+  links.disabled = feld.scrollLeft <= 1;
+  rechts.disabled = feld.scrollLeft >= rest - 1;
+}
+
+/* Ein Druck rollt vier Fünftel der sichtbaren Breite weiter. Ganze
+   Breiten sind zu viel: Am Rand stünde dann nichts mehr, woran sich das
+   Auge festhält. */
+function weltRollen(richtung) {
+  const feld = $('welt-bekannt');
+  feld.scrollBy({ left: richtung * feld.clientWidth * 0.8, behavior: 'smooth' });
 }
 
 /* Eine neue Welt kommt in CHAR_WORLDS (js/chars.js) und steht danach in
@@ -6058,6 +6202,38 @@ $('figur-alias').addEventListener('keydown', (ev) => {
 $('welt-neu').addEventListener('input', frischeWelten);
 $('welt-hinzu').addEventListener('click', weltAnlegen);
 $('welt-weg').addEventListener('click', weltStreichen);
+$('welt-links').addEventListener('click', () => weltRollen(-1));
+$('welt-rechts').addEventListener('click', () => weltRollen(1));
+$('welt-bekannt').addEventListener('scroll', weltRollstand);
+/* Von sich aus rollte das Rad hier nur mit gedrückter Umschalttaste zur
+   Seite, senkrecht gedreht ginge stattdessen der Dialog darunter. Steht
+   der Zeiger über der Reihe, ist die Reihe gemeint: Die senkrechte
+   Drehung wird deshalb zur waagerechten Bewegung.
+
+   Solange die Reihe rollt, gehört ihr das Rad ganz, auch am Anschlag.
+   Wird es dort weitergereicht, schiebt Chrome die Reihe mit seiner
+   eigenen Bewegung um einen Pixel vor und zurück, und das sieht man als
+   Zittern. Es liegt nicht am Weiterreichen nach oben, sondern an der
+   Standardbewegung selbst: Gemessen bleibt der Rollstand nur dann fest,
+   wenn das Ereignis immer abgebrochen wird.
+
+   Passt die Reihe ganz hinein, ist nichts zu rollen, und das Rad bleibt
+   dem Dialog überlassen. Und gerollt wird ohne Weichzeichner, das smooth
+   aus dem Stilblatt gehört den Pfeilen: Beim Rad reihten sich die
+   Bewegungen sonst hintereinander auf. */
+$('welt-bekannt').addEventListener('wheel', (ev) => {
+  const feld = $('welt-bekannt');
+  if (feld.scrollWidth - feld.clientWidth <= 1) return;
+  ev.preventDefault();
+  feld.scrollBy({
+    left: Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : ev.deltaY,
+    behavior: 'instant',
+  });
+}, { passive: false });
+/* frischeWelten() läuft, bevor der Dialog offen ist, und misst dort nur
+   Nullen. Der Beobachter meldet sich, sobald die Reihe ihre Breite
+   bekommt, und danach bei jeder Änderung des Fensters. */
+new ResizeObserver(weltRollstand).observe($('welt-bekannt'));
 $('figur-loeschen').addEventListener('click', figurLoeschen);
 $('welt-neu').addEventListener('keydown', (ev) => {
   if (ev.key !== 'Enter') return;
@@ -6126,10 +6302,12 @@ document.addEventListener('keydown', (ev) => {
   if (!listeHoertZu(ev)) return;
 
   if (ev.key === 'Enter') {
-    const figur = S.figuren.find((f) => f.slug === S.vorwahl);
-    if (!figur || figur._knopf.parentElement.hidden) return;
+    const alle = zeichen() ? S.zeichen : S.figuren;
+    const eintrag = alle.find((f) => f.slug === S.vorwahl);
+    if (!eintrag || eintrag._knopf.parentElement.hidden) return;
     ev.preventDefault();
-    waehleFigur(figur.slug);
+    if (zeichen()) waehleZeichen(eintrag.name);
+    else waehleFigur(eintrag.slug);
     return;
   }
 
@@ -6138,7 +6316,8 @@ document.addEventListener('keydown', (ev) => {
   ev.preventDefault();
   /* Ohne Vorwahl steht die offene Figur als Ausgangspunkt ein. Ist auch
      die weggefiltert, fängt der Lauf am jeweiligen Ende an. */
-  const jetzt = sichtbar.findIndex((f) => f.slug === (S.vorwahl || (S.figur && S.figur.slug)));
+  const offen = zeichen() ? S.zeichenWahl : (S.figur && S.figur.slug);
+  const jetzt = sichtbar.findIndex((f) => f.slug === (S.vorwahl || offen));
   const naechster = jetzt < 0
     ? (runter ? 0 : sichtbar.length - 1)
     : Math.min(Math.max(jetzt + (runter ? 1 : -1), 0), sichtbar.length - 1);
@@ -6237,13 +6416,11 @@ $('offen').addEventListener('change', (ev) => {
    auf der Bühne wie in der Vorschau. */
 function frischeGroesse() {
   vorschau();
-  if (quadrat() || !S.rahmen) return;
-  /* Der Rahmen bleibt stehen, die Figur wächst darin. Dafür muss die
-     Ansicht dem Regler folgen, deshalb wird sie hier neu gesetzt und
-     nicht nur nachgebessert: Wer am Größenregler zieht, will die Größe
-     sehen, auch wenn er die Bühne vorher selbst verschoben hat. */
-  passeAnsichtAn(true);
-  zeichne();
+  /* Auf der Bühne hängen allein die Rahmenlinien an den beiden Reglern.
+     Sie wandern, der Zoom bleibt: Wer an der Größe dreht, will die Linien
+     laufen sehen und nicht die Bühne unter der Hand springen haben. Ohne
+     Rahmen ändert sich auf der Bühne gar nichts. */
+  if (!quadrat() && S.rahmen) zeichne();
 }
 
 $('skala').addEventListener('input', (ev) => {
@@ -6252,7 +6429,9 @@ $('skala').addEventListener('input', (ev) => {
 });
 
 $('korrektur').addEventListener('input', (ev) => {
-  S.korrektur = Number(ev.target.value);
+  /* Drei Stellen, mehr trägt chars.js nicht. Ohne das Runden käme über
+     die Schrittrechnung des Browsers eine vierte mit. */
+  S.korrektur = Math.round(Number(ev.target.value) * 1000) / 1000;
   frischeGroesse();
 });
 
@@ -6287,11 +6466,10 @@ $('skala-speichern').addEventListener('click', async () => {
     ziel.korrektur = korrektur;
     frischerVerlauf(antwort.verlauf);
     if (S.ziel === ziel) vorschau();
-    const prozent = Math.round(korrektur * 100);
     melde(skala === 1 && korrektur === 1
       ? `${ziel.datei} steht wieder auf der Standardgröße, chars.js führt die Datei nicht mehr.`
       : `Körpergröße ${skala.toFixed(2)}`
-        + (korrektur === 1 ? '' : `, Bildkorrektur ${prozent} %`)
+        + (korrektur === 1 ? '' : `, Bildkorrektur ${prozent(korrektur)}`)
         + ` für ${ziel.datei} in js/chars.js eingetragen.`);
   } catch (fehler) {
     melde('Größe nicht gesetzt: ' + fehler.message, true);
@@ -6396,3 +6574,435 @@ document.addEventListener('keydown', (ev) => {
 });
 
 start();
+
+/* ---------- Embleme ----------
+
+   Der einzige Bereich ohne Figuren. In der Liste stehen die Namen aus
+   EMBLEM_ART in js/emblems.js, und zu jedem gehört eine Strecke aus drei
+   Schritten:
+
+     Vorlage        ein Bild mit flachem Grund, wie es hereinkommt
+     Freigestellt   dasselbe mit Alphakanal, gerechnet ohne Modell
+     Maske          512 auf 512, weiß, beschnitten, quadratisch gerahmt
+
+   Der mittlere Schritt ist der, den man ansehen muss. Das Innere dieser
+   Zeichen trägt denselben Schwarzwert wie ihr Grund, an der Farbe ist
+   beides nicht zu unterscheiden. Ob das Innere zum Zeichen gehört oder
+   nicht, sagt die Lesart, und welche stimmt, sieht man nur am Bild.
+
+   Gerechnet wird beides in tools/emblems, nicht hier und auch nicht im
+   Server: cutout-emblems.py stellt frei, build-emblems.py baut die
+   Maske. Beide bleiben dort die maßgebliche Fassung, das Studio ruft sie
+   nur auf. */
+
+const ZEICHEN_ZUSTAND = {
+  fertig: ['Maske gebaut', 'fertig'],
+  alt: ['Vorlage liegt, Maske fehlt', 'alt'],
+  fehlt: ['gezeichneter Umriss', 'fehlt'],
+};
+
+function zeichenZustand(z) {
+  if (z.maske) return 'fertig';
+  return z.vorlage ? 'alt' : 'fehlt';
+}
+
+/* Die Bilder der drei Schritte. Der Zeitstempel hängt hinten dran, sonst
+   zeigte der Browser nach dem Bauen die alte Maske weiter. */
+function zeichenVorlageUrl(z) {
+  return z.vorlage
+    ? `/datei/assets/emblems/source/${z.vorlage}?v=${Math.round(z.vorlageStand)}`
+    : '';
+}
+
+function zeichenMaskeUrl(z) {
+  return z.maske
+    ? `/datei/assets/emblems/${z.name}.webp?v=${Math.round(z.maskeStand)}`
+    : '';
+}
+
+async function ladeZeichen() {
+  try {
+    const daten = await json('/api/embleme');
+    /* Nach dem Namen sortiert und nicht in der Reihenfolge, in der die
+       Zeichen in js/emblems.js stehen. Dort stehen sie nach Zugehörigkeit
+       beieinander, Iron Man bei War Machine, und das ist beim Lesen der
+       Datei richtig. Wer hier ein bestimmtes Zeichen sucht, kennt aber
+       nur seinen Namen und nicht seinen Platz in jener Liste.
+
+       Einmal hier und nicht erst in der Liste: An dieser Reihenfolge
+       hängen auch der Zähler, die Pfeiltasten und die Vorwahl über die
+       Tastatur. */
+    S.zeichen = daten.zeichen.slice()
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+    baueZeichenListe();
+    zeigeZaehler(true);
+  } catch (fehler) {
+    melde('Die Zeichen sind nicht zu lesen: ' + fehler.message, true);
+  }
+}
+
+/* Der Stand kommt bei jedem Bauen mit zurück. Er ersetzt die Liste, ohne
+   sie neu aufzubauen: Die Einträge behalten damit ihren Platz und ihr
+   Aussehen, und nur die betroffenen Punkte und Bilder rücken nach. */
+function frischeZeichen(neu) {
+  if (!neu) return;
+  const nachName = new Map(neu.map((z) => [z.name, z]));
+  for (const alt of S.zeichen) {
+    const frisch = nachName.get(alt.name);
+    if (!frisch) continue;
+    Object.assign(alt, frisch);
+    const zustand = zeichenZustand(alt);
+    if (alt._punkt) alt._punkt.className = 'punkt ' + zustand;
+    if (alt._unten) alt._unten.textContent = ZEICHEN_ZUSTAND[zustand][0];
+    if (alt._bild) {
+      const url = zeichenMaskeUrl(alt) || zeichenVorlageUrl(alt);
+      alt._bild.style.visibility = url ? '' : 'hidden';
+      if (url) alt._bild.src = url;
+    }
+  }
+  zeigeZaehler(false);
+}
+
+function baueZeichenListe() {
+  const liste = $('liste');
+  if (listenBlick) listenBlick.disconnect();
+  vorwahlKnopf = null;
+  liste.classList.toggle('belebt', !!listenBlick);
+  liste.textContent = '';
+
+  for (const z of S.zeichen) {
+    const li = document.createElement('li');
+    const knopf = document.createElement('button');
+    knopf.type = 'button';
+    knopf.className = 'eintrag eintrag-zeichen';
+    knopf.dataset.zeichen = z.name;
+    /* Vorwahl und Pfeiltasten gehen die Liste über „slug“ durch, egal was
+       darin steht. Bei einem Zeichen ist der Name der Schlüssel. */
+    z.slug = z.name;
+
+    /* In der Liste steht die Maske, solange es eine gibt, sonst die
+       Vorlage. So sieht man am Eintrag selbst, wie weit das Zeichen ist,
+       und muss es nicht erst aufschlagen. */
+    const bild = document.createElement('img');
+    bild.loading = 'lazy';
+    bild.alt = '';
+    const url = zeichenMaskeUrl(z) || zeichenVorlageUrl(z);
+    if (url) bild.src = url;
+    else bild.style.visibility = 'hidden';
+    bild.addEventListener('error', () => { bild.style.visibility = 'hidden'; });
+
+    const text = document.createElement('span');
+    text.className = 'eintrag-text';
+    const name = document.createElement('span');
+    name.className = 'eintrag-name';
+    name.textContent = z.name;
+    const unten = document.createElement('span');
+    unten.className = 'eintrag-unten';
+    unten.textContent = ZEICHEN_ZUSTAND[zeichenZustand(z)][0];
+    text.append(name, unten);
+
+    const punkt = document.createElement('span');
+    punkt.className = 'punkt ' + zeichenZustand(z);
+
+    knopf.append(bild, text, punkt);
+    li.append(knopf);
+    liste.append(li);
+
+    z._knopf = knopf;
+    z._bild = bild;
+    z._punkt = punkt;
+    z._unten = unten;
+    /* Beobachtet wird der Knopf und nicht sein Listenelement: Die Klasse
+       „sichtbar“, die der Beobachter setzt, gehört zu .eintrag, und ohne
+       sie bleibt der Eintrag auf Deckkraft null stehen. */
+    if (listenBlick) listenBlick.observe(knopf);
+  }
+
+  filtereZeichen();
+}
+
+function filtereZeichen() {
+  const suche = S.suche.trim().toLowerCase();
+  for (const z of S.zeichen) {
+    const zustand = zeichenZustand(z);
+    let passt = S.filter === 'alle'
+      || (S.filter === 'offen' && zustand !== 'fertig')
+      || (S.filter === 'fertig' && zustand === 'fertig')
+      || (S.filter === 'fehlt' && zustand === 'fehlt');
+    if (passt && suche) passt = z.name.includes(suche);
+    z._knopf.parentElement.hidden = !passt;
+  }
+  frischeSchleier();
+}
+
+/* ---------- Ein Zeichen aufschlagen ---------- */
+
+function zeigeLeerZeichen() {
+  $('arbeit').hidden = true;
+  $('leerzustand').hidden = false;
+}
+
+function waehleZeichen(name) {
+  const z = S.zeichen.find((e) => e.name === name);
+  if (!z) return;
+  const gewechselt = S.zeichenWahl !== name;
+  S.zeichenWahl = name;
+  if (gewechselt) {
+    /* Was freigestellt in der Schwebe hing, gehörte dem vorigen Zeichen.
+       Es mit hinüberzunehmen, hieße es unter falschem Namen abzulegen. */
+    S.zeichenRoh = null;
+    S.zeichenFrei = null;
+    S.zeichenErzwungen = false;
+  }
+
+  history.replaceState(null, '', '#' + MARKE.emblem + name);
+  for (const e of S.zeichen) e._knopf.classList.toggle('an', e === z);
+  setzeVorwahl(z, false);
+  z._knopf.scrollIntoView({ block: 'nearest' });
+
+  $('leerzustand').hidden = true;
+  $('arbeit').hidden = false;
+  zeigeZeichen();
+}
+
+function zeigeZeichen() {
+  const z = S.zeichen.find((e) => e.name === S.zeichenWahl);
+  if (!z) return;
+
+  $('emblem-marke').textContent = z.name;
+
+  /* Links steht, was hereinkommt: das eben Abgelegte, solange eines in
+     der Schwebe hängt, sonst die abgelegte Vorlage. */
+  const rohUrl = S.zeichenRoh ? `/upload/${S.zeichenRoh.id}` : zeichenVorlageUrl(z);
+  setzeSchritt('vorlage', rohUrl, S.zeichenRoh
+    ? 'eben abgelegt, noch nicht übernommen'
+    : (z.vorlage ? 'assets/emblems/source/' + z.vorlage : ''));
+
+  /* Der mittlere Schritt zeigt nur, was wirklich gerechnet wurde. Steht
+     dort nichts, ist die Vorlage so abgelegt, wie sie kam, und der Knopf
+     „Freistellen“ holt den Schritt nach. Vorher hier zu behaupten, sie
+     trage ihren Alphakanal, wäre geraten: Nachgesehen hat niemand. */
+  const frei = S.zeichenFrei;
+  setzeSchritt('frei', frei ? `/upload/${frei.id}` : (S.zeichenRoh ? '' : rohUrl),
+    frei
+      ? `${frei.breite} × ${frei.hoehe}, ${Math.round(frei.deckend * 100)} % deckend`
+        + (frei.erzwungen ? ', erzwungen' : '')
+      : (S.zeichenRoh ? '' : (z.vorlage ? 'so abgelegt, nicht neu gerechnet' : '')));
+
+  setzeSchritt('maske', zeichenMaskeUrl(z), z.maske ? '512 × 512' : '');
+
+  /* Übernehmen gibt es nur, wenn etwas Freigestelltes dasteht. Freistellen
+     und Neu bauen, sobald es überhaupt eine Vorlage gibt, gleich ob eben
+     abgelegt oder längst da. */
+  $('emblem-uebernehmen').disabled = !frei;
+  $('emblem-freistellen').disabled = !S.zeichenRoh && !z.vorlage;
+  $('emblem-bauen').disabled = !z.vorlage;
+  $('emblem-weg').disabled = !z.vorlage && !z.maske;
+  $('emblem-info').textContent = '';
+}
+
+function setzeSchritt(welcher, url, mass) {
+  const bild = $('emblem-bild-' + welcher);
+  const feld = bild.parentElement;
+  bild.src = url || '';
+  bild.hidden = !url;
+  feld.querySelector('.emblem-leer').hidden = !!url;
+  $('emblem-mass-' + welcher).textContent = mass || '';
+}
+
+/* ---------- Vorlage ablegen und freistellen ---------- */
+
+async function zeichenVorlageNehmen(datei) {
+  if (!S.zeichenWahl) return melde('Erst ein Zeichen wählen.', true);
+  if (!datei || !datei.type.startsWith('image/')) {
+    return melde('Das ist kein Bild.', true);
+  }
+  try {
+    const antwort = await json('/api/upload', {
+      method: 'POST',
+      headers: { 'X-Dateiname': encodeURIComponent(datei.name || 'vorlage.png') },
+      body: await datei.arrayBuffer(),
+    });
+    S.zeichenRoh = { id: antwort.id, name: antwort.name };
+    S.zeichenFrei = null;
+    zeigeZeichen();
+    await zeichenFreistellen();
+  } catch (fehler) {
+    melde('Hochladen misslungen: ' + fehler.message, true);
+  }
+  return undefined;
+}
+
+/* Zwei Vorlagen kommen in Frage, und die eben abgelegte hat Vorrang:
+   Sie ist die, die auf dem Weg ins Repo ist. Liegt keine in der Schwebe,
+   gilt die, die schon unter assets/emblems/source steht. */
+function zeichenQuelle() {
+  if (S.zeichenRoh) return { typ: 'upload', id: S.zeichenRoh.id };
+  const z = S.zeichen.find((e) => e.name === S.zeichenWahl);
+  return z && z.vorlage ? { typ: 'emblem', name: z.name } : null;
+}
+
+/* erzwingen übergeht die Abfuhr „bringt schon einen Alphakanal mit“. Von
+   allein wird nie erzwungen, denn eine gute Freistellung soll nicht ein
+   zweites Mal gerechnet werden. Auf Knopfdruck immer: Wer ihn drückt,
+   hat gesehen, dass die vorhandene nicht taugt. */
+async function zeichenFreistellen(erzwingen) {
+  const quelle = zeichenQuelle();
+  if (!quelle) return;
+  S.zeichenErzwungen = !!erzwingen;
+  $('emblem-info').textContent = 'stellt frei …';
+  try {
+    S.zeichenFrei = await json('/api/emblem/freistellen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quelle, lesart: S.zeichenLesart, erzwingen: !!erzwingen,
+      }),
+    });
+    zeigeZeichen();
+    if (S.zeichenFrei.erzwungen) {
+      $('emblem-info').textContent = 'Neu gerechnet, der mitgebrachte '
+        + 'Alphakanal ist dabei weggefallen.';
+    }
+  } catch (fehler) {
+    S.zeichenFrei = null;
+    zeigeZeichen();
+    /* Eine eben abgelegte Vorlage, die schon einen Alphakanal mitbringt,
+       ist kein Fehlschlag: Sie geht so, wie sie ist, an den Bauer
+       weiter. Wer sie trotzdem gerechnet haben will, drückt den Knopf. */
+    if (/schon freigestellt/.test(fehler.message) && S.zeichenRoh) {
+      S.zeichenFrei = { ...S.zeichenRoh, durchgereicht: true };
+      $('emblem-uebernehmen').disabled = false;
+      $('emblem-info').textContent = 'Die Vorlage bringt ihren Alphakanal '
+        + 'schon mit und wird unverändert übernommen. „Freistellen“ rechnet '
+        + 'sie trotzdem neu.';
+      return;
+    }
+    melde('Freistellen misslungen: ' + fehler.message, true);
+  }
+}
+
+async function zeichenUebernehmen() {
+  const quelle = S.zeichenFrei || S.zeichenRoh;
+  if (!S.zeichenWahl || !quelle) return;
+  $('emblem-info').textContent = 'legt ab und baut …';
+  try {
+    const antwort = await json('/api/emblem/uebernehmen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: S.zeichenWahl,
+        quelle: { typ: 'upload', id: quelle.id },
+      }),
+    });
+    S.zeichenRoh = null;
+    S.zeichenFrei = null;
+    frischeZeichen(antwort.zeichen);
+    zeigeZeichen();
+    $('emblem-info').textContent = antwort.gesichert
+      ? 'Gebaut. Die alte Vorlage liegt als ' + antwort.gesichert + ' in .sicherung.'
+      : 'Gebaut.';
+    melde('Maske für ' + S.zeichenWahl + ' gebaut.');
+  } catch (fehler) {
+    $('emblem-info').textContent = '';
+    melde('Übernehmen misslungen: ' + fehler.message, true);
+  }
+  return undefined;
+}
+
+async function zeichenBauen(namen, wort) {
+  $('emblem-info').textContent = 'baut …';
+  try {
+    const antwort = await json('/api/emblem/bauen', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ namen }),
+    });
+    frischeZeichen(antwort.zeichen);
+    zeigeZeichen();
+    const daneben = (antwort.misslungen || []).length;
+    $('emblem-info').textContent = '';
+    melde(`${antwort.gebaut.length} ${wort} gebaut`
+      + (daneben ? `, ${daneben} nicht gegangen` : '') + '.', !!daneben);
+  } catch (fehler) {
+    $('emblem-info').textContent = '';
+    melde('Bauen misslungen: ' + fehler.message, true);
+  }
+}
+
+async function zeichenVorlageWeg() {
+  const name = S.zeichenWahl;
+  if (!name) return;
+  if (!confirm(`Vorlage und Maske von „${name}“ entfernen?\n\n`
+    + 'Beide wandern nach assets/emblems/.sicherung. Auf der Bühne steht '
+    + 'danach wieder der gezeichnete Umriss aus js/emblems.js.')) return;
+  try {
+    const antwort = await json('/api/emblem/vorlage-weg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    S.zeichenRoh = null;
+    S.zeichenFrei = null;
+    frischeZeichen(antwort.zeichen);
+    zeigeZeichen();
+    melde(antwort.weg.length + ' Datei(en) entfernt, gesichert in .sicherung.');
+  } catch (fehler) {
+    melde('Entfernen misslungen: ' + fehler.message, true);
+  }
+  return undefined;
+}
+
+/* ---------- Bedienung ---------- */
+
+$('liste').addEventListener('click', (ev) => {
+  const knopf = ev.target.closest('[data-zeichen]');
+  if (knopf) waehleZeichen(knopf.dataset.zeichen);
+});
+
+$('emblem-hochladen').addEventListener('click', () => $('emblem-datei').click());
+$('emblem-datei').addEventListener('change', (ev) => {
+  const datei = ev.target.files && ev.target.files[0];
+  if (datei) zeichenVorlageNehmen(datei);
+  ev.target.value = '';
+});
+
+$('emblem-lesart').addEventListener('click', (ev) => {
+  const knopf = ev.target.closest('[data-lesart]');
+  if (!knopf || knopf.dataset.lesart === S.zeichenLesart) return;
+  S.zeichenLesart = knopf.dataset.lesart;
+  for (const k of $('emblem-lesart').querySelectorAll('[data-lesart]')) {
+    k.classList.toggle('an', k === knopf);
+  }
+  /* Die Lesart ändert nur den mittleren Schritt. Gerechnet wird er neu,
+     sobald überhaupt einer dasteht, und zwar so, wie er zuletzt lief. */
+  if (S.zeichenRoh || S.zeichenFrei) zeichenFreistellen(S.zeichenErzwungen);
+});
+
+$('emblem-freistellen').addEventListener('click', () => zeichenFreistellen(true));
+$('emblem-uebernehmen').addEventListener('click', zeichenUebernehmen);
+$('emblem-bauen').addEventListener('click', () => zeichenBauen([S.zeichenWahl], 'Maske'));
+$('emblem-alle').addEventListener('click', () => zeichenBauen([], 'Masken'));
+$('emblem-weg').addEventListener('click', zeichenVorlageWeg);
+
+/* Ablegen: über der Tafel, nicht nur über dem Feld. Wer ein Bild aus dem
+   Dateimanager zieht, trifft die kleine Fläche sonst nur mit Mühe. */
+const emblemAblage = $('emblem-ablage');
+for (const art of ['dragenter', 'dragover']) {
+  $('emblem-bank').addEventListener(art, (ev) => {
+    if (!zeichen() || !S.zeichenWahl) return;
+    ev.preventDefault();
+    emblemAblage.classList.add('an');
+  });
+}
+for (const art of ['dragleave', 'drop']) {
+  $('emblem-bank').addEventListener(art, (ev) => {
+    if (art === 'drop') ev.preventDefault();
+    if (ev.relatedTarget && $('emblem-bank').contains(ev.relatedTarget)) return;
+    emblemAblage.classList.remove('an');
+  });
+}
+$('emblem-bank').addEventListener('drop', (ev) => {
+  const datei = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (datei) zeichenVorlageNehmen(datei);
+});

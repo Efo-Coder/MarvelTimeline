@@ -10,7 +10,7 @@
    Die Vorlage ist react-icons, genauer der Satz Lucide daraus
    (react-icons/lu). Das Studio hat keinen Bauschritt und soll ohne
    Internet laufen, deshalb liegt hier nicht das Paket, sondern das, was
-   davon gebraucht wird: die reinen Pfaddaten der 42 benutzten Symbole,
+   davon gebraucht wird: die reinen Pfaddaten der 44 benutzten Symbole,
    aus react-icons entnommen und unverändert. Sie teilen sich alle
    denselben Rahmen (24 × 24, ohne Füllung, Strich in der Textfarbe), der
    steht deshalb nur einmal in RAHMEN. Lucide steht unter der ISC-Lizenz,
@@ -69,6 +69,12 @@
     'umbenennen':     '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/>',  // LuPencil
     'hoch':           '<path d="m18 15-6-6-6 6"/>',  // LuChevronUp
     'runter':         '<path d="m6 9 6 6 6-6"/>',  // LuChevronDown
+    /* Dieselben Pfade wie 'variante-hoch' und 'variante-runter'. Sie
+       stehen trotzdem eigens da, denn der Schlüssel sagt hier die
+       Richtung einer rollenden Reihe und dort den Platz einer Fassung in
+       ihrer Liste. Wer eines davon austauscht, meint nicht das andere. */
+    'links':          '<path d="m15 18-6-6 6-6"/>',  // LuChevronLeft
+    'rechts':         '<path d="m9 18 6-6-6-6"/>',  // LuChevronRight
     'variante-neu':   '<line x1="15" x2="15" y1="12" y2="18"/><line x1="12" x2="18" y1="15" y2="15"/><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',  // LuCopyPlus
     'variante-weg':   '<line x1="12" x2="18" y1="15" y2="15"/><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',  // LuCopyMinus
     'variante-hoch':  '<path d="m15 18-6-6 6-6"/>',  // LuChevronLeft
