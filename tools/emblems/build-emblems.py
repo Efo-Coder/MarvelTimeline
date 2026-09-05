@@ -28,15 +28,30 @@ oder schon freigestellt sein. Erkannt wird beides:
     steht oder hell auf dunkel, sieht das Skript an den Rändern nach:
     Was in den vier Ecken liegt, ist der Hintergrund.
 
+Der Helligkeitsweg ist der schlechtere von beiden. Er kommt bei einem
+dunkel gemalten Zeichen ins Straucheln, und er kann nicht wissen, ob
+das Schwarze im Inneren zum Zeichen gehört oder es schneidet. Genau
+dafür steht cutout-emblems.py daneben: Es setzt den Alphakanal vorweg,
+und dann greift hier der obere der beiden Wege.
+
+Beides zusammen bedient das Bild-Studio im Bereich „Embleme“. Es zeigt
+die Strecke aus Vorlage, freigestelltem Bild und Maske nebeneinander
+und ruft dafür genau diese beiden Skripte auf. Sie bleiben die
+maßgebliche Fassung, das Studio führt keine eigene.
+
 Aufrufe:
 
     python tools/emblems/build-emblems.py            alle neuen
     python tools/emblems/build-emblems.py --alle     auch die fertigen
     python tools/emblems/build-emblems.py --liste    welche Namen es gibt
     python tools/emblems/build-emblems.py spider-man nur dieses eine
+
+--json hängt sich an jeden dieser Aufrufe und macht aus der Ausgabe
+eine Zeile JSON. Daraus liest das Studio seinen Stand.
 """
 
 import io
+import json
 import os
 import re
 import sys
@@ -61,6 +76,20 @@ LUFT = 0.04
 
 LESBAR = ('.png', '.webp', '.jpg', '.jpeg', '.gif', '.bmp')
 
+# Vorlagen, deren Zeichen eine gefüllte Fläche ist und deren Zeichnung
+# darin als schwarze Linie liegt: die Finger der Hulk-Faust etwa. Bei
+# ihnen gehört das Schwarze nicht zum Zeichen, sondern schneidet es -
+# ohne diesen Schritt würde die Faust zu einem Klumpen.
+#
+# Warum keine Regel für alle: Manches Zeichen ist selbst dunkel, der
+# Totenkopf des Punisher etwa. Dort nähme derselbe Schritt neun Zehntel
+# des Zeichens weg. Wer eine neue Vorlage ablegt und einen Klumpen
+# bekommt, trägt ihren Namen hier ein.
+LINIEN = {'hulk', 'thanos'}
+
+# Ab welcher Helligkeit eine Linie als schwarz gilt.
+LINIEN_SCHWELLE = 90
+
 
 def namen_aus_js():
     """Die Schlüssel aus EMBLEM_ART, damit die Vorlagen richtig heißen."""
@@ -72,14 +101,25 @@ def namen_aus_js():
     return re.findall(r"^  '([a-z0-9-]+)':", text[anfang:ende], re.M)
 
 
+def linien_schneiden(deckung, bild):
+    """Die schwarze Zeichnung im Zeichen aus der Deckung nehmen."""
+    grau = np.array(bild.convert('L'))
+    dunkel = (grau < LINIEN_SCHWELLE) & (deckung > 128)
+    return np.where(dunkel, 0, deckung)
+
+
 def maske_aus(bild):
-    """Aus einer Vorlage die Deckung machen: 255 ist Zeichen, 0 ist Grund."""
+    """Aus einer Vorlage die Deckung machen: 255 ist Zeichen, 0 ist Grund.
+
+    Zurück kommen die Deckung und die Auskunft, ob sie aus einem echten
+    Alphakanal stammt. Das entscheidet weiter unten über LINIEN.
+    """
     # Ein Alphakanal gilt nur, wenn er wirklich etwas freistellt. Viele
     # Dateien tragen einen mit, der überall undurchsichtig ist.
     if bild.mode in ('RGBA', 'LA') or 'transparency' in bild.info:
         alpha = np.array(bild.convert('RGBA'))[:, :, 3]
         if alpha.min() < 200:
-            return alpha
+            return alpha, True
 
     grau = np.array(bild.convert('L')).astype(np.int16)
 
@@ -100,7 +140,7 @@ def maske_aus(bild):
         lo, hi = deckung.min(), max(deckung.max(), deckung.min() + 1)
     deckung = np.clip((deckung - lo) * (255.0 / (hi - lo)), 0, 255)
 
-    return deckung.astype(np.uint8)
+    return deckung.astype(np.uint8), False
 
 
 def zuschneiden(maske):
@@ -123,7 +163,15 @@ def zuschneiden(maske):
 
 def bauen(name, quelle, ziel):
     bild = Image.open(quelle)
-    feld = zuschneiden(maske_aus(bild))
+    deckung, _aus_alpha = maske_aus(bild)
+    # Auch bei einer Vorlage mit Alphakanal: Photoroom und seinesgleichen
+    # nehmen nur den Grund weg und lassen die schwarze Zeichnung im
+    # Zeichen deckend stehen. Ohne diesen Schritt wird die Faust ein
+    # Klumpen. Bei einer mit cutout-emblems.py freigestellten Vorlage
+    # läuft er ins Leere, dort ist das Schwarz schon durchsichtig.
+    if name in LINIEN:
+        deckung = linien_schneiden(deckung, bild)
+    feld = zuschneiden(deckung)
 
     klein = Image.fromarray(feld, 'L').resize((KANTE, KANTE), Image.LANCZOS)
 
@@ -135,16 +183,46 @@ def bauen(name, quelle, ziel):
     return klein
 
 
+def vorlagen():
+    """Welche Vorlage zu welchem Namen liegt, egal in welchem Format."""
+    if not os.path.isdir(QUELLE):
+        return {}
+    gefunden = {}
+    for f in sorted(os.listdir(QUELLE)):
+        name, endung = os.path.splitext(f)
+        if endung.lower() in LESBAR:
+            gefunden.setdefault(name, f)
+    return gefunden
+
+
+def stand():
+    """Der Stand aller Zeichen: was die Bühne kennt, was gebaut ist.
+
+    Das ist die Auskunft, aus der das Bild-Studio seine Liste baut.
+    """
+    fertig = {os.path.splitext(f)[0] for f in os.listdir(ZIEL)
+              if f.lower().endswith('.webp')} if os.path.isdir(ZIEL) else set()
+    liegt = vorlagen()
+    return [{
+        'name': name,
+        'vorlage': liegt.get(name),
+        'maske': name in fertig,
+    } for name in namen_aus_js()]
+
+
 def main():
-    args = [a for a in sys.argv[1:]]
-    alle = '--alle' in args
-    args = [a for a in args if not a.startswith('--')]
+    roh = sys.argv[1:]
+    alle = '--alle' in roh
+    als_json = '--json' in roh
+    args = [a for a in roh if not a.startswith('--')]
 
     bekannt = namen_aus_js()
 
-    if '--liste' in sys.argv[1:]:
-        da = {os.path.splitext(f)[0] for f in os.listdir(ZIEL)
-              if f.lower().endswith('.webp')} if os.path.isdir(ZIEL) else set()
+    if '--liste' in roh:
+        if als_json:
+            print(json.dumps({'ok': True, 'zeichen': stand()}))
+            return
+        da = {z['name'] for z in stand() if z['maske']}
         print('Diese Namen kennt die Bühne (%d):\n' % len(bekannt))
         for n in bekannt:
             print('  [%s] %s' % ('x' if n in da else ' ', n))
@@ -154,6 +232,9 @@ def main():
 
     if not os.path.isdir(QUELLE):
         os.makedirs(QUELLE)
+        if als_json:
+            print(json.dumps({'ok': True, 'gebaut': [], 'misslungen': []}))
+            return
         print('Ordner angelegt: assets/emblems/source')
         print('Vorlagen dort ablegen, Namen siehe --liste.')
         return
@@ -166,17 +247,23 @@ def main():
         dateien = [f for f in dateien if os.path.splitext(f)[0] in args]
 
     if not dateien:
+        if als_json:
+            print(json.dumps({'ok': True, 'gebaut': [], 'misslungen': [],
+                              'grund': 'Keine Vorlagen in assets/emblems/source.'}))
+            return
         print('Keine Vorlagen in assets/emblems/source.')
         return
 
-    gemacht, uebersprungen, fehler = 0, 0, 0
+    gebaut, uebersprungen, misslungen = [], 0, []
     for datei in dateien:
         name = os.path.splitext(datei)[0]
         ziel = os.path.join(ZIEL, name + '.webp')
 
         if name not in bekannt:
-            print('  ?  %-22s kein Zeichen dieses Namens, siehe --liste' % name)
-            fehler += 1
+            misslungen.append({'name': name,
+                               'grund': 'kein Zeichen dieses Namens, siehe --liste'})
+            if not als_json:
+                print('  ?  %-22s kein Zeichen dieses Namens, siehe --liste' % name)
             continue
         if os.path.exists(ziel) and not alle and not args:
             uebersprungen += 1
@@ -184,17 +271,34 @@ def main():
 
         try:
             klein = bauen(name, os.path.join(QUELLE, datei), ziel)
-            anteil = (np.array(klein) > 24).mean()
-            print('  ok %-22s %d x %d, %.0f%% Fläche' % (name, KANTE, KANTE, anteil * 100))
-            gemacht += 1
+            anteil = float((np.array(klein) > 24).mean())
+            gebaut.append({'name': name, 'kante': KANTE,
+                           'anteil': round(anteil, 4)})
+            if not als_json:
+                print('  ok %-22s %d x %d, %.0f%% Fläche'
+                      % (name, KANTE, KANTE, anteil * 100))
         except Exception as e:
-            print('  !  %-22s %s' % (name, e))
-            fehler += 1
+            misslungen.append({'name': name, 'grund': str(e)})
+            if not als_json:
+                print('  !  %-22s %s' % (name, e))
 
-    print('\n%d gebaut, %d schon da, %d nicht gegangen.' % (gemacht, uebersprungen, fehler))
-    if gemacht:
+    if als_json:
+        print(json.dumps({'ok': True, 'gebaut': gebaut,
+                          'uebersprungen': uebersprungen,
+                          'misslungen': misslungen}))
+        return
+
+    print('\n%d gebaut, %d schon da, %d nicht gegangen.'
+          % (len(gebaut), uebersprungen, len(misslungen)))
+    if gebaut:
         print('Die Bühne nimmt sie beim nächsten Neuladen von selbst.')
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as fehler:  # noqa: BLE001 - die Antwort muss JSON bleiben
+        if '--json' in sys.argv[1:]:
+            print(json.dumps({'fehler': f'{type(fehler).__name__}: {fehler}'}))
+            sys.exit(1)
+        raise

@@ -3636,6 +3636,15 @@ a.char-film { text-decoration: none; }
   --mode-h: 3.25rem;
   --mode-space: calc(var(--mode-top) + var(--mode-h));
 
+  /* Das Farbpaar der Figur, dunkel und hell (EMBLEM_TINT in
+     js/emblems.js). Es steht hier und nicht an der Bühne, weil beide es
+     brauchen: die Bühne für ihre Kulisse und ihr Wappen, die Leiste
+     darüber für ihren Grund. Gesetzt wird es beim Aufbau der Bühne,
+     siehe setStage() in js/characters.js; hier steht nur, was gilt,
+     solange keine Figur offen ist. */
+  --stage-dark: #8c1017;
+  --stage-light: #e62429;
+
   /* Die Höhe der Bühnenzeile, also der Platz, in dem die Figur steht.
      Sie steht fest und rechnet weder mit der Höhe des Fensters noch mit
      dem, was rechts an Text steht: Ein Fenster, das eine Zeile höher
@@ -3732,10 +3741,19 @@ a.char-film { text-decoration: none; }
   /* Rechts das Stück, das die Schräge wegnimmt, plus etwas Luft hinter
      dem letzten Eintrag. Ohne es liefe die Kante durch seine Schrift. */
   padding-right: clamp(1.6rem, 4vw, 2.8rem);
-  /* Dieselbe Anlage wie zuvor, nur in Rot: links das gedrückte Rot der
-     Vorlage, in der Mitte das reine Marvel-Rot, rechts hinter der Schräge
-     eine Spur heller. */
-  background: linear-gradient(100deg, var(--m-red-dark) 0%, var(--accent) 62%, #f0343a 100%);
+  /* Dieselbe Anlage wie zuvor, nur nicht mehr in Rot, sondern im dunklen
+     Ton der Figur: links noch eine Spur gedrückter, in der Mitte der Ton
+     selbst, rechts hinter der Schräge etwas aufgehellt.
+
+     Warum der dunkle und nicht der helle Ton: Die Kulisse unter der
+     Leiste trägt seit dem Foto den hellen. Die Leiste in derselben Farbe
+     verschwände darin, statt als Leiste dazuliegen. Der dunkle Ton ist
+     dieselbe Farbe, nur tiefer, und hebt sich von der Bühne ab, ohne
+     neben ihr zu stehen. */
+  background: linear-gradient(100deg,
+    color-mix(in srgb, var(--stage-dark) 84%, #000) 0%,
+    var(--stage-dark) 62%,
+    color-mix(in srgb, var(--stage-dark) 70%, var(--stage-light)) 100%);
   clip-path: polygon(0 0, 100% 0, calc(100% - 1.1rem) 100%, 0 100%);
   overflow: hidden;
 }
@@ -3864,8 +3882,11 @@ a.char-film { text-decoration: none; }
   color: var(--m-ink);
 }
 
+/* Die gewählte Tafel im Ton der Leiste, an der sie hängt. Im Marvel-Rot
+   von früher stünde sie neben einer Leiste in der Farbe der Figur als
+   zweite Farbe da. */
 .char-variant.active {
-  background: var(--accent);
+  background: var(--stage-dark);
   color: #fff;
 }
 
@@ -3941,7 +3962,9 @@ a.char-film { text-decoration: none; }
    Bühne noch die Farbe der Figur. Der Grund selbst ist bei jeder Figur
    derselbe, so steht es in der Vorlage. */
 .char-stage {
-  --stage-light: #e62429;
+  /* --stage-light und --stage-dark stehen an .char-full-profile: Ein
+     eigener Wert an dieser Stelle stünde über dem geerbten, und die
+     Bühne bliebe rot, während die Leiste die Farbe der Figur trägt. */
 
   /* Der flache Grund, ohne jede Textur. */
   --stage-grund: #303746;
@@ -3966,6 +3989,43 @@ a.char-film { text-decoration: none; }
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
+  /* Die beiden Ebenen darin verrechnen sich nur miteinander. Ohne diese
+     Grenze suchte sich die Farbebene ihren Grund weiter unten und
+     schlüge auf die ganze Seite durch. */
+  isolation: isolate;
+  background: #0b0e15;
+}
+
+/* Solange das Foto liegt, bleibt die gezeichnete Kulisse aus. */
+.char-stage-scene .stage-art { display: none; }
+
+/* Das Foto trägt allein das Licht: wo die Wand hell ist, wo die Ecke
+   dunkel wird, wo der Boden anfängt. Seine eigene Farbe wird ihm dafür
+   genommen, sonst mischte sich das Blau der Vorlage in jeden Ton. */
+.char-stage-photo {
+  position: absolute;
+  inset: 0;
+  background: url('../assets/theme/stage-backdrop.webp') center bottom / cover no-repeat;
+  filter: grayscale(1);
+}
+
+/* Und die Farbe der Figur kommt als eigene Ebene darüber. Das
+   Mischverfahren "color" nimmt von ihr den Farbton und vom Foto die
+   Helligkeit: Die Wand bleibt hell, die Ecke bleibt dunkel, nur eben in
+   Rot statt in Blau.
+
+   Nicht ganz deckend: Volle Deckung zwingt jedem Pixel die volle
+   Sättigung der Figurenfarbe auf, und die Bühne leuchtete dann stärker
+   als die Figur davor. Mit gut zwei Dritteln bleibt ein Rest Grau
+   stehen, und das nimmt dem Ton die Grelle.
+
+   Ohne Figurenfarbe steht das Blau der Vorlage da, wie im Bild. */
+.char-stage-tone {
+  position: absolute;
+  inset: 0;
+  background: var(--stage-light, #5c6f9e);
+  mix-blend-mode: color;
+  opacity: 0.72;
 }
 
 .stage-art {
@@ -4002,29 +4062,33 @@ a.char-film { text-decoration: none; }
 .char-stage-emblem {
   position: absolute;
   top: 50%;
-  /* Nicht in der Mitte, sondern nach rechts gerückt: Mittig stünde es
-     genau hinter der Figur, und von einem Zeichen, das die Figur zu
-     zwei Dritteln verdeckt, bleibt nur ein Fleck. Ein Stück nach rechts
-     liegt es halb hinter ihr und halb in der freien Fläche daneben und
-     ist als Form zu erkennen. */
-  left: 62%;
+  /* Genau auf der Achse der Figur: Beide teilen sich dieselbe Mitte, das
+     Zeichen steht symmetrisch hinter ihr und ragt links wie rechts gleich
+     weit heraus. Es war einmal nach rechts gerückt, damit mehr von seiner
+     Form frei liegt, aber die Figur stand damit sichtbar neben ihrem
+     eigenen Zeichen. Verdeckt wird davon ohnehin wenig: Das Zeichen ist
+     gut doppelt so breit wie die Figur. */
+  left: 50%;
   width: calc(var(--stage-h) * 0.9);
   height: calc(var(--stage-h) * 0.9);
   transform: translate(-50%, -53%);
   z-index: 0;
   pointer-events: none;
-  /* Nicht in der reinen Farbe der Figur, sondern zur Hälfte im Ton der
-     Kulisse. Auf der roten Bühne von früher lag die Farbe im Grund und
-     das Wappen sank darin ein. Der Grund ist jetzt kühl und grau, und
-     ein reines Rot darauf wäre kein Hintergrund mehr, sondern ein
-     zweiter Gegenstand neben der Figur. */
-  color: color-mix(in srgb, var(--stage-light) 50%, #7d8698);
-  --wappen-deckung: 0.14;
+  /* Überwiegend Weiß, mit einem Rest der Figurenfarbe darin. Die
+     Kulisse trägt jetzt selbst den Ton der Figur, und ein Wappen in
+     genau diesem Ton verschwände darin: Gleiche Farbe auf gleicher
+     Farbe ist keine Form mehr. Weiß dagegen ist auf jedem Ton eine
+     Aufhellung und bleibt zu sehen. */
+  color: color-mix(in srgb, var(--stage-light) 25%, #ffffff);
+  --wappen-deckung: 0.2;
 }
 
-/* Kommt das Zeichen aus einer Vorlage statt aus einem gezeichneten
-   Umriss, trägt die Datei nur die Form und keine Farbe: Sie liegt als
-   Maske über einer Fläche in der Farbe der Figur (siehe
+/* Ohne Klasse from-file ist der Platz leer: Solange die Vorlage nicht
+   geladen ist, steht dort nichts, und ein Zeichen ohne Vorlage bleibt
+   ganz aus (siehe setStage() in js/characters.js).
+
+   Die Vorlage trägt nur die Form und keine Farbe: Sie liegt als Maske
+   über einer Fläche in der Farbe der Figur (siehe
    tools/emblems/build-emblems.py). */
 .char-stage-emblem.from-file {
   background: currentColor;
@@ -4038,21 +4102,6 @@ a.char-film { text-decoration: none; }
   -webkit-mask-position: center;
   mask-position: center;
 }
-
-.char-stage-emblem svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  opacity: var(--wappen-deckung);
-}
-
-/* Die Farben in der Maske. Weiß steht dort für sichtbar, Schwarz für
-   unsichtbar: Was f und s zeichnen, bleibt von der eingefärbten Platte
-   stehen, was c zeichnet, wird aus ihr ausgestanzt und gibt den Blick
-   auf Band und Schrägstrich frei (siehe emblemSvg() in js/emblems.js). */
-.char-stage-emblem .art .f { fill: #fff; }
-.char-stage-emblem .art .s { fill: none; stroke: #fff; }
-.char-stage-emblem .art .c { fill: #000; }
 
 /* ---------- Mitte: Wappen und Figur ---------- */
 
@@ -4457,12 +4506,16 @@ a.char-film { text-decoration: none; }
   box-shadow: inset 0 0 0 2px var(--m-sub);
 }
 
-/* Die gewählte Fassung trägt den roten Rahmen und oben rechts die Ecke,
-   an der in der Vorlage der gelbe Haken sitzt. Die Ecke liegt über
-   allem, sie ist die Antwort auf die Frage, welche Fassung im Bild
-   steht. */
+/* Die gewählte Fassung trägt den Rahmen und oben rechts die Ecke, an der
+   in der Vorlage der gelbe Haken sitzt. Die Ecke liegt über allem, sie
+   ist die Antwort auf die Frage, welche Fassung im Bild steht.
+
+   Beide im dunklen Ton der Figur, wie die Leiste über der Bühne. Im
+   Marvel-Rot von früher stand hier bei einer blauen oder grünen Figur
+   eine dritte Farbe auf der Bühne: die Kulisse hell, die Leiste dunkel,
+   der Rahmen rot. */
 .char-look.active::before,
-.char-look.active:hover::before { box-shadow: inset 0 0 0 2px var(--accent); }
+.char-look.active:hover::before { box-shadow: inset 0 0 0 2px var(--stage-dark); }
 
 .char-look.active::after {
   content: "";
@@ -4470,12 +4523,12 @@ a.char-film { text-decoration: none; }
   top: 0;
   right: 0;
   z-index: 3;
-  border-top: 0.9rem solid var(--accent);
+  border-top: 0.9rem solid var(--stage-dark);
   border-left: 0.9rem solid transparent;
 }
 
 .char-look:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--stage-dark);
   outline-offset: 2px;
 }
 
@@ -4582,10 +4635,22 @@ a.char-film { text-decoration: none; }
   object-fit: contain;
 }
 
+/* Die Schrift auf der Bühne stand einmal auf Weiß und war deshalb
+   dunkel. Seit die Kulisse ein Foto in der Farbe der Figur ist, steht
+   sie auf Farbe, und dunkle Schrift darauf ist nicht mehr zu lesen. Sie
+   ist jetzt hell: Der Platz des Textes ist die rechte Spalte, und dort
+   ist der Grund bei jedem Ton am dunkelsten.
+
+   Der Schatten ist die Rückversicherung für den Fall, dass er es einmal
+   nicht ist. Unter 1100 px rückt die Spalte unter die Figur und damit
+   über hellere Stellen der Wand; dort trägt der Schatten die Schrift.
+   Er ist weich und ohne Versatz zu den Seiten, er soll nicht zu sehen
+   sein, sondern nur die Kanten halten. */
 .char-stage-text {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+  text-shadow: 0 1px 4px rgba(10, 12, 18, 0.4);
 }
 
 /* Der Zeilenkasten des Titels darunter ist enger als seine Schrift
@@ -4604,14 +4669,17 @@ a.char-film { text-decoration: none; }
   font-style: italic;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--m-meta);
+  color: rgba(255, 255, 255, 0.72);
 }
 
+/* Die kleine Marke davor im aufgehellten Ton der Figur. Im Marvel-Rot
+   von früher wäre sie auf einer blauen oder grünen Bühne eine fremde
+   Farbe; aufgehellt bleibt sie ein Akzent und gehört trotzdem dazu. */
 .char-stage-kicker svg {
   flex: none;
   width: 0.95rem;
   height: 0.95rem;
-  color: var(--accent);
+  color: color-mix(in srgb, var(--stage-light) 45%, #ffffff);
 }
 
 .char-stage-title {
@@ -4622,7 +4690,7 @@ a.char-film { text-decoration: none; }
   line-height: 0.98;
   letter-spacing: 0.01em;
   text-transform: uppercase;
-  color: var(--m-ink);
+  color: #fff;
 }
 
 /* Der bürgerliche Name der Figur, an der Stelle, an der die Vorlage
@@ -4636,7 +4704,9 @@ a.char-film { text-decoration: none; }
   font-style: italic;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent);
+  /* Dieselbe Überlegung wie bei der Marke im Kicker: der Ton der Figur,
+     so weit aufgehellt, dass er auf ihrem eigenen dunklen Grund steht. */
+  color: color-mix(in srgb, var(--stage-light) 45%, #ffffff);
 }
 
 /* Wovon der Film handelt, an der Stelle des Zitats in der Vorlage. Vier
@@ -4647,7 +4717,7 @@ a.char-film { text-decoration: none; }
   font-size: 0.84rem;
   line-height: 1.55;
   font-style: italic;
-  color: var(--m-body);
+  color: rgba(255, 255, 255, 0.88);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
@@ -4660,11 +4730,11 @@ a.char-film { text-decoration: none; }
 .char-stage-note {
   margin: 0.7rem 0 0;
   padding-top: 0.7rem;
-  border-top: 1px solid var(--m-line);
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
   font-size: 0.72rem;
   line-height: 1.5;
   font-style: italic;
-  color: var(--m-meta);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Bei Figuren ohne Fassungen bleibt die linke Spalte leer, statt dass die
@@ -6396,11 +6466,6 @@ html.films-page .chars-masthead {
        knickt vor seiner Spalte ohnehin nach unten ab. */
     padding-bottom: 3.4rem;
   }
-
-  /* Einspaltig füllt die Figur die Bühne, und das Zeichen hat keine
-     freie Fläche mehr neben ihr, in die es rücken könnte. Also steht es
-     wieder mittig hinter ihr. */
-  .char-stage-emblem { left: 50%; }
 
   .char-stage-logo {
     position: static;

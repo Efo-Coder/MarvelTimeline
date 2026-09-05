@@ -52,14 +52,20 @@
      jede Figur dasselbe <img> wieder, ein angehängter Lauscher bliebe
      dort über alle Wechsel hinweg liegen. src steht zuletzt, sonst liefe
      das Laden schon los, bevor der Notnagel bereitsteht. */
-  function setFilmLogo(img, slug, onMissing) {
+  /* Von jedem Film liegen zwei Fassungen des Logos bereit: die dunkle
+     unter assets/logos/dark/ für hellen Grund und die helle daneben für
+     dunklen. Welche zuerst versucht wird, sagt hell; fehlt sie, tritt die
+     andere ein, denn nicht von jedem Film gibt es beide. */
+  function setFilmLogo(img, slug, onMissing, hell) {
+    const erste = hell ? 'assets/logos/' : 'assets/logos/dark/';
+    const zweite = hell ? 'assets/logos/dark/' : 'assets/logos/';
     let fallback = false;
     img.onerror = () => {
       if (fallback) { if (onMissing) onMissing(); return; }
       fallback = true;
-      img.src = 'assets/logos/' + slug + '.webp';
+      img.src = zweite + slug + '.webp';
     };
-    img.src = 'assets/logos/dark/' + slug + '.webp';
+    img.src = erste + slug + '.webp';
   }
 
   /* Suchtext und Slug folgen denselben Regeln: „Doctor Strange“ soll auch
@@ -1558,15 +1564,23 @@
 
     /* ---------- Die Kulisse ----------
 
-       Hinter allem liegt die Szene: der dunkle Grund, die große helle
-       Fläche darüber und die Splitter darauf, siehe STAGE_SCENE. Sie
-       steht bei jeder Figur in denselben Farben. Was von der Figur noch
-       durchkommt, ist das Wappen, und das hängt nicht hier, sondern in
-       der Figurenspalte: Dort steht es genau hinter der Figur, siehe
-       .char-stage-emblem. */
+       Hinter allem liegt die Szene, und sie besteht aus zwei Ebenen: das
+       Foto der Wand, dem die Farbe genommen ist, und darüber die Farbe
+       der Figur. Erst beide zusammen ergeben das Bild, siehe
+       .char-stage-photo und .char-stage-tone im Stylesheet. So steht
+       jede Figur vor derselben Wand und trotzdem in ihrem eigenen Ton.
+
+       Die gezeichnete Kulisse (STAGE_SCENE) bleibt im Dokument, aber
+       ausgeblendet: Sie ist der Stand ohne Foto und soll nicht erst
+       wieder gebaut werden müssen.
+
+       Was von der Figur noch durchkommt, ist das Wappen, und das hängt
+       nicht hier, sondern in der Figurenspalte: Dort steht es genau
+       hinter der Figur, siehe .char-stage-emblem. */
     const scene = el('div', 'char-stage-scene');
     scene.setAttribute('aria-hidden', 'true');
-    scene.innerHTML = STAGE_SCENE;
+    scene.append(el('div', 'char-stage-photo'), el('div', 'char-stage-tone'));
+    scene.insertAdjacentHTML('beforeend', STAGE_SCENE);
     figure.append(scene);
 
     const frame = el('div', 'char-figure-frame');
@@ -1681,7 +1695,10 @@
           LogoFit.toHeight(filmLogoImg);
           filmLogo.classList.add('ready');
         };
-        setFilmLogo(filmLogoImg, entry[2], () => { filmLogo.hidden = true; });
+        /* Hier die helle Fassung: Das Logo steht in der rechten Spalte der
+           Bühne, und dort ist der Grund seit dem Foto dunkel. Die dunkle
+           Fassung wäre darauf kaum noch zu sehen. */
+        setFilmLogo(filmLogoImg, entry[2], () => { filmLogo.hidden = true; }, true);
       }
 
       /* Der Absatz beschreibt die Fassung selbst und nicht den Film:
@@ -1702,22 +1719,19 @@
           + filmYear(movie) + ')'
         : countLabel(item.char.entries.length) + ' in der Timeline';
 
-      setStage(movie ? movie.slug : null);
-
       if (railNow) {
         const at = looks.findIndex(other => other[1] === look);
         railNow.textContent = at === -1 ? '–' : String(at + 1);
       }
     }
 
-    /* Stellt die Kulisse auf das Wappen um, das zu Figur und Film
-       gehört (js/emblems.js).
+    /* Stellt die Kulisse auf das Wappen der Figur um (js/emblems.js).
 
-       Aufgerufen wird das bei jedem Fassungswechsel, denn ohne eigenes
-       Wappen erbt eine Figur das des Films, und der wechselt mit der
-       Fassung. Wer eines hat, behält es: emblemFor() sieht zuerst bei
-       der Figur nach. Gemalt wird nur, wenn sich etwas ändert, sonst
-       baute jeder Klick auf dieselbe Fassung das SVG neu.
+       Aufgerufen wird das genau einmal, beim Aufbau der Tafel. Das
+       Wappen hängt an der Figur und nicht an der gezeigten Fassung:
+       Entweder trägt sie ein eigenes, oder sie erbt das ihres ersten
+       Auftritts. Beides steht für die ganze Figur fest, also steht auch
+       die Kulisse fest, während man durch die Fassungen blättert.
 
        Fehlt die Datei emblems.js, bleibt die Bühne, wie sie war: Das
        Wappen stünde dann im Rot der Marke, das im CSS voreingestellt
@@ -1729,24 +1743,38 @@
       if (name === emblemNow) return;
       emblemNow = name;
 
-      /* Nur noch der helle Ton der Figur, und der färbt allein das
-         Wappen. Die Kulisse selbst steht seit der Vorlage bei jeder
-         Figur in denselben kühlen Grautönen. */
-      figure.style.setProperty('--stage-light', emblemTint(name)[1]);
+      /* Das Farbpaar der Figur, dunkel und hell. Der helle Ton färbt die
+         Kulisse (die Farbebene über der Wand, siehe .char-stage-tone)
+         und das Wappen darauf, der dunkle die Leiste über der Bühne.
+         Eine Figur ohne eigenes Zeichen erbt die Töne ihres Films, eine
+         ganz ohne beides das Rot der Marke.
 
-      /* Erst das gezeichnete Zeichen, damit sofort etwas dasteht. */
+         Beide hängen an der Tafel und nicht an der Bühne: Die Leiste ist
+         keine Tochter der Bühne, sie liegt als Geschwister darüber
+         (siehe charStageBox weiter oben). Von der Bühne aus erbte sie
+         nichts. */
+      const [dunkel, hell] = emblemTint(name);
+      charStageBox.style.setProperty('--stage-dark', dunkel);
+      charStageBox.style.setProperty('--stage-light', hell);
+
+      /* Der Wappenplatz bleibt leer, bis die Vorlage da ist. Vorher
+         sprang für einen Augenblick der von Hand gezeichnete Umriss ein,
+         damit sofort etwas dasteht, und der blitzte bei jedem
+         Aufschlagen kurz auf, bevor die Vorlage ihn ablöste. Der Umriss
+         ist das schlechtere Bild, und ein kurzer Blitz davon ist
+         schlechter als gar keiner: Auf der Bühne steht entweder das
+         Wappen der Figur oder nichts. */
       emblem.className = 'char-stage-emblem';
       emblem.style.removeProperty('--emblem-src');
-      emblem.innerHTML = emblemSvg(name);
 
-      /* Gibt es zu dem Zeichen eine Vorlage unter assets/emblems, tritt
-         sie an seine Stelle (siehe emblemFile in js/emblems.js). Der
-         Rückruf kommt erst nach dem Laden, deshalb die Prüfung auf
-         emblemNow: Wer inzwischen weitergeblättert hat, soll nicht das
-         Zeichen von vorhin nachgereicht bekommen. */
+      /* Das Wappen liegt als Maske unter assets/emblems (siehe
+         emblemFile in js/emblems.js). Der Rückruf kommt erst nach dem
+         Laden, deshalb die Prüfung auf emblemNow: Wer inzwischen
+         weitergeblättert hat, soll nicht das Zeichen von vorhin
+         nachgereicht bekommen. Gibt es keine Datei, kommt gar kein
+         Rückruf und der Platz bleibt leer. */
       emblemFile(name, src => {
         if (emblemNow !== name) return;
-        emblem.innerHTML = '';
         emblem.style.setProperty('--emblem-src', 'url("' + src + '")');
         emblem.className = 'char-stage-emblem from-file';
       });
@@ -2079,6 +2107,13 @@
     shown = firstFile;
     shownLook = standard;
     setFront(0);
+    /* Der erste Auftritt der Figur in Handlungsreihenfolge. Aus ihm
+       kommt das Wappen, wenn die Figur kein eigenes trägt. Die Liste
+       kommt aus buildCharIndex() und steht schon in dieser Reihenfolge
+       (js/chars.js). */
+    const erstFilm = item.char.entries.length
+      ? item.char.entries[0].movie.slug : null;
+    setStage(erstFilm);
     setInfo(standard, firstFile);
     setVariants(lookVariants(standard), 1, pick => showLook(standard, pick));
 

@@ -7,43 +7,41 @@
    Grund, ein Wappen im Rücken, oben und unten ein angeschnittener
    Streifen.
 
-   Woher das Zeichen einer Figur kommt, entscheidet sich in drei
-   Schritten, siehe emblemFor():
+   Die Regel ist EMBLEM_BY_FILM, und EMBLEM_BY_CHAR steht darüber und
+   sticht sie. Im einzelnen entscheidet emblemFor() in drei Schritten:
 
-     1. EMBLEM_BY_CHAR - wer ein eigenes Zeichen trägt, bekommt es.
-        Tony Stark den Helm, Steve Rogers das Schild, Peter Parker die
-        Spinne.
+     1. EMBLEM_BY_CHAR - wer ein eigenes Zeichen trägt, bekommt es und
+        behält es überall. Tony Stark den Helm, Steve Rogers das Schild,
+        Peter Parker die Spinne.
 
-     2. EMBLEM_BY_FILM - alle anderen erben das Zeichen des Films, aus
-        dem ihr Bild stammt. Aamir Khan ist kein Held und hat kein
-        Wappen, aber er steht in Ms. Marvel, also steht der Blitz seiner
+     2. EMBLEM_BY_FILM - alle anderen erben das Zeichen ihres ersten
+        Auftritts. Aamir Khan ist kein Held und hat kein Wappen, aber er
+        kommt zuerst in Ms. Marvel vor, also steht der Blitz seiner
         Schwester hinter ihm.
 
      3. 'marvel' - bleibt beides leer, steht das Zeichen des Hauses da.
 
-   Das Zeichen wechselt mit der Fassung: Wer in einem anderen Film ein
-   anderes Bild hat, steht dort vor dem Wappen jenes Films, aber nur,
-   solange die Figur nicht selbst eines mitbringt. Tony Stark bleibt
-   unter jedem Logo Iron Man.
+   Maßgeblich ist der erste Auftritt in Handlungsreihenfolge und nicht
+   der Film, aus dem das gezeigte Bild stammt. Das Zeichen steht damit
+   für die ganze Figur fest: Wer durch die Fassungen blättert, sieht die
+   Kulisse nicht mehr die Farbe wechseln. Wem dabei ein Wappen zufällt,
+   das nicht zu ihm passt, den trägt man in EMBLEM_BY_CHAR ein.
 
-   Gezeichnet ist jedes Zeichen in einer Fläche von 200 auf 200 als
-   Umriss, nicht als Bild: Es steht auf der Bühne mehrere hundert Pixel
-   groß und in wechselnden Farben da, und beides kann eine Datei nicht.
-   Klasse "f" füllt, Klasse "s" zieht eine Linie, Klasse "c" schneidet
-   ein Loch in die Fläche darunter. Alle drei nehmen ihre Farbe von der
-   Bühne. */
+   Auf die Bühne kommt jedes Zeichen als Vorlage aus assets/emblems,
+   siehe emblemFile() weiter unten. Die Umrisse in EMBLEM_ART werden
+   nicht mehr gezeichnet: Sie sind der erste Stand von Hand, und sie
+   stehen hier noch als Verzeichnis der Wappen. Woran EMBLEM_ART hängt,
+   ist emblemFor() oben, das nur Namen aus dieser Liste durchlässt, und
+   tools/emblems/build-emblems.py, das die Schlüssel daraus liest, damit
+   die Vorlagen richtig heißen.
+
+   Ein Zeichen ohne Vorlage steht deshalb nicht mehr als Umriss da,
+   sondern gar nicht. Wer eines aufnimmt, legt also auch die Datei dazu
+   an. */
 
 const EMBLEM_ART = {
 
   /* ---------- Die Zeichen ---------- */
-
-  /* Der Kreis mit dem A, dessen rechter Balken oben als Pfeil aus ihm
-     herausschießt. Der Kreis hat deshalb dort eine Lücke. */
-  'avengers': '<path class="s" stroke-width="11" fill="none" d="M142 27A84 84 0 1 0 183 85"/>'
-    + '<path class="f" fill-rule="evenodd" d="M100 34 156 168h-28l-8-24H80l-8 24H44Z'
-    + 'M88 120h24l-12-36Z"/>'
-    + '<path class="s" stroke-width="15" d="M126 78 178 20"/>'
-    + '<path class="f" d="M198 2 152 10 188 42Z"/>',
 
   /* Die Helmmaske: die kantige Haube mit den beiden Augenschlitzen und
      dem waagerechten Mund. */
@@ -58,6 +56,12 @@ const EMBLEM_ART = {
     + '<circle class="s" cx="100" cy="100" r="37" stroke-width="15"/>'
     + '<path class="f" d="M100 58 110 86.2 139.9 87 116.2 105.3 124.7 134 100 117'
     + ' 75.3 134 83.8 105.3 60.1 87 90 86.2Z"/>',
+
+  /* John Walkers Stern, halb ausgefüllt: dasselbe Zeichen wie auf Steve
+     Rogers' Schild, aber nur zur Hälfte. Der Mann, den die Regierung an
+     seine Stelle setzt, füllt sie nie ganz aus. */
+  'us-agent': '<path class="s" stroke-width="12" fill="none" d="M100 12 119.8 72.8 183.7 72.8 132 110.4 151.7 171.2 100 133.6 48.3 171.2 68 110.4 16.3 72.8 80.2 72.8Z"/>'
+    + '<path class="f" d="M100 133.6 48.3 171.2 68 110.4 16.3 72.8 80.2 72.8 100 12Z"/>',
 
   /* Mjölnir von vorn: der breite Kopf mit den abgeschrägten Ecken, der
      lange Stiel darunter, die Schlaufe am Ende. */
@@ -100,6 +104,14 @@ const EMBLEM_ART = {
     + 'M86 74 52 54 40 22M84 90 44 90 24 66M86 106 52 124 42 156'
     + 'M114 74 148 54 160 22M116 90 156 90 176 66M114 106 148 124 158 156"/>',
 
+  /* Ava Starrs Maske mit den kantigen Augen, und daneben dieselbe Maske
+     noch einmal als bloßer Umriss. Zwei Fassungen derselben Figur, weil
+     sie nie ganz an einem Ort ist. */
+  'ghost': '<g transform="translate(-26 0)">'
+    + '<path class="s" stroke-width="9" fill="none" d="M100 12C144 12 164 44 164 80C164 120 138 160 100 188C62 160 36 120 36 80C36 44 56 12 100 12Z"/></g>'
+    + '<path class="f" d="M100 12C144 12 164 44 164 80C164 120 138 160 100 188C62 160 36 120 36 80C36 44 56 12 100 12Z"/>'
+    + '<path class="c" d="M58 62 96 74v20L58 84Zm84 0L104 74v20l38-10Z"/>',
+
   /* Das Auge von Agamotto: die Mandel mit dem Stein und die vier
      Strahlen des Siegels. */
   'doctor-strange': '<path class="s" stroke-width="11" fill="none" d="M18 100'
@@ -127,6 +139,32 @@ const EMBLEM_ART = {
     + 'M46 58C28 74 22 90 22 100M154 58c18 16 24 32 24 42M46 142c-18-16-24-32-24-42'
     + 'M154 142c18-16 24-32 24-42"/>',
 
+  /* Yelenas Ampulle mit dem roten Gas, dem Gegenmittel, das die Witwen
+     aus der Fremdsteuerung holt. Nicht die Sanduhr: Die trägt Natasha,
+     und Yelena ist über den ganzen Film hinweg die mit dem Fläschchen. */
+  'yelena': '<path class="s" stroke-width="8" stroke-linecap="round" fill="none"'
+    + ' d="M100 24C100 16 90 14 90 4M72 30C72 24 64 22 64 12M128 30c0-6 8-8 8-18"/>'
+    + '<path class="f" d="M84 36h32v16H84Z"/>'
+    + '<path class="s" stroke-width="9" fill="none" d="M80 52v104a20 20 0 0 0 40 0V52"/>'
+    + '<path class="f" d="M80 118h40v38a20 20 0 0 1-40 0Z"/>',
+
+  /* Alexeis Zeichen: die volle Scheibe, aus der der Sowjetstern
+     ausgespart ist. Umgekehrt herum gezeichnet, weil ein Stern im Ring
+     schon hinter Bucky steht. */
+  'red-guardian': '<circle class="f" cx="100" cy="100" r="88"/>'
+    + '<path class="c" d="M100 36 114.4 80.2 160.9 80.2 123.3 107.6 137.6 151.8 100 124.4 62.4 151.8 76.7 107.6 39.1 80.2 85.6 80.2Z"/>',
+
+  /* Zwei gekreuzte Schwerter für Antonia Dreykov, die jede Bewegung
+     nachmacht, die sie einmal gesehen hat. */
+  'taskmaster': '<path class="f" d="M28.5 166.4 35.6 173.5 66 143.1 58.9 136Z'
+    + 'M41.1 124.2 77.8 160.9 86.9 151.8 50.2 115.1Z'
+    + 'M62.9 127.8 74.2 139.1 170.1 40.4 161.6 31.9ZM161.6 31.9 170.1 40.4 178 24Z'
+    + 'M25.7 163.6a9 9 0 1 0 .1 0Z"/>'
+    + '<path class="f" d="M164.4 173.5 171.5 166.4 141.1 136 134 143.1Z'
+    + 'M122.2 160.9 158.9 124.2 149.8 115.1 113.1 151.8Z'
+    + 'M125.8 139.1 137.1 127.8 38.4 31.9 29.9 40.4ZM29.9 40.4 38.4 31.9 22 24Z'
+    + 'M161.6 176.3a9 9 0 1 0 .1 0Z"/>',
+
   /* Die Zielscheibe mit dem Pfeil quer hindurch. */
   'hawkeye': '<circle class="s" cx="100" cy="100" r="86" stroke-width="11"/>'
     + '<circle class="s" cx="100" cy="100" r="54" stroke-width="11"/>'
@@ -152,6 +190,19 @@ const EMBLEM_ART = {
     + '<path class="c" d="M40 108h32v10H40Zm88 0h32v10h-32Z"/>',
 
   /* Der rote Stern des Winter Soldier zwischen den Fugen der Armplatten. */
+  /* Ultrons Kopf: die kantige Platte, die schmalen schrägen Augen und
+     das Gitter vor dem Mund. Der Umriss läuft nach unten spitz zu, damit
+     er sich von der runderen Helmmaske Iron Mans unterscheidet. */
+  'ultron': '<path class="f" d="M100 14 152 44 160 92 142 128 100 186 58 128 40 92 48 44Z"/>'
+    + '<path class="c" d="M56 74 92 88v14L56 90Zm88 0L108 88v14l36-12Z"/>'
+    + '<path class="c" d="M78 122h7v20h-7Zm12 0h7v20h-7Zm12 0h7v20h-7Zm12 0h7v20h-7Z"/>',
+
+  /* Quicksilvers Zeichen: zwei ineinander laufende Winkel, wie die
+     Striche, die hinter einem Läufer stehen bleiben. Kein Blitz, den
+     tragen auf dieser Seite schon Ms. Marvel und die Thunderbolts. */
+  'quicksilver': '<path class="f" d="M104 22 186 100 104 178H74L156 100 74 22Z"/>'
+    + '<path class="f" d="M44 22 126 100 44 178H14L96 100 14 22Z"/>',
+
   'winter-soldier': '<circle class="s" cx="100" cy="100" r="88" stroke-width="9"/>'
     + '<path class="f" d="M100 30 120 84 178 84 131 117 149 172 100 138 51 172 69 117'
     + ' 22 84 80 84Z"/>'
@@ -161,13 +212,6 @@ const EMBLEM_ART = {
   'falcon': '<path class="f" d="M100 42c7 0 12 5 12 12v92l-12 20-12-20V54c0-7 5-12 12-12Z"/>'
     + '<path class="f" d="M84 62 6 38l20 28-14 4 28 22-14 6 30 18-8 8 36 14Z"/>'
     + '<path class="f" d="M116 62 194 38l-20 28 14 4-28 22 14 6-30 18 8 8-36 14Z"/>',
-
-  /* Die Zehn Ringe: fünf Reifen übereinander, wie sie am Arm sitzen. */
-  'shang-chi': '<ellipse class="s" cx="100" cy="34" rx="60" ry="17" stroke-width="10"/>'
-    + '<ellipse class="s" cx="100" cy="67" rx="66" ry="18" stroke-width="10"/>'
-    + '<ellipse class="s" cx="100" cy="100" rx="70" ry="19" stroke-width="10"/>'
-    + '<ellipse class="s" cx="100" cy="133" rx="66" ry="18" stroke-width="10"/>'
-    + '<ellipse class="s" cx="100" cy="166" rx="60" ry="17" stroke-width="10"/>',
 
   /* Das Zeichen der Eternals: der Kreis der Ewigkeit mit den Strahlen
      des kosmischen Ursprungs. */
@@ -213,6 +257,50 @@ const EMBLEM_ART = {
     + '<path class="f" d="M100 2l14 148-14 40-14-40Z"/>'
     + '<path class="f" d="M168 8l-14 142 16 34 14-34Z"/>',
 
+  /* Reeds Zeichen: das Band, das durch sich selbst zurückläuft und
+     nirgends aufhört. Kein Knoten und keine gedehnte Vier, beides wurde
+     beim Zeichnen zum Hufeisen. */
+  'mister-fantastic': '<path class="s" stroke-width="21" fill="none" d="'
+    + 'M100 100C74 66 34 68 34 100C34 132 74 134 100 100'
+    + 'C126 66 166 68 166 100C166 132 126 134 100 100Z"/>',
+
+
+  /* Sues Kraftfeld: zwei Ringe aus einzelnen Bögen, mit Lücken
+     dazwischen, dazu der Kern. Das Feld ist da und doch nicht ganz zu
+     sehen. */
+  'invisible-woman': 
+    + 'M13.3 84.7A88 88 0 0 1 84.7 13.3M115.3 13.3A88 88 0 0 1 186.7 84.7'
+    + 'M132.1 145.9A56 56 0 0 1 67.9 145.9M54.1 132.1A56 56 0 0 1 54.1 67.9'
+    + 'M67.9 54.1A56 56 0 0 1 132.1 54.1M145.9 67.9A56 56 0 0 1 145.9 132.1"/>'
+    + '<circle class="f" cx="100" cy="100" r="20"/>',
+
+
+  /* Johnnys Flamme, mit der zweiten Zunge im Inneren. Nicht die Sonne
+     Sentrys und nicht der brennende Schädel des Ghost Rider, sondern das
+     Feuer allein. */
+  'human-torch': '<path class="f" d="M100 4C112 46 148 60 148 106'
+    + 'C148 154 126 190 100 196C74 190 52 154 52 106C52 60 88 46 100 4Z"/>'
+    + '<path class="c" d="M100 76C108 100 122 110 122 134C122 156 112 174 100 178'
+    + 'C88 174 78 156 78 134C78 110 92 100 100 76Z"/>'
+    + '<path class="f" d="M100 118C104 130 112 136 112 148C112 160 106 170 100 172'
+    + 'C94 170 88 160 88 148C88 136 96 130 100 118Z"/>',
+
+
+  /* Bens Steinpanzer: der Brocken mit den Platten darin. Keine Faust,
+     die tragen auf dieser Seite schon Hulk und She-Hulk.
+
+     Die Risse sind gefüllte Bänder und keine Striche. Klasse c bekommt
+     im Stylesheet nur eine Füllung und keine Strichfarbe, ein
+     gezeichneter Riss bliebe also stehen. */
+  'the-thing': '<path class="f" d="M62 14 146 26 186 78 168 154 96 190 30 152 14 74Z"/>'
+    + '<path class="c" d="M86.4 65 141 81.6 143.6 73 89 56.4ZM134.1 71 127 129.9 135.9 131 143 72.1Z'
+    + 'M136.1 121.1 79.1 125.9 79.9 134.9 136.9 130.1ZM90 132.1 68.1 86 60 89.9 81.9 136Z'
+    + 'M66.5 98.3 98.3 61.5 91.5 55.7 59.7 92.5ZM98 64 76 20 68 24 90 68Z'
+    + 'M134.9 81.5 179.5 69.1 177.1 60.5 132.5 72.9Z'
+    + 'M125.7 126.5 158.5 154.3 164.3 147.5 131.5 119.7Z'
+    + 'M82.5 123.8 55.8 167.5 63.5 172.2 90.2 128.5Z'
+    + 'M71.3 88.4 20.4 78.7 18.7 87.6 69.6 97.3Z"/>',
+
   /* Die Vier der Fantastic Four im Ring. */
   'fantastic-four': '<circle class="s" cx="100" cy="100" r="88" stroke-width="12"/>'
     + '<path class="f" fill-rule="evenodd" d="M112 28h30v78h22v30h-22v34h-30v-34H42v-28Z'
@@ -239,15 +327,21 @@ const EMBLEM_ART = {
     + '-10 26-10-26-11 24-9-26-17 28 5-46c-9-9-14-21-14-36 0-30 24-52 56-52Z"/>'
     + '<path class="c" d="M52 112 94 122l-3 26-38-10Zm96 0-42 10 3 26 38-10Z"/>',
 
-  /* Der doppelte Blitz der Thunderbolts im Kreis. */
-  'thunderbolts': '<circle class="s" cx="100" cy="100" r="88" stroke-width="11"/>'
-    + '<path class="f" d="M104 22 46 106h30l-8 72 58-84H96Z"/>'
-    + '<path class="f" d="M154 44 116 100h20l-6 48 38-56h-20Z"/>',
-
-  /* Das Zeichen der Dora Milaje: der Vibranium-Speer im Ring. */
-  'wakanda': '<circle class="s" cx="100" cy="100" r="86" stroke-width="10"/>'
-    + '<path class="f" d="M100 14 132 70 100 132 68 70Z"/>'
-    + '<path class="f" d="M93 122h14v62H93Z"/>',
+  /* Sentrys Sonne: der volle Kern und zehn Flammen, die sich alle in
+     dieselbe Richtung legen. Flammen statt gerader Zacken sind Absicht.
+     Ein gleichmäßiger Stern stünde zu nah bei Captain Marvel, ein dünner
+     Ring zu nah bei den Eternals. */
+  'sentry': '<circle class="f" cx="100" cy="100" r="40"/>'
+    + '<path class="f" d="M92.1 62.8Q109.6 26.9 136 11Q122.1 33.9 107.9 62.8Z'
+    + 'M115.5 65.3Q150.7 46.5 181.4 49.1Q156.7 59.5 128.2 74.6Z'
+    + 'M132.9 81Q172.5 86.6 195.8 106.7Q169.7 100.6 137.8 96Z'
+    + 'M137.8 104Q166.5 131.7 173.5 161.7Q156 141.4 132.9 119Z'
+    + 'M128.2 125.4Q135.2 164.8 123.2 193.1Q121 166.5 115.5 134.7Z'
+    + 'M107.9 137.2Q90.4 173.1 64 189Q77.9 166.1 92.1 137.2Z'
+    + 'M84.5 134.7Q49.3 153.5 18.6 150.9Q43.3 140.5 71.8 125.4Z'
+    + 'M67.1 119Q27.5 113.4 4.2 93.3Q30.3 99.4 62.2 104Z'
+    + 'M62.2 96Q33.5 68.3 26.5 38.3Q44 58.6 67.1 81Z'
+    + 'M71.8 74.6Q64.8 35.2 76.8 6.9Q79 33.5 84.5 65.3Z"/>',
 
   /* Agathas Zeichen: die drei Monde der Hexen, zunehmend, voll und
      abnehmend. */
@@ -277,6 +371,20 @@ const EMBLEM_ART = {
     + '<circle class="s" cx="100" cy="100" r="44" stroke-width="10"/>'
     + '<path class="s" stroke-width="9" d="M100 14v42M100 144v42M14 100h42M144 100h42"/>',
 
+  /* Der Totenkopf mit den sechs Armen. Abgeschlagen wachsen zwei nach,
+     deshalb greifen sie unter dem Schädel hervor und krümmen sich nach
+     außen. */
+  'hydra': '<path class="f" d="M84.7 89.3 78.5 88.8 72.4 88.8 66.5 89.3 60.8 90.1 55.3 91.5 50 93.2 45 95.3 40.3 97.9 35.9 100.8 32 104 28.4 107.7 25.3 111.6 22.7 115.8 20.6 120.2 19.1 124.9 18.1 129.8 17.6 134.8 17.8 140 18.5 145.3 19.7 150.7 21.6 156.3 24 162 24 162 22.7 156 22.1 150.3 22 145 22.5 140.1 23.5 135.7 24.9 131.6 26.8 128 28.9 124.8 31.4 121.9 34.1 119.5 37.1 117.3 40.3 115.6 43.6 114.1 47.2 112.9 50.9 112.1 54.7 111.5 58.7 111.3 62.7 111.3 66.8 111.7 71 112.4 75.2 113.4 79.3 114.7Z'
+    + 'M120.7 114.7 124.8 113.4 129 112.4 133.2 111.7 137.3 111.3 141.3 111.3 145.3 111.5 149.1 112.1 152.8 112.9 156.4 114.1 159.7 115.6 162.9 117.3 165.9 119.5 168.6 121.9 171.1 124.8 173.2 128 175.1 131.6 176.5 135.7 177.5 140.1 178 145 177.9 150.3 177.3 156 176 162 176 162 178.4 156.3 180.3 150.7 181.5 145.3 182.2 140 182.4 134.8 181.9 129.8 180.9 124.9 179.4 120.2 177.3 115.8 174.7 111.6 171.6 107.7 168 104 164.1 100.8 159.7 97.9 155 95.3 150 93.2 144.7 91.5 139.2 90.1 133.5 89.3 127.6 88.8 121.5 88.8 115.3 89.3Z'
+    + 'M78.6 97.3 74.2 101.2 70 105.3 65.9 109.6 62.1 114 58.5 118.5 55.2 123.2 52.2 127.9 49.4 132.8 47 137.6 45 142.5 43.3 147.4 42 152.3 41.2 157.1 40.8 161.9 40.9 166.5 41.5 170.9 42.6 175.2 44.3 179.2 46.5 182.9 49.1 186.3 52.3 189.3 56 192 56 192 53.2 188.5 51.1 184.9 49.6 181.3 48.8 177.7 48.4 174.1 48.6 170.5 49.1 166.9 50.1 163.3 51.5 159.7 53.2 156.2 55.2 152.6 57.6 149 60.2 145.5 63.1 142.1 66.3 138.7 69.7 135.4 73.3 132.2 77.1 129.1 81 126.2 85 123.5 89.2 121 93.4 118.7Z'
+    + 'M106.6 118.7 110.8 121 115 123.5 119 126.2 122.9 129.1 126.7 132.2 130.3 135.4 133.7 138.7 136.9 142.1 139.8 145.5 142.4 149 144.8 152.6 146.8 156.2 148.5 159.7 149.9 163.3 150.9 166.9 151.4 170.5 151.6 174.1 151.2 177.7 150.4 181.3 148.9 184.9 146.8 188.5 144 192 144 192 147.7 189.3 150.9 186.3 153.5 182.9 155.7 179.2 157.4 175.2 158.5 170.9 159.1 166.5 159.2 161.9 158.8 157.1 158 152.3 156.7 147.4 155 142.5 153 137.6 150.6 132.8 147.8 127.9 144.8 123.2 141.5 118.5 137.9 114 134.1 109.6 130 105.3 125.8 101.2 121.4 97.3Z'
+    + 'M80.1 106.8 78.7 111.6 77.3 116.4 76 121.3 74.8 126.2 73.6 131.1 72.6 136 71.8 140.9 71 145.8 70.5 150.6 70.2 155.3 70.1 159.9 70.2 164.4 70.6 168.7 71.2 172.9 72.2 176.9 73.5 180.6 75.1 184.1 77.1 187.2 79.3 190 81.9 192.4 84.8 194.4 88 196 88 196 85.6 193.5 83.7 190.8 82.3 188 81.3 185.1 80.7 182.1 80.4 179 80.4 175.8 80.7 172.4 81.2 168.9 82 165.3 82.9 161.6 84.1 157.8 85.5 153.9 87.1 149.9 88.8 145.9 90.6 141.8 92.6 137.7 94.7 133.5 96.9 129.4 99.2 125.3 101.5 121.2 103.9 117.2Z'
+    + 'M96.1 117.2 98.5 121.2 100.8 125.3 103.1 129.4 105.3 133.5 107.4 137.7 109.4 141.8 111.2 145.9 112.9 149.9 114.5 153.9 115.9 157.8 117.1 161.6 118 165.3 118.8 168.9 119.3 172.4 119.6 175.8 119.6 179 119.3 182.1 118.7 185.1 117.7 188 116.3 190.8 114.4 193.5 112 196 112 196 115.2 194.4 118.1 192.4 120.7 190 122.9 187.2 124.9 184.1 126.5 180.6 127.8 176.9 128.8 172.9 129.4 168.7 129.8 164.4 129.9 159.9 129.8 155.3 129.5 150.6 129 145.8 128.2 140.9 127.4 136 126.4 131.1 125.2 126.2 124 121.3 122.7 116.4 121.3 111.6 119.9 106.8Z"/>'
+    + '<path class="f" d="M100 10C128 10 143 29 143 54C143 71 135 84 122 92'
+    + 'V108H78V92C65 84 57 71 57 54C57 29 72 10 100 10Z"/>'
+    + '<path class="c" d="M70 48 95 58V76L70 66Zm60 0L105 58v18l25-10Z"/>'
+    + '<path class="c" d="M100 80 110 98H90Z"/>',
+
   /* Der Skrull-Kopf mit den spitzen Ohren und dem gefurchten Kinn. */
   'skrull': '<path class="f" d="M100 20c30 0 50 20 50 48 0 8-2 16-6 22 14-6 26-4 36 6'
     + '-14 2-24 10-30 22-10 26-28 46-50 56-22-10-40-30-50-56-6-12-16-20-30-22'
@@ -284,6 +392,25 @@ const EMBLEM_ART = {
     + '<path class="c" d="M72 62c10-6 20-2 22 6s-6 16-16 18-18-2-20-10 4-12 14-14Z'
     + 'M128 62c-10-6-20-2-22 6s6 16 16 18 18-2 20-10-4-12-14-14Z"/>'
     + '<path class="c" d="M92 148h16l-2 24h-12Z"/>',
+
+  /* Der Infinity-Handschuh im Ring: die vier Finger, der Daumen rechts
+     daneben, und die sechs Steine als Löcher darin. Nicht Thanos selbst,
+     sondern das Ding, um das sich bei ihm alles dreht - so wie beim
+     Captain das Schild steht und nicht der Mann. */
+  'thanos': '<circle class="s" cx="100" cy="100" r="88" stroke-width="12"/>'
+    + '<rect class="f" x="56" y="50" width="16" height="42" rx="7"/>'
+    + '<rect class="f" x="73" y="46" width="16" height="46" rx="7"/>'
+    + '<rect class="f" x="90" y="46" width="16" height="46" rx="7"/>'
+    + '<rect class="f" x="107" y="50" width="16" height="42" rx="7"/>'
+    + '<rect class="f" x="127" y="80" width="21" height="36" rx="10"/>'
+    + '<rect class="f" x="54" y="86" width="86" height="66" rx="14"/>'
+    + '<rect class="f" x="68" y="148" width="58" height="16" rx="5"/>'
+    + '<circle class="c" cx="64" cy="80" r="5.5"/>'
+    + '<circle class="c" cx="81" cy="76" r="5.5"/>'
+    + '<circle class="c" cx="98" cy="76" r="5.5"/>'
+    + '<circle class="c" cx="115" cy="80" r="5.5"/>'
+    + '<circle class="c" cx="137.5" cy="96" r="5.5"/>'
+    + '<circle class="c" cx="94" cy="118" r="12"/>',
 
   /* Das Haus selbst, wenn zu einer Figur nichts Näheres bekannt ist:
      der Block mit dem M, wie ihn die Marke führt. */
@@ -293,8 +420,12 @@ const EMBLEM_ART = {
 
 /* ---------- Wer welches Zeichen trägt ----------
 
-   Nur Figuren mit eigenem Wappen stehen hier. Wer fehlt, erbt das des
-   Films, siehe EMBLEM_BY_FILM.
+   Die Ausnahmen von EMBLEM_BY_FILM. Zwei Sorten stehen hier: Figuren
+   mit einem Wappen, das nur ihnen gehört, und Figuren, deren erster
+   Auftritt sie sonst unter ein falsches Wappen stellte. Ronan kommt
+   zuerst in Captain Marvel vor und gehört trotzdem zu den Guardians.
+
+   Wer fehlt, erbt das Zeichen seines ersten Auftritts.
 
    Der Schlüssel ist der Charakter-Slug aus charSlug() (js/chars.js). */
 const EMBLEM_BY_CHAR = {
@@ -306,13 +437,14 @@ const EMBLEM_BY_CHAR = {
   'ivan-vanko-whiplash': 'iron-man',
   'aldrich-killian': 'iron-man',
   'justin-hammer': 'iron-man',
+  'howard-stark': 'iron-man',
   'riri-williams': 'ironheart',
 
   /* Captain America */
   'steve-rogers': 'captain-america',
   'sam-wilson': 'falcon',
   'bucky-barnes': 'winter-soldier',
-  'john-walker': 'captain-america',
+  'john-walker': 'us-agent',
   'isaiah-bradley': 'captain-america',
   'peggy-carter': 'captain-america',
   'sharon-carter': 'shield',
@@ -330,6 +462,7 @@ const EMBLEM_BY_CHAR = {
   'sif': 'thor',
   'korg': 'thor',
   'gorr': 'thor',
+  'eitri': 'thor',
 
   /* Hulk */
   'bruce-banner': 'hulk',
@@ -345,16 +478,21 @@ const EMBLEM_BY_CHAR = {
   'may-parker': 'spider-man',
   'michelle-jones-watson': 'spider-man',
   'ned-leeds': 'spider-man',
+  'flash-thompson': 'spider-man',
 
   /* Black Panther und Wakanda */
   't-challa': 'black-panther',
   'shuri': 'black-panther',
-  'okoye': 'wakanda',
-  'nakia': 'wakanda',
-  'm-baku': 'wakanda',
+  'okoye': 'black-panther',
+  'nakia': 'black-panther',
+  'm-baku': 'black-panther',
   'koenigin-ramonda': 'black-panther',
   'erik-killmonger': 'black-panther',
-  'ayo': 'wakanda',
+  'ayo': 'black-panther',
+  /* Beide treten zuerst in Civil War auf und trügen sonst Steve Rogers'
+     Schild, obwohl sie nach Wakanda gehören. */
+  't-chaka': 'black-panther',
+  'everett-ross': 'black-panther',
 
   /* Ant-Man */
   'scott-lang': 'ant-man',
@@ -364,7 +502,12 @@ const EMBLEM_BY_CHAR = {
   'cassie-lang': 'ant-man',
   'luis': 'ant-man',
   'darren-cross': 'ant-man',
-  'ava-starr': 'ant-man',
+  'ava-starr': 'ghost',
+  'dave': 'ant-man',
+  'kurt-goreshter': 'ant-man',
+  'jim-paxton': 'ant-man',
+  'maggie-lang': 'ant-man',
+  'jimmy-woo': 'ant-man',
 
   /* Doctor Strange */
   'stephen-strange': 'doctor-strange',
@@ -387,40 +530,94 @@ const EMBLEM_BY_CHAR = {
   'kraglin': 'guardians',
   'adam-warlock': 'guardians',
   'cosmo': 'guardians',
+  /* Beide kommen erst über Umwege zu den Guardians: Ronan tritt zuerst
+     in Captain Marvel auf, der Collector im Abspann von Thor 2. Ohne
+     diese Zeilen stünden sie vor dem Stern von Carol Danvers und vor
+     Thors Hammer. */
+  'ronan': 'guardians',
+  'the-collector': 'guardians',
+  'gamora-2014': 'guardians',
+  'nebula-2014': 'guardians',
 
   /* Captain Marvel */
   'carol-danvers': 'captain-marvel',
   'monica-rambeau': 'captain-marvel',
   'maria-rambeau': 'captain-marvel',
   'goose': 'captain-marvel',
+  'korath-der-verfolger': 'captain-marvel',
   'kamala-khan-ms-marvel': 'ms-marvel',
 
   /* S.H.I.E.L.D. */
   'nick-fury': 'shield',
   'maria-hill': 'shield',
   'phil-coulson': 'shield',
-  'alexander-pierce': 'shield',
+  'valentina-allegra-de-fontaine': 'shield',
+  'mel': 'shield',
   'talos': 'skrull',
   'gravik': 'skrull',
 
+  /* HYDRA
+
+     Nur, wer dazugehört. Bucky Barnes steht nicht hier: Er war ihr
+     Werkzeug und nicht ihr Mann, und sein Zeichen bleibt das des Winter
+     Soldier. */
+  'johann-schmidt-red-skull': 'hydra',
+  'arnim-zola': 'hydra',
+  'wolfgang-von-strucker': 'hydra',
+  'alexander-pierce': 'hydra',
+  'crossbones': 'hydra',
+
   /* Die übrigen Avengers */
   'natasha-romanoff': 'black-widow',
-  'yelena-belova': 'black-widow',
-  'taskmaster': 'black-widow',
-  'alexei': 'black-widow',
+  'yelena-belova': 'yelena',
+  'taskmaster': 'taskmaster',
+  'alexei': 'red-guardian',
   'melina-vostokoff': 'black-widow',
   'clint-barton': 'hawkeye',
   'kate-bishop': 'hawkeye',
+  'laura-barton': 'hawkeye',
+  'cooper-barton': 'hawkeye',
+  'lila-barton': 'hawkeye',
+  'nathaniel-barton': 'hawkeye',
   'wanda-maximoff': 'scarlet-witch',
   'agatha-harkness': 'agatha',
+  /* Billy tritt zuerst in WandaVision auf und erbte darüber Wandas
+     Zeichen. Er gehört aber zu Agatha, bei der er den ganzen Weg über
+     die Straße geht. */
+  'billy-maximoff-wiccan': 'agatha',
   'vision': 'vision',
-  'ultron': 'avengers',
-  'pietro-maximoff': 'avengers',
-  'thanos': 'avengers',
+  'white-vision': 'vision',
+  'ultron': 'ultron',
+  'pietro-maximoff': 'quicksilver',
+
+  /* Thanos und die Seinen
+
+     Der Handschuh steht hinter Thanos selbst, hinter dem Schwarzen Orden
+     als seinen Kindern und hinter dem Anderen, der in Avengers noch für
+     ihn spricht. Beide Zeitlinien tragen dasselbe Zeichen: Der Thanos von
+     2014 ist eine eigene Figur, aber derselbe Mann mit demselben Ziel.
+
+     Nicht dabei sind seine Töchter. Gamora und Nebula sind seine Kinder
+     wie die anderen, aber sie laufen über und gehören seit ihrem ersten
+     Auftritt zu den Guardians; ihr Zeichen bleibt deren Zeichen. Ebenso
+     Ronan, der als Kree mit ihm paktiert und ihn verrät, und sein Bruder
+     Eros, der bei den Eternals steht. */
+  'thanos': 'thanos',
+  'thanos-2014': 'thanos',
+  'ebony-maw': 'thanos',
+  'ebony-maw-2014': 'thanos',
+  'corvus-glaive': 'thanos',
+  'corvus-glaive-2014': 'thanos',
+  'proxima-midnight': 'thanos',
+  'proxima-midnight-2014': 'thanos',
+  'cull-obsidian': 'thanos',
+  'cull-obsidian-2014': 'thanos',
+  'der-andere': 'thanos',
 
   /* Die Straße von New York */
   'matt-murdock-daredevil': 'daredevil',
   'wilson-fisk-kingpin': 'daredevil',
+  'karen-page': 'daredevil',
   'frank-castle-punisher': 'punisher',
   'marc-spector-steven-grant-moon-knight': 'moon-knight',
   'maya-lopez-echo': 'echo',
@@ -429,22 +626,33 @@ const EMBLEM_BY_CHAR = {
   'wade-wilson-deadpool': 'deadpool',
   'logan-wolverine': 'wolverine',
   'charles-xavier-professor-x': 'x-men',
-  'shang-chi': 'shang-chi',
-  'katy': 'shang-chi',
+  'scott-summers-cyclops': 'x-men',
+  'erik-lehnsherr-magneto': 'x-men',
+  'raven-darkhoelme-mystique': 'x-men',
+  'kurt-wagner-nightcrawler': 'x-men',
+  /* Jean Grey steht beim Netz und nicht beim X: Sie kommt in Brand New
+     Day vor und bei den X-Men, und gezeigt wird die Fassung aus dem
+     Spider-Man-Film. */
+  'jean-grey': 'spider-man',
+  'shang-chi': 'ten-rings',
+  'katy': 'ten-rings',
   'wenwu-mandarin': 'ten-rings',
   'xialing': 'ten-rings',
 
   /* Fantastic Four */
-  'reed-richards-mister-fantastic': 'fantastic-four',
-  'sue-storm-invisible-woman': 'fantastic-four',
-  'johnny-storm-human-torch': 'fantastic-four',
-  'ben-grimm-the-thing': 'fantastic-four',
+  'reed-richards-mister-fantastic': 'mister-fantastic',
+  'sue-storm-invisible-woman': 'invisible-woman',
+  'johnny-storm-human-torch': 'human-torch',
+  'ben-grimm-the-thing': 'the-thing',
+  /* Der Reed aus Erde-838 ist derselbe Mann und trägt dasselbe Zeichen.
+     Die Vier bleibt bei Doom, der gegen die vier antritt und keinem von
+     ihnen gehört. */
+  'reed-richards-838': 'mister-fantastic',
   'doctor-doom': 'fantastic-four',
 
   /* Der Rest */
   'simon-williams': 'wonder-man',
-  'bob-sentry': 'thunderbolts',
-  'valentina-allegra-de-fontaine': 'thunderbolts',
+  'bob-sentry': 'sentry',
   'trevor-slattery': 'ten-rings',
   'joaquin-torres-falcon': 'falcon',
   'g-iah': 'skrull',
@@ -462,7 +670,6 @@ const EMBLEM_BY_CHAR = {
      das Zeichen dahinter ist trotzdem die Vier. */
   'peter-parker-maguire': 'spider-man',
   'peter-parker-garfield': 'spider-man',
-  'reed-richards-838': 'fantastic-four',
   'peggy-carter-838': 'captain-america',
   'maria-rambeau-838': 'captain-marvel',
   'karl-mordo-838': 'doctor-strange',
@@ -470,8 +677,13 @@ const EMBLEM_BY_CHAR = {
 
 /* ---------- Welcher Film welches Zeichen führt ----------
 
-   Der Rückfall für alle, die kein eigenes Wappen tragen. Der Schlüssel
-   ist der Film-Slug aus data.js. */
+   Die Regel für alle, die kein eigenes Wappen tragen. Der Schlüssel ist
+   der Film-Slug aus data.js, und nachgesehen wird unter dem ersten
+   Auftritt der Figur.
+
+   Ein Film ohne Zeile hier schickt seine Figuren auf das rote Zeichen
+   der Marke. Wer also einen Titel neu aufnimmt, trägt ihn auch hier
+   ein. */
 const EMBLEM_BY_FILM = {
   'iron-man': 'iron-man',
   'iron-man-2': 'iron-man',
@@ -486,12 +698,6 @@ const EMBLEM_BY_FILM = {
   'captain-america-civil-war': 'captain-america',
   'captain-america-brave-new-world': 'captain-america',
   'the-falcon-and-the-winter-soldier': 'falcon',
-  'the-avengers': 'avengers',
-  'avengers-age-of-ultron': 'avengers',
-  'avengers-infinity-war': 'avengers',
-  'avengers-endgame': 'avengers',
-  'avengers-doomsday': 'avengers',
-  'avengers-secret-wars': 'avengers',
   'guardians-of-the-galaxy': 'guardians',
   'guardians-of-the-galaxy-vol-2': 'guardians',
   'guardians-of-the-galaxy-vol-3': 'guardians',
@@ -500,7 +706,7 @@ const EMBLEM_BY_FILM = {
   'ant-man-and-the-wasp-quantumania': 'ant-man',
   'black-widow': 'black-widow',
   'black-panther': 'black-panther',
-  'black-panther-wakanda-forever': 'wakanda',
+  'black-panther-wakanda-forever': 'black-panther',
   'black-panther-3': 'black-panther',
   'spider-man-homecoming': 'spider-man',
   'spider-man-far-from-home': 'spider-man',
@@ -525,7 +731,6 @@ const EMBLEM_BY_FILM = {
   'daredevil-born-again': 'daredevil',
   'the-punisher-one-last-kill': 'punisher',
   'ironheart': 'ironheart',
-  'thunderbolts': 'thunderbolts',
   'the-fantastic-four-first-steps': 'fantastic-four',
   'wonder-man': 'wonder-man',
   'deadpool-and-wolverine': 'deadpool',
@@ -557,7 +762,6 @@ const EMBLEM_TINT = {
   'she-hulk':        ['#2b6130', '#54a04a'],
   'spider-man':      ['#8c1119', '#d02a32'],
   'black-panther':   ['#2a1b47', '#5b3d94'],
-  'wakanda':         ['#3a2560', '#7a52c4'],
   'ant-man':         ['#7a2c14', '#c25a26'],
   'doctor-strange':  ['#6b2a12', '#c2551f'],
   'guardians':       ['#5a2372', '#9b47b8'],
@@ -565,13 +769,19 @@ const EMBLEM_TINT = {
   'ms-marvel':       ['#8c3a05', '#e0700c'],
   'black-widow':     ['#3a1216', '#8e2028'],
   'hawkeye':         ['#5c1f24', '#a83b3f'],
+  'yelena':          ['#3f4a1c', '#8a9e33'],
+  'red-guardian':    ['#5e1214', '#9c2b22'],
+  'taskmaster':      ['#5c4a24', '#a89040'],
+  'ghost':           ['#2d4a4a', '#6f9c9c'],
+  'us-agent':        ['#232f42', '#556b8c'],
   'scarlet-witch':   ['#5f0f22', '#a81f3f'],
   'agatha':          ['#3c1a52', '#7c3fa0'],
   'vision':          ['#6a1030', '#b81f52'],
   'shield':          ['#1b2c3d', '#3e6183'],
   'skrull':          ['#1f4a2c', '#3d8a54'],
-  'avengers':        ['#1c2a4a', '#3f5f9e'],
-  'shang-chi':       ['#7a1616', '#c22c2c'],
+  'hydra':           ['#16301f', '#2a5c34'],
+  'ultron':          ['#3a3a3f', '#82828c'],
+  'quicksilver':     ['#155a63', '#2ba7bd'],
   'ten-rings':       ['#5c2410', '#a8481f'],
   'eternals':        ['#0f3a44', '#1f7d90'],
   'moon-knight':     ['#22283a', '#5a6488'],
@@ -582,17 +792,22 @@ const EMBLEM_TINT = {
   'wolverine':       ['#7a5a08', '#c99a12'],
   'x-men':           ['#1f3352', '#42639e'],
   'fantastic-four':  ['#123a63', '#2470b8'],
-  'thunderbolts':    ['#5c1a1f', '#a83238'],
+  'mister-fantastic':['#173f66', '#2d78c0'],
+  'invisible-woman': ['#33356e', '#6a6fd0'],
+  'human-torch':     ['#8f1c05', '#e8480a'],
+  'the-thing':       ['#5a3a1c', '#9c6a35'],
+  'sentry':          ['#7a6408', '#e5c520'],
   'wonder-man':      ['#6b2a52', '#b8479e'],
   'ghost-rider':     ['#5c2a08', '#c2691f'],
+  'thanos':          ['#33174d', '#6b34a3'],
   'marvel':          ['#8c1017', '#e62429'],
 };
 
-/* Das Zeichen zu einer Figur in einem Film.
+/* Das Zeichen zu einer Figur.
 
-   charSlug ist der Schlüssel der Figur, filmSlug der des Films, aus dem
-   das gezeigte Bild stammt. Der zweite darf fehlen, dann entscheidet
-   allein die Figur. Zurück kommt ein Name aus EMBLEM_ART. */
+   charSlug ist der Schlüssel der Figur, filmSlug der ihres ersten
+   Auftritts. Der zweite darf fehlen, dann entscheidet allein die Figur.
+   Zurück kommt ein Name aus EMBLEM_ART. */
 function emblemFor(charSlug, filmSlug) {
   const eigen = EMBLEM_BY_CHAR[charSlug];
   if (eigen && EMBLEM_ART[eigen]) return eigen;
@@ -601,61 +816,40 @@ function emblemFor(charSlug, filmSlug) {
   return 'marvel';
 }
 
-/* Das fertige SVG zu einem Zeichen, für innerHTML.
-
-   Gezeichnet wird nicht direkt, sondern über eine Maske: Die Fläche ist
-   eine einzige eingefärbte Platte, und was von ihr stehen bleibt,
-   entscheidet die Maske darüber. Nur so werden die Löcher im Zeichen -
-   die Augenschlitze im Helm, der Kern im Stern - wirklich zu Löchern.
-   Würden sie weiß gefüllt, stünden sie als helle Flecken auf dem Band
-   und dem Schrägstrich, die hinter dem Zeichen durchlaufen.
-
-   In einer Maske heißt Weiß sichtbar und Schwarz unsichtbar, deshalb
-   liegen die Klassen f und s dort in Weiß und c in Schwarz. Die Farbe
-   dafür setzt das Stylesheet, siehe .char-stage-emblem.
-
-   Jede Maske braucht einen eigenen Namen: Auf der Seite stehen mehrere
-   Bühnen zugleich im Dokument, und zwei Masken desselben Namens brächten
-   den Browser dazu, überall dieselbe zu nehmen. */
-let emblemNr = 0;
-
-function emblemSvg(name) {
-  const art = EMBLEM_ART[name] || EMBLEM_ART['marvel'];
-  const id = 'emblem-' + (++emblemNr);
-  return '<svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">'
-    + '<mask id="' + id + '" maskUnits="userSpaceOnUse"'
-    + ' x="0" y="0" width="200" height="200">'
-    + '<g class="art">' + art + '</g>'
-    + '</mask>'
-    + '<rect width="200" height="200" fill="currentColor" mask="url(#' + id + ')"/>'
-    + '</svg>';
-}
-
 /* Das Farbpaar zu einem Zeichen: [dunkel, hell]. */
 function emblemTint(name) {
   return EMBLEM_TINT[name] || EMBLEM_TINT['marvel'];
 }
 
-/* ---------- Vorlagen statt gezeichneter Zeichen ----------
+/* ---------- Die Vorlagen ----------
 
-   Die Umrisse oben sind von Hand gezeichnet und sehen auch danach aus.
-   Wer ein besseres Zeichen hat, legt es als Vorlage ab und lässt
-   tools/emblems/build-emblems.py eine Maske daraus machen; die liegt
-   dann unter assets/emblems/<name>.webp und tritt an die Stelle des
-   gezeichneten.
+   Ein Wappen entsteht aus einer Vorlage: Sie kommt unter
+   assets/emblems/source/<name>.png, und tools/emblems/build-emblems.py
+   macht die Maske assets/emblems/<name>.webp daraus, die die Bühne
+   dann zeigt.
 
-   Welche Masken es gibt, steht nirgends geschrieben: Die Bühne
-   probiert es einfach und merkt sich das Ergebnis. Das erspart eine
-   Liste, die bei jeder neuen Datei mitgepflegt werden müsste, und
-   kostet pro Zeichen einen einzigen Versuch für die ganze Sitzung.
+   Welche Masken es gibt, steht nirgends geschrieben: Die Bühne probiert
+   es einfach und merkt sich das Ergebnis. Das erspart eine Liste, die
+   bei jeder neuen Datei mitgepflegt werden müsste, und kostet pro
+   Zeichen einen einzigen Versuch für die ganze Sitzung.
 
-   Der Rückruf kommt nur, wenn es die Datei gibt. Bis dahin steht das
-   gezeichnete Zeichen da, und wenn es keine Datei gibt, bleibt es
-   stehen. */
+   Der Rückruf kommt nur, wenn es die Datei wirklich gibt. Fehlt sie,
+   kommt er nie, und der Wappenplatz auf der Bühne bleibt leer. */
 const EMBLEM_FILE_STATE = new Map();
 
 function emblemFileSrc(name) {
-  return 'assets/emblems/' + name + '.webp';
+  /* Voll ausgeschrieben und nicht als kurzer Pfad: Der Wert geht als
+     Eigenschaft --emblem-src weiter, und dort steht er in einer
+     Eigenschaft, die css/style.css benutzt (mask-image). Einen kurzen
+     Pfad darin rechnet der Browser nicht vom Dokument aus, sondern von
+     der Stildatei - er suchte also unter css/assets/emblems/ und fände
+     nichts. Die Maske bliebe leer und das Zeichen unsichtbar, ohne
+     Fehlermeldung: eine leere Maske zeigt nichts an, sie ist kein
+     kaputtes Bild.
+
+     Die Prüfung mit new Image() weiter unten fiele nicht darauf herein,
+     die läuft am Dokument. Nur die Maske daneben wäre leer. */
+  return new URL('assets/emblems/' + name + '.webp', document.baseURI).href;
 }
 
 function emblemFile(name, wennDa) {

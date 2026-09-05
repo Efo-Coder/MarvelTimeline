@@ -1,6 +1,9 @@
 # Lokale Claude-Code-Einstellungen
 .claude/
 
+# Bytecode-Zwischenlager von Python
+__pycache__/
+
 # Windows / OneDrive
 Thumbs.db
 desktop.ini
@@ -10,6 +13,12 @@ desktop.ini
 # Repo, die Vorlagen mit mehreren hundert Megabyte gehören nicht hinein.
 assets/ersetzen/
 vorschau/
+
+# Kopien der überschriebenen Emblem-Vorlagen und Masken, die das
+# Bild-Studio vor jedem Austausch anlegt. Wie tools/portrait-studio/.sicherung
+# eine reine Rückfallebene für diesen Rechner. Die Vorlagen selbst unter
+# assets/emblems/source gehören ins Repo, aus ihnen entstehen die Masken.
+assets/emblems/.sicherung/
 
 # Real-ESRGAN für das Bild-Studio: rund 50 MB Binärdateien und Modelle,
 # die nicht in die Versionsverwaltung gehören. Der Server sucht die
