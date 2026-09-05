@@ -1654,14 +1654,6 @@ const CHAR_POWERS = {
       'Dmitri hält sich im Hintergrund und macht, was ihm gesagt wird. Im Lagerhaus gehört er zu denen, die Clint Barton bewachen sollen.'],
   ],
 
-  'grills': [
-    ['Feuerwehrmann in New York',
-      'Grills fährt Einsätze und weiß, wie man Menschen aus einem brennenden Gebäude holt. Dieselbe Selbstverständlichkeit bringt er auch mit, als ein Fremder bei ihm auf der Couch liegt.'],
-    ['Rollenspieler mit eigener Rüstung',
-      'Er kämpft am Wochenende mit selbstgebauten Waffen im Park und nimmt das ernster als seinen Dienstplan. Genau diese Rüstung leiht er später Clint Barton.'],
-    ['Kochen für die Gruppe',
-      'Er versorgt seine ganze Runde und stellt niemandem eine Frage, der Hunger hat. Es ist die Freundlichkeit, die ihn am Ende das Leben kostet.'],
-  ],
 
   'wendy-conrad': [
     ['Polizistin',
@@ -3128,6 +3120,15 @@ const CHAR_POWERS = {
       'Er verbindet echte Magie mit Rauch, Musik und Ansage und verkauft es als Show. Genau diese Mischung macht die Sache gefährlich.'],
   ],
 
+  'eugene-patilio-leapfrog': [
+    ['Froschanzug',
+      'Eigene Kräfte hat Patilio keine, alles kommt aus dem gepolsterten Anzug, den Luke Jacobson für ihn gebaut hat. Er schützt den Träger und trägt die Technik für seine Auftritte.'],
+    ['Flug',
+      'In den Sohlen des Anzugs stecken Triebwerke, mit denen er springen und kurz fliegen kann. Weil er sie gegen die Anleitung mit Flugbenzin befüllt, versagen sie im Einsatz und setzen seine Beine in Brand.'],
+    ['Nahkampf',
+      'Er bringt einen Tritt auf den Fuß eines Räubers zustande und hält das für einen Sieg. Mehr gibt seine Ausbildung nicht her, und die beiden Räuber drehen den Kampf in Sekunden um.'],
+  ],
+
   'luke-jacobson': [
     ['Kostümdesign',
       'Jacobson entwirft Anzüge für Menschen mit Kräften und rechnet Belastung, Dehnung und Schutz mit ein. Was er näht, hält Stürze und Feuer aus.'],
@@ -3253,6 +3254,24 @@ const CHAR_POWERS = {
   'sanford-williams': [
     ['Der abwesende Vater',
       'Sein Tod liegt über der Familie und über dem Verhältnis der beiden Brüder. Was er zu Lebzeiten von seinen Söhnen erwartet hat, wirkt weiter, obwohl er nichts mehr sagt.'],
+  ],
+
+  'deadpool-2099': [
+    ['Selbstheilung',
+      'Wie jede Wilson-Variante steht sie nach jedem Treffer wieder auf. Im Void ist das die Grundausstattung des ganzen Corps.'],
+    ['Dämonenblut',
+      'Warda Wilson ist halb Sukkubus und trägt damit ein Erbe in sich, das keine andere Variante hat. Was daraus folgt, zeigt der Film nicht.'],
+    ['Geladene Katanas',
+      'Sie führt zwei Schwerter, deren Klingen unter Strom stehen. Gegen Deadpool und Wolverine setzt sie beide zugleich ein.'],
+  ],
+
+  'zenpool': [
+    ['Selbstheilung',
+      'Auch die ruhigste Variante hat den Heilfaktor, der jeden Wilson wieder auf die Beine bringt. Ein Kampf gegen ihn endet deshalb nie durch einen Treffer.'],
+    ['Blasrohr',
+      'Statt zu schießen setzt er ein Blasrohr an und trifft damit auf offener Fläche. Sein Pfeil erwischt Deadpool in dem Moment, in dem der sich Nicepool vor den Körper hält.'],
+    ['Kampfstab',
+      'Zu seiner Ausrüstung gehört ein langer Stab, der Waffe und Gehhilfe zugleich ist. Er passt zur Kutte so gut wie die zwei Colts zum Westernaufzug seines Kameraden.'],
   ],
 
   'cowboypool': [

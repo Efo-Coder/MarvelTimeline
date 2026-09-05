@@ -1233,12 +1233,6 @@ const CHAR_FACTS = {
     teams: ['Tracksuit Mafia'],
     status: 'Am Leben',
   },
-  'grills': {
-    origin: 'USA',
-    species: 'Mensch',
-    teams: ['Fire Department of New York City', 'New York City Live Action Role Players'],
-    status: 'Am Leben',
-  },
   'wendy-conrad': {
     origin: 'USA',
     species: 'Mensch',
@@ -2385,7 +2379,6 @@ const CHAR_FACTS_EXTRA = {
   },
   'enrique': {},
   'dmitri': {},
-  'grills': {},
   'wendy-conrad': {},
   'lucky': {},
   'matt-murdock-daredevil': {},
@@ -3157,6 +3150,12 @@ const CHAR_FACTS_EXTRA = {
     teams: ['Meister der mystischen Künste'],
     status: 'Am Leben',
   },
+  'eugene-patilio-leapfrog': {
+    origin: 'USA',
+    species: 'Mensch',
+    teams: ['Leap Squad'],
+    status: 'In Gewahrsam',
+  },
   'luke-jacobson': {
     origin: 'USA',
     species: 'Mensch',
@@ -3268,6 +3267,18 @@ const CHAR_FACTS_EXTRA = {
     species: 'Mensch',
     teams: ['Fantastic Four', 'Resistance'],
     status: 'Verstorben',
+  },
+  'deadpool-2099': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mensch-Sukkubus-Hybrid',
+    teams: ['Deadpool Corps', 'Cassandra Novas Gefolge'],
+    status: 'Am Leben',
+  },
+  'zenpool': {
+    origin: 'Andere Wirklichkeit',
+    species: 'Mutant',
+    teams: ['Deadpool Corps', 'Cassandra Novas Gefolge'],
+    status: 'Am Leben',
   },
   'kidpool': {
     origin: 'Andere Wirklichkeit',
@@ -3596,6 +3607,8 @@ const CHAR_BONDS = {
     ['Variante', 'cowboypool'],
     ['Variante', 'kidpool'],
     ['Variante', 'samuraipool'],
+    ['Variante', 'deadpool-2099'],
+    ['Variante', 'zenpool'],
     ['Mitstreiter', 'blade'],
     ['Weggefährte', 'colossus'],
   ],
@@ -3856,7 +3869,6 @@ const CHAR_BONDS = {
     ['Schützling', 'kate-bishop'],
     ['Gegenspielerin', 'maya-lopez-echo'],
     ['Hund', 'lucky'],
-    ['Freund', 'grills'],
   ],
   'carol-danvers': [
     ['Beste Freundin', 'maria-rambeau'],
@@ -4462,6 +4474,13 @@ const CHAR_BONDS = {
   'cowboypool': [
     ['Hauptfassung', 'wade-wilson-deadpool'],
   ],
+  'deadpool-2099': [
+    ['Hauptfassung', 'wade-wilson-deadpool'],
+    ['Bester Freund', 'peter-wisdom'],
+  ],
+  'zenpool': [
+    ['Hauptfassung', 'wade-wilson-deadpool'],
+  ],
   'kidpool': [
     ['Hauptfassung', 'wade-wilson-deadpool'],
   ],
@@ -4619,6 +4638,12 @@ const CHAR_BONDS = {
   'luke-jacobson': [
     ['Kundin', 'jennifer-walters-she-hulk'],
     ['Kunde', 'matt-murdock-daredevil'],
+    ['Entführer', 'eugene-patilio-leapfrog'],
+  ],
+  'eugene-patilio-leapfrog': [
+    ['Schneider', 'luke-jacobson'],
+    ['Ehemalige Anwältin', 'jennifer-walters-she-hulk'],
+    ['Widersacher', 'matt-murdock-daredevil'],
   ],
   'donny-blaze': [
     ['Lehrer', 'wong'],
@@ -5213,13 +5238,7 @@ const CHAR_BONDS = {
     ['Bande', 'enrique'],
     ['Gegnerin', 'kate-bishop'],
   ],
-  'grills': [
-    ['Freund', 'clint-barton'],
-    ['Mitstreiterin', 'wendy-conrad'],
-    ['Bekannte', 'kate-bishop'],
-  ],
   'wendy-conrad': [
-    ['Mitstreiter', 'grills'],
     ['Bekannter', 'clint-barton'],
     ['Bekannte', 'kate-bishop'],
   ],

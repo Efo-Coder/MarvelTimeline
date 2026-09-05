@@ -5,10 +5,10 @@ Fanprojekt zu WebP verkleinert. Dank an die jeweiligen Ersteller.
 
 Die Tabelle unten führt die Bilder der ersten beiden Runden. Die
 Nachlieferungen ab dem 26.07.2026 (124 Bilder in der dritten Runde, 65 in
-der vierten, 36 in der fünften, 26 in der sechsten, 13 in der siebten und
-35 in der achten) kamen als fertig
-freigestellte PNGs über
-`assets/ersetzen/` herein, ihre Originalquellen sind hier nicht bekannt.
+der vierten, 36 in der fünften, 26 in der sechsten, 13 in der siebten,
+35 in der achten und 24 in der neunten) kamen als fertig freigestellte
+PNGs aus den Arbeitsordnern des Nutzers herein, ihre Originalquellen sind
+hier nicht bekannt.
 Auch für sie gilt der Dank an die jeweiligen Ersteller.
 
 Zwei Bilder stammen nicht von DeviantArt, sondern aus dem MCU-Wiki bei
@@ -36,11 +36,11 @@ Freistellers eine weiche Vignette.
 | bob-sentry.webp | Thunderbolts Sentry PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Thunderbolts-Sentry-PNG-1197841334 |
 | bruce-banner.webp | HULK (Avengers: age of Ultron) 6 png  | joaolucasvingaprimos | https://www.deviantart.com/joaolucasvingaprimos/art/HULK-Avengers-age-of-Ultron-6-png-1113938297 |
 | bruce-banner-smart-hulk.webp | Avengers Endgame Hulk PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Avengers-Endgame-Hulk-PNG-763863336 |
-| bucky-barnes-winter-soldier-unmasked.webp | 'Bucky' Barnes/The Winter Soldier: CATWS/FaTWS PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Bucky-Barnes-The-Winter-Soldier-CATWS-FaTWS-PNG-1030585557 |
+| bucky-barnes-winter-soldier-3.webp | 'Bucky' Barnes/The Winter Soldier: CATWS/FaTWS PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Bucky-Barnes-The-Winter-Soldier-CATWS-FaTWS-PNG-1030585557 |
 | carol-danvers.webp | Captain Marvel Carol Danvers PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Captain-Marvel-Carol-Danvers-PNG-788858018 |
 | carol-danvers-starforce.webp | Captain Marvel Carol Danvers Starforce PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Captain-Marvel-Carol-Danvers-Starforce-PNG-783104933 |
 | cassandra-nova.webp | Cassandra Nova (MCU) - Transparent 01 | matuta2002 | https://www.deviantart.com/matuta2002/art/Cassandra-Nova-MCU-Transparent-01-1044794861 |
-| cassie-lang.webp | Ant-Man and The Wasp Quantumania Cassie PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Ant-Man-and-The-Wasp-Quantumania-Cassie-PNG-958898443 |
+| cassie-lang-1.webp | Ant-Man and The Wasp Quantumania Cassie PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Ant-Man-and-The-Wasp-Quantumania-Cassie-PNG-958898443 |
 | charles-xavier-professor-x.webp | Professor X (Multiverse of Madness) - PNG | DHV123 | https://www.deviantart.com/dhv123/art/Professor-X-Multiverse-of-Madness-PNG-920388534 |
 | christine-palmer.webp | Christine Palmer - Doctor strange png MCU | kevinalexande23 | https://www.deviantart.com/kevinalexande23/art/Christine-Palmer-Doctor-strange-png-MCU-1160747388 |
 | clint-barton.webp | Hawkeye Clint Barton PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Hawkeye-Clint-Barton-PNG-893703761 |
@@ -82,7 +82,7 @@ Freistellers eine weiche Vignette.
 | jennifer-walters-she-hulk.webp | She Hulk Attorney at Law Jennifer Walters PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/She-Hulk-Attorney-at-Law-Jennifer-Walters-PNG-937645036 |
 | joaquin-torres-falcon.webp | Joaquin Torres/Falcon: CABNW PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Joaquin-Torres-Falcon-CABNW-PNG-1046949661 |
 | johann-schmidt-red-skull.webp | Captain America First Avenger - Red Skull PNG | DavidBksAndrade | https://www.deviantart.com/davidbksandrade/art/Captain-America-First-Avenger-Red-Skull-PNG-702246432 |
-| john-walker.webp | The Falcon and the Winter Soldier John Walker PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/The-Falcon-and-the-Winter-Soldier-John-Walker-PNG-873789753 |
+| john-walker-1.webp | The Falcon and the Winter Soldier John Walker PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/The-Falcon-and-the-Winter-Soldier-John-Walker-PNG-873789753 |
 | johnny-storm-human-torch.webp | Human Torch - The Fantastic 4: First Steps PNG | GMG616 | https://www.deviantart.com/gmg616/art/Human-Torch-The-Fantastic-4-First-Steps-PNG-1196364826 |
 | kaecilius.webp | DOCTOR STRANGE 2016- Kaecilius PNG TRANSPARENT ART | paintpot2 | https://www.deviantart.com/paintpot2/art/DOCTOR-STRANGE-2016-Kaecilius-PNG-TRANSPARENT-ART-646146043 |
 | kamala-khan-ms-marvel.webp | Ms. Marvel Kamala Khan PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Ms-Marvel-Kamala-Khan-PNG-918724042 |
@@ -96,7 +96,7 @@ Freistellers eine weiche Vignette.
 | koenigin-ramonda.webp | Ramonda (Wakanda Forever) 1 - PNG | Captain-Kingsman16 | https://www.deviantart.com/captain-kingsman16/art/Ramonda-Wakanda-Forever-1-PNG-938911474 |
 | korg.webp | Thor Ragnarok - Korg PNG | DavidBksAndrade | https://www.deviantart.com/davidbksandrade/art/Thor-Ragnarok-Korg-PNG-709930731 |
 | kurt-wagner-nightcrawler.webp | Nightcrawler Earth-2000 PNG  | HunterC-10 | https://www.deviantart.com/hunterc-10/art/Nightcrawler-Earth-2000-PNG-1176597609 |
-| logan-wolverine.webp | Wolverine (Deadpool and Wolverine) png | jalonct | https://www.deviantart.com/jalonct/art/Wolverine-Deadpool-and-Wolverine-png-1082358927 |
+| logan-wolverine-1.webp | Wolverine (Deadpool and Wolverine) png | jalonct | https://www.deviantart.com/jalonct/art/Wolverine-Deadpool-and-Wolverine-png-1082358927 |
 | loki.webp | Thor Ragnarok: Loki - Transparent! | SpeedCam | https://www.deviantart.com/camo-flauge/art/Thor-Ragnarok-Loki-Transparent-695691743 |
 | lucky.webp | Lucky The Pizza Dog PNG Hawkeye | akithefull | https://www.deviantart.com/akithefull/art/Lucky-The-Pizza-Dog-PNG-Hawkeye-943186410 |
 | loki-tva.webp | TVA Loki PNG | PurpleAxell | https://www.deviantart.com/purpleaxell/art/TVA-Loki-PNG-918143820 |
@@ -158,7 +158,7 @@ Freistellers eine weiche Vignette.
 | taskmaster.webp | Taskmaster: Black Widow PNG | IWasBoredSoIDidThis | https://www.deviantart.com/iwasboredsoididthis/art/Taskmaster-Black-Widow-PNG-862446645 |
 | thaddeus-ross.webp | The Incredible Hulk (2008) - General Ross PNG | DavidBksAndrade | https://www.deviantart.com/davidbksandrade/art/The-Incredible-Hulk-2008-General-Ross-PNG-701501168 |
 | thaddeus-ross-red-hulk.webp | Red Hulk PNG | ThePngGuy | https://www.deviantart.com/thepngguy/art/Red-Hulk-PNG-1075408243 |
-| thanos.webp | Avengers Infinity War - Thanos PNG | DavidBksAndrade | https://www.deviantart.com/davidbksandrade/art/Avengers-Infinity-War-Thanos-PNG-734860938 |
+| thanos-ohne-ruestung.webp | Avengers Infinity War - Thanos PNG | DavidBksAndrade | https://www.deviantart.com/davidbksandrade/art/Avengers-Infinity-War-Thanos-PNG-734860938 |
 | thena.webp | Thena (Eternals) PNG | shathit | https://www.deviantart.com/shathit/art/Thena-Eternals-PNG-897014398 |
 | thor.webp | Thor | The Avengers PNG | thatKONNORguy | https://www.deviantart.com/thatkonnorguy/art/Thor-The-Avengers-PNG-1199987084 |
 | thor-endgame.webp | Avengers Endgame Thor PNG | Metropolis-Hero1125 | https://www.deviantart.com/metropolis-hero1125/art/Avengers-Endgame-Thor-PNG-763863069 |
