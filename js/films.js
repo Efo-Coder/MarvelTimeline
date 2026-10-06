@@ -109,7 +109,7 @@
   }
 
   /* Das Sternsymbol vor der Bewertung. Es kommt wie die Zeichen im
-     Bild-Studio aus react-icons, aus dem Satz Lucide darin (LuStar), und
+     Vision-Studio aus react-icons, aus dem Satz Lucide darin (LuStar), und
      steht hier als reine Pfaddaten – die Seite hat keinen Bauschritt.
      Anders als dort ist es gefüllt und nicht gestrichelt: Auf 0,7 rem
      wäre ein Strichstern nur noch ein Fleck. */
@@ -394,7 +394,7 @@
      es keines gibt, der Notnagel darunter.
 
      Die Cover liegen als assets/covers/<slug>.webp und kommen aus
-     tools/covers/import-covers.py. Zu einigen Titeln gibt es noch keines.
+     vision-studio/films/covers/import-covers.py. Zu einigen Titeln gibt es noch keines.
      Statt eines leeren grauen Kastens steht dort dann das Filmlogo auf
      dunklem Grund: Das erkennt man genauso gut, und die Datei liegt für
      jeden Titel ohnehin schon da (assets/logos/). Fehlt auch die, bleibt
@@ -786,9 +786,173 @@
     });
   }
 
+  /* ---------- Der Countdown im Kopfband ----------
+
+     An der unteren Kante des Kopfbands läuft die Zeit bis zum nächsten
+     Start ab: Tage, Stunden, Minuten und Sekunden als rollende Zahlenräder
+     (js/counter.js). Wo genau die Uhr hängt, entscheidet das Stylesheet;
+     sie steht außerhalb des Textflusses, damit Kicker, Titel und Zeile
+     darüber dort stehen bleiben, wo sie ohne sie stünden.
+
+     Welcher Titel gemeint ist, entscheidet nicht das Feld upcoming,
+     sondern das Datum. Der nächste ist der mit dem frühesten Start, der
+     noch bevorsteht. Damit stimmt die Anzeige auch an dem Tag, an dem ein
+     Titel erscheint und in data.js noch als angekündigt steht, und wenn
+     ein Start abgelaufen ist, rückt sie von selbst eine Zeile weiter.
+     Steht am Ende nichts mehr aus, bleibt das Kopfband leer.
+
+     Eine Serie steht mit jeder Staffel für sich im Plan, und das ist hier
+     richtig: Was ansteht, ist die nächste Staffel und nicht die Serie. */
+
+  const countdownBox = document.getElementById('film-countdown');
+
+  /* Der Start als Zeitpunkt in der Zeitzone des Lesers: Um Mitternacht
+     seines Tages springt der Zähler auf einen Tag weniger. Date.UTC, wie
+     releaseTime() es für die Reihenfolge nimmt, wäre hier je nach
+     Jahreszeit ein, zwei Stunden daneben.
+
+     Steht bei einem angekündigten Titel erst der Monat fest („März 2027“),
+     zählt der Erste dieses Monats. Genauer geht es nicht, und die Zeile
+     über der Uhr nennt ohnehin das Datum so, wie es in data.js steht. */
+  function releaseAt(movie) {
+    const date = parseDate(movie);
+    return date ? new Date(date.year, date.month, date.day || 1).getTime() : 0;
+  }
+
+  /* Die Einheiten der Uhr, von grob nach fein. wrap ist der Überlauf:
+     Sekunden und Minuten laufen bis 60, Stunden bis 24, die Tage laufen
+     einfach weiter. places ist die Zahl der Ziffernstellen; bei den Tagen
+     steht sie erst fest, wenn der Abstand bekannt ist. */
+  const UNITS = [
+    { label: 'Tage', per: 86400000, wrap: 0, places: 0 },
+    { label: 'Std.', per: 3600000, wrap: 24, places: 2 },
+    { label: 'Min.', per: 60000, wrap: 60, places: 2 },
+    { label: 'Sek.', per: 1000, wrap: 60, places: 2 },
+  ];
+
+  function unitValue(unit, remaining) {
+    const raw = Math.floor(remaining / unit.per);
+    return unit.wrap ? raw % unit.wrap : raw;
+  }
+
+  function buildCountdown() {
+    if (!countdownBox || typeof Counter === 'undefined') return;
+
+    const schedule = entries
+      .map(entry => ({ entry, at: releaseAt(entry.movie) }))
+      .filter(item => item.at)
+      .sort((a, b) => a.at - b.at);
+
+    let next = null;
+    let clocks = [];
+    let timer = 0;
+
+    /* Eine Sekunde weiter, und zwar auf die volle Sekunde gelegt statt
+       alle tausend Millisekunden ab jetzt: Sonst schiebt sich die Anzeige
+       im Lauf einer Stunde spürbar gegen die Uhr.
+
+       Wer Bewegung abbestellt hat, bekommt dieselbe Uhr, nur springen die
+       Ziffern dann von Wert zu Wert, statt zu rollen. */
+    function nextTick() {
+      clearTimeout(timer);
+      if (!next) return;
+      timer = setTimeout(function () {
+        step(!reduceMotion);
+        nextTick();
+      }, 1000 - (Date.now() % 1000) + 15);
+    }
+
+    function step(animate) {
+      if (!next) return;
+      const remaining = next.at - Date.now();
+      /* Der Start ist da: Der Countdown fängt beim nächsten Titel neu an
+         oder verschwindet, wenn keiner mehr aussteht. */
+      if (remaining <= 0) {
+        build();
+        return;
+      }
+      for (const clock of clocks) {
+        clock.counter.set(unitValue(clock.unit, remaining), animate);
+      }
+    }
+
+    function build() {
+      for (const clock of clocks) clock.counter.release();
+      clocks = [];
+      countdownBox.textContent = '';
+      clearTimeout(timer);
+
+      const now = Date.now();
+      next = schedule.find(item => item.at > now) || null;
+      if (!next) return;
+
+      const movie = next.entry.movie;
+      const remaining = next.at - now;
+
+      /* Die Zeile über der Uhr sagt, worauf gewartet wird. Der Titel führt
+         ins Fenster des Films, wie jede Kachel darunter auch. */
+      const line = el('p', 'film-countdown-line');
+      line.append('Nächster Start: ');
+      const link = el('button', 'film-countdown-link', movie.title);
+      link.type = 'button';
+      link.addEventListener('click', function () {
+        openFilm(next.entry.group, next.entry, link);
+      });
+      line.append(link, ', ' + longDate(movie));
+
+      /* Die Uhr selbst bleibt für Vorleseprogramme stumm: Zehn Ziffern je
+         Stelle ergeben vorgelesen nur Zahlensalat, und was sie bedeutet,
+         steht als Datum schon in der Zeile darüber. */
+      const clock = el('div', 'film-countdown-clock');
+      clock.setAttribute('aria-hidden', 'true');
+
+      for (const unit of UNITS) {
+        if (clock.childElementCount) {
+          clock.append(el('span', 'film-countdown-colon', ':'));
+        }
+        /* Stunden, Minuten und Sekunden haben immer zwei Stellen. Die Tage
+           bekommen so viele, wie der Wert beim Bauen braucht, mindestens
+           aber zwei: Zum nächsten Start sind es meist Wochen und damit
+           zwei Stellen, zu einem Titel in zwei Jahren dreistellig viele
+           Tage. Größer wird die Zahl danach nicht mehr, sie läuft ja
+           herunter, und beim Wechsel auf den nächsten Titel wird die Uhr
+           ohnehin neu gebaut. */
+        const value = unitValue(unit, remaining);
+        const places = unit.places || Math.max(2, String(value).length);
+        const counter = Counter.create(places);
+        const box = el('div', 'film-countdown-unit');
+        box.append(counter.node, el('span', 'film-countdown-label', unit.label));
+        clock.append(box);
+        clocks.push({ counter, unit });
+      }
+
+      countdownBox.append(line, clock);
+
+      /* Erst messen, dann stellen: Die Schritthöhe eines Rades kommt aus
+         dem Stylesheet und steht erst fest, wenn die Uhr in der Seite
+         hängt. Der erste Stand steht ohne Bewegung da, es gibt ja noch
+         nichts, wovon er herrollen könnte. */
+      measureCountdown();
+      step(false);
+      nextTick();
+    }
+
+    function measureCountdown() {
+      for (const clock of clocks) clock.counter.measure();
+    }
+
+    /* Die Schriftgröße der Uhr hängt an Breite und Höhe des Fensters, die
+       Schritthöhe der Räder damit auch. Sie steht in em und muss nach
+       jeder Größenänderung neu gemessen werden. */
+    window.addEventListener('resize', measureCountdown);
+
+    build();
+  }
+
   /* ---------- Start ---------- */
 
   rows.append(...buildRowPlan().map(buildRow).filter(Boolean));
+  buildCountdown();
   measureScrollbar();
 
   /* films.html#<slug> öffnet den Titel direkt – so verlinkt die

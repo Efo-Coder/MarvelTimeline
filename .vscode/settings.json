@@ -13,6 +13,6 @@
   // Warnung, die keine ist.
   "python.analysis.extraPaths": [
     ".claude/skills/portraits/scripts",
-    "tools/portrait-studio/services/facial-recognition/vendor"
+    "vision-studio/characters/facial-recognition/vendor"
   ]
 }

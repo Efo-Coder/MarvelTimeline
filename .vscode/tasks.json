@@ -1,5 +1,5 @@
 {
-  // Startet Fanpage und Bild-Studio, sobald dieser Ordner in VS Code
+  // Startet Fanpage und Vision-Studio, sobald dieser Ordner in VS Code
   // aufgeht. Damit ersetzt die Aufgabe den Doppelklick auf start.cmd und
   // den Knopf „Go Live“: kein eigenes Konsolenfenster, keine Browsertabs
   // von selbst, und der Server läuft schon, bevor man ihn braucht.
@@ -15,7 +15,7 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Server: Fanpage und Bild-Studio",
+      "label": "Server: Fanpage und Vision-Studio",
       "detail": "Fanpage auf 4320, Studio auf 4321, beide beobachtet",
       "type": "shell",
       "command": "node",

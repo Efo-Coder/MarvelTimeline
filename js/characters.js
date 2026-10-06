@@ -68,6 +68,35 @@
     img.src = erste + slug + '.webp';
   }
 
+  /* Für Logos, die auf dem Grund der Seite stehen und nicht auf einer
+     Fläche mit fester Farbe: Welche Fassung passt, hängt am hellen oder
+     dunklen Modus und kann sich ändern, während die Seite offen steht.
+
+     Der Slug bleibt am Bild hängen. Er ist die ganze Auskunft, die das
+     Umschalten weiter unten braucht, um dasselbe Logo noch einmal zu
+     setzen. */
+  function dunklerModus() {
+    return document.documentElement.classList.contains('theme-dark');
+  }
+
+  /* Die helle Fassung des Logos gehört auf den dunklen Grund und
+     umgekehrt, hell ist deshalb genau dann gefragt, wenn der dunkle
+     Modus läuft. */
+  function setFilmLogoAufGrund(img, slug, onMissing) {
+    img.dataset.logoSlug = slug;
+    setFilmLogo(img, slug, onMissing, dunklerModus());
+  }
+
+  /* js/theme.js meldet jeden Wechsel. Die Logos auf dem Grund tauschen
+     dann ihre Fassung, alle anderen bleiben stehen: Der Streifen unter
+     einer Fassung ist auch im dunklen Modus weiß, und die Bühne ist in
+     beiden dunkel. */
+  document.addEventListener('themechange', () => {
+    for (const img of document.querySelectorAll('img[data-logo-slug]')) {
+      setFilmLogo(img, img.dataset.logoSlug, null, dunklerModus());
+    }
+  });
+
   /* Suchtext und Slug folgen denselben Regeln: „Doctor Strange“ soll auch
      jemand finden, der „Stephen“ tippt, und „Lokis“ Umlaute dürfen dabei
      keine Rolle spielen. */
@@ -84,8 +113,15 @@
 
   /* Aus jeder Figur wird ein Datensatz mit allem, was Kachel, Karte,
      Suche und Filter brauchen. Die Reihenfolge der Map ist die des ersten
-     Auftritts – daraus entsteht die chronologische Sortierung. */
-  const chars = Array.from(charIndex.values()).map((char, order) => {
+     Auftritts – daraus entsteht die chronologische Sortierung.
+
+     Wer in CHAR_UNRELEASED steht (js/chars.js), bleibt draußen: Die Figur
+     ist gepflegt, aber noch nicht veröffentlicht. Aussortiert wird vor
+     dem Zählen, damit die Ordnung lückenlos bleibt und die Seite von
+     einer Figur, die es hier nicht gibt, auch nichts weiß. */
+  const gezeigt = Array.from(charIndex.values())
+    .filter(char => !CHAR_UNRELEASED.has(char.slug));
+  const chars = gezeigt.map((char, order) => {
     const roles = [];
     for (const name of char.names) {
       const role = splitName(name).role;
@@ -143,11 +179,20 @@
       .map(word => word[0].toUpperCase()).join('');
   }
 
+  /* Die Datei zum Porträt einer Figur, oder nichts, wenn es zu ihr keines
+     gibt. Die Kacheln, die Bühne und der Übergang zwischen zwei Figuren
+     lesen alle hier nach, damit keine drei Stellen denselben Pfad
+     zusammensetzen. */
+  function portraitSrc(item) {
+    return item && item.hasImage
+      ? 'assets/characters/portraits/' + item.char.slug + '.webp' : '';
+  }
+
   function buildShot(item, className) {
     const shot = el('span', className);
     if (item.hasImage) {
       const img = el('img');
-      img.src = 'assets/characters/portraits/' + item.char.slug + '.webp';
+      img.src = portraitSrc(item);
       img.alt = '';
       img.loading = 'lazy';
       img.decoding = 'async';
@@ -722,8 +767,18 @@
   const charBody = el('div', 'char-full-body');
   charBody.append(charOverview, charLifeBox);
 
+  /* Der Inhalt liegt in einer eigenen Lage innerhalb der rollenden
+     Fläche. Das ist keine Zier, sondern die Trennlinie für den Übergang
+     beim Blättern (siehe js/page-morph.js): Verzogen wird diese Lage
+     hier, und die Rollleiste bleibt außen vor, weil sie an der Fläche
+     hängt und nicht am Inhalt. Zugleich beschneidet die Fläche, was der
+     Übergang über die Kanten hinauszieht, sodass die Ränder der Ansicht
+     gerade bleiben. */
+  const charFlow = el('div', 'char-full-flow');
+  charFlow.append(charHero, charBody);
+
   const charInner = el('div', 'char-full-inner');
-  charInner.append(charHero, charBody);
+  charInner.append(charFlow);
   charFull.append(charBg, charActions, charInner);
   document.body.append(charFull);
 
@@ -802,7 +857,7 @@
     { key: 'faehigkeiten', label: 'Fähigkeiten', panel: charPowersSlot,
       has: item => powersOf(item).length },
     { key: 'daten', label: 'Daten', panel: charDataSlot,
-      has: item => dataRows(item).length },
+      has: item => dataGroups(item).length },
   ];
 
   for (const mode of MODES) {
@@ -1025,6 +1080,11 @@
      Gebaut wird es bei jedem Öffnen neu, weil buildShot() den Ersatz aus
      Anfangsbuchstaben selbst regelt. */
   function fillHeroArt(item) {
+    /* Ein laufender Übergang hinge sonst über einem Bild, das es nicht
+       mehr gibt, und hielte das neue verborgen. Was er zuletzt zeigte,
+       bleibt einen Augenblick stehen: Blättert der nächste Zug weiter,
+       knüpft er genau dort an (siehe js/portrait-morph.js). */
+    if (window.PortraitMorph) window.PortraitMorph.channel('hero').stop();
     charHeroArt.replaceChildren(buildShot(item, 'char-hero-shot'));
   }
 
@@ -1095,24 +1155,7 @@
     if (!list.length) return null;
 
     const box = el('div', 'char-powers');
-
-    /* Rechts die Figur hinter einer schrägen Kante, wie das angeschnittene
-       Bild in der Vorlage. Sie ist Kulisse und trägt keine Aussage,
-       deshalb die Standardfassung und kein Wechsel: Wer die Fassungen
-       sehen will, ist einen Reiter weiter links richtig. */
-    const art = el('div', 'char-powers-art');
-    art.setAttribute('aria-hidden', 'true');
-    const artImg = el('img');
-    artImg.alt = '';
-    artImg.loading = 'lazy';
-    artImg.decoding = 'async';
-    /* Fehlt die Datei, bleibt die schräge Fläche stehen und nur das Bild
-       darin geht weg: Ohne sie wäre die Tafel ein schwarzes Rechteck. */
-    artImg.addEventListener('error', () => { artImg.remove(); });
-    artImg.src = lookSrc(standardFile(item));
-    art.style.setProperty('--figure-scale', fullsizeScale(standardFile(item)));
-    art.style.setProperty('--figure-lift', fullsizeLift(standardFile(item)));
-    art.append(artImg);
+    const art = buildSideArt(item, 'char-powers-art');
 
     const now = el('span', 'char-powers-now');
     const all = el('span', 'char-powers-all', pad2(list.length));
@@ -1172,6 +1215,31 @@
     return box;
   }
 
+  /* Rechts die Figur hinter einer schrägen Kante, wie das angeschnittene
+     Bild in der Vorlage der Fähigkeiten. Die Tafel Daten trägt sie an
+     genau derselben Stelle: Wer zwischen beiden umschaltet, sieht die
+     Figur stehen bleiben, getauscht wird nur die Schrift daneben.
+
+     Sie ist Kulisse und trägt keine Aussage, deshalb die Standardfassung
+     und kein Wechsel: Wer die Fassungen sehen will, ist einen Reiter
+     weiter links richtig. */
+  function buildSideArt(item, className) {
+    const art = el('div', className);
+    art.setAttribute('aria-hidden', 'true');
+    const artImg = el('img');
+    artImg.alt = '';
+    artImg.loading = 'lazy';
+    artImg.decoding = 'async';
+    /* Fehlt die Datei, bleibt die schräge Fläche stehen und nur das Bild
+       darin geht weg: Ohne sie wäre die Tafel ein leeres Rechteck. */
+    artImg.addEventListener('error', () => { artImg.remove(); });
+    artImg.src = lookSrc(standardFile(item));
+    art.style.setProperty('--figure-scale', fullsizeScale(standardFile(item)));
+    art.style.setProperty('--figure-lift', fullsizeLift(standardFile(item)));
+    art.append(artImg);
+    return art;
+  }
+
   /* „01“ statt „1“, wie die Nummer über der Vorlage. */
   function pad2(count) {
     return count < 10 ? '0' + count : String(count);
@@ -1179,73 +1247,130 @@
 
   /* ---------- Tafel Daten ----------
 
-     Was eine Figur ausmacht, ohne Erzählung: Herkunft, Spezies, Größe,
-     Zugehörigkeit und Status aus den Wikis, dazu was diese Seite selbst
-     über sie weiß. Wie oft sie vorkommt, wo sie anfängt, in welchen
-     Phasen sie steht und wer sie spielt.
+     Was eine Figur ausmacht, ohne Erzählung. Die Angaben stehen in zwei
+     festen Gruppen nebeneinander:
 
-     Die Kräfte stehen hier nicht mehr, sie haben ihre eigene Tafel
-     nebenan. */
-  function dataRows(item) {
+       Steckbrief   was die Figur in ihrer Welt ist: Herkunft, Spezies,
+                    Größe, Status und Zugehörigkeit aus den Wikis
+       Im MCU       was diese Seite über sie weiß: wo sie anfängt, wie oft
+                    und in welchen Phasen sie vorkommt und wer sie spielt
+
+     Früher stand alles in einem einzigen Raster aus Kästchen, die sich
+     nach der Länge ihres Werts breit machten. Dadurch brach jede Figur
+     anders um, und neun gleich laute Felder ließen nicht erkennen, was
+     zusammengehört. Jetzt steht jede Angabe bei jeder Figur an derselben
+     Stelle, und was fehlt, lässt nur seine eigene Zeile aus.
+
+     Kurze Angaben teilen sich eine Zeile (half). Ein Wert als Liste steht
+     Eintrag für Eintrag untereinander, statt mit Punkten aneinandergereiht
+     umzubrechen. Die Kräfte stehen hier nicht, sie haben ihre eigene
+     Tafel nebenan. */
+  function dataGroups(item) {
     const facts = factsOf(item);
     const first = item.char.entries[0];
-    const rows = [];
+    const cast = ACTORS[item.char.slug];
 
-    function add(label, value) {
-      if (!value || (Array.isArray(value) && !value.length)) return;
-      rows.push([label, Array.isArray(value) ? value.join(' · ') : value]);
+    function rows(...list) {
+      const found = list.filter(row => row && row.value
+        && (!Array.isArray(row.value) || row.value.length));
+      /* Halbe Zeilen gehen nur paarweise auf. Fehlt der Partner, nimmt
+         die übrige die ganze Breite, sonst endete die Linie über ihr auf
+         halbem Weg. */
+      for (let at = 0; at < found.length; at += 1) {
+        if (!found[at].half) continue;
+        if (found[at + 1] && found[at + 1].half) at += 1;
+        else found[at].half = false;
+      }
+      return found;
     }
 
-    add('Herkunft', facts.origin);
-    add('Spezies', facts.species);
-    add('Größe', facts.height);
-    add('Status', facts.status);
-    add('Zugehörigkeit', facts.teams);
-    if (first) {
-      const jahr = filmYear(first.movie);
-      add('Erster Auftritt', first.movie.title + (jahr ? ' (' + jahr + ')' : ''));
+    return [
+      {
+        title: 'Steckbrief',
+        rows: rows(
+          { label: 'Herkunft', value: facts.origin },
+          { label: 'Spezies', value: facts.species },
+          { label: 'Größe', value: facts.height, half: true },
+          { label: 'Status', value: facts.status, half: true },
+          { label: 'Zugehörigkeit', value: facts.teams }
+        ),
+      },
+      {
+        title: 'Im MCU',
+        rows: rows(
+          first && { label: 'Erster Auftritt', value: first.movie.title,
+            note: filmYear(first.movie) },
+          { label: 'Auftritte', value: item.char.entries.length, kind: 'count', half: true },
+          { label: 'Phasen', value: item.phases, kind: 'phases', half: true },
+          { label: CHAR_VOICE_ONLY.has(item.char.slug) ? 'Gesprochen von' : 'Gespielt von',
+            value: Array.isArray(cast) ? cast : cast ? [cast] : [] }
+        ),
+      },
+    ].filter(group => group.rows.length);
+  }
+
+  /* Die Phasen als Leiste über alle Phasen des Universums, nicht nur über
+     die der Figur: Erst neben den leeren sieht man, wo sie steht und wie
+     weit sie reicht. Zwischen zwei Sagas liegt eine breitere Fuge. Für
+     Vorlesehilfen ist die Leiste ein Bild mit ausgeschriebenem Text. */
+  function buildPhaseBar(phases) {
+    const nums = phases.map(phase => phase.num);
+    const bar = el('span', 'char-data-phases');
+    bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', nums.length === 1
+      ? 'Phase ' + nums[0]
+      : 'Phasen ' + nums.slice(0, -1).join(', ') + ' und ' + nums[nums.length - 1]);
+    let saga = null;
+    for (const phase of PHASES) {
+      const step = el('span', 'char-data-phase', String(phase.num));
+      step.classList.toggle('on', nums.includes(phase.num));
+      step.classList.toggle('saga-start', saga !== null && phase.saga !== saga);
+      step.title = 'Phase ' + phase.num + ' · ' + phase.saga;
+      saga = phase.saga;
+      bar.append(step);
     }
-    add('Auftritte', countLabel(item.char.entries.length));
-    add('Phasen', item.phases.map(phase => 'Phase ' + phase.num));
-    add(CHAR_VOICE_ONLY.has(item.char.slug) ? 'Gesprochen von' : 'Gespielt von',
-      item.castNames);
-    return rows;
+    return bar;
   }
 
   function buildData(item) {
-    const rows = dataRows(item);
-    if (!rows.length) return null;
+    const groups = dataGroups(item);
+    if (!groups.length) return null;
 
     const box = el('div', 'char-data');
     box.setAttribute('aria-label', 'Daten zu ' + langerName(item));
 
-    const kicker = el('p', 'char-data-kicker');
-    kicker.innerHTML = STAGE_MARK;
-    kicker.append(el('span', null, 'Daten zur Figur'));
-
-    const list = el('dl', 'char-data-list');
-    /* Jede Angabe ist freiwillig: Was zu einer Figur nicht bekannt ist,
-       lässt die Tafel weg, statt eine Zeile mit Strich zu zeigen. Lange
-       Werte bekommen die ganze Breite, sonst bräche
-       „S.H.I.E.L.D. · Howling Commandos · SSR“ in eine Säule. */
-    for (const row of rows) {
-      const cell = el('div', 'char-data-cell');
-      if (row[1].length > 38) cell.classList.add('wide');
-      cell.append(
-        el('dt', 'char-data-key', row[0]),
-        el('dd', 'char-data-value', row[1])
-      );
-      list.append(cell);
+    const sheet = el('div', 'char-data-sheet');
+    for (const group of groups) {
+      const list = el('dl', 'char-data-list');
+      for (const row of group.rows) {
+        const line = el('div', 'char-data-row');
+        line.classList.toggle('half', Boolean(row.half));
+        const value = el('dd', 'char-data-value');
+        if (row.kind === 'phases') {
+          value.append(buildPhaseBar(row.value));
+        } else if (row.kind === 'count') {
+          value.classList.add('count');
+          value.textContent = String(row.value);
+        } else if (Array.isArray(row.value) && row.value.length > 1) {
+          const lines = el('ul', 'char-data-lines');
+          for (const entry of row.value) lines.append(el('li', null, entry));
+          value.append(lines);
+        } else if (Array.isArray(row.value)) {
+          /* Ein einzelner Eintrag ist keine Liste und braucht keine Marke. */
+          value.textContent = row.value[0];
+        } else {
+          value.textContent = row.value;
+          if (row.note) value.append(el('span', 'char-data-note', row.note));
+        }
+        line.append(el('dt', 'char-data-key', row.label), value);
+        list.append(line);
+      }
+      const part = el('section', 'char-data-group');
+      part.append(el('h4', 'char-data-head', group.title), list);
+      sheet.append(part);
     }
 
-    /* Das Wappen füllt die Ecke, die neben den Feldern frei bleibt. Auf
-       der Bühne steht es nicht mehr, hier trägt es die sonst leere
-       weiße Fläche. */
-    const emblem = el('div', 'char-data-emblem');
-    emblem.setAttribute('aria-hidden', 'true');
-    emblem.innerHTML = STAGE_EMBLEM;
-
-    box.append(emblem, kicker, list);
+    box.append(buildSideArt(item, 'char-data-art'), sheet);
     return box;
   }
 
@@ -1402,10 +1527,6 @@
      Gebaut wird die Bühne bei jedem Öffnen neu. Die Bilder bleiben dabei
      im Zwischenspeicher des Browsers, teuer ist daran nichts. */
 
-  /* Das Wappen in der Ecke der Tafel Daten: ein Ring mit zwei Marken und
-     darin ein gezackter Stern. Es steht sehr blass und ist reine Kulisse.
-     Hinter der Figur auf der Bühne stand es früher auch, dort ist die
-     Fläche jetzt frei. */
   /* ---------- Die Kulisse der Bühne ----------
 
      Nach der Vorlage: ein flacher dunkler Grund, darüber eine sehr große
@@ -1498,16 +1619,6 @@
 
   const STAGE_SCENE = STAGE_SCENE_BREIT + STAGE_SCENE_SCHMAL;
 
-  const STAGE_EMBLEM = '<svg viewBox="0 0 400 400" aria-hidden="true">'
-    + '<path class="burst" d="M200 30 236.4 112.2 320.2 79.8 287.8 163.6 370 200'
-    + ' 287.8 236.4 320.2 320.2 236.4 287.8 200 370 163.6 287.8 79.8 320.2'
-    + ' 112.2 236.4 30 200 112.2 163.6 79.8 79.8 163.6 112.2Z"/>'
-    + '<circle class="ring" cx="200" cy="200" r="176"/>'
-    + '<circle class="ring dash" cx="200" cy="200" r="158"/>'
-    + '<circle class="node" cx="24" cy="200" r="7"/>'
-    + '<circle class="node" cx="376" cy="200" r="7"/>'
-    + '</svg>';
-
   /* Das Nachmessen der Rollleiste der gerade gebauten Fassungswahl. Sie
      hängt wie die Pfeile der Connections an einem einzigen Haken am
      Fenster statt an je einem pro Figur: Sonst sammelten sich beim
@@ -1517,9 +1628,9 @@
   window.addEventListener('resize', () => { if (railFit) railFit(); });
 
   /* Die kleine Marke vor „Marvel Cinematic Universe“ über dem Titel: der
-     Filmstreifen, den das Bild-Studio schon für die Auftritte einer Figur
+     Filmstreifen, den das Vision-Studio schon für die Auftritte einer Figur
      benutzt (LuFilm, siehe ZEICHEN['auftritte'] in
-     tools/portrait-studio/ui-components/icons.js). */
+     vision-studio/ui-components/icons.js). */
   const STAGE_MARK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"'
     + ' stroke-width="2" aria-hidden="true">'
     + '<rect width="18" height="18" x="3" y="3" rx="2"/>'
@@ -1606,12 +1717,37 @@
 
     /* Zwei Ebenen übereinander: Eine trägt die sichtbare Fassung, die
        andere nimmt die nächste auf und wird darübergeblendet. */
+    /* Der Wurf des Schattens: zweimal dasselbe Bild wie die Figur, nur
+       schwarz gerechnet und flach auf die Fläche geworfen. Er beginnt
+       dort, wo die Figur den Boden berührt, und zwar an jeder Stelle
+       ihrer Standlinie einzeln, damit auch zwei weit auseinanderstehende
+       Füße jeder aus ihrem eigenen Punkt werfen.
+
+       Zweimal deshalb, weil ein Schatten mit dem Abstand von seinem
+       Werfer weicher wird: Das eine Stück liegt scharf am Fuß und hört
+       auf halber Strecke auf, das andere setzt dort an und läuft weich
+       aus. Wohin, wie weit und wie dunkel, steht im Stylesheet, siehe
+       .char-figure-cast. */
+    function buildCast(art) {
+      const cast = el('span', 'char-figure-cast ' + art);
+      cast.setAttribute('aria-hidden', 'true');
+      const img = el('img');
+      img.alt = '';
+      img.decoding = 'async';
+      cast.append(img);
+      return cast;
+    }
+
     function buildLayer() {
       const layer = el('span', 'char-figure-layer');
       const img = el('img');
       img.alt = '';
       img.decoding = 'async';
-      layer.append(img);
+      /* Die Figur zuerst: Alles weitere in der Ebene ist ihr Schatten und
+         liegt hinter ihr, siehe .char-figure-layer > img im Stylesheet.
+         Als erstes Kind bleibt sie außerdem die, die gemeint ist, wenn
+         die Ebene nach ihrem Bild gefragt wird. */
+      layer.append(img, buildCast('nah'), buildCast('fern'));
       stack.append(layer);
       return layer;
     }
@@ -1788,11 +1924,20 @@
        Der Wert hängt an der Datei, nicht an der Figur, und zieht deshalb
        mit der Ebene um. */
     function paint(layer, file) {
-      layer.firstElementChild.src = lookSrc(file);
+      /* Alle Bilder der Ebene auf einmal: die Figur und die beiden
+         Stücke ihres Schattens. Sie zeigen dieselbe Datei, geladen wird
+         sie nur einmal. */
+      const src = lookSrc(file);
+      layer.querySelectorAll('img').forEach(img => { img.src = src; });
       layer.style.setProperty('--figure-scale', fullsizeScale(file));
       /* Trägt die Datei unter der Figur leere Fläche, weil sie fliegt,
          rechnet der Rahmen sie darüber wieder groß (FULLSIZE_LIFT). */
       layer.style.setProperty('--figure-lift', fullsizeLift(file));
+      /* Unten mittig ist die Regel. Wo ein Bild woanders hingehört, sagt
+         FULLSIZE_SHIFT, wie weit es von dort abrückt. */
+      const [rechts, runter] = fullsizeShift(file);
+      layer.style.setProperty('--figure-shift-x', rechts);
+      layer.style.setProperty('--figure-shift-y', runter);
     }
 
     /* Nur die vordere Ebene ist sichtbar, nur sie beschreibt das Bild.
@@ -1822,6 +1967,136 @@
       frame.classList.add('empty');
     }
 
+    /* ---------- Der Übergang auf der Bühne ----------
+
+       Wechselt das Bild, löst sich das alte auf und das neue tritt daraus
+       hervor, wie beim Porträt oben (siehe js/portrait-morph.js). Zwei
+       Anlässe gibt es dafür: eine andere Fassung derselben Figur, und
+       eine andere Figur, weil geblättert wurde.
+
+       Beim Blättern kommt die Anforderung von außen, denn diese Bühne
+       hier ist dann längst neu gebaut und weiß von der Figur davor
+       nichts mehr. Steht ihr eigenes Bild noch nicht, wartet die
+       Anforderung kurz auf das nächste: Ein Ganzkörperbild ist groß, und
+       es kann sein, dass es erst im nächsten Augenblick fertig ist.
+
+       Die Frist ist knapp bemessen. Was später kommt, gehört gefühlt
+       nicht mehr zum Klick, und ein Übergang, der nach einer halben
+       Sekunde Stillstand losläuft, sieht aus wie ein Fehler. */
+    const stageChannel = window.PortraitMorph
+      ? window.PortraitMorph.channel('stage') : null;
+    let waiting = null;
+    const WAIT = 400;
+
+    /* Das Bild, das gerade auf der Bühne steht, mit der Fläche, die es
+       einnimmt. Ohne Bild oder ohne Maß gibt es nichts zu blenden. */
+    function stageShot() {
+      if (!shown || !stageChannel || frame.classList.contains('empty')) return null;
+      const box = window.PortraitMorph.boxOf(layers[front].firstElementChild, frame);
+      return box ? { src: lookSrc(shown), box } : null;
+    }
+
+    /* Der Übergang vom übergebenen Bild auf das, was jetzt dasteht.
+       Beide müssen schon auf der Grafikkarte liegen, sonst käme er zu
+       spät und spränge zurück. */
+    function runMorph(from, dir) {
+      if (!from || !stageChannel || !stageChannel.ready()) return;
+      const to = stageShot();
+      if (!to || !stageChannel.hot(from.src) || !stageChannel.hot(to.src)) return;
+      /* Nach setFront() in swap() liegt die neue Fassung vorn und die
+         alte dahinter. Ihr Schatten läuft mit, siehe castMorph. */
+      stageChannel.play(frame, from, to, dir,
+        castMorph(layers[1 - front], layers[front], dir));
+    }
+
+    /* ---------- Der Schatten im Übergang ----------
+
+       Die Leinwand des Übergangs zeigt nur die Figur. Ihr Schatten ist
+       kein Bild, sondern zwei schwarz gerechnete Kopien davon, flach auf
+       die Fläche geworfen, mit Verlauf und Weichzeichner (siehe
+       .char-figure-cast). Das auf der Leinwand nachzurechnen hieße, den
+       ganzen Wurf ein zweites Mal zu bauen und bei jeder Änderung am
+       Stylesheet nachzuziehen.
+
+       Er geht deshalb dort über, wo er ohnehin liegt: auf den beiden
+       Ebenen der Fassungen. Derselbe Filter wie beim Übergang der ganzen
+       Ansicht (siehe PageMorph.warp in js/page-morph.js) verzieht beide
+       gegenläufig und löst den alten Schatten fleckig auf, während der
+       neue an genau den Stellen erscheint, an denen der alte fehlt. Den
+       Takt gibt die Leinwand vor: Sie meldet jeden Stand, und der
+       Schatten folgt im selben Bild.
+
+       Die beiden Ebenen blenden sonst per CSS über. Für die Dauer des
+       Übergangs stehen sie deshalb beide ganz da, und was man sieht,
+       entscheidet allein die Maske. Wer weniger Bewegung verlangt, bekommt
+       die gewohnte Blende. */
+    let castLauf = 0;
+
+    function castMorph(alt, neu, dir) {
+      const pm = window.PageMorph;
+      if (!pm || !pm.warp || !alt || !neu) return null;
+      if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+      const paar = pm.warp('cast-morph', { freq: 0.009, octaves: 3, seed: 7, margin: 8, both: true });
+      const lagen = [alt, neu];
+      const seite = dir < 0 ? -1 : 1;
+      /* So weit wie die Figur auf der Leinwand, siehe den Shader in
+         js/portrait-morph.js: Ein Schatten, der weiter ausschlägt als sein
+         Werfer, reißt sich von ihm los. */
+      const weit = (stageChannel.get().intensity || 0) * 65;
+      const kante = 0.6;
+      let mine = 0;
+      return {
+        start() {
+          mine = ++castLauf;
+          for (const lage of lagen) {
+            lage.style.transition = 'none';
+            lage.style.opacity = '1';
+          }
+          alt.style.filter = paar.out;
+          neu.style.filter = paar.in;
+          paar.step(0, 0, kante);
+        },
+        frame(p) {
+          paar.step(p, Math.sin(p * Math.PI) * weit * seite, kante);
+        },
+        /* Am Ende und beim Abbruch gleich: Die Ebenen gehen auf ihren
+           Stand aus dem Stylesheet zurück, und zwar ohne Blende. Die alte
+           ist dann schon fort, eine Blende brächte sie für einen
+           Augenblick zurück. Die Blende selbst kommt erst im nächsten
+           Bild wieder, und nur, wenn kein neuer Übergang die Ebenen
+           inzwischen übernommen hat. */
+        end() {
+          for (const lage of lagen) {
+            lage.style.transition = 'none';
+            lage.style.removeProperty('opacity');
+            lage.style.removeProperty('filter');
+          }
+          requestAnimationFrame(() => {
+            if (mine !== castLauf) return;
+            for (const lage of lagen) lage.style.removeProperty('transition');
+          });
+        },
+      };
+    }
+
+    /* In welche Richtung der Wechsel innerhalb der Fassungen geht. Sie
+       dreht Welle, Streifen und Wirbel, damit der Übergang der Bewegung
+       durch die Fassungswahl folgt. */
+    function lookDir(look) {
+      const at = looks.findIndex(entry => entry[1] === look);
+      const was = looks.findIndex(entry => entry[1] === shownLook);
+      return at >= 0 && was >= 0 && at < was ? -1 : 1;
+    }
+
+    stageMorph = {
+      shown: stageShot,
+      from(quelle, dir) {
+        if (!quelle || !stageChannel) return;
+        if (stageShot()) runMorph(quelle, dir);
+        else waiting = { quelle, dir, at: performance.now() };
+      },
+    };
+
     /* Ein Fassungswechsel wartet, bis die neue Datei fertig dekodiert ist,
        und blendet dann über. Würde stattdessen das src im sichtbaren Bild
        getauscht, stünde die alte Fassung erst noch im Maß der neuen da
@@ -1847,11 +2122,20 @@
         if (mine !== ticket) return;
         clearTimeout(busyTimer);
         frame.classList.remove('busy', 'empty');
+        /* Vor dem Umschalten: Gleich darauf steht die neue Fassung im
+           Rahmen, und wo die alte lag, ist nicht mehr zu messen. Wartet
+           eine Anforderung von außen, weil eben geblättert wurde, gilt
+           deren Bild statt dem hier. */
+        const frisch = waiting && performance.now() - waiting.at < WAIT;
+        const from = frisch ? waiting.quelle : stageShot();
+        const dir = frisch ? waiting.dir : lookDir(look);
+        waiting = null;
         paint(next, file);
         shown = file;
         shownLook = look;
         setFront(1 - front);
         setInfo(look, file);
+        runMorph(from, dir);
       };
       /* Ohne Datei bleibt der Platzhalter stehen. Die rechte Spalte
          schreibt trotzdem, was gewählt ist: Die Fassung gibt es ja, nur
@@ -1867,7 +2151,14 @@
         missing();
         return;
       }
-      if (lookReady.has(file)) {
+      /* Gewartet wird auf zwei Dinge: dass der Browser die Datei
+         dekodiert hat und dass sie als Textur bereitliegt. Die Textur
+         erst nach dem Umschalten zu holen, hieße, den Übergang um ein
+         paar Bilder zu spät zu beginnen, und dann spränge das schon
+         gewechselte Bild noch einmal zurück. */
+      const warm = () => !stageChannel || !stageChannel.ready()
+        || stageChannel.hot(lookSrc(file));
+      if (lookReady.has(file) && warm()) {
         swap();
         return;
       }
@@ -1876,7 +2167,9 @@
       busyTimer = setTimeout(() => {
         if (mine === ticket) frame.classList.add('busy');
       }, 140);
-      loadLook(file).then(swap, () => {
+      const auchAlsTextur = stageChannel && stageChannel.ready()
+        ? stageChannel.preload(lookSrc(file)) : null;
+      Promise.all([loadLook(file), auchAlsTextur]).then(swap, () => {
         lookGone.add(file);
         missing();
       });
@@ -2149,6 +2442,12 @@
        steht nur die, die die Leiste gerade offen hat (siehe fitModes()
        am Ende): Ein Wechsel soll die Fläche austauschen und nicht auf den
        Aufbau warten lassen. */
+    /* Wie beim Porträt: Ein laufender Übergang hinge sonst über einer
+       Bühne, die es nicht mehr gibt. Sein letztes Bild bleibt einen
+       Augenblick stehen, damit der Wechsel auf die neue Figur daran
+       anknüpfen kann. */
+    if (window.PortraitMorph) window.PortraitMorph.channel('stage').stop();
+    stageMorph = null;
     charStageSlot.replaceChildren(buildFigure(item));
 
     const powers = buildPowers(item);
@@ -2196,16 +2495,19 @@
     charFilms.replaceChildren(...char.entries.map(record => {
       const link = el('a', 'char-film');
       link.href = 'index.html#titel=' + encodeURIComponent(record.movie.title);
-      /* Links das Filmlogo, dieselben Dateien wie auf der Timeline
-         (assets/logos/dark/<slug>.webp), rechts daneben Titel und Phase. Der
+      /* Links das Filmlogo, dieselben Dateien wie auf der Timeline. Der
          Logokasten ist fest bemessen und bleibt auch stehen, wenn die
-         Datei fehlt – so fangen die Titel in allen Kacheln bündig an. */
+         Datei fehlt – so fangen die Titel in allen Kacheln bündig an.
+
+         Die Kachel trägt den Grund der Seite, also entscheidet der Modus
+         über die Fassung: dunkles Logo auf dem weißen Grund, helles auf
+         dem dunklen (siehe setFilmLogoAufGrund). */
       const logo = el('span', 'char-film-logo');
       const logoImg = el('img');
       logoImg.alt = '';
       logoImg.loading = 'lazy';
       logoImg.decoding = 'async';
-      setFilmLogo(logoImg, record.movie.slug, () => logoImg.remove());
+      setFilmLogoAufGrund(logoImg, record.movie.slug, () => logoImg.remove());
       logo.append(logoImg);
       const text = el('span', 'char-film-text');
       text.append(
@@ -2253,6 +2555,7 @@
     charInner.scrollTop = blick;
     labelStep(charPrev, stepTarget(-1), 'Vorherige Figur');
     labelStep(charNext, stepTarget(1), 'Nächste Figur');
+    primeMorph();
     /* Die Adresse merkt sich die offene Figur, ohne einen Verlaufsschritt
        anzulegen: Ein geteilter Link öffnet sie beim Laden wieder. */
     setHash('#' + item.char.slug);
@@ -2260,6 +2563,58 @@
        vor der Figur, die er zuletzt gelesen hat, statt vor der, bei der er
        eingestiegen ist. */
     charOpener = item.cell.firstElementChild;
+  }
+
+  /* ---------- Der Übergang zwischen zwei Figuren ----------
+
+     Beide Bilder der Ansicht wechseln nicht hart, sondern lösen sich auf
+     und setzen sich als die der nächsten Figur wieder zusammen: das
+     Porträt oben auf der Bühne und das Ganzkörperbild auf der
+     Erscheinungsbühne darunter. Gerechnet wird das in
+     js/portrait-morph.js auf der Grafikkarte, hier steht nur, wann es
+     losgeht und zwischen welchen beiden Bildern.
+
+     Der Text wechselt weiterhin in einem Zug: Der Übergang gehört den
+     Bildern, und eine Zeile, die eine Sekunde lang halbdurchsichtig
+     danebensteht, wäre nicht zu lesen.
+
+     Die Bühne meldet ihr eigenes Bild an, sobald sie gebaut ist (siehe
+     stageMorph weiter unten): Von hier aus ist sie nicht zu erreichen,
+     denn buildFigure() baut sie bei jeder Figur neu. */
+  const heroMorph = () => window.PortraitMorph
+    && window.PortraitMorph.channel('hero');
+
+  /* Was gerade auf der Erscheinungsbühne steht, und wie man es wechselt.
+     Gesetzt wird das von buildFigure(), sobald ihr Rahmen steht. */
+  let stageMorph = null;
+
+  function morphHero(from, to, delta) {
+    const morph = heroMorph();
+    /* Beide Bilder müssen schon auf der Grafikkarte liegen, sonst käme
+       der Übergang zu spät und spränge auf das alte Bild zurück. Dafür
+       sorgt primeMorph() beim Aufschlagen der Figur davor. */
+    if (!morph || !morph.ready() || !morph.hot(from.src) || !morph.hot(to.src)) return;
+    morph.play(charHeroArt, from, to, delta);
+  }
+
+  /* Die Bilder der eigenen Figur und der beiden Nachbarn im Voraus
+     holen. Wer blättert, blättert meistens weiter, und der Übergang beim
+     nächsten Klick soll nicht am Laden hängen. */
+  function primeMorph() {
+    const morph = heroMorph();
+    if (!morph || !morph.ready()) return;
+    const stage = window.PortraitMorph.channel('stage');
+    const bahn = [charItem, stepTarget(-1), stepTarget(1)].filter(Boolean);
+    for (const item of bahn) {
+      morph.preload(portraitSrc(item));
+      if (!stage.ready()) continue;
+      const file = standardFile(item);
+      stage.preload(lookSrc(file));
+      /* Auch die Bühne selbst soll das Bild schon haben: Sie zeigt es
+         erst, wenn es dekodiert ist, und bis dahin gäbe es nichts, worauf
+         der Übergang zulaufen könnte. */
+      loadLook(file).catch(() => {});
+    }
   }
 
   /* Eine Figur weiter oder zurück. */
@@ -2270,7 +2625,40 @@
        nimmt ihm dabei den Fokus, deshalb vorher merken und danach dem
        Gegenpfeil geben. */
     const held = document.activeElement;
+
+    /* Der Abzug der ganzen Ansicht, noch vor dem Umbau. Solange er liegt,
+       geschieht der Umbau unsichtbar darunter, und danach gehen beide
+       Schichten gegeneinander über (siehe js/page-morph.js). Die drei
+       Schaltflächen oben rechts bleiben davon unberührt: Sie stehen als
+       eigene Lage über der Ansicht und gehören nicht zur Figur.
+
+       Gibt es keinen Abzug, weil der Übergang abgeschaltet ist, bleibt
+       es beim Wechsel der beiden Bilder für sich. */
+    const shot = window.PageMorph ? window.PageMorph.take(charInner, charFlow) : null;
+
+    /* Noch vor dem Wechsel: Gleich darauf stehen die neuen Bilder in
+       ihren Rahmen, und die alten sind nur noch als Datei zu haben.
+       Gemessen wird jetzt, denn nach dem Wechsel gibt es die Fläche, die
+       sie einnahmen, nicht mehr. */
+    const heroFrom = shot ? null : {
+      src: portraitSrc(charItem),
+      box: window.PortraitMorph
+        ? window.PortraitMorph.boxOf(charHeroArt.querySelector('img'), charHeroArt) : null,
+    };
+    const stageFrom = shot || !stageMorph ? null : stageMorph.shown();
     showChar(target, true);
+    if (shot) {
+      window.PageMorph.play(shot, delta);
+    } else {
+      morphHero(heroFrom, {
+        src: portraitSrc(target),
+        box: window.PortraitMorph
+          ? window.PortraitMorph.boxOf(charHeroArt.querySelector('img'), charHeroArt) : null,
+      }, delta);
+      /* Die Bühne der neuen Figur steht inzwischen, stageMorph zeigt also
+         schon auf sie. */
+      if (stageFrom && stageMorph) stageMorph.from(stageFrom, delta);
+    }
     if (held === charPrev && charPrev.disabled) charNext.focus();
     else if (held === charNext && charNext.disabled) charPrev.focus();
   }
@@ -2372,6 +2760,9 @@
 
   function closeChar() {
     if (!charOpen) return;
+    /* Ein laufender Übergang der Ansicht hat sich damit erledigt: Sie
+       fährt gleich hinaus, und der Abzug führe als zweite Schicht mit. */
+    if (window.PageMorph) window.PageMorph.cancel();
     charOpen = false;
     charItem = null;
     charFull.classList.remove('visible');

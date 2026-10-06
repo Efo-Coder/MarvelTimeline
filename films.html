@@ -22,6 +22,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Ohne defer und vor allem anderen: Die Datei setzt die Klasse für den
+       hellen oder dunklen Modus und muss damit fertig sein, bevor der
+       erste Punkt gezeichnet ist. Sie baut auch den Knopf im Kopf. -->
+  <script src="js/theme.js"></script>
   <script>
     /* Gleiche sanfte Einblendung wie auf der Timeline, siehe index.html */
     document.documentElement.classList.add('js');
@@ -41,7 +45,7 @@
       <div class="header-side">
         <a class="brand" href="index.html">
           <img class="brand-logo" src="assets/theme/marvel-logo.webp" alt="Marvel Logo">
-          <span class="brand-text">Timeline</span>
+          <span class="brand-text">Filme &amp; Serien</span>
         </a>
       </div>
 
@@ -61,12 +65,24 @@
        Inhaltsbreite begrenzt wäre und das Band bis an beide Fensterränder
        laufen soll. -->
   <section class="chars-masthead">
+    <!-- Hinter dem Titel treibt eine Wand aus Filmplakaten vorbei, statt
+         eines stehenden Bildes wie auf der Charakterseite. Gebaut wird sie
+         in js/drift-wall.js aus den Titeln in data.js, der leere Kasten
+         hier sagt nur, wo sie hingehört. Sie ist reine Zier und trägt
+         deshalb aria-hidden. -->
+    <div class="drift-wall" data-drift-wall aria-hidden="true"></div>
+
     <div class="chars-masthead-inner">
       <p class="chars-kicker">Woraus das Universum besteht</p>
       <h1 class="chars-title">Filme &amp; Serien</h1>
       <p class="chars-lead">Jeder Titel der Timeline als Plakat, in Reihen sortiert: empfohlen,
       nach der Handlung, nach dem Kinostart und Phase für Phase. Ein Klick öffnet Stab,
       Besetzung und Handlung.</p>
+
+      <!-- Die Uhr bis zum nächsten Start. Sie kommt aus js/films.js, weil
+           erst data.js sagt, welcher Titel als Nächstes ansteht. Steht
+           keiner mehr aus, bleibt der Kasten leer und verschwindet. -->
+      <div class="film-countdown" id="film-countdown"></div>
     </div>
   </section>
 
@@ -87,6 +103,9 @@
   <script src="js/credits.js"></script>
   <script src="js/chars.js"></script>
   <script src="js/logo-fit.js"></script>
+  <script src="js/counter.js"></script>
+  <script src="js/drift-wall-config.js"></script>
+  <script src="js/drift-wall.js"></script>
   <script src="js/films.js"></script>
 </body>
 </html>
