@@ -6,12 +6,11 @@
    horizontal. Ist sie in Scrollrichtung am Anschlag, läuft das Event an
    Lenis weiter und die Seite scrollt normal vertikal weiter.
 
-   Ein-/Ausblendungen (Hero-Textstufen, Timeline-Einträge) sind scroll-
-   gekoppelt (Scrub): opacity/transform werden pro Frame aus der Position
-   im Viewport berechnet. Der Hero klebt dabei über die Höhe seines Tracks
-   am oberen Rand und schaltet nacheinander durch seine Textstufen. Nur
-   die Hero-Intro-Choreografie beim Laden läuft zeitbasiert über
-   CSS-Transitions (.hero.ready). */
+   Ein-/Ausblendungen der Timeline-Einträge sind scroll-gekoppelt
+   (Scrub): opacity/transform werden pro Frame aus der Position im
+   Viewport berechnet. Der Auftritt des Kopfbandes beim Laden läuft
+   dagegen zeitbasiert über CSS-Transitions (.hero.ready), und der Titel
+   darin bringt seinen eigenen mit (js/masked-heading.js). */
 (function () {
   'use strict';
 
@@ -20,13 +19,10 @@
   const root = document.documentElement;
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* #hero ist der Scroll-Track, die eigentliche Sektion klebt darin
-     (sticky). heroSpan = Scrollweg durch den Track (Trackhöhe minus
-     Viewport); measure() hält ihn aktuell. Schon hier deklariert, weil
-     der Ton-Schalter beim Start darauf zugreift. */
-  const heroTrack = document.getElementById('hero');
-  const hero = heroTrack.querySelector('.hero');
-  let heroSpan = 1;
+  /* Das Kopfband der Seite. Es steht ganz gewöhnlich im Fluss, hier wird
+     nur sein Auftritt beim Laden gestartet und es dient dem
+     Phasen-Beobachter als erster Abschnitt. */
+  const hero = document.getElementById('hero');
 
   const navLinks = new Map();
   const byId = new Map(PHASES.map(p => [p.id, p]));
@@ -391,74 +387,6 @@
     store(TIPS_KEY, tipsEnabled ? 'on' : 'off');
     if (!tipsEnabled) hideTip();
   });
-
-  /* ---------- Ton-Schalter für das Hero-Theme-Video ----------
-
-     Das Video läuft wegen der Autoplay-Policy stumm. Der Button schaltet
-     den Ton um; die letzte Wahl wird gespeichert. Beim Neuladen kann der
-     Browser Ton ohne Nutzergeste blockieren – dann fällt play() durch und
-     wir gehen sauber zurück auf stumm. */
-  const SOUND_KEY = 'mcu-timeline.sound';
-  const heroVideo = document.querySelector('.hero-video');
-  const soundBtn = document.getElementById('hero-sound');
-
-  /* Wird vom Frame-Loop aufgerufen und weiter unten befüllt, sobald der
-     Ton-Schalter existiert. */
-  let fadeHeroSound = () => {};
-
-  if (heroVideo && soundBtn) {
-    const reflectSound = () => {
-      const on = !heroVideo.muted;
-      soundBtn.classList.toggle('is-on', on);
-      soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      soundBtn.setAttribute('aria-label', on ? 'Ton ausschalten' : 'Ton einschalten');
-    };
-
-    /* Die Lautstärke hängt am Scroll und folgt dem Ausblenden der Hero:
-       Während der gepinnten Textsequenz bleibt das Theme voll zu hören –
-       das Video füllt dort durchgehend den Viewport. Erst wenn der Hero
-       den Track verlässt, wird es leiser und nach gut der halben
-       Viewporthöhe still. Zurückscrollen dreht wieder auf. Gestellt wird
-       nur volume, nicht muted, damit der Schalter seinen Zustand behält.
-       Die Stufen von 5 Prozent halten die Zahl der Setzer pro Sekunde
-       klein, ohne dass man den Verlauf treppig hört. */
-    const FADE_SPAN = 0.55; // Anteil der Viewporthöhe bis zur Stille
-    let shownVolume = -1;
-
-    const scrollVolume = () => {
-      const vh = window.innerHeight || 1;
-      return Math.round((1 - clamp01((window.scrollY - heroSpan) / (vh * FADE_SPAN))) * 20) / 20;
-    };
-
-    const applyVolume = (v) => {
-      if (v === shownVolume) return;
-      shownVolume = v;
-      try { heroVideo.volume = v; } catch (err) {}
-    };
-
-    fadeHeroSound = () => {
-      if (heroVideo.muted) return;
-      applyVolume(scrollVolume());
-    };
-
-    const setSound = (on) => {
-      heroVideo.muted = !on;
-      store(SOUND_KEY, on ? 'on' : 'off');
-      if (on) {
-        /* Beim Einschalten im gescrollten Zustand sofort auf den zum
-           Scrollstand passenden Pegel, sonst knallt der erste Frame laut */
-        applyVolume(scrollVolume());
-        const p = heroVideo.play();
-        if (p && p.catch) p.catch(() => { heroVideo.muted = true; reflectSound(); });
-      }
-      reflectSound();
-    };
-
-    soundBtn.addEventListener('click', () => setSound(heroVideo.muted));
-
-    if (readStored(SOUND_KEY) === 'on') setSound(true);
-    else reflectSound();
-  }
 
   /* Das Menü selbst öffnet und schließt rein über CSS (:hover bzw.
      :has(:focus-visible)) – hier hängt keine Logik dran. */
@@ -902,7 +830,6 @@
   const FIT_MIN_SHRINK = 0.9; // größere Phasen: nur wenn ≥90 % Breite bleibt
 
   function measure() {
-    heroSpan = Math.max(1, heroTrack.offsetHeight - window.innerHeight);
     for (const item of strips) {
       item.wrap.classList.remove('fit');
       if (item.timeline.offsetWidth > item.viewport.clientWidth) {
@@ -977,7 +904,6 @@
         updateEntries(item, item.tx, vw, vh);
       }
     }
-    if (!reduceMotion) updateHero(vh);
   }
 
   /* ---------- Lenis Smooth Scroll ---------- */
@@ -990,7 +916,6 @@
   function frame(time) {
     if (lenis) lenis.raf(time);
     updateScrub();
-    fadeHeroSound();
     if (tipAnchor) positionTip();
     requestAnimationFrame(frame);
   }
@@ -1006,15 +931,19 @@
     try { history.pushState(null, '', link.getAttribute('href')); } catch (err) {}
   });
 
-  /* ---------- Aktive Phase: Nav, Akzentfarbe, Galaxie ---------- */
+  /* ---------- Aktive Phase: Nav, Akzentfarbe, Fasern ---------- */
 
+  /* Das Faserfeld hinter der Seite trägt die Farben der Phase, in der man
+     gerade steht, und blendet beim Wechsel hinüber. Ohne Phase, also im
+     Kopfband, geht es auf die Farben aus js/ghost-fibers-config.js
+     zurück; das sagt hier das null. */
   function activate(id) {
     const phase = byId.get(id) || null;
     navLinks.forEach((link, key) => {
       link.classList.toggle('active', phase !== null && key === id);
     });
     root.style.setProperty('--accent', phase ? phase.accent : DEFAULT_ACCENT);
-    if (window.Galaxy) Galaxy.setPalette(phase ? phase.nebula : DEFAULT_NEBULA);
+    if (window.GhostFibers) GhostFibers.setPhase(phase ? phase.fibers : null);
   }
 
   const sectionObserver = new IntersectionObserver(entries => {
@@ -1023,7 +952,7 @@
     });
   }, { rootMargin: '-45% 0px -45% 0px', threshold: 0 });
 
-  sectionObserver.observe(heroTrack);
+  sectionObserver.observe(hero);
   PHASES.forEach(p => sectionObserver.observe(document.getElementById(p.id)));
 
   /* ---------- Scroll-gekoppelte Ein-/Ausblendung (Scrub) ----------
@@ -1113,82 +1042,12 @@
     }
   }
 
-  /* Hero: gepinnte Textsequenz. Der Fortschritt p (0..1) durch den Track
-     schaltet die Stufen um – jede blendet in ihrem Fenster scroll-
-     gekoppelt ein (Hub von unten, Unschärfe weicht) und wieder aus
-     (Drift nach oben, Unschärfe kehrt zurück); Zurückscrollen spielt
-     alles rückwärts. Der Titel steht ohne Einblendfenster von Anfang an
-     da – sein Auftritt beim Laden gehört der Intro-Choreografie
-     (.hero.ready), die das h1 im Wrapper animiert. Die Untertitel bleiben
-     bis zum Schluss stehen und fahren mit dem Hero aus dem Bild. */
-  const STAGE_RISE = 22;   // px Hub beim Einblenden
-  const STAGE_LIFT = 30;   // px Drift nach oben beim Ausblenden
-  const STAGE_BLUR = 8;    // px Unschärfe im ausgeblendeten Zustand
-  const STAGE_ZOOM = 0.04; // Anteil, um den eine Stufe beim Einblenden größer startet
+  /* ---------- Auftritt des Kopfbandes: sobald die Schriften stehen ----------
 
-  /* Breite Fenster (je rund ein Fünftel des Scrollwegs) halten die
-     Übergänge ruhig: Auch ein kräftiger Mausrad-Schwung durchläuft eine
-     Blende dann über mehrere hundert Pixel Scrollweg statt sie im
-     Vorbeiflug zu überspringen. Die kurzen Lücken dazwischen verhindern,
-     dass zwei Stufen halbtransparent übereinander stehen.
-
-     Die Fenster sind auf den kürzeren Track (350vh statt 460vh, siehe
-     .hero-track) nachgezogen. Weggefallen ist vor allem das Warten: Der
-     Titel steht nur noch eine Achtel Viewporthöhe, bevor er zu gehen
-     beginnt, vorher war es fast eine halbe. Die Blenden selbst laufen
-     weiter über 42 bis 55 Viewportprozent Scrollweg, also über vier
-     Fünftel ihrer früheren Länge und damit genauso ruhig wie vorher. */
-  const heroStages = [
-    { node: hero.querySelector('.hero-stage-title'),  fadeIn: null,         fadeOut: [0.05, 0.27] },
-    { node: hero.querySelector('.hero-stage-kicker'), fadeIn: [0.30, 0.51], fadeOut: [0.55, 0.76] },
-    { node: hero.querySelector('.hero-stage-subs'),   fadeIn: [0.79, 0.96], fadeOut: null },
-  ];
-  for (const s of heroStages) s.shown = -1;
-
-  let heroShown = -1;
-
-  /* Rampe 0→1 über das Fenster [von, bis]; ohne Fenster konstant 1. */
-  function ramp(p, span) {
-    return span ? clamp01((p - span[0]) / (span[1] - span[0])) : 1;
-  }
-
-  function updateHero(vh) {
-    const y = window.scrollY;
-    const p = y / heroSpan;
-
-    for (const s of heroStages) {
-      const vIn = ramp(p, s.fadeIn);
-      const vOut = 1 - (s.fadeOut ? ramp(p, s.fadeOut) : 0);
-      /* Beide Rampen quantisiert in einem Schlüssel – geschrieben wird
-         nur, wenn sich sichtbar etwas ändert */
-      const q = Math.round(vIn * 200) * 1000 + Math.round(vOut * 200);
-      if (q === s.shown) continue;
-      s.shown = q;
-      const eIn = smooth(vIn);
-      const eOut = smooth(vOut);
-      s.node.style.opacity = (eIn * eOut).toFixed(3);
-      /* Beim Einblenden startet die Stufe minimal größer und setzt sich
-         wie ein Fokuszug ins Bild – transform statt Laufweite/Umbruch,
-         damit mehrzeilige Texte während der Blende nicht neu umbrechen. */
-      const ty = (1 - eIn) * STAGE_RISE - (1 - eOut) * STAGE_LIFT;
-      const sc = 1 + STAGE_ZOOM * (1 - eIn);
-      s.node.style.transform = Math.abs(ty) < 0.05 && sc < 1.0005 ? '' :
-        'translateY(' + ty.toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')';
-      const blur = Math.min((1 - eIn) + (1 - eOut), 1) * STAGE_BLUR;
-      s.node.style.filter = blur < 0.05 ? '' : 'blur(' + blur.toFixed(1) + 'px)';
-    }
-
-    /* Nach dem Track löst sich der Hero vom oberen Rand und scrollt mit
-       der Seite davon – dabei blendet er wie früher über gut die halbe
-       Viewporthöhe aus; Zurückscrollen kehrt es um. */
-    const q = Math.round(clamp01((y - heroSpan) / (vh * 0.55)) * 200);
-    if (q !== heroShown) {
-      heroShown = q;
-      hero.style.opacity = q === 0 ? '' : (1 - smooth(q / 200)).toFixed(3);
-    }
-  }
-
-  /* ---------- Hero-Intro: startet, sobald die Fonts geladen sind ---------- */
+     Die drei Zeilen um den Titel herum blenden nacheinander auf, das
+     steht in css/style.css unter .hero.ready. Der Titel selbst hat seinen
+     eigenen Auftritt, den startet js/masked-heading.js, sobald das Video
+     seinen ersten Frame hat. */
 
   const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
   Promise.race([fontsReady, new Promise(res => setTimeout(res, 1500))]).then(() => {

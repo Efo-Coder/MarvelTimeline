@@ -6,7 +6,7 @@ Die Aufgabe ist jetzt als Standard-Buildaufgabe eingetragen, das ist der kürzes
 
 2. Über die Befehlspalette
 
-Strg+Umschalt+P, dann Tasks: Run Task, dann „Server: Fanpage und Bild-Studio“ auswählen. Derselbe Effekt, nur mit Auswahlliste.
+Strg+Umschalt+P, dann Tasks: Run Task, dann „Server: Fanpage und Vision-Studio“ auswählen. Derselbe Effekt, nur mit Auswahlliste.
 
 3. Im Terminal
 
@@ -20,7 +20,7 @@ Cinematic Universe als horizontale Timeline, aufgeteilt in die offiziellen
 Phasen 1–7. Innerhalb jeder Phase ist alles **chronologisch nach der
 Handlung** sortiert (Story-Reihenfolge, angelehnt an Marvels offizielle
 Timeline-Reihenfolge), nicht nach Kinostart – vor einem animierten
-Galaxie-Hintergrund, dessen Farben sich pro Phase ändern. Serien tragen
+Faserfeld, dessen Farben sich pro Phase ändern. Serien tragen
 ein „Serie“-Badge unter dem Zeitstrahl.
 
 Dazu gibt es zwei weitere Seiten. [characters.html](characters.html) zeigt
@@ -38,10 +38,11 @@ Reihe wieder zurück. Die Sortierung ist
 dagegen eine Wahl unter vieren, deshalb steht in der Zeile nur die
 gewählte: als roter Schalter, hinter dem die übrigen aufklappen.
 
-Sie ist als einzige Seite **hell** und nach
-[marvel.com/characters](https://www.marvel.com/characters) gebaut: weißer
-Grund, eckige Flächen ohne Rundung und Marvel-Rot (`#e62429`) als einziger
-Akzent. Phasenfarben und Galaxie gibt es dort nicht, die Phase ist nur noch
+Sie steht wie die Filmseite im **hellen** Design nach
+[marvel.com/characters](https://www.marvel.com/characters): weißer Grund,
+eckige Flächen ohne Rundung und Marvel-Rot (`#e62429`) als einziger
+Akzent. Über den Knopf im Kopf laufen beide auch dunkel, siehe „Heller und
+dunkler Modus“. Phasenfarben und Faserfeld gibt es dort nicht, die Phase ist nur noch
 ein Filter. Jede Karte zeigt oben das Porträt und darunter einen dunklen
 Block mit dem Heldennamen groß und dem bürgerlichen klein darunter; beim
 Zeigen läuft der Block von seinem roten Balken aus voll und das Bild zoomt
@@ -170,11 +171,11 @@ Fassungswahl und Filmspalte übrig lassen, auf einem breiten Fenster über
 hing früher daran und verlor beim Verkleinern des Fensters bis zu einem
 Drittel ihrer Größe, während die Figur daneben stehen blieb. Deshalb gilt
 in der Breite nicht die Spalte, sondern `--frame-ratio` mal die Höhe der
-Bühne, derzeit 1.1. Elf der rund 720 Dateien sind breiter als dieses Maß
+Bühne, derzeit 1.65. Zwei der rund 780 Dateien sind breiter als dieses Maß
 und stehen dadurch etwas kleiner im Rahmen, dafür stehen alle bei jeder
 Fensterbreite gleich groß. Reicht die Spalte für dieses Maß nicht, darf
 die Figur um `--frame-bleed` in die Fugen neben ihr laufen, aber keinen
-Schritt weiter. Dieselbe Zahl steht als `RAHMEN_SEITEN` im Bild-Studio,
+Schritt weiter. Dieselbe Zahl steht als `RAHMEN_SEITEN` im Vision-Studio,
 dessen Vorschau denselben Rahmen zeigt.
 
 Trägt eine Datei unter der Figur leere Fläche, weil sie fliegt, steht
@@ -183,7 +184,7 @@ nicht die Figur darin, ohne diese Zahl stünde eine schwebende Figur also
 kleiner da als eine stehende derselben Größe. Mit ihr rechnet die Seite
 die Datei wieder groß, bis die Figur ihr Maß hat, und über die Oberkante
 des Rahmens geht sie dabei nicht hinaus. Gepflegt wird auch diese Zahl
-nicht von Hand: Das Bildstudio misst sie beim Speichern ab.
+nicht von Hand: Das Vision-Studio misst sie beim Speichern ab.
 
 Dazu gehört, dass die Bühne schon bei 1250 Pixeln zweispaltig wird und
 nicht erst bei 1100: Dreispaltig blieben der Figur darunter keine 400
@@ -232,7 +233,7 @@ Aufnahme als groß daneben. Fehlt die Datei einer Variante – eine frisch
 angelegte hat noch keine –, tritt der Buchstabenersatz an ihre Stelle,
 und die nächste Ziffer holt das Bild zurück.
 
-Gepflegt wird das im Bild-Studio unter *Ganzkörper*, siehe **Variante +**,
+Gepflegt wird das im Vision-Studio unter *Fassungen*, siehe **Variante +**,
 **Variante −**, **Zur Variante …** und **Zur Fassung …** weiter unten.
 Auch die Reihenfolge der Varianten lässt sich dort ändern, und ob ein
 Bild eine eigene Fassung ist oder nur eine Aufnahme einer anderen, muss
@@ -272,13 +273,84 @@ einer Zeitskala scrollt, schiebt sich diese Timeline horizontal weiter
 (auf Touch-Geräten per Wischen). Ist sie am Anfang/Ende angekommen,
 scrollt die Seite normal weiter.
 
-Der Einstieg ist eine gepinnte Hero-Sequenz: Die Startsektion bleibt beim
-Scrollen zunächst am oberen Rand stehen und zeigt nacheinander den Titel,
-den Fan-Timeline-Hinweis und die Kurzbeschreibung. Jede Stufe blendet
-scroll-gekoppelt ein und aus, Zurückscrollen spielt alles rückwärts. Erst
-danach löst sich der Hero und es geht zu den Phasen weiter. Bei
-reduzierter Bewegung (Systemeinstellung) entfällt die Sequenz und alle
-Texte stehen statisch untereinander.
+Der Einstieg ist ein Kopfband, das dem der beiden anderen Seiten in jedem
+Maß gleicht. Höhe, Polster, Inhaltsbreite und Grundfarbe stehen an einer
+einzigen Stelle, nämlich als `--masthead-min-h`, `--masthead-pad`,
+`--masthead-inner` und `--masthead-bg` in `css/style.css`, und `.hero`
+wie `.chars-masthead` greifen beide darauf zu. Kicker, Titel und Zeile
+darunter stehen dadurch auf allen drei Seiten auf demselben Pixel.
+
+Ein eigenes Bild trägt das Band anders als dort nicht, und einen eigenen
+Grund braucht es auch nicht: Hinter der ganzen Seite liegt ein Feld
+feiner Fasern, das langsam atmet, und das Band steht darauf wie die
+Timeline darunter. Es geht ohne Kante in sie über, während es auf den
+anderen beiden Seiten als eigene Fläche über dem weißen Raster steht.
+
+Gezeichnet wird das Feld in [js/ghost-fibers.js](js/ghost-fibers.js) auf
+WebGL2, in einem einzigen Fragment-Shader. Der Bildpunkt wird darin
+mehrmals hintereinander verbogen, erst quer von einer Sinuswelle, dann um
+den Mittelpunkt gedreht, und aus jeder Runde fällt eine Lage Linien. Weil
+die Ebene bei jeder Lage weiter verbogen wird, laufen die Linien nicht
+parallel, sondern legen sich wie Fasern übereinander. Dazu kommen ein
+Schein in der Mitte, eine ziehende Wolke und Filmkorn.
+
+**Die Regler** stehen alle in
+[js/ghost-fibers-config.js](js/ghost-fibers-config.js), jeder mit einer
+Zeile dazu, was er tut. Gedreht wird an ihnen im Vision-Studio unter
+**Fasern**: Dort steht die echte Startseite in einem Rahmen, die Regler
+wirken sofort, und **Sichern** schreibt sie in die Datei zurück. Der
+Rahmen zeigt die ganze Seite und nicht nur das Feld, und das mit Absicht,
+denn ob die Fasern taugen, entscheidet sich daran, wie der Titel darauf
+steht. Unter dem Rahmen stehen die sieben Phasen zur Auswahl, denn das
+Feld wechselt mit ihnen die Farbe, und im Rahmen rollt niemand. Siehe
+*Das Faserfeld hinter der Seite*.
+
+Zum Ausprobieren gehen sie auch zur Laufzeit:
+
+    GhostFibers.set({ twist: 0.4, lineSharpness: 24 })
+    GhostFibers.get()
+
+Gerechnet wird nur, wenn es auch jemand sieht: nicht in einem Tab im
+Hintergrund und nicht bei abgeschalteter Bewegung. In beiden Fällen
+bleibt trotzdem ein Bild stehen, die Seite ist also nie leer. Kann der
+Browser kein WebGL2, bleibt sie auf der bloßen Grundfarbe `--bg` stehen
+und sieht immer noch richtig aus.
+
+Der Titel trägt dieselbe `clamp(2.6rem, 7vw, 4.4rem)` wie `.chars-title`.
+Nur die Schrift ist eine andere: Auf der Startseite steht der Benton des
+Marvel-Schriftzugs.
+
+Der Titel ist eine Video-Maske: „Marvel Timeline" steht durchsichtig da
+und gibt nur die Maße vor, darüber liegt `assets/theme/marvel-timeline-bg.mp4`,
+und ein clipPath aus denselben Wörtern schneidet daraus die Buchstaben
+heraus. Beim Auftritt steigen die Wörter versetzt herauf, danach wandert
+das Video in der Schrift langsam umher und folgt dem Zeiger. Gebaut wird
+das in [js/masked-heading.js](js/masked-heading.js), gestellt über
+`data-mh-…` am `<h1>` in [index.html](index.html).
+
+Angefangen wird bei Sekunde 1,6 (`data-mh-start`) und nicht bei null. Der
+Film ist nur 13 Sekunden lang und läuft dauernd von vorne, der Sprung vom
+letzten zurück zum ersten Bild fällt also alle paar Atemzüge auf. Die
+ersten anderthalb Sekunden sind dunkel, das Ende ist hell, und dieser
+Sprung wäre der härteste im ganzen Film. Bei 1,6 steht derselbe helle
+gelbe Schleier wie am Schluss, damit reiht sich der Übergang unter die
+Schnitte ein, die der Film ohnehin hat.
+
+Der Film ist 1920 × 1080 groß, sein Bild aber im Kinoformat 2,40:1, oben
+und unten liegen also je 140 Pixel Schwarz. Zu sehen ist davon nichts:
+Der Titel zeigt bei `object-fit: cover` nur gut 190 Zeilen aus der Mitte,
+und die liegen weit innerhalb des Bildes.
+
+Solange das Video noch lädt, steht das Standbild
+`assets/theme/marvel-timeline-bg-poster.webp` in der Schrift. Es zeigt
+genau die Stelle, an der das Video anfängt, und hat dasselbe
+Seitenverhältnis wie der Film, wird von `object-fit` also genauso
+beschnitten. Der Wechsel darauf ist deshalb nicht zu sehen.
+
+Bei reduzierter Bewegung (Systemeinstellung) steht das Band einfach da:
+Die Zeilen blenden nicht auf, die Buchstaben steigen nicht herauf, das
+Video hält auf dem Bild von Sekunde 1,6 an, statt zu laufen, und die
+Fasern dahinter stehen still.
 
 ## Filme & Serien (films.html)
 
@@ -287,8 +359,34 @@ Die dritte Seite zeigt jeden Titel als Plakat, angeordnet in Reihen mit
 Fuß einer Figur und wie die Reihen auf Disney+. Sie steht auf demselben
 hellen Grund wie die Charakterseite und trägt dafür dieselbe Klasse
 `chars-page` am `<html>`, dazu `films-page` für das, was nur hier gilt.
-Ihr Kopfband trägt ein eigenes Bild: den MARVEL-Schriftzug mit Figuren in
-den Buchstaben (`assets/theme/marvel-cinematic-bg.webp`).
+In ihrem Kopfband steht kein Bild, sondern eine Wand aus Filmplakaten,
+die vorbeizieht, siehe den nächsten Abschnitt.
+
+An der unteren Kante des Kopfbands läuft die Zeit bis zum nächsten Start
+ab, in Tagen, Stunden, Minuten und Sekunden. Welcher Titel gemeint ist,
+entscheidet das Datum und nicht das Feld `upcoming`: Es ist der mit dem
+frühesten Start, der noch bevorsteht. Läuft einer ab, rückt die Uhr von
+selbst zum nächsten weiter, und steht gar keiner mehr aus, verschwindet
+sie. Steht bei einem angekündigten Titel erst der Monat fest, zählt der
+Erste dieses Monats; die Zeile darüber nennt das Datum so, wie es in
+`data.js` steht, und führt als Knopf ins Fenster des Titels.
+
+Die Ziffern hängen als Räder hinter einem schmalen Ausschnitt und rollen
+eine Stelle weiter, sobald sich der Wert ändert. Das Zählwerk dafür steht
+in [js/counter.js](js/counter.js) und ist die React-Fassung von ReactBits
+(`Counter`, `motion/react`) ohne Bauschritt und ohne Bibliothek: Die Feder
+rechnet die Datei selbst, alle Räder hängen an einer Bildschleife. Zwei
+Dinge weichen bewusst ab. Die Dämpfung steht auf dem aperiodischen
+Grenzfall, die Ziffer sackt am Ende also nicht unter ihre Stelle durch.
+Und jede Stelle merkt sich ihren Stand als fortlaufende Zahl, statt auf
+den nackten Ziffernwert zu federn: Beim Countdown springt eine Stelle von
+0 auf 9 zurück, und sonst liefe das Rad dabei neun Ziffern weit statt der
+einen, die wirklich dazwischenliegt.
+
+Die Uhr hängt absolut am Kopfband und nicht im Textfluss darin. Kicker,
+Titel und Zeile stehen damit genau dort, wo sie ohne die Uhr stünden. Ist
+das Fenster flacher als 780 px, bliebe unter der Zeile zu wenig Platz;
+dann steht die Uhr wieder als gewöhnlicher Absatz darunter.
 
 Die Reihen entstehen in [js/films.js](js/films.js) aus `PHASES`, eine neue
 Phase in `data.js` bringt also von selbst ihre eigene Reihe mit:
@@ -320,11 +418,81 @@ eine Kachel, stehen sie in zwei Zeilen: oben, was der Titel ist, unten,
 wie er angekommen ist. Ein angekündigter Titel hat weder Laufzeit noch
 Bewertung und zeigt nur „ab 14. Okt. 2026“.
 
-Der Stern kommt wie die Zeichen im Bild-Studio aus `react-icons`, aus dem
+Der Stern kommt wie die Zeichen im Vision-Studio aus `react-icons`, aus dem
 Satz Lucide darin (`LuStar`), und steht in `js/films.js` als reine
 Pfaddaten — die Seite hat keinen Bauschritt. Anders als im Studio ist er
 gefüllt statt gestrichelt und behält sein Gold, auch wenn der rote Balken
 beim Zeigen unter ihm durchläuft.
+
+### Die Plakatwand im Kopfband
+
+Hinter Titel, Zeile und Uhr steht kein Bild, sondern eine Wand aus
+Filmplakaten, die in Spalten aneinander vorbeizieht: eine Spalte nach
+oben, die nächste nach unten, jede in ihrem eigenen Tempo. Die ganze Wand
+steht dabei schräg im Raum, und ihre Ränder verlaufen ins Nichts.
+
+Die Vorlage ist **DriftWall** von ReactBits. Hier steht sie ohne React und
+ohne Bauschritt in [js/drift-wall.js](js/drift-wall.js), und vor allem
+ohne alles, was auf den Zeiger reagiert: Die Vorlage hebt die Kachel unter
+der Maus heraus, hält ihre Spalte an, neigt die Wand zum Zeiger hin und
+öffnet auf Klick einen Link. Nichts davon gehört in einen Hintergrund.
+
+Welche Titel die Wand zeigt, sagt `PHASES` in `js/data.js`. Jedes Plakat
+wird einmal angefragt, und gebaut wird erst aus dem, was ankommt — zu
+einigen Titeln gibt es noch keines, und welche das sind, weiß im Browser
+niemand. Bis die Wand steht, bleibt das Band auf seinem dunklen Grund.
+
+Die Bilder sind dieselben wie in den Kacheln darunter, nur klein:
+
+```
+python vision-studio/films/covers/build-wall-covers.py
+python vision-studio/films/covers/build-wall-covers.py --force
+```
+
+Das Werkzeug legt `assets/covers/wall/<slug>.webp` an, 300 Pixel breit und
+eine Spur entsättigt. Alle 55 zusammen sind rund ein Megabyte, die vollen
+Fassungen wären über sechs, und die will niemand vor dem ersten Bild der
+Seite laden. Ein neues Plakat braucht also erst `import-covers.py` und
+danach einen Lauf hier.
+
+**Warum die Wand so gebaut ist, wie sie gebaut ist.** Sie ist die größte
+bewegte Fläche der Seite, und drei Dinge daran waren gemessen zu teuer:
+
+- Eine Maske an der Wand, die ihre Ränder ausblendet, müsste bei jedem
+  Bild über die ganze Fläche gerechnet werden. Sie ist deshalb durch eine
+  deckende Schicht darüber ersetzt. Das ist kein Kompromiss, sondern
+  dasselbe Bild: Eine Maske lässt die Wand mit dem Anteil *m* stehen und
+  den Grundton mit *1 − m* durchscheinen, und derselbe Grundton mit der
+  Deckung *1 − m* obendrauf ergibt Punkt für Punkt dieselbe Farbe.
+- Eine eigene Deckung und ein eigener Filter je Kachel zwingen den
+  Browser, jede der weit über hundert Kacheln einzeln in einen
+  Zwischenspeicher zu zeichnen. Gedämpft wird deshalb einmal für alle,
+  mit derselben Schicht, und die zurückgenommene Farbe steckt schon in
+  den Dateien.
+- Bleibt die Bewegung selbst. Sie läuft mit dreißig Bildern je Sekunde
+  statt mit sechzig — bei dreißig Pixeln Tempo ist ein Schritt ohnehin ein
+  einziger Pixel — und sie hält an, solange gescrollt wird. Das ist der
+  Punkt, an dem die Wand sonst auffällt: Wer scrollt, verlangt dem Browser
+  schon ab, die halbe Seite neu zu zeichnen. Zu sehen ist das Anhalten
+  nicht, während der Bewegung wandert ohnehin das ganze Band über den
+  Schirm.
+
+Dazu kommt: Die Wand ruht, wenn das Kopfband aus dem Bild gerollt ist oder
+der Reiter im Hintergrund liegt, und wer keine Bewegung will
+(`prefers-reduced-motion`), bekommt sie als stehendes Bild.
+
+**Die Regler** stehen alle in
+[js/drift-wall-config.js](js/drift-wall-config.js) — auch das Stylesheet
+holt sich seine Maße von dort, `drift-wall.js` schreibt sie als eigene
+Eigenschaften an das Kopfband. Gedreht wird an ihnen im Vision-Studio unter
+**Plakatwand**: Dort steht die echte Filmseite in einem Rahmen, die Regler
+wirken sofort, und **Sichern** schreibt sie in die Datei zurück. Das
+Verfahren ist dasselbe wie beim Faserfeld, siehe *Das Faserfeld hinter der
+Seite* weiter unten.
+
+Drei Regler der Vorlage fehlen und werden auch nicht nachgereicht:
+**Parallax**, **Lift** und **Pause on Hover**. Alle drei hängen am
+Mauszeiger, und der hat in einem Hintergrund nichts zu suchen.
 
 ### Das Fenster zu einem Titel
 
@@ -366,8 +534,8 @@ Neue Plakate kommen über ein kleines Werkzeug herein. Es verkleinert auf
 Dateiname steht als Tabelle `TITLES` oben in der Datei:
 
 ```
-python tools/covers/import-covers.py
-python tools/covers/import-covers.py --source "D:/woanders" --force
+python vision-studio/films/covers/import-covers.py
+python vision-studio/films/covers/import-covers.py --source "D:/woanders" --force
 ```
 
 Ohne `--force` bleibt liegen, was schon abgelegt ist.
@@ -396,6 +564,60 @@ die Zeilen neu. Eine Serie hat auf IMDb **eine** Bewertung für alle
 Staffeln zusammen, ihre Staffeln tragen deshalb dieselbe Zahl. Was noch
 nicht gelaufen ist, hat keine — bei den drei angekündigten Titeln fehlt
 das Feld.
+
+## Heller und dunkler Modus
+
+Im Kopf jeder Seite steht rechts ein Knopf mit Sonne und Mond, auf der
+Timeline links neben dem Zahnrad. Er schaltet zwischen hellem und dunklem
+Modus um und merkt sich die Wahl für die ganze Fanpage: Wer auf der
+Charakterseite umschaltet, findet auch die Filmseite dunkel vor. Gemerkt
+wird sie in `localStorage` unter `mcu-timeline.theme`, wie schon die
+Infoboxen der Timeline.
+
+Ohne eigene Wahl entscheidet die Einstellung des Betriebssystems
+(`prefers-color-scheme`), und zwar auch, während die Seite offen steht.
+Sobald der Knopf einmal gedrückt wurde, gilt diese Wahl und das System
+redet nicht mehr mit.
+
+Die Timeline ist von Anfang an dunkel und bleibt es in beiden Modi, ihr
+Grund ist der Nachthimmel. Dort wechselt allein das Zeichen im Knopf. Zu
+sehen ist der Modus auf den beiden hellen Seiten, also auf
+`films.html` und `characters.html`.
+
+Die beiden Zeichen sind `FiSun` und `FiMoon` aus
+[react-icons](https://react-icons.github.io/react-icons/) (Feather-Satz),
+Linie für Linie übernommen und in [js/theme.js](js/theme.js) als SVG
+gesetzt. Der Knopf zeigt, wohin es geht, und nicht, wo man steht: Im
+Hellen steht dort der Mond, im Dunklen die Sonne.
+
+Umgeschaltet wird über die Klasse `theme-dark` am `<html>`. Sie wird noch
+im `<head>` gesetzt, deshalb liegt `js/theme.js` dort und ohne `defer`:
+Käme sie später, stünde die Seite einen Moment lang hell da und liefe erst
+danach ins Dunkle.
+
+Der Modus tauscht keine Regel im Stylesheet aus, sondern nur die Werte der
+Marken aus `html.chars-page` (siehe den Block „Heller und dunkler Modus“
+in [css/style.css](css/style.css)). Wer eine neue Fläche baut, nimmt
+deshalb eine dieser Marken statt einer festen Farbe:
+
+| Marke | wofür |
+| --- | --- |
+| `--m-page` | Grund der Seite und jede Fläche darauf, die im Hellen weiß ist |
+| `--m-raise` | die beiden Tafeln, die über der Seite schweben: Filtermenü und Filmfenster |
+| `--m-bar` | Dunkel, das dunkel bleiben muss: Kopfleiste, Namensbalken einer Fassung, Tafel der Fähigkeiten |
+| `--m-ink` | Schrift |
+| `--m-body`, `--m-meta` | Fließtext und Beschriftungen |
+| `--m-line`, `--m-wash` | Linien und ruhige Flächen |
+| `--m-night`, `--m-sub` | Namensblöcke der Karten und deren Zweitzeile, in beiden Modi dunkel |
+
+Was in einer Bilddatei steckt, kann das Stylesheet nicht umfärben. Das
+betrifft die Filmlogos, von denen eine helle und eine dunkle Fassung
+nebeneinanderliegen (siehe „Dunkle Fassung für die Charakterseite“). Wer
+auf dem Grund der Seite steht, tauscht beim Umschalten die Fassung:
+`js/theme.js` meldet jeden Wechsel als Ereignis `themechange`, und
+`js/characters.js` setzt die betroffenen Logos daraufhin neu. Der Streifen
+unter einer Fassung bleibt davon unberührt, er ist auch im dunklen Modus
+weiß, damit ein dunkles Logo darauf lesbar bleibt.
 
 ## Starten
 
@@ -443,7 +665,7 @@ der Browser es sich selbst dazu. Mit `100 900` bekäme jedes fett gesetzte
 Wort wieder den normalen Schnitt und wäre von seiner Umgebung nicht mehr
 zu unterscheiden.
 
-Wer beides zusammen braucht, Seite und Bild-Studio, startet
+Wer beides zusammen braucht, Seite und Vision-Studio, startet
 [start.cmd](start.cmd) per Doppelklick oder im Terminal:
 
 ```
@@ -451,7 +673,7 @@ node start.js
 ```
 
 Das bedient die Fanpage unter [http://127.0.0.1:4320](http://127.0.0.1:4320)
-und startet das Bild-Studio unter
+und startet das Vision-Studio unter
 [http://127.0.0.1:4321](http://127.0.0.1:4321) gleich mit; beide Adressen
 gehen im Browser auf. Die Ausgabe des Studios steht eingerückt in
 derselben Konsole, Strg+C beendet beide. Die Ports lassen sich mit
@@ -467,7 +689,7 @@ jede Änderung an den offenen Tab, der daraus seinen Schluss zieht:
 | Geändert | Was passiert |
 | --- | --- |
 | `css/style.css` | Das Stilblatt wird im laufenden Betrieb getauscht. Die Seite lädt nicht neu, die Scrollhöhe und die geöffnete Figur bleiben stehen. |
-| Bilder in `assets/characters/portraits/` und `assets/characters/fullsize/` | Nur das eine Bild wird getauscht, sonst ändert sich nichts. Ein Schnitt im Bild-Studio steht damit sofort in der offenen Figur. |
+| Bilder in `assets/characters/portraits/` und `assets/characters/fullsize/` | Nur das eine Bild wird getauscht, sonst ändert sich nichts. Ein Schnitt im Vision-Studio steht damit sofort in der offenen Figur. |
 | `index.html`, `characters.html`, alles in `js/` | Die Seite lädt neu. Der Browser stellt die Scrollhöhe wieder her, die Figur steht in der Adresse. |
 | `start.js` | Nichts. Der Server ist keine Seitendatei, für ihn zählt weiter ein Neustart. |
 
@@ -528,13 +750,18 @@ alle Logos optisch gleich groß wirken – als Referenz dient `iron-man.webp`.
 ### Dunkle Fassung für die Charakterseite
 
 Die Logos in `assets/logos/` sind hell gezeichnet, für den dunklen Grund der
-Timeline. Die Charakterseite (`characters.html`) ist als einzige Seite weiß,
-dort wären sie kaum zu sehen. Deshalb liegt derselbe Schriftzug noch einmal
+Timeline. Charakterseite und Filmseite stehen im hellen Modus auf Weiß, dort
+wären sie kaum zu sehen. Deshalb liegt derselbe Schriftzug noch einmal
 dunkel unter `assets/logos/dark/<slug>.webp`, mit denselben Bildmaßen wie die
 helle Datei, damit beide Seiten auf dieselbe Logogröße kommen.
 
-Fehlt eine dunkle Datei, nimmt die Charakterseite die helle. Es reicht also,
-die dunklen Fassungen nach und nach zu ergänzen.
+Welche Fassung ein Logo bekommt, hängt am Grund, auf dem es steht: die
+dunkle auf hellem, die helle auf dunklem. Schaltet jemand in den dunklen
+Modus, tauschen die Logos auf dem Grund der Seite ihre Fassung, siehe
+„Heller und dunkler Modus“.
+
+Fehlt eine der beiden Dateien, tritt die andere ein. Es reicht also, die
+dunklen Fassungen nach und nach zu ergänzen.
 
 ### Dateinamen (Slugs)
 
@@ -608,19 +835,26 @@ Serien (Staffeln teilen sich ein Logo):
 Die runden Profilbilder liegen als quadratisches WebP unter
 `assets/characters/portraits/<slug>.webp`, die Ganzkörperbilder unter
 `assets/characters/fullsize/<datei>.webp`. Wer sie selbst setzen möchte,
-startet das Bild-Studio:
+startet das Vision-Studio:
 
 ```
-node tools/portrait-studio/server.js
+node vision-studio/server.js
 ```
 
 Wer die Fanpage daneben laufen lassen will, nimmt stattdessen
 `node start.js` (siehe [Starten](#starten)).
 
 Es öffnet [http://127.0.0.1:4321](http://127.0.0.1:4321) und listet jede
-Figur aus `js/data.js`. Oben wird zwischen drei Bereichen umgeschaltet:
-**Porträts** und **Ganzkörper** arbeiten am Bild und werden gleich
-bedient, **Biografie** arbeitet an allem, was Text ist.
+Figur aus `js/data.js`. Oben wird zwischen fünf Bereichen umgeschaltet:
+**Porträts** und **Fassungen** arbeiten am Bild und werden gleich
+bedient, **Biografie** arbeitet an allem, was Text ist, **Embleme** an den
+Zeichen hinter den Figuren. **Fasern** gehört zu keiner Figur, dort
+stehen die Regler des Hintergrunds der ganzen Startseite samt den Farben
+jeder Phase, und die Liste links bleibt weg.
+
+Ganz rechts im Kopf steht ein Menü. Darin liegen die **Sicherung** und
+das **Farbschema**, denn beides betrifft nicht die offene Figur, sondern
+das Studio als Ganzes.
 
 Die Liste links steht in derselben Ordnung wie das Raster der
 Charakterseite: nach der Zeile, die dort groß über der Kachel steht, also
@@ -629,19 +863,31 @@ Rogers steht deshalb unter **Captain America** und der Realname eine
 Zeile darunter. Wer eine Figur auf der Seite an einer Stelle sucht,
 findet sie hier an derselben.
 
-Unter `tools/portrait-studio/` liegen oben der Server und die beiden
-Dateien, die die Oberfläche tragen. Darunter stehen vier Ordner:
+Der Studioordner ist eingeteilt wie die Fanpage selbst. Unter
+`vision-studio/` liegen oben die drei Dateien, die das Studio
+ausmachen: `server.js`, `index.html` und `studio.js`. Daneben stehen die
+zwei Ordner mit dem, was jede Seite gleichermaßen braucht, und darunter je
+ein Ordner pro Seite. Wer etwas zum Faserfeld sucht, schaut in
+`timeline/`, wer etwas zu den Porträts sucht, in `characters/`:
 
 | Ordner | Was darin liegt |
 | --- | --- |
-| `ui-components/` | Die eigenständigen Stücke der Oberfläche: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema, die Stränge im Fortschrittskasten und die Symbole an den Knöpfen. |
+| `ui-components/` | Die Stücke der Oberfläche, die jeder Bereich braucht: Hintergrund, Partikelschrift, elektrischer Rand, Zählwerk, Farbschema, das Menü im Kopf, die Seitenwahl, die Stränge im Fortschrittskasten und die Symbole an den Knöpfen. |
 | `styles/` | Das Stilblatt `studio.css`. |
-| `services/` | Was der Server aufruft, sortiert nach Bereich. Oben liegt, was Porträt und Ganzkörper gleichermaßen bedient: `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst. Darunter steht je ein Ordner für die Skripte eines einzelnen Bereichs: `fullsize/` mit `crop-fullsize.py`, `biography/` mit `fetch-facts.py` und `build-facts.py`. |
+| `timeline/` | Was die Timeline angeht: `fibers-panel.js` ist die Tafel des Reiters **Fasern**, also des Feldes hinter der Seite und der Farben jeder Phase. |
+| `films/` | Was die Film- und Serienseite angeht: `wall-panel.js` ist die Tafel der Plakatwand, `covers/` holt die Titelbilder (`import-covers.py`) und beschneidet sie für die Wand (`build-wall-covers.py`). |
+| `characters/` | Was die Charakterseite angeht, und das ist das meiste. Oben liegt, was alle Bilder einer Figur bedient: `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst, `offen.json` merkt sich die von Hand als offen markierten Bilder. Darunter steht je ein Ordner für einen Reiter: `portraits/` mit `pending-portraits.js`, `fullsize/` mit `crop-fullsize.py`, `biography/` mit `fetch-facts.py`, `build-facts.py` und `bond-labels.json`, `emblems/` mit `cutout-emblems.py` und `build-emblems.py`. |
 | `vendor/` | Fremdes, hier nur Real-ESRGAN zum Hochrechnen. Rund 50 MB Binärdateien, die nicht im Repo liegen. |
 
+Dazu kommen die versteckten Ordner, die zur Sitzung und nicht zum Quelltext
+gehören: `.sicherung` mit den Kopien vor jedem Eingriff, `.verlauf` mit dem
+Rückgängig-Stapel der laufenden Sitzung, `.wiki` mit dem Rohtext der
+Infoboxen.
+
 Der Browser bekommt nur, was in `SEITENDATEIEN` und `STILDATEI` in
-`server.js` steht, und zwar unter demselben Weg wie auf der Platte. Die
-Skripte in `services/` liefert der Server nicht aus.
+`server.js` steht, und zwar unter demselben Weg wie auf der Platte. Eine
+neue Tafel gehört deshalb in `SEITENDATEIEN` unter ihrem Weg bei ihrer
+Seite. Die Python-Skripte liefert der Server nicht aus.
 
 Die Zeichen an den Knöpfen kommen aus `react-icons`, aus dem Satz Lucide
 darin. Das Studio hat keinen Bauschritt und läuft ohne Internet, deshalb
@@ -687,7 +933,7 @@ Begriffe auf, die schon benutzt sind, mit der Zahl ihrer Beziehungen
 dahinter, und Tippen filtert die Liste. Ein Wort, das noch nicht darin
 steht, kommt beim Verlassen des Feldes von selbst hinein und liegt bis zu
 seinem ersten Auftritt bei einer Figur in
-`tools/portrait-studio/bond-labels.json`. Alles andere wird aus
+`vision-studio/characters/biography/bond-labels.json`. Alles andere wird aus
 `CHAR_BONDS` gezählt und nicht zweimal geführt. Das Stiftzeichen an einer
 Zeile benennt den Begriff bei allen Figuren zugleich um, was ein Schritt
 im Verlauf ist, und ein Begriff ohne Beziehung lässt sich mit dem Kreuz
@@ -706,9 +952,9 @@ vor jedem Wechsel nach.
 ### Steckbriefe aus den Wikis
 
 `CHAR_FACTS` in `js/facts.js` ist erzeugt und gehört den beiden Skripten
-in `tools/portrait-studio/services/biography/`:
-[fetch-facts.py](tools/portrait-studio/services/biography/fetch-facts.py)
-holt, [build-facts.py](tools/portrait-studio/services/biography/build-facts.py)
+in `vision-studio/characters/biography/`:
+[fetch-facts.py](vision-studio/characters/biography/fetch-facts.py)
+holt, [build-facts.py](vision-studio/characters/biography/build-facts.py)
 schreibt. Beide lassen sich aus dem Reiter Biografie auslösen:
 
 - **Wiki neu** holt die offene Figur noch einmal aus beiden Wikis.
@@ -721,7 +967,7 @@ seiner Namensliste steht. Das Studio baut deshalb in eine Kopie neben
 wurden. Alles andere im Block bleibt unberührt, und ein Lauf über eine
 einzelne Figur ist eine Sache von Sekunden.
 
-Der Rohtext der Infoboxen bleibt unter `tools/portrait-studio/.wiki`
+Der Rohtext der Infoboxen bleibt unter `vision-studio/.wiki`
 liegen. Was einmal geholt ist, wird nicht noch einmal geholt; nur beim
 ausdrücklichen Neuabruf einer Figur fliegt ihr Eintrag vorher heraus.
 
@@ -764,7 +1010,7 @@ Bilder, Fassungen, Namen, Schlüssel, Auftritte, Körpergrößen,
 Offen-Markierungen, die Texte einer Figur und die Steckbriefe aus den
 Wikis. Dahinter stehen keine Gegenrechnungen, sondern
 Schnappschüsse: Vor und nach jedem Eingriff sichert das Studio genau die
-Dateien, die er anfassen kann, unter `tools/portrait-studio/.verlauf`.
+Dateien, die er anfassen kann, unter `vision-studio/.verlauf`.
 Rückgängig spielt den Stand von vorher zurück, wiederholen den von
 nachher. Deshalb stimmt es auch dort, wo Dateien umbenannt, verschoben
 oder gelöscht wurden. Wer nach einem Rückgängig etwas Neues tut,
@@ -778,7 +1024,7 @@ fremde Arbeit überschreiben. Er hält die letzten 40 Schritte.
 ### Die Sicherung
 
 Darunter liegt die zweite Ebene. Vor jedem Eingriff legt das Studio eine
-Kopie der Datei nach `tools/portrait-studio/.sicherung`, mit dem Zeitpunkt
+Kopie der Datei nach `vision-studio/.sicherung`, mit dem Zeitpunkt
 im Namen: die Porträts und Ganzkörperbilder, dazu `chars.js`, `data.js`,
 `profiles.js`, `facts.js` und die Quellenangabe `CREDITS.md`. Sie überlebt
 den Neustart, hält keine Reihenfolge und kennt kein Wiederholen — sie ist
@@ -830,6 +1076,22 @@ wartet auf ihre Bilder: Porträt und Ganzkörperbild stehen mit rotem Punkt
 da, bis eine Vorlage hochgeladen und gespeichert wird. Alles zusammen ist
 ein Schritt im Verlauf, ein Rückgängig nimmt die Figur wieder heraus.
 
+### Veröffentlicht oder noch nicht
+
+Über der Figur steht das Kästchen **Veröffentlicht**. Ohne Haken lässt das
+Raster auf `characters.html` diese Figur aus: für angekündigte Rollen und
+für Besetzungen aus Filmen, die erst kommen. Der Haken wirkt sofort, ohne
+Speichern, und geht als eigener Schritt in den Verlauf.
+
+Gepflegt wird sie deswegen weiter. Sie steht im Studio in der Liste, dort
+mit einem durchgestrichenen Auge neben ihrem Punkt, sie behält Bilder,
+Biografie und Steckbrief, und in der Zeitleiste und bei den Filmen tritt
+sie auf wie zuvor. Weggelassen wird sie allein auf der Charakterseite.
+
+In der Datei ist das eine Zeile: Der Schlüssel steht in `CHAR_UNRELEASED`
+(`js/chars.js`), einer Liste der Ausnahmen. Wer dort nicht steht, ist
+veröffentlicht.
+
 ### Namen, Schlüssel und Auftritte
 
 Neben dem Namen der Figur stehen zwei Knöpfe, die in `js/data.js` und
@@ -879,7 +1141,7 @@ mit: die Bilddateien in beiden Ordnern und die Verweise in `data.js`,
 `chars.js`, `profiles.js` und `facts.js`. Das ist der Eingriff mit der
 größten Reichweite im Studio, deshalb steht eine Warnung im Dialog,
 geschrieben wird erst auf *Übernehmen*, und von jeder berührten Datei
-liegt vorher eine Kopie in `tools/portrait-studio/.sicherung`.
+liegt vorher eine Kopie in `vision-studio/.sicherung`.
 
 **Auftritte …** listet alle Filme und Serien mit einem Kontrollkästchen.
 Ein Haken schreibt die Besetzungsliste des Films sofort um. Beim
@@ -922,7 +1184,7 @@ Schlüssel. Wer `peter-parker` löscht, verliert dessen neun Anzüge, aber
 Der Dialog nennt vorher, was daranhängt, und die Rückfrage zählt es noch
 einmal auf. Alles zusammen ist ein Schritt im Verlauf, ein Rückgängig
 holt die Figur samt Bildern zurück. Die Bilder liegen danach zusätzlich
-in `tools/portrait-studio/.sicherung`.
+in `vision-studio/.sicherung`.
 
 ### Porträts
 
@@ -972,7 +1234,7 @@ Bild von Hand auf offen, auch wenn die Datei längst da ist. Das wirkt
 sofort, ohne Speichern: Die Figur bekommt einen gelben Punkt und zählt
 oben als markiert. Bei den Porträts steht sie zusätzlich in
 `A - Portraits noch offen.txt` mit dem Zusatz `[von Hand markiert]`.
-Gespeichert wird die Markierung in `tools/portrait-studio/offen.json`,
+Gespeichert wird die Markierung in `vision-studio/characters/offen.json`,
 getrennt nach Porträts und Ganzkörperbildern, denn dieselbe Figur heißt in
 beiden Ordnern gleich. Wer das Bild danach neu schneidet und speichert,
 ist die Markierung wieder los.
@@ -981,10 +1243,10 @@ ist die Markierung wieder los.
 Gesicht suchen, von dort bis zum Scheitel laufen, den Kopf 60 Prozent der
 Bildhöhe füllen lassen. Rechts steht die Vorschau in Originalgröße neben
 dem bisherigen Porträt. **Speichern** schreibt die Datei endgültig, legt
-die alte nach `tools/portrait-studio/.sicherung` und erneuert die Liste
+die alte nach `vision-studio/.sicherung` und erneuert die Liste
 `assets/ersetzen/A - Portraits noch offen.txt`.
 
-### Ganzkörper
+### Fassungen
 
 Hier ist der Ausschnitt ein freies Rechteck: Neben den Ecken lassen sich
 auch die vier Kantenmitten anfassen, jede Seite geht für sich. Anders als
@@ -993,6 +1255,18 @@ Zugeschnitten wird das Bild, das an dieser Stelle steht, oder ein
 hochgeladenes. Welches das ist, steht unter der Vorschau bei *Bisher*.
 Eine Fassung ohne Datei steht mit rotem Punkt in der Liste und wartet auf
 ein eigenes Bild.
+
+Der Rahmen liegt hier nicht fest auf der Vorlage. Wer ihn greift und
+zieht, hebt ihn mitsamt seinem Stück Bild ab und schiebt beides über die
+liegende Vorlage: Die Figur bleibt im Rahmen, die Vorlage darunter bleibt
+liegen, und die Ansicht wandert nicht mit. Fest ist also die Bühne,
+beweglich sind der Rahmen und sein Inhalt. Weil der Rahmen seinen Inhalt
+mitnimmt, ändert sich der Zuschnitt dabei nicht. Der ändert sich über die
+Ecken, die Kantenmitten, das Mausrad und die Pfeiltasten, und *Einpassen*
+legt den Rahmen wieder auf seine Stelle im Bild. Beim Porträt bleibt es
+anders: Dort ist der Ausschnitt ein kleiner Fleck in einer großen
+Vorlage, gesucht wird die Stelle, und deshalb wandert er über das
+stehende Bild und zeigt, was darunter liegt.
 
 Eine Fassung mit Varianten steht trotzdem nur einmal in der Reihe, ihre
 Bilder hängen als Ziffern hinter dem Chip – genau wie sie auf der
@@ -1094,7 +1368,7 @@ Nur Figuren ohne Eintrag in `FULLSIZE_LOOKS` haben ihr eines Bild unter
   dahinter rücken eine Nummer nach vorn, und bleibt drüben ein einziges
   Bild übrig, heißt es wieder wie seine Fassung.
 - **Löschen** nimmt die Fassung aus der Liste, das Bild wandert in
-  `tools/portrait-studio/.sicherung` und die Größenangaben fallen mit weg.
+  `vision-studio/.sicherung` und die Größenangaben fallen mit weg.
   Eine Fassung mit Varianten nimmt alle ihre Bilder mit.
   Bleibt danach ein einzelnes Bild übrig, das ohnehin wie die Figur heißt,
   verschwindet der ganze Eintrag.
@@ -1219,7 +1493,7 @@ Stelle der kommentierten Gruppen und aufsteigend sortiert, die
 Bildkorrektur in `FULLSIZE_FIT`, nach Dateinamen sortiert. 1.0 nimmt den
 jeweiligen Eintrag wieder heraus, weil das der Vorgabewert ist. Vor dem
 Schreiben wird die neue Fassung geladen und geprüft, und eine Kopie der
-alten `chars.js` liegt in `tools/portrait-studio/.sicherung`.
+alten `chars.js` liegt in `vision-studio/.sicherung`.
 
 ### Vorlagen aufbereiten
 
@@ -1308,7 +1582,7 @@ Was der Server gefunden hat, steht beim Start in seiner Ausgabe.
   eigenen Zeile unter dem Namen und nicht hinter ihm, in der Timeline
   ebenso über der Rolle. Klammern, die keine Welt sind, bleiben am Namen:
   „Gamora (2014)“ nennt eine Zeit, „Peter Parker / Spider-Man (Maguire)“
-  eine Besetzung. Neue Welten kommen über das Bild-Studio dazu.
+  eine Besetzung. Neue Welten kommen über das Vision-Studio dazu.
 - **Porträt pro Film**: Wird eine Figur umbesetzt oder verwandelt sie sich
   sichtbar, zeigt jeder Film die Fassung aus genau diesem Film. `CHAR_LOOKS`
   in [js/chars.js](js/chars.js) hält dafür pro Charakter-Slug die Filme fest,
@@ -1347,100 +1621,272 @@ Was der Server gefunden hat, steht beim Start in seiner Ausgabe.
   einmal einer, fällt der Reiter weg, statt eine Tafel ohne Text zu
   zeigen. Erfunden wird nichts. Auch diese Datei gehört nur in
   `characters.html`.
-- **Akzentfarben pro Phase**: ebenfalls in `js/data.js`
-  (`accent` fürs UI, `nebula` = drei RGB-Farben für die Galaxie-Nebel).
-- **Galaxie-Animation**: alle Regler an einer Stelle in
-  [js/galaxy-config.js](js/galaxy-config.js), gezeichnet wird in
-  [js/galaxy.js](js/galaxy.js) auf WebGL2. Siehe
-  [Der Galaxie-Hintergrund](#der-galaxie-hintergrund).
+- **Farben pro Phase**: ebenfalls in `js/data.js`
+  (`accent` fürs UI, `fibers` = zwei Hexwerte für das Faserfeld).
+- **Faserfeld hinter der Seite**: alle Regler an einer Stelle in
+  [js/ghost-fibers-config.js](js/ghost-fibers-config.js), gezeichnet wird
+  in [js/ghost-fibers.js](js/ghost-fibers.js) auf WebGL2. Siehe
+  [Das Faserfeld hinter der Seite](#das-faserfeld-hinter-der-seite).
 - **Scroll-Gefühl**: in [js/main.js](js/main.js) beim Lenis-Aufruf
   (`lerp: 0.09` – kleiner = weicher/träger, größer = direkter).
-- **Hero-Sequenz**: Länge über `.hero-track { height: 460vh }` in
-  `css/style.css` (mehr = gemächlicher), die Fenster der Textstufen in
-  `js/main.js` bei `heroStages` (Anteile 0–1 am Scrollweg des Tracks).
+- **Kopfbänder aller drei Seiten**: `--masthead-min-h`,
+  `--masthead-pad`, `--masthead-inner` und `--masthead-bg` in
+  `css/style.css`.
+- **Faserfeld zur Laufzeit**: `GhostFibers.set({ … })` in der Konsole,
+  und `GhostFibers.setPhase(['#340e0e', '#a23434'])` für die beiden
+  Farben einer Phase.
+- **Titel der Startseite**: die Größe über `.hero-title` in
+  `css/style.css` (dieselbe clamp()-Kurve wie `.chars-title`), alles
+  Übrige über die `data-mh-…` am `<h1>` in [index.html](index.html):
+  `data-mh-parallax` und `data-mh-drift` für die Bewegung des Videos in
+  der Schrift, `data-mh-start` und `data-mh-end` für das gespielte Stück.
+  `data-mh-text-scale` steht bewusst auf 0, das heißt „die Größe bestimmt
+  das Stylesheet"; mit einem Wert darüber rechnet die Überschrift sie sich
+  aus der eigenen Breite aus. Was jeder Wert tut, steht bei `DEFAULTS` in
+  [js/masked-heading.js](js/masked-heading.js).
 - **Layout/Design**: [css/style.css](css/style.css).
 
-## Der Galaxie-Hintergrund
+## Der Übergang zwischen zwei Bildern
 
-Der Hintergrund ist ein einziges bildschirmfüllendes Canvas hinter der
-ganzen Seite. Von unten nach oben liegen darauf: ein gemaltes Grundbild
-(`assets/theme/galaxy-bg.webp`, 3072 x 2048), zwei prozedural erzeugte
-Nebelfelder, der Phasenschleier, die pulsierende Sonne links oben, ein
-feines Sternenfeld, die hellen Sterne mit Funkeln, gelegentliche
-Sternschnuppen und zuletzt drei abdunkelnde Verläufe.
+Zwei Bilder wechseln in der Figurenansicht, und beide springen nicht
+mehr: das Porträt auf der Bühne oben und das Ganzkörperbild auf der
+Erscheinungsbühne darunter. Das alte löst sich auf, und das neue tritt
+aus derselben Auflösung wieder heraus. Gerechnet wird das auf der
+Grafikkarte, in [js/portrait-morph.js](js/portrait-morph.js) auf einer
+Leinwand, die für die Dauer des Übergangs über dem Bild liegt und trägt,
+was sonst an ihm hängt: oben die Maske, unten den Schlagschatten. Danach
+steht wieder das gewöhnliche `<img>` da. Ohne WebGL bleibt es beim harten
+Wechsel, und wer in den Systemeinstellungen weniger Bewegung verlangt,
+bekommt eine kurze Überblendung ohne Verzerrung.
 
-Gezeichnet wird auf WebGL2, in fünf Durchgängen mit eigenen Shadern. Das
-Nebelbild backt die Grafikkarte einmal beim Start in eine Textur, alles
-Übrige entsteht pro Bildpunkt.
+Seit dem Übergang der ganzen Ansicht (siehe den nächsten Abschnitt) ist
+das der Weg für den Wechsel der Fassung innerhalb einer Figur. Beim
+Blättern geht die ganze Fläche über, dann wäre ein zweiter Übergang für
+die Bilder darin ein Bild zu viel. Wer den Seitenübergang abschaltet,
+bekommt an seiner Stelle wieder die beiden Bildübergänge:
+
+```js
+PageMorph.set({ enabled: false })
+```
+
+| Anlass | Was übergeht |
+| --- | --- |
+| eine andere Fassung derselben Figur | das Ganzkörperbild samt seinem Schatten |
+| Pfeil im Vollbild, wenn `PageMorph` aus ist | beide Bilder zugleich |
+| eine Figur ohne Bild an einer der beiden Stellen | dort nichts, die andere Stelle geht trotzdem über |
+
+Der Schatten unter dem Ganzkörperbild ist kein Bild, das die Leinwand
+übernehmen könnte, sondern zwei schwarz gerechnete Kopien der Figur, per
+`matrix3d` auf die Fläche geworfen (siehe `.char-figure-cast`). Er geht
+deshalb dort über, wo er ohnehin liegt: auf den beiden Ebenen der
+Fassungen, mit demselben Filterverfahren wie der Übergang der ganzen
+Ansicht (`PageMorph.warp`). Der alte Schatten löst sich fleckig auf, der
+neue erscheint an genau den Stellen, an denen der alte fehlt, und den
+Takt gibt die Leinwand vor: Sie meldet jeden Stand über einen Rückruf,
+und der Schatten folgt im selben Bild.
+
+Jede der beiden Stellen ist ein eigener Kanal mit eigener Leinwand,
+`hero` für das Porträt und `stage` für die Erscheinungsbühne. Vier
+Übergänge stehen zur Wahl, umgestellt wird in der Konsole:
+
+```js
+PortraitMorph.set({ transition: 'ripple' })   // melt, ripple, shear, swirl
+PortraitMorph.set({ duration: 1.2, intensity: 0.8, aberration: 0.2 })
+PortraitMorph.channel('stage').set({ duration: 0.7 })   // nur die Bühne
+PortraitMorph.get()
+```
+
+| Regler | Vorgabe | Wofür |
+| --- | --- | --- |
+| `transition` | `melt` | `melt` zerfließt entlang eines Rauschens, `ripple` schickt eine Welle von der Seite herein, aus der geblättert wurde, `shear` zieht waagerechte Streifen versetzt zur Seite, `swirl` dreht beide Bilder gegeneinander. |
+| `duration` | `0.9` | Wie lange der Übergang läuft, in Sekunden. |
+| `intensity` | `0.55` | Wie weit die Bilder dabei verzogen werden. |
+| `aberration` | `0.35` | Der Farbversatz an den Kanten der Verzerrung. |
+| `drift` | `0.4` | Das leichte Wandern der ganzen Fläche währenddessen. |
+| `scale` | `2.4` | Wie fein das Rauschen von `melt` gekörnt ist. |
+
+Die Werte sind die der Vorlage, aus der die Idee stammt, mit zwei
+Ausnahmen: Die Dauer ist kürzer, weil hier geblättert und nicht ein Bild
+betrachtet wird, und der Farbversatz misst sich enger, weil ein Prozent
+der Breite quer über ein Gesicht mehr ist als über eine Landschaft.
+
+Wo ein Bild in seinem Rahmen liegt, wird vor dem Wechsel am Bild selbst
+gemessen und nicht aus dem Stylesheet nachgerechnet. Anders ginge es auf
+der Erscheinungsbühne auch nicht: Dort hat jede Datei ihr eigenes Maß aus
+Körpergröße, Zuschnitt und Schwebe (`FULLSIZE_SCALE` und `FULLSIZE_LIFT`
+in [js/chars.js](js/chars.js)), und auf schmalen Fenstern wird aus dem
+Porträt oben eine Kulisse mit anderem Zuschnitt.
+
+Die Bilder der beiden Nachbarn liegen schon auf der Grafikkarte, bevor
+geklickt wird. Ist eines ausnahmsweise noch nicht da, wechselt die Seite
+hart, statt den Übergang verspätet nachzuschieben. Ein Ganzkörperbild
+bringt rund tausend Zeilen mit und steht auf der Bühne in der Hälfte
+davon; seine Textur wird deshalb beim ersten Übergang auf das Maß der
+Fläche gezogen, auf der sie landet.
+
+## Der Übergang der ganzen Ansicht
+
+Beim Blättern mit den Pfeilen wechselt nicht nur ein Bild, sondern alles:
+Namen, Beschreibung, Bühne, Fassungen, Auftritte, Begegnungen. Die ganze
+Fläche geht deshalb als eine Schicht über, und stehen bleiben allein die
+drei Schaltflächen oben rechts. Sie gehören nicht zur Figur, sondern zur
+Ansicht, und wer weiterblättert, zielt schon auf den nächsten Klick.
+
+Der Weg dorthin ist ein Abzug: [js/page-morph.js](js/page-morph.js) klont
+den Inhalt vor dem Umbau und legt den Klon deckungsgleich darüber. Der
+Umbau läuft unsichtbar darunter ab, und erst danach blenden beide
+Schichten gegeneinander über. Das hat einen Nebeneffekt, der den Aufwand
+allein schon wert ist: Der Umbau einer Figur mit vielen Fassungen und
+Begegnungen kostet einen Augenblick, und den sieht seither niemand mehr.
+
+Übergangen wird dabei der Inhalt und nicht die Fläche, in der er rollt.
+Dafür liegt er in einer eigenen Lage, `.char-full-flow` innerhalb von
+`.char-full-inner`, und die Trennung leistet zweierlei: Die Rollleiste
+hängt an der Fläche und bleibt deshalb außen vor, und die Fläche
+beschneidet, was der Übergang über die Kanten hinauszieht. Die Ränder der
+Ansicht bleiben so gerade, während es innen fließt.
+
+Ein Sonderfall bleibt der Zuwachs aus `zoom`: Eine Vergrößerung greift
+erst nach dem Beschnitt und ragte damit genau um ihren Zuwachs in die
+Rinne der Rollleiste. Die Lage schneidet sich deshalb zusätzlich selbst
+zu, und zwar um genau so viel, wie sie danach wächst.
+
+Gerechnet wird nicht im eigenen Shader, sondern von der Seite selbst.
+Ein Filter aus `feTurbulence` und `feDisplacementMap` verzieht beide
+Schichten gegenläufig, und aus demselben Rauschen entsteht die Maske,
+mit der die alte Schicht fleckig aufreißt. Aufreißen darf dabei nur sie:
+Zwei halb durchsichtige Schichten übereinander decken zusammen nur drei
+Viertel, und das fehlende Viertel wäre die Rasterseite dahinter, die als
+grauer Schleier durchschiene.
+
+```js
+PageMorph.set({ intensity: 0.8, duration: 1.2 })
+PageMorph.set({ enabled: false })     // zurück zum Wechsel der Bilder
+PageMorph.get()
+```
+
+| Regler | Vorgabe | Wofür |
+| --- | --- | --- |
+| `enabled` | `true` | Ob die Ansicht als Ganzes übergeht. |
+| `duration` | `0.9` | Wie lange, in Sekunden. |
+| `intensity` | `0.55` | Der Ausschlag der Verzerrung, gemessen in Bildpunkten auf dem Höhepunkt (0.55 sind rund fünfzig). |
+| `dissolve` | `0.85` | Wie hart die alte Schicht aufreißt. Bei 0 bleibt eine weiche Blende. |
+| `zoom` | `0.14` | Wie weit beide Schichten dabei wachsen. |
+
+Der Ausschlag bleibt bewusst moderat. Die Ansicht bringt keinen eigenen
+Grund mit, sie besteht aus dem schwarzen Band oben und dem weißen
+darunter. Was die Verzerrung zur Seite zieht, lässt also ein Loch
+zurück, durch das die Rasterseite schaut. Der Zuwachs aus `zoom`
+schiebt dagegen Material über die Ränder nach.
+
+Gemessen auf einer Intel-Grafikeinheit kostet der Filter nichts: Der
+Abstand zwischen den Bildern liegt bei 11,8 ms im Median, mit und ohne
+Übergang gleich. Wer weniger Bewegung verlangt, bekommt eine kurze
+Blende ohne Verzerrung und ohne Filter.
+
+## Das Faserfeld hinter der Seite
+
+Der Hintergrund der Startseite ist ein einziges bildschirmfüllendes
+Canvas hinter allem, gezeichnet in einem einzigen Fragment-Shader auf
+WebGL2. Bis September 2026 lag dort eine gemalte Galaxie mit Nebeln,
+Sternen und Sternschnuppen, und das Faserfeld deckte nur den Streifen des
+Kopfbandes zu. Beides ist heraus: Das Feld deckt jetzt die ganze Seite,
+die Galaxie und ihre Funkelschicht sind gelöscht.
+
+Der Bildpunkt wird mehrmals hintereinander verbogen. Je Lage schiebt eine
+Sinuswelle die Koordinaten quer, danach dreht ein zweiter Sinus sie um den
+Mittelpunkt, und aus jeder Runde fällt eine Lage Linien. Weil die Ebene
+bei jeder Lage weiter verbogen wird, laufen die Linien nicht parallel,
+sondern legen sich wie Fasern übereinander. Dazu kommen ein Schein in der
+Mitte, eine ziehende Wolke, Vignette, Tonwertkurve, Blaustich und
+Filmkorn.
+
+Das Canvas steht fest im Fenster (`position: fixed`, `z-index: -1`) und
+rollt nicht mit. Das Feld atmet in seinem eigenen Takt, und ein zweiter,
+gescrollter Takt darüber sähe nach Wackeln aus.
+
+Gerechnet wird nur, wenn es auch jemand sieht: nicht in einem Tab im
+Hintergrund und nicht bei abgeschalteter Bewegung. In beiden Fällen bleibt
+ein Bild stehen, statt dass die Seite leer wäre. Kann der Browser kein
+WebGL2, bleibt die Grundfarbe `--bg` stehen.
 
 | Datei | Wofür |
 | --- | --- |
-| [js/galaxy-config.js](js/galaxy-config.js) | Alle Regler und die sechs Nebelbereiche. Wer am Aussehen dreht, dreht hier. |
-| [js/galaxy.js](js/galaxy.js) | Der WebGL2-Renderer und die Schnittstelle `window.Galaxy`. |
-| [js/galaxy-canvas-2d.js](js/galaxy-canvas-2d.js) | Rückfallebene ohne WebGL2. Startet nur, wenn `js/galaxy.js` sie ruft. |
-| [tools/portrait-studio/ui-components/galaxy-panel.js](tools/portrait-studio/ui-components/galaxy-panel.js) | Die Tafel im Bild-Studio: Vorschau und Schieber. |
+| [js/ghost-fibers-config.js](js/ghost-fibers-config.js) | Alle Regler, jeder mit einer Zeile dazu, was er tut. Wer am Aussehen dreht, dreht hier. |
+| [js/ghost-fibers.js](js/ghost-fibers.js) | Der Shader, die Schleife und die Schnittstelle `window.GhostFibers`. |
+| [js/data.js](js/data.js) | Die beiden Farben je Phase, bei der Phase selbst unter `fibers`. |
+| [vision-studio/timeline/fibers-panel.js](vision-studio/timeline/fibers-panel.js) | Die Tafel im Vision-Studio: Vorschau, Schieber und die Farben der Phasen. |
 
-Alle drei müssen in dieser Reihenfolge eingebunden sein, siehe das Ende
-von `index.html` und `characters.html`.
+### Die Farbe wechselt mit der Phase
 
-### Regler im Bild-Studio
+Das Feld trägt zwei Farben: `lineColor` für die Fasern selbst und
+`glowColor` für den Schein in der Mitte und die ziehende Wolke. Welche
+beiden gelten, hängt daran, wo man auf der Seite steht.
+
+[js/main.js](js/main.js) beobachtet die Phasen und meldet jeden Wechsel
+mit `GhostFibers.setPhase(phase.fibers)` weiter, in derselben Funktion,
+die auch `--accent` setzt. Im Kopfband gilt noch keine Phase, dort geht
+`setPhase(null)` auf die beiden Farben aus
+`js/ghost-fibers-config.js` zurück.
+
+Umgeschaltet wird nicht hart: Die Blende läuft über `phaseFade` Sekunden
+(Vorgabe 1,2) und fängt dort an, wo die Farben gerade stehen. Wer mitten
+in einer Blende weiterrollt, sieht deshalb keinen Sprung, sondern einen
+neuen Weg von der aktuellen Mischung aus. Bei abgeschalteter Bewegung
+steht die neue Farbe sofort da.
+
+### Regler im Vision-Studio
 
 Der bequeme Weg. Das Studio starten (`node start.js`, oder direkt
-`node tools/portrait-studio/server.js`), oben im Kopf auf **Galaxie**.
+`node vision-studio/server.js`), oben im Kopf auf die Seite **Timeline**
+und dort auf den Reiter **Fasern**.
 
 Links läuft eine Vorschau, rechts stehen alle Regler als Schieber. Die
-Vorschau ist kein Nachbau: Der Dialog lädt dieselben Dateien aus `js/`,
-die auch die Seite lädt, und lässt sie in seinem eigenen Canvas laufen.
-Was dort zu sehen ist, ist deshalb genau das, was herauskommt.
+Vorschau ist kein Nachbau: In der Bühne steht `index.html` selbst, über
+`/datei/` aus dem Repo geladen. Was dort zu sehen ist, ist deshalb genau
+das, was ein Besucher sieht, samt Titel und Zeile darüber. Und genau
+darauf kommt es an, denn ob die Fasern taugen, entscheidet sich daran,
+wie der Titel darauf steht.
 
-Unter der Vorschau stehen die sieben Phasen zur Auswahl, damit sich der
-Phasenschleier beurteilen lässt und nicht nur der Seitenanfang. Weiter
-unten in der Reglerspalte kommen zwei Gruppen, die nicht zu den Reglern
-gehören:
-
-- **Nebelbereiche**: die sechs Bereiche des prozeduralen Nebelbilds
-  einzeln, mit Farbe, Stärke, Feinheit, Graten und ihrer Lage.
-- **Farben der Phasen**: je Phase der Akzent und die drei Nebelfarben,
-  siehe unten. Sie stehen in `js/data.js`.
+Unter der Bühne steht die Reihe der Phasen. Im Rahmen rollt niemand, ohne
+sie sähe man immer nur den Seitenanfang. Ein Klick stellt die Farben
+dieser Phase sofort ein, ohne Blende. Unten in der Reglerspalte kommt
+dazu die Gruppe **Farben der Phasen**: je Phase der Akzent und die beiden
+Faserfarben. Sie gehören nicht zu den Reglern, sie stehen in
+`js/data.js`.
 
 Was man anfasst, wirkt sofort, aber nur in der Vorschau. Erst **Sichern**
 schreibt es in die Dateien, und zwar Zeile für Zeile: Von den 4200 Zeilen
 in `js/data.js` ändern sich genau die, die auch gemeint waren, und die
-Erklärungen in `js/galaxy-config.js` bleiben unangetastet. Vorher legt
-das Studio wie immer Kopien in `.sicherung`, und **Rückgängig** nimmt
+Erklärungen in `js/ghost-fibers-config.js` bleiben unangetastet. Vorher
+legt das Studio wie immer Kopien in `.sicherung`, und **Rückgängig** nimmt
 beide Dateien in einem Schritt zurück.
 
 ### Regler zur Laufzeit
 
 ```js
-Galaxy.set({ nebWarp: 0.35, bgTint: 0.8, timeScale: 0.5 })
-Galaxy.get()                                   // aktueller Stand
-Galaxy.setRegions([{ col: [200, 40, 90] }])    // Nebelbereiche einzeln
-Galaxy.getRegions()
-Galaxy.setPalette([[70,110,255], ...])         // ruft main.js pro Phase
+GhostFibers.set({ twist: 0.4, lineSharpness: 24 })
+GhostFibers.get()                                // aktueller Stand
+GhostFibers.setPhase(['#340e0e', '#a23434'])     // ruft main.js pro Phase
+GhostFibers.setPhase(null)                       // zurück auf die Datei
+GhostFibers.pause(true)                          // anhalten
 ```
 
-Was das Nebelbild betrifft, löst ein neues Backen aus (unter einer
-Millisekunde), der Rest wirkt im nächsten Bild. Jeder Regler ist in
-`js/galaxy-config.js` einzeln beschrieben. Die wichtigsten:
+Jeder Regler ist in `js/ghost-fibers-config.js` einzeln beschrieben. Die
+wichtigsten:
 
-- **`bgTint`** trennt Struktur und Farbe im gemalten Grundbild. Bei 0
-  behält es seine eigenen Farben, bei 1 wird nur noch seine Helligkeit
-  als Dichte gelesen und die Farbe kommt vollständig aus der Palette der
-  gerade sichtbaren Phase. Der Schleier allein konnte die gemalten Farben
-  nur anhauchen, das hier färbt sie wirklich um.
-- **`nebWarp`** verzerrt das Rauschen mit sich selbst. Aus runden Wolken
-  werden gezogene, wirbelnde Schwaden.
-- **`nebRoughness`** bestimmt, wie viel jede Oktave von der vorigen
-  behält. Der eigentliche Regler für Feinstruktur im Nebel.
-- **`bgResample`** legt fest, wie das Grundbild verkleinert wird, und
-  entscheidet damit, wie hart die darin gemalten Sterne herauskommen.
-- **`shootInterval`** ist der mittlere Abstand zwischen zwei
-  Sternschnuppen in Sekunden. Der wirkliche Abstand streut von gut der
-  Hälfte bis knapp zum Anderthalbfachen, bei 12.5 sind das die 7 bis 18
-  Sekunden der Vorlage.
-- **`timeScale`**, **`nebPulse`**, **`sunPulse`**, **`twinkleSpeed`**
-  regeln das Tempo der Bewegungen.
+- **`scale`** ist der Zoom auf das Feld. Größer heißt weiter weg und damit
+  mehr, feinere Fasern im Bild.
+- **`lineSharpness`** ist die Potenz, mit der die Streifen zusammengezogen
+  werden. Hohe Werte geben dünne Fäden, niedrige breite, weiche Bänder.
+- **`layers`** ist die Zahl der Lagen, höchstens zehn. Jede verbiegt die
+  Ebene weiter und kostet Rechenzeit.
+- **`twist`** dreht das Feld um seinen Mittelpunkt, aus geraden Linien
+  werden Wirbel.
+- **`speed`** ist das Tempo aller Bewegungen zusammen, 0 friert das Feld
+  ein.
+- **`dpr`** und **`fps`** bestimmen den Rechenaufwand: ein Bildpunkt je
+  CSS-Punkt reicht, 2 kostet das Vierfache.
 
 ### Die Farben der Phasen
 
@@ -1449,86 +1895,25 @@ in [js/data.js](js/data.js) bei der Phase selbst. Zwei Felder:
 
 - **`accent`** ist ein Hexwert und färbt die ganze Oberfläche dieser
   Phase: Ränder, Knöpfe, Chips, die Marke am Zeitstrahl. Er wird als
-  CSS-Variable `--accent` gesetzt.
-- **`nebula`** sind drei RGB-Tripel. Sie liegen als Verlauf über der
-  Bildschirmdiagonale, das erste oben links, das dritte unten rechts, und
-  gelten, solange diese Phase sichtbar ist.
+  CSS-Variable `--accent` gesetzt und hat mit dem Faserfeld nichts zu tun.
+- **`fibers`** sind zwei Hexwerte: die Farbe der Fasern und die des
+  Scheins. Auf sie blendet das Feld über, solange diese Phase im Bild
+  steht.
 
-| Phase | Zeile | Akzent |
-| --- | --- | --- |
-| 1 | [data.js:65](js/data.js#L65) | `#4d8cff` Blau |
-| 2 | [data.js:252](js/data.js#L252) | `#ff4d4d` Rot |
-| 3 | [data.js:453](js/data.js#L453) | `#ffd93c` Gelb |
-| 4 | [data.js:716](js/data.js#L716) | `#a855f7` Violett |
-| 5 | [data.js:1156](js/data.js#L1156) | `#34d6a0` Grün |
-| 6 | [data.js:1427](js/data.js#L1427) | `#ffa63c` Orange |
-| 7 | [data.js:1636](js/data.js#L1636) | `#ff4dc4` Magenta |
+| Phase | Zeile | Akzent | Fasern |
+| --- | --- | --- | --- |
+| 1 | [data.js:67](js/data.js#L67) | `#4d8cff` Blau | `#0e1c34` / `#345ba2` |
+| 2 | [data.js:254](js/data.js#L254) | `#ff4d4d` Rot | `#340e0e` / `#a23434` |
+| 3 | [data.js:456](js/data.js#L456) | `#ffd93c` Gelb | `#342d0e` / `#a28c34` |
+| 4 | [data.js:719](js/data.js#L719) | `#a855f7` Violett | `#220e34` / `#6c34a2` |
+| 5 | [data.js:1163](js/data.js#L1163) | `#34d6a0` Grün | `#0e3428` / `#34a27d` |
+| 6 | [data.js:1434](js/data.js#L1434) | `#ffa63c` Orange | `#34230e` / `#a27034` |
+| 7 | [data.js:1643](js/data.js#L1643) | `#ff4dc4` Magenta | `#340e28` / `#a2347e` |
 
-Ein Zusammenhang, den man leicht übersieht: `DEFAULT_NEBULA`
-([data.js:2570](js/data.js#L2570)) wird nicht gepflegt, sondern aus den
-**Akzenten** aller Phasen gerechnet. Das ist die Palette am Seitenanfang,
-wo noch keine Phase gilt, also alle nebeneinander. Wer einen Akzent
-ändert, ändert damit auch den Seitenanfang, aber nicht die Galaxie
-dieser Phase. Wer `nebula` ändert, ändert nur die Galaxie dieser Phase.
-
-### Nachprüfen
-
-Der Umbau von Canvas auf WebGL2 sollte am Bild nichts ändern. Ob das
-stimmt, entscheidet nicht das Auge, sondern
-[tools/galaxy-diff/verify.js](tools/galaxy-diff/verify.js): Es startet
-beide Renderer im selben Browser, schiebt sie Bild für Bild durch
-denselben Zeitverlauf und zählt die Abweichung Punkt für Punkt.
-
-```
-cd tools/galaxy-diff && npm i puppeteer-core     # einmalig
-node tools/galaxy-diff/verify.js                # alle drei Prüfungen
-node tools/galaxy-diff/verify.js schichten      # Schicht für Schicht
-node tools/galaxy-diff/verify.js regler         # wirkt jeder Regler?
-node tools/galaxy-diff/verify.js seite          # läuft die echte Seite?
-```
-
-Stand bei der Umstellung, 1280 x 720, Abweichung in Stufen von 255: im
-Mittel 0,6 über alle Schichten, 99,3 Prozent aller Bildpunkte innerhalb
-von zwei Stufen, kein einziger über 24 außer bei bewegten Schweifen. Die
-verbliebene Abweichung ist symmetrische Rundung und kein Versatz, das ist
-mitgemessen: Canvas rundet nach jeder der sechs Schichten auf acht Bit,
-der Shader nur einmal am Ende.
-
-Drei Dinge sind bewusst anders und nicht angeglichen worden:
-
-- Die feinen Sterne bekommen ihre Kantenglättung aus 64 ausgezählten
-  Proben statt aus einem weichen Übergang. Bei Radien um einen halben
-  Bildpunkt entscheidet das über die Helligkeit, und Auszählen trifft
-  genau das, was Canvas rechnet.
-- Sterne werden additiv übereinandergelegt, Canvas legt sie innerhalb
-  ihrer Ebene deckend übereinander. Additiv ist richtiger, überlappende
-  Sterne sind Licht und keine Farbe.
-- Die hellen Sterne bekommen ihren Halo als Formel statt als 48 Punkte
-  großes Bild, das auf 5 bis 24 Punkte zusammengezogen wird.
-
-Zwei Erwartungen haben sich beim Messen nicht bestätigt und stehen
-deshalb anders in der Vorgabe, als zuerst gedacht war: `nebFactor` ändert
-das Bild um zwei von 255 Stufen und steht deshalb auf 1 statt auf 4, das
-Sechzehnfache an Speicher lohnt dafür nicht. Die Weichheit der Nebel kam
-nicht von der Auflösung des gebackenen Bildes, sondern daher, dass die
-feinen Oktaven kaum Energie tragen und die ganze Schicht nur ein blasser
-Hauch über dem Grundbild ist (gemessen 0,9 von 255 Stufen).
-
-### Tempo
-
-Gemessen auf einer Intel-Grafikeinheit, Median des Abstands zwischen den
-Bildern über mehrere Läufe:
-
-| | WebGL2 | Canvas 2D |
-| --- | --- | --- |
-| 1920 x 1080 | 16,6 bis 16,7 ms | 16,7 bis 16,8 ms |
-| 3840 x 2160 | 17 bis 24 ms | 33 bis 40 ms |
-
-Bei 1080p laufen beide mit vollen 60 Bildern, die alte Fassung mit etwas
-mehr Ausreißern nach oben. Auf sehr großen Flächen, also 4K oder ein
-2K-Schirm mit doppelter Punktdichte, ist die neue Fassung ungefähr
-doppelt so schnell. Die Werte schwanken von Lauf zu Lauf spürbar, weil
-die Grafikeinheit sich den Speicher mit allem anderen teilt.
+Die sieben Paare stehen im selben Verhältnis zueinander: Der Farbton kommt
+aus dem Akzent der Phase, die Fasern liegen sehr dunkel (Helligkeit 13
+Prozent), der Schein in der Mitte (42 Prozent). Wer ein Paar von Hand
+setzt, sollte diesen Abstand halten, sonst fällt eine Phase aus der Reihe.
 
 ## Hinweise
 

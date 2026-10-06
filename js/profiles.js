@@ -18,6 +18,48 @@
    Achtung: Die Texte beschreiben die ganze Reihe und nehmen dabei jede
    Wendung vorweg. */
 const PROFILES = {
+  "augustus-pugliese": [
+    ["Der Anwalt aus der zweiten Reihe",
+      "Augustus Pugliese arbeitet bei Goodman, Lieber, Kurtzberg & Holliway in der Abteilung für Superhelden-Recht und wird von allen nur Pug genannt. Er ist der Erste, der Jennifer Walters an ihrem neuen Arbeitsplatz begrüßt, und zwar mit einem Korb voller Büroartikel, Snacks und einem Stadtplan der besten Toiletten des Hauses."],
+    ["Freund statt Rivale",
+      "Obwohl beide um dieselben Mandanten streiten, macht Pug aus der Konkurrenz keine Feindschaft. Er teilt seine Kontakte, verrät ihr, wo man in dieser Stadt Kleidung für eine zwei Meter große Frau bekommt, und bringt sie zu dem Schneider Luke Jacobson, der später ihren Anzug näht."],
+    ["Was ihn ausmacht",
+      "Pug hat keine Kräfte und keinen Anzug, sondern ein Gespür dafür, wann jemand einen Verbündeten braucht. Er hält zu Walters, als die Kanzlei sie nur noch als grüne Werbefigur behandelt, und er ist einer der wenigen, die sie als Person und nicht als Fall sehen."],
+  ],
+  "eliot-franklin-thunderball": [
+    ["Die Wrecking Crew",
+      "Eliot Franklin gehört zu den vier Männern, die einem asgardischen Bauarbeiter sein Werkzeug gestohlen haben. Jedes Stück ist mit asgardischem Vibranium durchsetzt und verleiht seinem Träger übermenschliche Kraft. Franklin führt seither eine Kugel an einer Kette und nennt sich Thunderball."],
+    ["Der Auftrag der Intelligencia",
+      "Die Bande arbeitet für die Intelligencia, ohne zu wissen, wer dahintersteckt. Ihr Auftrag lautet, Jennifer Walters Blut abzunehmen. Auf einer Landstraße stellen sie ihren Wagen und greifen an, doch Thunderballs Nadel knickt an ihrer Haut einfach um."],
+    ["Wesen und Fähigkeiten",
+      "Die Kugel macht aus jedem Schlag einen Einschlag, und Franklin trifft damit auch, was sich bewegt. Gegen She-Hulk reicht das nicht, und weil die Bande ihre Auftraggeber nie kennenlernt, führt ihr Scheitern die Spur auch nicht weiter."],
+  ],
+  "henry-camp-bulldozer": [
+    ["Die Wrecking Crew",
+      "Henry Camp ist der Dritte im Bunde der Wrecking Crew und trägt vom Raubzug bei dem asgardischen Bauarbeiter den Helm davon. Damit geht er durch Mauern, Wagen und alles andere, was ihm im Weg steht, und heißt seither Bulldozer."],
+    ["Der Überfall auf Jennifer Walters",
+      "Beim Angriff auf der Landstraße bekommt Camp Jennifer Walters als Einziger der Bande zu fassen und hält sie im Schwitzkasten. Genau in diesem Griff verwandelt sie sich, und was eben noch ein Erfolg war, wirft ihn quer über die Fahrbahn."],
+    ["Wesen und Fähigkeiten",
+      "Camp ist der Rammbock der Truppe und braucht dafür weder Anlauf noch Plan. Zusammen mit Thunderball und Piledriver taucht er später bei einem Treffen der Intelligencia wieder auf, wo dieselben Männer den Auftraggeber immer noch nicht erkennen."],
+  ],
+  "jasper-sitwell": [
+    ["Der Agent mit dem sauberen Lebenslauf",
+      "Jasper Sitwell dient S.H.I.E.L.D. über Jahre in der Freigabestufe sieben. Er steht 2011 am Krater in New Mexico, als Thors Hammer im Boden steckt, und arbeitet später auf dem Helicarrier an der Seite von Nick Fury und Maria Hill."],
+    ["Hydra von Anfang an",
+      "Was niemand weiß: Sitwell ist bereits während seiner Ausbildung an der Vorbereitungsakademie von Hydra für die Organisation gewonnen worden. Sein ganzer Dienst bei S.H.I.E.L.D. ist eine Unterwanderung, und je höher er steigt, desto mehr trägt er hinaus."],
+    ["Das Dach in Washington",
+      "Rogers, Romanoff und Wilson stellen ihn auf einem Hochhausdach und halten ihn über die Kante, bis er redet. Er erklärt ihnen Zolas Algorithmus, der aus Bankdaten, Krankenakten und Telefonaten die Zukunft eines Menschen errechnet und die Ziele für Project Insight bestimmt."],
+    ["Das Ende",
+      "Kurz darauf wird Sitwell auf offener Straße vom Winter Soldier aus dem fahrenden Wagen geschleudert, ehe er mehr verraten kann. Er stirbt am 18. März 2014, an demselben Tag, an dem S.H.I.E.L.D. auffliegt."],
+  ],
+  "die-hand": [
+    ["Ein Bund und keine Bande",
+      "Die Hand ist eine weltweit tätige Organisation von Auftragsmördern mit Wurzeln im Fernen Osten. Fünf Anführer teilten sie einst unter sich auf, und ihre Leute sind über Konzerne, Behörden und das organisierte Verbrechen so verteilt, dass die Organisation nie an einer Stelle zu fassen ist."],
+    ["New York",
+      "In New York hat die Hand schon einmal versucht, die Stadt von unten auszuhöhlen, und wurde dabei von Daredevil, Jessica Jones, Luke Cage und Iron Fist gestoppt. Übrig blieben genug Leute, um weiterzumachen, und mit Snow steht wieder eine Anführerin an der Spitze."],
+    ["Die roten Kämpfer",
+      "Ihre Fußsoldaten treten in roter Vermummung auf, kämpfen mit Schwert und Sichel und geben sich nicht zu erkennen. In Spider-Man: Brand New Day ziehen sie wieder durch die Straßen, und diesmal steht ihnen ein Spider-Man gegenüber, den niemand mehr kennt."],
+  ],
   "steve-rogers": [
     ["Ein kranker Junge", "Steven Grant Rogers kommt am 4. Juli 1918 in New York als Sohn von Sarah und Joseph Rogers zur Welt. Sein Vater fällt im Krieg, noch bevor er geboren wird, seine Mutter arbeitet als Krankenschwester und stirbt an der Tuberkulose, die sie sich im Krankenhaus geholt hat. Sie sagt ihm als Kind, sein Körper sei zwar zerbrechlich, sein Herz aber zehnmal so groß, und nimmt ihm das Versprechen ab, seinen Kopf zu benutzen. Asthma, ein schwaches Herz und eine lange Liste weiterer Diagnosen begleiten ihn durch die gesamte Jugend."],
     ["Bucky", "James Buchanan Barnes wächst mit ihm auf und zieht ihn regelmäßig aus Prügeleien, die Rogers nicht gewinnen kann und trotzdem nicht abbricht. Der Satz, dass er das den ganzen Tag machen könne, stammt aus dieser Zeit und begleitet ihn bis in die letzten Kämpfe. Als Barnes 1943 zum 107. Regiment eingezogen wird, versucht Rogers zum fünften Mal, sich unter falschen Angaben zur Musterung zu melden. Die Freundschaft der beiden ist der einzige feste Punkt in seinem Leben vor dem Serum."],
@@ -3177,5 +3219,21 @@ const PROFILES = {
     ["Das Kostüm", "Als seine Tochter zum ersten Mal öffentlich als Ms. Marvel auftritt, näht er ihr aus einem alten Burkini und Stoffresten ein Kostüm. Es ist ein Geschenk ohne große Worte, aber es sagt alles, denn er hat sie längst durchschaut und trägt es mit. Von ihm stammt auch die Erklärung ihres Namens, den er noch einmal aufsagt, als sie ihn am nötigsten braucht. Aus dem Wunder ist damit ein Auftrag geworden."],
     ["Karatschi", "Als die Familie nach Karatschi reist, kehrt Yusuf an den Ort zurück, aus dem sie einst aufgebrochen sind. Dort holt die Familiengeschichte, die Muneeba immer abgetan hat, die Khans endgültig ein. Yusuf steht dabei zwischen zwei Frauen, die sich beide für den Bruch mit der Vergangenheit entschieden haben. Er ist die Figur, an der die Serie zeigt, dass Herkunft kein Gepäckstück ist, das man abstellen kann."],
     ["Danach", "Auch bei Kamalas späteren Abenteuern ist er dabei, wenn die Wohnung der Khans wieder einmal zum Hauptquartier wird. Er arbeitet bei der New York Mutual Bank und behandelt kosmische Ereignisse mit derselben Freundlichkeit wie alles andere. Zwischen den Marvels und Dar-Benn behält er den Blick für den Abendbrottisch. Das ist in dieser Reihe eine eigene Leistung."],
+  ],
+  "irani-rael": [
+    ["Nova Prime", "Irani Rael tritt in das Nova Corps ein und arbeitet sich bis an dessen Spitze hoch. Als Nova Prime führt sie nicht nur die Streitmacht von Xandar, sondern steht auch für die Politik des Planeten ein. Ihr Rang ist der höchste, den das Corps zu vergeben hat, und sie trägt ihn ohne Pathos. Wer mit ihr spricht, bekommt eine Antwort und keine Rede."],
+    ["Der Frieden mit den Kree", "Einen großen Teil ihrer Amtszeit verwendet sie darauf, den tausend Jahre alten Krieg zwischen den Kree und den Xandarianern zu beenden. Sie hält es für aussichtslos, den Frieden aus einer Position der Überlegenheit zu diktieren, und sorgt dafür, dass beide Seiten über dieselbe Technik verfügen. Am Ende steht ein unterzeichneter Vertrag. Dass er im Imperium nicht alle überzeugt, weiß sie."],
+    ["Ronan", "Ronan der Ankläger erkennt den Vertrag nicht an und überfällt weiter xandarianische Außenposten. Rael stellt den Kree-Botschafter zur Rede und verlangt, dass sein Imperium diese Massaker verurteilt. Der Botschafter erklärt ihr, das sei ihre Angelegenheit, und beendet das Gespräch. Sie bleibt zurück mit der Erkenntnis, dass der Frieden auf dem Papier keinen einzigen Angriff verhindert."],
+    ["Die Entscheidung", "Als Peter Quill dem Corps melden lässt, dass Ronan mit dem Machtstein im Anflug ist, stehen sich in ihrem Hauptquartier zwei Meinungen gegenüber. Garthan Saal hält die Nachricht für eine Finte von Verbrechern. Rael fragt stattdessen Rhomann Dey, ob er Quill glaubt, und richtet sich nach dessen Antwort. Sie lässt die Stadt räumen und schickt die Flotte in die Luft."],
+    ["Die Schlacht um Xandar", "Ihr Plan ist einfach und teuer. Die Nova-Jäger bilden eine Sperrlinie aus ihren eigenen Schiffen, um die Dark Aster am Landen zu hindern, während die Guardians an Bord gehen. Ronan zerschlägt die Linie mit der Macht des Steins und reißt Hunderte ihrer Leute mit in den Tod, darunter Saal. Die Rechnung geht trotzdem auf, weil die Guardians in der gewonnenen Zeit an den Stein kommen."],
+    ["Der Orb im Tresor", "Nach der Schlacht befördert sie Dey zum Denarian und lässt die Akten der Guardians löschen. Quill erfährt von ihr, dass sein Vater keiner Art angehörte, die sie kennt. Den Orb mit dem Machtstein nimmt sie persönlich in Verwahrung und schließt ihn tief im Hauptquartier weg. Sie weiß genau, was sie da einschließt, und sie weiß auch, dass Xandar damit zur Zielscheibe wird."],
+  ],
+  "rhomann-dey": [
+    ["Der Corpsman", "Rhomann Dey ist Familienvater, verheiratet mit einer Krylorianerin und Vater einer Tochter. Beim Nova Corps dient er als einfacher Corpsman und bringt es bis zum Millenian. Er ist ausgebildeter Gefechtssanitäter und hält nichts vom Töten. Unter lauter Uniformierten ist er derjenige, der zuerst an die Leute denkt und dann an die Vorschrift."],
+    ["Die Festnahme", "2014 greift er auf Xandar eine Schlägerei mitten in der Stadt auf und nimmt Peter Quill, Gamora, Rocket und Groot fest. Quill kennt er bereits, denn er hat ihn Jahre zuvor schon einmal wegen einer Kleinigkeit einkassiert. Bei der Aufnahme nennt er ihn versehentlich Star-Prince, was Quill zur Weißglut treibt. Der Ton zwischen den beiden ist von da an gesetzt."],
+    ["Der Kyln", "Im Hauptquartier meldet er die vier bei Denarian Garthan Saal an und trägt ihre Vergehen vor. Als Saal die Verlegung in den Kyln anordnet, widerspricht er und hält das Gefängnis für zu brutal. Saal setzt sich durch, weil die eigenen Zellen zu klein sind. Es ist der erste von mehreren Fällen, in denen Dey recht hat und trotzdem verliert."],
+    ["Der Anruf", "Tage später erreicht ihn zu Hause eine Nachricht von Quill: Ronan ist mit dem Machtstein unterwegs nach Xandar. Dey fährt ins Hauptquartier und legt die Sache Nova Prime vor. Saal nennt es eine Falle, Rael fragt Dey nach seiner Einschätzung, und er sagt, dass er Quill glaubt. Diese eine Antwort ist der Grund, warum Xandar an jenem Tag nicht verglüht."],
+    ["Die Schlacht", "Aus dem Kontrollraum verfolgt er, wie die Flotte die Sperrlinie zieht und wie Ronan sie zerschlägt. Er sieht dabei zu, wie Kollegen sterben, unter ihnen der Mann, der ihm eben noch widersprochen hat. Eingreifen kann er nicht. Was er tun konnte, hat er getan, als er für Quill gebürgt hat."],
+    ["Denarian", "Nach dem Sieg rückt er an Saals Stelle zum Denarian auf und übergibt den Guardians die wiederaufgebaute Milano. Quill erklärt er, dass diese Leute seiner Frau und seiner Tochter das Leben gerettet haben, und löscht ihre Vorstrafen. Beim Abflug murmelt er, dass es vielleicht keine so gute Idee war, sie frei laufen zu lassen. Dann geht er nach Hause, wo ihm seine Tochter in die Arme springt."],
   ],
 };

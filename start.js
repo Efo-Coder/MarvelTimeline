@@ -1,4 +1,4 @@
-/* Starter: Timeline und Bild-Studio in einem Rutsch.
+/* Starter: Timeline und Vision-Studio in einem Rutsch.
 
    Aufruf
    ------
@@ -7,7 +7,7 @@
        node start.js --ohne-studio
        node start.js --beobachten --kein-browser
 
-   Danach steht die Fanpage unter http://127.0.0.1:4320 und das Bild-Studio
+   Danach steht die Fanpage unter http://127.0.0.1:4320 und das Vision-Studio
    unter http://127.0.0.1:4321. Beide Server lauschen nur auf der
    Loopback-Adresse, sie sind Werkzeuge für diesen Rechner und nicht fürs
    Netz gedacht. Strg+C beendet beide zusammen.
@@ -23,7 +23,7 @@
    lädt nach jeder Änderung von selbst nach (siehe „Änderungen kommen von
    selbst an“ weiter unten), und das Studio steht daneben unter einer festen
    Adresse. Den Statik-Teil macht diese Datei selbst, das Studio ist
-   tools/portrait-studio/server.js und läuft als Kindprozess; seine Ausgabe
+   vision-studio/server.js und läuft als Kindprozess; seine Ausgabe
    steht eingerückt darunter.
 
    Beim Arbeiten am Studio
@@ -31,7 +31,7 @@
    Mit --beobachten läuft das Studio unter node --watch: Eine Änderung an
    server.js startet es neu, ohne dass hier jemand etwas anklicken muss.
    Der Browser merkt das von selbst und lädt nach, siehe pruefeStand in
-   tools/portrait-studio/studio.js. Zusammen mit --kein-browser ist das
+   vision-studio/studio.js. Zusammen mit --kein-browser ist das
    die Fassung für einen Server, der den ganzen Tag nebenher läuft, und
    genau so ruft ihn .vscode/tasks.json auf.
 */
@@ -45,7 +45,7 @@ const path = require('path');
 const { spawn, execSync } = require('child_process');
 
 const REPO = __dirname;
-const STUDIO = path.join(REPO, 'tools', 'portrait-studio', 'server.js');
+const STUDIO = path.join(REPO, 'vision-studio', 'server.js');
 
 const argv = process.argv.slice(2);
 const PORT = Number(wert('--port') || 4320);
@@ -77,6 +77,11 @@ const TYPEN = {
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',
+  /* Das Theme im Titel der Startseite. Ohne den richtigen Typ nimmt der
+     Browser application/octet-stream und spielt es je nach Fassung gar
+     nicht erst ab. */
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
 };
 
 const server = http.createServer((req, res) => {
@@ -101,15 +106,81 @@ const server = http.createServer((req, res) => {
   }
   if (istOrdner(ziel)) ziel = path.join(ziel, 'index.html');
 
+  const typ = TYPEN[path.extname(ziel).toLowerCase()] || 'application/octet-stream';
+
+  /* Ein Stück aus der Mitte statt der ganzen Datei. Ohne das kann der
+     Browser in einem Video nicht springen: Er fragt den Bereich an, den
+     er sehen will, und ohne 206 bekäme er jedes Mal die ganzen elf
+     Megabyte von vorne. Genau das braucht der Titel auf der Startseite,
+     der nur das helle Stück des Themes spielt (js/masked-heading.js).
+
+     Nur für alles außer HTML. In die Seiten setzt mitZuhoerer noch den
+     Zuhörer ein, ihre ausgelieferte Länge ist also nicht die der Datei
+     und ein Bereich daraus wäre falsch gezählt. */
+  if (!typ.startsWith('text/html') && req.headers.range) {
+    return sendeBereich(req, res, ziel, typ, pfad);
+  }
+
   fs.readFile(ziel, (fehler, inhalt) => {
     if (fehler) {
       console.log(`  404  ${pfad}`);
       return sende(res, 404, `Nicht gefunden: ${pfad}`, req.method);
     }
-    const typ = TYPEN[path.extname(ziel).toLowerCase()] || 'application/octet-stream';
     sende(res, 200, typ.startsWith('text/html') ? mitZuhoerer(inhalt) : inhalt, req.method, typ);
   });
 });
+
+/* bytes=von-bis, wobei beide Enden fehlen dürfen. Offen gelassen heißt
+   „bis zum Schluss“, und bytes=-500 meint die letzten 500 Bytes. */
+function bereichLesen(kopf, groesse) {
+  const treffer = /^bytes=(\d*)-(\d*)$/.exec(String(kopf).trim());
+  if (!treffer) return null;
+  const [, vonRoh, bisRoh] = treffer;
+  if (vonRoh === '' && bisRoh === '') return null;
+  let von;
+  let bis;
+  if (vonRoh === '') {
+    von = Math.max(0, groesse - Number(bisRoh));
+    bis = groesse - 1;
+  } else {
+    von = Number(vonRoh);
+    bis = bisRoh === '' ? groesse - 1 : Math.min(Number(bisRoh), groesse - 1);
+  }
+  if (!Number.isFinite(von) || !Number.isFinite(bis) || von > bis || von >= groesse) return null;
+  return { von, bis };
+}
+
+function sendeBereich(req, res, ziel, typ, pfad) {
+  let stat;
+  try {
+    stat = fs.statSync(ziel);
+  } catch {
+    console.log(`  404  ${pfad}`);
+    return sende(res, 404, `Nicht gefunden: ${pfad}`, req.method);
+  }
+
+  const teil = bereichLesen(req.headers.range, stat.size);
+  if (!teil) {
+    /* Ein Bereich, den es nicht gibt. Der Browser soll daraus lernen, wie
+       groß die Datei wirklich ist, und es noch einmal versuchen. */
+    res.writeHead(416, {
+      'Content-Range': `bytes */${stat.size}`,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'no-store',
+    });
+    return res.end();
+  }
+
+  res.writeHead(206, {
+    'Content-Type': typ,
+    'Content-Length': teil.bis - teil.von + 1,
+    'Content-Range': `bytes ${teil.von}-${teil.bis}/${stat.size}`,
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'no-store',
+  });
+  if (req.method === 'HEAD') return res.end();
+  fs.createReadStream(ziel, { start: teil.von, end: teil.bis }).pipe(res);
+}
 
 function istOrdner(pfad) {
   try {
@@ -126,6 +197,10 @@ function sende(res, code, daten, methode, typ) {
   res.writeHead(code, {
     'Content-Type': typ || 'text/plain; charset=utf-8',
     'Content-Length': koerper.length,
+    /* Sagt dem Browser, dass er auch nach einem Stück fragen darf. Ohne
+       diese Zeile lädt er ein Video immer am Stück und kann nicht
+       springen, siehe sendeBereich. */
+    'Accept-Ranges': 'bytes',
     'Cache-Control': 'no-store',
   });
   res.end(methode === 'HEAD' ? undefined : koerper);
@@ -144,7 +219,7 @@ function sende(res, code, daten, methode, typ) {
    Stilblatt und die Bilder stehen dabei für sich allein: Sie lassen sich
    im laufenden Betrieb austauschen, während für HTML und JavaScript kein
    Weg am Neuladen vorbeiführt. Genau deshalb zählen sie nicht zu den
-   Seitendateien. Beim Arbeiten im Bild-Studio ist das der Unterschied
+   Seitendateien. Beim Arbeiten im Vision-Studio ist das der Unterschied
    zwischen Zusehen und Nachschlagen: Das frisch geschnittene Porträt
    steht in der offenen Figur, ohne dass die Seite von vorn anfängt.
 
@@ -600,7 +675,7 @@ function lauschen() {
     console.log(`  ${adresse}            Timeline`);
     console.log(`  ${adresse}/characters.html   Charaktere`);
     if (MIT_STUDIO) {
-      console.log(`  http://127.0.0.1:${STUDIO_PORT}            Bild-Studio`);
+      console.log(`  http://127.0.0.1:${STUDIO_PORT}            Vision-Studio`);
     }
     console.log('  Die Seite wird beobachtet: Änderungen kommen ohne Neuladen an.');
     if (MIT_STUDIO && BEOBACHTEN) {

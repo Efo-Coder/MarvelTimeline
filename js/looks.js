@@ -16,7 +16,7 @@
    Charakter: Eine Figur hat so viele Sätze wie Fassungen. Auch die
    Figur mit nur einem einzigen Bild hat einen, denn ihre Standardansicht
    ist ebenso eine Fassung wie die zwanzigste Rüstung Tony Starks.
-   Gepflegt wird der Satz im Bild-Studio unter der Fassungsleiste. Fehlt
+   Gepflegt wird der Satz im Vision-Studio unter der Fassungsleiste. Fehlt
    er doch einmal, springt auf der Bühne die Zusammenfassung des Films
    ein.
 
@@ -43,7 +43,7 @@ const FULLSIZE_NOTES = {
   'tony-stark-mark-xlv': 'Den fünfundvierzigsten Anzug trug Stark vor allem in der Schlacht von Sokovia gegen Ultron.',
   'tony-stark-mark-xlviii-hulkbuster-2-0': 'Der achtundvierzigste Anzug war als zweiter Hulkbuster gedacht, um Hulk notfalls zu bändigen, in der Schlacht von Wakanda steckte darin aber Bruce Banner.',
   'tony-stark-mark-l': 'Der fünfzigste Anzug ist der erste aus Nanotechnik, die aus dem Brustelement über den Körper wächst, und kämpfte auf Titan gegen Thanos.',
-  'tony-stark-mark-lxxxv-85': 'Der fünfundachtzigste und letzte Anzug begleitete Stark durch den Zeitraub und die Schlacht um die Erde, in der er die Steine ein letztes Mal in die Hand nahm.',
+  'tony-stark-mark-lxxxv': 'Der fünfundachtzigste und letzte Anzug begleitete Stark durch den Zeitraub und die Schlacht um die Erde, in der er die Steine ein letztes Mal in die Hand nahm.',
   'tony-stark-quantum-suit': 'Für den Zeitraub trägt auch Stark den weißen Quantenanzug nach Scott Langs Bauplan und geht darin zurück ins Jahr 1970.',
   'tony-stark-civil': 'Ohne Rüstung ist Stark der Kopf von Stark Industries, der seine Identität als Iron Man vor laufenden Kameras selbst preisgegeben hat.',
   'tony-stark-mark-xlvii': 'Der siebenundvierzigste Anzug entstand als Ersatz, nachdem Captain America den Mark XLVI in Leipzig beschädigt hatte.',
@@ -54,6 +54,7 @@ const FULLSIZE_NOTES = {
   'marc-spector-steven-grant-moon-knight-mr-knight': 'Mr. Knight ist die zweite Gestalt derselben Rüstung, ein weißer Anzug mit Maske, den Steven Grant ruft, wenn ermittelt statt gekämpft wird.',
   'marc-spector-steven-grant-moon-knight-steven-grant': 'Steven Grant ist die zweite Persönlichkeit in Marc Spectors Körper, ein Angestellter im Museumsladen, der von den nächtlichen Einsätzen zunächst nichts ahnt.',
   'marc-spector-steven-grant-moon-knight-steven-grant-zivil': 'Zwischen den Aussetzern führt Steven Grant sein Londoner Alltagsleben weiter und fesselt sich nachts ans Bett, um dem eigenen Körper nicht zu folgen.',
+  'marc-spector-steven-grant-moon-knight-jake-lockley': 'Jake Lockley ist die dritte Persönlichkeit in diesem Körper, von der die beiden anderen nichts wissen, und er erledigt in der Abspannszene, was Khonshu von Marc Spector nicht bekommen hat.',
 
   /* ---------- Thor ---------- */
   'thor': 'Für die Schlacht von New York trägt Thor die asgardische Rüstung mit den Scheiben auf der Brust und rotem Umhang und führt noch Mjölnir.',
@@ -74,6 +75,7 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Bruce Banner ---------- */
   'bruce-banner': 'Hulk ist die Gestalt, in die Banner unter Wut und Angst umschlägt, seit ein Gammastrahlenversuch die Kontrolle über seinen Körper zerrissen hat.',
+  'bruce-banner-age-of-ultron': 'Unter dem Einfluss von Wanda Maximoff verliert der Hulk in Age of Ultron die Beherrschung über sich und zieht durch Johannesburg, bis Stark ihm in der Hulkbuster-Rüstung entgegentritt.',
   'bruce-banner-smart-hulk': 'Als Smart Hulk hat Banner nach achtzehn Monaten im Gammalabor beide Seiten in einem Körper vereint und behält Verstand und Sprache im grünen Leib.',
   'bruce-banner-quantum-suit': 'Für den Zeitraub steckt der Smart Hulk in einem eigens geschnittenen Quantenanzug und holt in Greenwich Village den Zeitstein bei der Ältesten.',
   'bruce-banner-ruffalo': 'Zwischen den Verwandlungen ist Banner der Wissenschaftler, der sich in Kalkutta versteckt hielt, bis S.H.I.E.L.D. ihn wegen des Tesserakts zurückholte.',
@@ -97,20 +99,23 @@ const FULLSIZE_NOTES = {
   'steve-rogers-age-of-ultron': 'Der Anzug aus Age of Ultron ist dunkler als der von New York und begleitet Rogers von der Erstürmung der Hydra-Festung bis in die Schlacht von Sokovia.',
   'steve-rogers-avengers': 'Das Kostüm für die Schlacht von New York ist das erste, das S.H.I.E.L.D. für ihn baut, mit hellem Blau, großem Stern und dem Helm mit dem A.',
   'steve-rogers-first-avenger': 'Das erste Kostüm entstand aus dem Bühnenanzug der Kriegsanleihe-Tournee und wurde für den Einsatz gegen Hydra zur Uniform mit Vibraniumschild umgebaut.',
+  'steve-rogers-kommando': 'Für die Einsätze mit den Howling Commandos trägt Rogers eine Lederjacke über der Uniform, dazu Schutzbrille und den runden Vibraniumschild.',
+  'steve-rogers-army-uniform': 'In der Ausgehuniform der Army steht Rogers zwischen den Fronten: nach außen der Werbeträger, im Stab der Mann, dem niemand ein Kommando geben will.',
   'steve-rogers-uso-tournee': 'Für die Tournee zum Verkauf von Kriegsanleihen steckte die Armee ihren einzigen Supersoldaten in ein Bühnenkostüm mit dreieckigem Schild, statt ihn an die Front zu lassen.',
   'steve-rogers-stealth-suit-maskiert-2': 'Die alte Uniform holt Rogers sich aus dem Smithsonian zurück, als S.H.I.E.L.D. von Hydra unterwandert ist und er niemandem mehr trauen kann.',
   'steve-rogers-stealth-suit-maskiert-1': 'Zum Stealth Suit gehört ein Helm ohne Flügel, hinter dem Rogers beim Zugriff auf der Lemurian Star unerkannt bleiben sollte.',
 
   /* ---------- Bucky Barnes ---------- */
-  'bucky-barnes-zivil': 'Nach der Rückkehr aus Wakanda lebt Barnes ohne Auftrag in Brooklyn, geht zur Therapie und arbeitet die Liste seiner Opfer ab.',
-  'bucky-barnes-winter-soldier-1': 'Als Winter Soldier war Barnes Hydras Auftragsmörder, den ein Metallarm, eine Maske und eine Reihe russischer Auslösewörter steuerten.',
-  'bucky-barnes-winter-soldier-3': 'Ohne Maske erkennt Rogers in dem Attentäter seinen totgeglaubten Freund, während Barnes selbst den eigenen Namen nicht mehr kennt.',
-  'bucky-barnes-winter-soldier-2': 'In der Rückblende von Civil War fährt der Winter Soldier 1991 mit Maulkorbmaske und Schutzbrille den Wagen der Starks von der Straße.',
-  'bucky-barnes-thunderbolts': 'Als gewählter Abgeordneter tritt Barnes den Thunderbolts bei und trägt einen dunklen Kampfanzug über dem goldenen Arm aus Wakanda.',
+  'bucky-barnes-captain-america-the-first-avenger': 'Nach der Rückkehr aus Wakanda lebt Barnes ohne Auftrag in Brooklyn, geht zur Therapie und arbeitet die Liste seiner Opfer ab.',
+  'bucky-barnes-captain-america-the-winter-soldier-1': 'Als Winter Soldier war Barnes Hydras Auftragsmörder, den ein Metallarm, eine Maske und eine Reihe russischer Auslösewörter steuerten.',
+  'bucky-barnes-captain-america-the-winter-soldier-3': 'Ohne Maske erkennt Rogers in dem Attentäter seinen totgeglaubten Freund, während Barnes selbst den eigenen Namen nicht mehr kennt.',
+  'bucky-barnes-captain-america-the-winter-soldier-2': 'In der Rückblende von Civil War fährt der Winter Soldier 1991 mit Maulkorbmaske und Schutzbrille den Wagen der Starks von der Straße.',
+  'bucky-barnes-ausgehuniform': 'Als Sergeant des 107. Regiments trägt Barnes die braune Ausgehuniform der Army, in der ihn Steve Rogers vor dem Abmarsch nach Europa zuletzt sieht.',
+  'bucky-barnes-thunderbolts': 'Für die Einsätze der Truppe legt Barnes den Anzug des Abgeordneten ab und trägt Schwarz, wobei der Metallarm frei bleibt.',
 
   /* ---------- Taskmaster ---------- */
-  'taskmaster': 'Der Taskmaster-Anzug wurde für Antonia Dreykov gebaut, die über ihr Visier die Bewegungen jedes Gegners abliest und sofort nachahmt.',
-  'taskmaster-unmasked': 'Unter der Maske steckt Antonia Dreykov, die ihr Vater nach einer Explosion mit einem Implantat im Kopf zur willenlosen Waffe machte.',
+  'taskmaster-black-widow-2': 'Der Taskmaster-Anzug wurde für Antonia Dreykov gebaut, die über ihr Visier die Bewegungen jedes Gegners abliest und sofort nachahmt.',
+  'taskmaster-black-widow-1': 'Unter der Maske steckt Antonia Dreykov, die ihr Vater nach einer Explosion mit einem Implantat im Kopf zur willenlosen Waffe machte.',
   'taskmaster-thunderbolts': 'Von Dreykovs Steuerung befreit arbeitet Antonia als Söldnerin für Valentina Allegra de Fontaine und läuft mit ihr in die Falle im Bunker.',
 
   /* ---------- Natasha Romanoff ---------- */
@@ -142,6 +147,9 @@ const FULLSIZE_NOTES = {
   'peter-parker-mutiert': 'Als das Trauma die Mutation seiner Spinnen-DNA beschleunigt, spinnt Parker organische Netze ohne Netzschleudern und hält die neuen Instinkte nur mit einem Inhibitor im Zaum.',
   'peter-parker-integrated-suit': 'Der Integrated Suit verbindet die Nanotechnik der Iron-Spider-Rüstung mit dem roten Anzug und ist der letzte, den Parker aus Starks Beständen trägt.',
   'peter-parker-zivil': 'Ohne Anzug ist Parker ein Schüler aus Queens, der mit seiner Klasse nach Europa fährt und dort eigentlich Ferien machen wollte.',
+  'peter-parker-zivil-brand-new-day': 'Vier Jahre nach dem großen Vergessen studiert Parker an der ESU und trägt den Pullover der Universität, während niemand mehr weiß, wer er einmal war.',
+  'peter-parker-zivil-no-way-home': 'Seit Mysterio seinen Namen in die Welt gesetzt hat, geht Parker in No Way Home als Gejagter durch die Stadt und bringt jeden in Schwierigkeiten, der zu ihm hält.',
+  'peter-parker-zivil-homecoming': 'Zwischen den Einsätzen ist Parker in Homecoming vor allem Schüler der Midtown School, und das Praktikum bei Stark ist die Ausrede für alles, was er versäumt.',
 
   /* ---------- Wanda Maximoff ---------- */
   'wanda-maximoff': 'Nach Sokovia kämpft Maximoff in dunkelrotem Mantel als Mitglied der Avengers und wird nach Lagos zur Streitfrage des Sokovia-Abkommens.',
@@ -155,6 +163,8 @@ const FULLSIZE_NOTES = {
   'nick-fury': 'Als Direktor von S.H.I.E.L.D. stellt Fury im langen Ledermantel die Avengers zusammen und behält die Fäden auch dann in der Hand, wenn er offiziell tot ist.',
   'nick-fury-secret-invasion': 'Nach Jahren auf der Raumstation kehrt ein gealterter Fury ohne Amt und ohne Rückhalt zurück, um die Skrull-Rebellion um Gravik aufzuhalten.',
   'nick-fury-director-fury': 'Im Dienstanzug führt Fury das Dreieck von S.H.I.E.L.D. in Washington, bis er merkt, dass Hydra längst im Haus sitzt.',
+  'nick-fury-the-winter-soldier': 'Im langen Mantel mit Schulterriemen entgeht Fury in Washington dem Anschlag des Winter Soldiers und taucht danach für tot erklärt unter.',
+  'nick-fury-iron-man-2': 'In Leder und mit Augenklappe tritt Fury Tony Stark im Donut-Laden entgegen und eröffnet ihm, dass er Teil eines viel größeren Universums ist.',
 
   /* ---------- Loki ---------- */
   'loki': 'In Asgard steht Loki als zweiter Sohn Odins im grün-goldenen Gewand neben dem Thron, bis er von seiner Herkunft als Jötun erfährt.',
@@ -203,9 +213,9 @@ const FULLSIZE_NOTES = {
   /* ---------- Shuri ---------- */
   'shuri': 'Als Prinzessin von Wakanda führt Shuri die Wakandan Design Group und baut die Technik, die ihr Bruder als Black Panther benutzt.',
   'shuri-panther-armor': 'Die Panther-Handschuhe aus ihrer Werkstatt baute Shuri für sich selbst und setzte sie im Kampf gegen Killmonger in der Vibraniummine ein.',
-  'shuri-black-panther': 'Nach dem Tod von T’Challa und Ramonda stellt Shuri das Kraut selbst her und nimmt als zweite Black Panther den Habit an.',
-  'shuri-black-panther-masked': 'Der Panther Habit ist ein aus Vibraniumgewebe gefertigter Anzug, der aufgenommene Treffer speichert und beim Gegenschlag zurückgibt.',
-  'shuri-black-panther-unmasked': 'In ihrem Habit mit goldenem Muster tritt Shuri Namor am Strand gegenüber und entscheidet sich gegen die Rache.',
+  'shuri-black-panther-2': 'Nach dem Tod von T’Challa und Ramonda stellt Shuri das Kraut selbst her und nimmt als zweite Black Panther den Habit an.',
+  'shuri-black-panther-1': 'Der Panther Habit ist ein aus Vibraniumgewebe gefertigter Anzug, der aufgenommene Treffer speichert und beim Gegenschlag zurückgibt.',
+  'shuri-black-panther-3': 'In ihrem Habit mit goldenem Muster tritt Shuri Namor am Strand gegenüber und entscheidet sich gegen die Rache.',
 
   /* ---------- Thaddeus Ross ---------- */
   'thaddeus-ross': 'Als General führte Ross die Jagd auf Bruce Banner und war es, der das Super-Soldaten-Programm wieder aufleben ließ, aus dem Abomination hervorging.',
@@ -249,6 +259,7 @@ const FULLSIZE_NOTES = {
   /* ---------- John Walker ---------- */
   'john-walker-captain-america': 'Von der Regierung zum neuen Captain America ernannt bekam Walker Schild und Uniform, ohne je das Serum erhalten zu haben.',
   'john-walker': 'Nach dem Mord vor laufenden Kameras wurde Walker unehrenhaft entlassen und trat später als U.S. Agent in einer schwarzen Fassung derselben Uniform an.',
+  'john-walker-thunderbolts': 'Für Valentina Allegra de Fontaine geht Walker als U.S. Agent auf Einsätze, die nicht in den Akten stehen, mit schwarzem Schild und ohne Rückendeckung.',
 
   /* ---------- Hope van Dyne ---------- */
   'hope-van-dyne': 'Den Wasp-Anzug hatten Hank Pym und Janet van Dyne einst begonnen und ihn für ihre Tochter mit Flügeln und Blastern fertiggestellt.',
@@ -277,9 +288,12 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Scott Lang ---------- */
   'scott-lang': 'Scott Lang ist der Einbrecher, den Hank Pym als Nachfolger auswählte, weil er den Anzug bei seinem ersten Bruch selbst gefunden hatte.',
-  'scott-lang-visor': 'Der Ant-Man-Anzug schützt seinen Träger vor den Nebenwirkungen der Pym-Partikel und regelt die Größe über einen Knopf am Handschuh.',
-  'scott-lang-masked': 'Mit geschlossenem Helm steuert Lang über eine Antenne die Ameisen, die im Einsatz Werkzeug, Transport und Verstärkung zugleich sind.',
+  'scott-lang-masked-2': 'Der Ant-Man-Anzug schützt seinen Träger vor den Nebenwirkungen der Pym-Partikel und regelt die Größe über einen Knopf am Handschuh.',
+  'scott-lang-masked-1': 'Mit geschlossenem Helm steuert Lang über eine Antenne die Ameisen, die im Einsatz Werkzeug, Transport und Verstärkung zugleich sind.',
   'scott-lang-quantum-suit': 'Der weiße Quantenanzug entstand nach Langs eigenem Bauplan, denn nach fünf Stunden im Quantenreich kannte er den Weg dorthin als Einziger.',
+  'scott-lang-ant-man': 'Der ursprüngliche Anzug stammt aus Hank Pyms Tresor und trägt noch den alten Lederhelm, mit dem Pym selbst als Ant-Man gearbeitet hat.',
+  'scott-lang-civil-war': 'Für den Flughafen von Leipzig baute Pym den Anzug um, damit Lang nicht nur schrumpfen, sondern auch wachsen kann.',
+  'scott-lang-quantumania': 'Der Anzug aus Quantumania ist Hope van Dynes Werk und hält im Quantenreich stand, in dem Kang der Eroberer über ganze Welten herrscht.',
 
   /* ---------- Thanos ---------- */
   'thanos-ohne-ruestung': 'Im Infinity War zieht Thanos ohne vollständige Rüstung durch die Galaxis, weil er sich seiner Sache und der Steine sicher ist.',
@@ -312,8 +326,8 @@ const FULLSIZE_NOTES = {
   'adrian-toomes-vulture-flight': 'Der Flügelanzug des Vulture stammt aus umgebauter Chitauri-Technik und hebt Toomes samt Beute in die Luft.',
 
   /* ---------- Alexei Shostakov ---------- */
-  'alexei': 'Alexei Shostakov war als Red Guardian die sowjetische Antwort auf Captain America und saß danach zwanzig Jahre in einem russischen Lager.',
-  'alexei-unmaskiert': 'Aus dem Gefängnis befreit passt Shostakov kaum noch in sein altes Kostüm und lebt von den Geschichten seines einzigen großen Auftritts.',
+  'alexei': 'Für die Thunderbolts holt Shostakov das abgetragene Kostüm ein letztes Mal hervor, ausgeblichen und an den Nähten gedehnt, und tritt darin wieder in eine Mannschaft ein.',
+  'alexei-black-widow': 'Das alte sowjetische Kostüm holt Shostakov nach dem Ausbruch aus dem Lager hervor, mit rotem Stern auf der Brust und Schulterplatten aus der Blütezeit des Programms.',
 
   /* ---------- Ava Starr ---------- */
   'ava-starr-schwarzer-ghost-anzug-unmaskiert': 'Ava Starr wurde als Kind von einem Quantenunfall zerrissen und kann seither durch feste Materie hindurchgehen, was sie zugleich langsam auflöst.',
@@ -354,6 +368,7 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Erik Killmonger ---------- */
   'erik-killmonger': 'N’Jadaka wuchs als Sohn eines ermordeten wakandischen Prinzen in Oakland auf und erarbeitete sich beim Militär den Namen Killmonger.',
+  'erik-killmonger-maskiert': 'Für den Raubzug mit Ulysses Klaue trägt Killmonger eine geschnitzte Kriegsmaske und eine Weste aus wakandischen Beutestücken.',
   'erik-killmonger-black-panther': 'Nach dem Sieg im Zweikampf nahm Killmonger das Kraut und den Habit an sich und ließ die restlichen Pflanzen verbrennen.',
 
   /* ---------- Norman Osborn ---------- */
@@ -413,10 +428,10 @@ const FULLSIZE_NOTES = {
   'simon-williams-2': 'Als Wonder Man besteht sein Körper aus Ionenenergie, die ihn nahezu unverwundbar macht und in blauem Licht leuchten lässt.',
 
   /* ---------- T’Challa ---------- */
-  't-challa': 'Nach dem Tod seines Vaters übernimmt T’Challa Thron und Habit und muss entscheiden, ob Wakanda sich der Welt öffnet.',
+  't-challa-1': 'Nach dem Tod seines Vaters übernimmt T’Challa Thron und Habit und muss entscheiden, ob Wakanda sich der Welt öffnet.',
   't-challa-civil': 'Zwischen den Einsätzen führt T’Challa die Amtsgeschäfte in Wakanda und trägt dabei die Gewänder des Königshauses.',
-  't-challa-unmasked': 'Der Habit lässt sich über die Halskette aus Kimoyo-Perlen an- und ablegen und rollt sich bei Bedarf vollständig zurück.',
-  't-challa-fight': 'In Leipzig kämpft T’Challa nicht für ein Abkommen, sondern für die Rache an dem Mann, den er für den Mörder seines Vaters hält.',
+  't-challa-3': 'Der Habit lässt sich über die Halskette aus Kimoyo-Perlen an- und ablegen und rollt sich bei Bedarf vollständig zurück.',
+  't-challa-2': 'In Leipzig kämpft T’Challa nicht für ein Abkommen, sondern für die Rache an dem Mann, den er für den Mörder seines Vaters hält.',
 
   /* ---------- Talos ---------- */
   'talos': 'In Menschengestalt gab Talos sich als Agent Keller aus, um in den Neunzigern unerkannt nach den Überresten des Lichtgeschwindigkeitsantriebs zu suchen.',
@@ -443,7 +458,6 @@ const FULLSIZE_NOTES = {
   'bill-foster-2': 'Als Goliath wächst Foster auf mehrere Meter Höhe und stellt sich Ava Starr in den Weg, für die er wie ein Vater sorgt.',
 
   /* ---------- Cull Obsidian ---------- */
-  'cull-obsidian': 'Cull Obsidian ist der stärkste Kämpfer der Black Order und wurde wie seine Geschwister von Thanos aufgezogen.',
   'cull-obsidian-hammer': 'Sein Kettenhammer wächst aus dem Armstumpf und ist die Waffe, mit der er in New York und Wakanda kämpft.',
 
   /* ---------- Kang ---------- */
@@ -491,6 +505,9 @@ const FULLSIZE_NOTES = {
   /* ---------- Pepper Potts ---------- */
   'pepper-potts-civil': 'Pepper Potts war Starks Assistentin, bevor sie Stark Industries übernahm, und hielt die Firma zusammen, wenn er in der Rüstung steckte.',
   'pepper-potts-mark-49-rescue': 'Die Rescue-Rüstung mit der Nummer 49 baute Stark für seine Frau, die damit in der Schlacht um die Erde an seiner Seite flog.',
+  'pepper-potts-iron-man-2': 'In Iron Man 2 überträgt Stark ihr die Leitung von Stark Industries, weil er sein eigenes Ende nahen sieht und es ihr nicht sagt.',
+  'pepper-potts-iron-man-3': 'Als Vorstandsvorsitzende empfängt Pepper in Iron Man 3 Aldrich Killian und schlägt sein Angebot aus, was ihn zum Gegner des Hauses macht.',
+  'pepper-potts-infinity-war': 'Beim Morgenlauf durch den Central Park erzählt Stark ihr von seinem Traum vom Kind, und wenige Minuten später steht Doctor Strange vor ihnen.',
 
   /* ---------- Peter Quill ---------- */
   'peter-quill': 'Peter Quill wurde als Kind von Ravagers von der Erde geholt und wuchs unter Yondus Bande zum Dieb heran.',
@@ -504,17 +521,16 @@ const FULLSIZE_NOTES = {
   't-chaka-civil': 'Bei der Unterzeichnung des Sokovia-Abkommens in Wien starb T’Chaka bei dem Anschlag, den Helmut Zemo Bucky Barnes anhängte.',
 
   /* ---------- Wade Wilson ---------- */
-  'wade-wilson-deadpool': 'Der rot-schwarze Anzug verbirgt die vom Heilfaktor entstellte Haut und macht Wilson zu dem Söldner, der beim Töten mit dem Publikum spricht.',
-  'wade-wilson-deadpool-unmaskiert': 'Ohne Maske zeigt der Anzug das vom Heilfaktor entstellte Gesicht, das Wilson sonst vor allen außer seinen Freunden verbirgt.',
-  'wade-wilson-deadpool-civil': 'Ohne Maske arbeitet Wilson als Gebrauchtwagenverkäufer und hat seine Zeit als Deadpool nach der Trennung von Vanessa an den Nagel gehängt.',
+  'wade-wilson-deadpool-1': 'Der rot-schwarze Anzug verbirgt die vom Heilfaktor entstellte Haut und macht Wilson zu dem Söldner, der beim Töten mit dem Publikum spricht.',
+  'wade-wilson-deadpool-2': 'Ohne Maske zeigt der Anzug das vom Heilfaktor entstellte Gesicht, das Wilson sonst vor allen außer seinen Freunden verbirgt.',
   'peter-wisdom': 'Als Peterpool steigt Wisdom in Wilsons alten Anzug aus dem Spind von Drive Max und lenkt damit das ganze Deadpool Corps auf sich.',
   'peter-wisdom-zivil': 'Im gestreiften Poloshirt verkauft Wisdom bei Drive Max Gebrauchtwagen und hebt den alten Anzug seines Freundes für den Fall der Fälle auf.',
 
   /* ---------- Cassie Lang ---------- */
-  'cassie-lang-1': 'Als Jugendliche baut Cassie Lang heimlich ein eigenes Gerät, das Signale in das Quantenreich schickt, und zieht damit die ganze Familie hinein.',
-  'cassie-lang-2': 'Ihr Anzug entstand aus Hank Pyms Werkstatt und lässt Lang unter dem Namen Stature wachsen und schrumpfen wie ihr Vater.',
+  'cassie-lang-ant-man-and-the-wasp-quantumania-1': 'Als Jugendliche baut Cassie Lang heimlich ein eigenes Gerät, das Signale in das Quantenreich schickt, und zieht damit die ganze Familie hinein.',
+  'cassie-lang-ant-man-and-the-wasp-quantumania-2': 'Ihr Anzug entstand aus Hank Pyms Werkstatt und lässt Lang unter dem Namen Stature wachsen und schrumpfen wie ihr Vater.',
   'cassie-lang-ant-man': 'In der Zukunft, die Darren Cross zeigt, trägt Cassie den Anzug ihres Vaters weiter.',
-  'cassie-lang-zivil': 'Nach dem Blip ist Cassie fünf Jahre älter als bei ihrem letzten Wiedersehen mit dem Vater, der die Zeit im Quantenreich verbracht hat.',
+  'cassie-lang-ant-man-and-the-wasp': 'Nach dem Blip ist Cassie fünf Jahre älter als bei ihrem letzten Wiedersehen mit dem Vater, der die Zeit im Quantenreich verbracht hat.',
 
   /* ---------- Agatha Harkness ---------- */
   'agatha-harkness': 'In Westview gab Agatha Harkness sich als Nachbarin Agnes aus, um herauszufinden, welche Macht den Ort unter der Kuppel hält.',
@@ -588,13 +604,14 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Mac Gargan ---------- */
   'scorpion-pose-1': 'Mac Gargan gehörte zu Adrian Toomes Kundschaft und wurde bei der Fährenaktion von Spider-Man festgenommen.',
-  'scorpion-pose-2': 'Im Gefängnis fragt Gargan bei Toomes nach dem wahren Namen von Spider-Man, weil draußen Leute darauf warten.',
   'scorpion-zivil': 'Die Tätowierung eines Skorpions im Nacken ist das Zeichen, unter dem Gargan in den Comics zum gleichnamigen Gegner wird.',
   'scorpion-lederjacke': 'In Lederjacke und Kapuzenpulli tritt Gargan als Käufer auf, der bei Adrian Toomes Waffen aus fremder Technik bestellt.',
 
   /* ---------- Ned Leeds ---------- */
   'ned-leeds': 'Ned Leeds ist Parkers bester Freund und der erste, der von der Maske erfährt, worauf er sich selbst zum Stuhlmann erklärt.',
   'ned-leeds-brand-new-day': 'Nach dem Zauber hat Leeds jede Erinnerung an Peter Parker verloren und beginnt sein Studium mit MJ ohne ihn.',
+  'ned-leeds-far-from-home': 'Auf der Klassenfahrt durch Europa hat Leeds vor allem Betty Brant im Kopf und lässt Parker mit Mysterio allein.',
+  'ned-leeds-no-way-home': 'Mit dem geliehenen Ring aus dem Sanctum entdeckt Leeds, dass auch er Portale öffnen kann, und holt damit zwei fremde Peter Parker herein.',
 
   /* ---------- Billy Maximoff ---------- */
   'billy-maximoff-wiccan': 'Billy Maximoff entstand in Westview aus Wandas Zauber und fand seine Seele nach dem Ende der Kuppel in einem Jungen namens William Kaplan.',
@@ -602,8 +619,6 @@ const FULLSIZE_NOTES = {
   'billy-maximoff-wiccan-magie': 'Als Wiccan wirkt Maximoff mit gesprochener Formel und blauem Licht und sucht auf der Straße der Hexen nach seinem Bruder Tommy.',
 
   /* ---------- Blade ---------- */
-  'blade': 'Eric Brooks kam als Halbvampir zur Welt, trägt die Stärken seiner Art ohne ihre Schwächen und jagt seitdem seinesgleichen.',
-  'blade-knight': 'In der Leere schlug Blade sich jahrelang allein durch und wartete auf eine Gelegenheit, nach Hause zu kommen.',
   'blade-kampfanzug': 'Zu seiner Ausrüstung gehören das Schwert aus Silber und der lange Mantel, der die Waffen für die Nachtjagd verbirgt.',
 
   /* ---------- Erik Lehnsherr ---------- */
@@ -645,16 +660,19 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Kraglin ---------- */
   'kraglin': 'Kraglin diente Yondu als erster Offizier und übernahm nach dessen Tod den Yaka-Pfeil, den er lange nicht steuern konnte.',
+  'kraglin-guardians-uniform': 'Nach Vol. 3 gehört Kraglin fest zur Mannschaft und trägt die blaue Einsatzuniform, die Peter Quill für die neuen Guardians ausgeben ließ.',
   'kraglin-vol-2': 'Unter den Ravagers war Kraglin derjenige, der die Meuterei gegen Yondu mit auslöste und sie danach am meisten bereute.',
 
   /* ---------- Maria Hill ---------- */
   'maria-hill': 'Maria Hill war Nick Furys Stellvertreterin bei S.H.I.E.L.D. und arbeitete nach dessen Fall für Stark Industries.',
   'maria-hill-im-einsatz': 'Auf dem Helicarrier führte Hill die Mannschaft, während Loki den Tesserakt und Bartons Verstand in seiner Gewalt hatte.',
   'maria-hill-s-h-i-e-l-d': 'In der blauen Einsatzuniform half Hill Rogers und Romanoff, Project Insight von innen zu stoppen.',
+  'maria-hill-secret-invasion': 'In Secret Invasion geht Hill mit Fury den Skrulls nach, die sich seit Jahrzehnten unter die Menschen gemischt haben.',
 
   /* ---------- Michelle Jones-Watson ---------- */
-  'michelle-jones-watson': 'MJ beobachtet ihre Mitschüler genauer als alle anderen und weiß lange vor allen anderen, wer unter der Spinnenmaske steckt.',
+  'michelle-jones-watson-homecoming': 'MJ beobachtet ihre Mitschüler genauer als alle anderen und weiß lange vor allen anderen, wer unter der Spinnenmaske steckt.',
   'michelle-jones-watson-far-from-home': 'Auf der Klassenfahrt durch Europa spricht MJ Parker offen darauf an und wird die erste, mit der er die Maske teilt.',
+  'michelle-jones-watson-brand-new-day': 'Vier Jahre nach dem Zauber lebt MJ ihr eigenes Leben in New York, ohne zu ahnen, dass der Mann in der Maske jede Nacht für sie mitdenkt.',
   'michelle-jones-watson-no-way-home': 'Nach dem Zauber weiß auch MJ nicht mehr, wer Peter Parker ist, und beginnt ihr Studium in Boston ohne ihn.',
 
   /* ---------- Nebula ---------- */
@@ -678,6 +696,8 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Stephen Strange ---------- */
   'stephen-strange': 'Nach dem Autounfall, der seine Hände zerstörte, fand der Neurochirurg Stephen Strange in Kamar-Taj die Kunst der Mystik.',
+  'stephen-strange-chirurg': 'Vor dem Unfall ist Strange einer der besten Neurochirurgen New Yorks und wählt seine Fälle danach aus, ob sie seinem Ruf nützen.',
+  'stephen-strange-nach-dem-unfall': 'Nach dem Unfall zittern seine Hände unbrauchbar, und der Mann, der nur an die Medizin geglaubt hat, sucht in Nepal nach dem, was ihm keiner erklären kann.',
   'stephen-strange-supreme-strange': 'Als Sorcerer Supreme trägt Strange das Auge von Agamotto und den Umhang der Levitation, der sich selbst entscheidet, wem er folgt.',
 
   /* ---------- Vanessa Fisk ---------- */
@@ -693,6 +713,7 @@ const FULLSIZE_NOTES = {
   /* ---------- Agent Cleary ---------- */
   'agent-cleary': 'Agent Cleary leitet die Behörde Damage Control, die Peter Parker nach Mysterios Video als Mordverdächtigen vernimmt.',
   'agent-cleary-anzug': 'Damage Control räumt seit der Schlacht von New York die Trümmer weg und ermittelt in allem, was mit Übermenschen zu tun hat.',
+  'agent-cleary-wonder-man': 'In Wonder Man tritt Cleary erneut für Damage Control auf, diesmal im Anzug der Behörde und ohne den Aktenkoffer der Nachtschicht.',
 
   /* ---------- Alejandro Montoya ---------- */
   'alejandro-montoya-el-aguila': 'El Águila ist ein Fechter mit elektrischen Kräften, der bei She-Hulk als Mandant in der Kanzlei sitzt.',
@@ -701,6 +722,7 @@ const FULLSIZE_NOTES = {
   /* ---------- Aneka ---------- */
   'aneka': 'Aneka bildet die Dora Milaje aus und wurde wegen Ungehorsams vor Gericht gestellt, nachdem sie Anzüge ohne Erlaubnis benutzt hatte.',
   'aneka-midnight-angel': 'Die Midnight-Angel-Rüstung gab Shuri an Aneka und Okoye aus, die damit außerhalb des Rangs der Dora Milaje kämpfen.',
+  'aneka-gruene-ruestung': 'Die grün-goldene Rüstung trägt Aneka als Ausbilderin der Dora Milaje, bevor Shuri ihr den Anzug der Midnight Angels gibt.',
 
   /* ---------- Elder Beast ---------- */
   'elder-beast': 'Die Elder Beasts sind die Wächter der Darkhold-Burg auf dem Berg Wundagore und gehorchen dem dunklen Wesen Chthon.',
@@ -728,6 +750,7 @@ const FULLSIZE_NOTES = {
   'yusuf-khan-ohne-muetze': 'Es war Yusuf, der beim Kostümwettbewerb den Rollstuhl mit dem Hulk-Handschuh baute und den Namen Ms. Marvel vorschlug.',
 
   /* ---------- Rocket ---------- */
+  'rocket-guardians-uniform': 'Als Anführer der neuen Guardians trägt Rocket die blaue Einsatzuniform der Mannschaft und führt sein Gewehr wie eh und je selbst.',
   'rocket-guradians-of-the-galaxy-vol-3': 'In Vol. 3 kommt heraus, dass Rocket als Versuchstier 89P13 des Hohen Evolutionärs entstand, der ihn für sein Denken hasste.',
   'rocket-quantum-suit': 'Für den Zeitraub bekommt auch Rocket den weißen Quantenanzug, in dem er mit Thor nach Asgard zurückgeht.',
   'rocket-endgame': 'Fünf Jahre nach dem Fingerschnippen ist Rocket der letzte Guardian im Avengers-Hauptquartier und holt beim Zeitraub mit Thor den Äther aus Asgard.',
@@ -781,6 +804,7 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Odin ---------- */
   'odin': 'Odin herrscht als Allvater über die Neun Reiche, die er einst mit Feuer und Schwert erobert hat, und verschweigt seinen Kindern beides.',
+  'odin-the-dark-world': 'In The Dark World verliert Odin seine Frau Frigga an die Dunkelelfen und kennt danach für Thor keine Nachsicht mehr.',
 
   /* ---------- Fandral ---------- */
   'fandral': 'Fandral ficht mit dem Degen, legt auf sein Auftreten mehr Wert als auf alles andere und erzählt unter den Drei Kriegern die Geschichten.',
@@ -799,6 +823,8 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Darcy Lewis ---------- */
   'darcy-lewis': 'Darcy Lewis fängt bei Jane Foster als Praktikantin an, weil sie sechs Studienpunkte braucht, und streckt Thor beim ersten Treffen mit dem Elektroschocker nieder.',
+  'darcy-lewis-wandavision': 'Als promovierte Astrophysikerin misst Lewis in WandaVision die Strahlung um Westview und fängt aus der Kuppel eine Sendung auf, die es nicht geben dürfte.',
+  'darcy-lewis-the-dark-world': 'In The Dark World steht Lewis wieder neben Jane Foster, diesmal mit einem eigenen Praktikanten, als die Konvergenz die Neun Reiche zusammenschiebt.',
 
   /* ---------- Frigga ---------- */
   'frigga': 'Frigga wurde von Hexen aufgezogen, brachte Loki die Magie bei und behandelt ihn auch dann noch als ihren Sohn, als alle anderen ihn aufgegeben haben.',
@@ -822,7 +848,11 @@ const FULLSIZE_NOTES = {
   'pietro-maximoff': 'Pietro Maximoff verdankt seine Geschwindigkeit den Versuchen mit Lokis Zepter und stirbt in Sokovia, als er Clint Barton und ein Kind vor dem Kugelhagel deckt.',
 
   /* ---------- Sharon Carter ---------- */
-  'sharon-carter': 'Sharon Carter wohnt als vermeintliche Krankenschwester in der Nachbarwohnung von Steve Rogers und bewacht ihn dort im Auftrag von Nick Fury.',
+  'sharon-carter': 'Als Power Broker beherrscht Sharon Carter den Schwarzmarkt von Madripoor, während sie in Washington seit Jahren als vermisst gilt.',
+  'sharon-carter-winter-soldier': 'Sharon Carter wohnt als vermeintliche Krankenschwester in der Nachbarwohnung von Steve Rogers und bewacht ihn dort im Auftrag von Nick Fury.',
+  'sharon-carter-s-h-i-e-l-d': 'Im Dienstanzug arbeitet Agent 13 im Triskelion unter Nick Fury, bis der Fall von S.H.I.E.L.D. offenlegt, wer dort neben ihr gesessen hat.',
+  'sharon-carter-finale': 'Nach ihrer Begnadigung tritt Sharon Carter im blauen Anzug wieder in den Dienst der Regierung und verkauft von dort weiter, was ihr unter die Hände kommt.',
+  'sharon-carter-madripoor': 'Im grünen Mantel führt Sharon Carter Wilson und Barnes durch Madripoor und gibt sich ihnen als Helferin, nicht als die Frau, der die Stadt gehört.',
 
   /* ---------- Georges Batroc ---------- */
   'georges-batroc': 'Georges Batroc kommt von der Fremdenlegion, kämpft in der Savate und arbeitet für jeden, der genug zahlt.',
@@ -841,9 +871,11 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Cosmo ---------- */
   'cosmo': 'Cosmo wurde von der Sowjetunion ins All geschossen, entwickelte dort Telepathie und Telekinese und wünscht sich nichts mehr, als ein braves Mädchen genannt zu werden.',
+  'cosmo-guardians-uniform': 'In Vol. 3 gehört Cosmo zur Mannschaft von Knowhere und trägt die blaue Uniform der Guardians, eigens für vier Beine geschnitten.',
 
   /* ---------- Ego ---------- */
   'ego': 'Ego ist ein Celestial, der sich über Millionen Jahre einen Planeten um sich herum gebaut und für die Suche nach Erben eine menschliche Gestalt geformt hat.',
+  'ego-planet': 'Der Planet ist Ego selbst. Was die Guardians für eine Welt halten, ist ein einziges Wesen, und in seinem Kern liegt das Licht, das alles zusammenhält.',
 
   /* ---------- Taserface ---------- */
   'taserface': 'Taserface bringt es im Ravager-Clan bis zum Leutnant, stiftet die Meuterei gegen Yondu und versteht bis zuletzt nicht, warum alle über seinen Namen lachen.',
@@ -892,6 +924,8 @@ const FULLSIZE_NOTES = {
 
   /* ---------- May Parker ---------- */
   'may-parker': 'May Parker zieht Peter nach Bens Tod allein in Queens groß und ahnt lange nicht, was ihr Neffe nachts in der Stadt treibt.',
+  'may-parker-far-from-home': 'Seit May von der Maske weiß, sammelt sie für Obdachlose und schiebt ihren Neffen bei jeder Gelegenheit nach vorn.',
+  'may-parker-no-way-home': 'May überredet ihren Neffen, den fremden Gegnern zu helfen statt sie zurückzuschicken, und bezahlt diesen Satz mit dem Leben.',
 
   /* ---------- Ayo ---------- */
   'ayo': 'Ayo bewacht mit dem Speer der Dora Milaje drei Könige Wakandas nacheinander, spricht dabei selten und zögert nie.',
@@ -904,6 +938,8 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Valentina Allegra de Fontaine ---------- */
   'valentina-allegra-de-fontaine': 'Valentina Allegra de Fontaine sammelt für die CIA beschädigte Leute ein und redet sich aus jedem Untersuchungsausschuss wieder heraus.',
+  'valentina-allegra-de-fontaine-thunderbolts': 'Als Direktorin der CIA stellt Valentina die Thunderbolts zusammen und will mit ihnen die Spuren ihrer eigenen Programme beseitigen lassen.',
+  'valentina-allegra-de-fontaine-falcon-and-the-winter-soldier': 'Im weinroten Mantel tritt Valentina zum ersten Mal an John Walker heran, kurz nachdem ihm der Schild genommen wurde.',
 
   /* ---------- W'Kabi ---------- */
   'w-kabi': 'W\'Kabi verwaltet den Grenzstamm und dessen gepanzerte Nashörner und stellt beide hinter Killmonger, weil kein König den Mörder seiner Eltern je zur Rechenschaft gezogen hat.',
@@ -916,6 +952,7 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Flash Thompson ---------- */
   'flash-thompson': 'Flash Thompson gehört mit Peter Parker zum Zehnkampfteam der Midtown School und hält seine endlosen Sticheleien selbst für Humor.',
+  'flash-thompson-homecoming': 'In Homecoming fährt Thompson mit dem Zehnkampfteam nach Washington und hält seine Sticheleien gegen Parker weiter für Humor.',
 
   /* ---------- Liz Allan ---------- */
   'liz-allan': 'Liz Allan führt das Zehnkampfteam der Midtown School an und erfährt erst am Abend des Balls, wer ihr Vater in Wirklichkeit ist.',
@@ -954,7 +991,8 @@ const FULLSIZE_NOTES = {
   'sonny-burch': 'Sonny Burch handelt in San Francisco mit allem, was sich nicht offen verkaufen lässt, und will Hank Pyms Labor an sich bringen, als er begreift, was darin steckt.',
 
   /* ---------- Jimmy Woo ---------- */
-  'jimmy-woo': 'Jimmy Woo überwacht für das FBI Scott Langs Hausarrest, klingelt gern unangemeldet und übt in der Freizeit Kartentricks.',
+  'jimmy-woo': 'In Westview leitet Woo die Ermittlung vor der Kuppel und arbeitet dort mit Darcy Lewis zusammen, die die Sendung darin empfängt.',
+  'jimmy-woo-ant-man-and-the-wasp': 'Für das FBI überwacht Woo den Hausarrest von Scott Lang und steht im Anzug vor der Tür, sobald er einen Fehler wittert.',
 
   /* ---------- Ebony Maw ---------- */
   'ebony-maw': 'Ebony Maw ist der Redner unter Thanos\' Kindern, der jede Welt vor ihrer Auslöschung noch glücklich preist, und kämpft allein mit Telekinese.',
@@ -1087,7 +1125,7 @@ const FULLSIZE_NOTES = {
   'thena': 'Thena formt aus kosmischer Energie jede Waffe, die sie gerade braucht, und leidet am Mahd Wy\'ry, in dem alle früheren Leben gleichzeitig auf sie einstürzen.',
 
   /* ---------- Kingo ---------- */
-  'kingo': 'Kingo schießt Energiegeschosse aus den Händen und lebt in Indien als Filmstar, der sich seit Generationen als sein eigener Nachfahre ausgibt.',
+  'kingo-2': 'Kingo schießt Energiegeschosse aus den Händen und lebt in Indien als Filmstar, der sich seit Generationen als sein eigener Nachfahre ausgibt.',
 
   /* ---------- Sprite ---------- */
   'sprite': 'Sprite erschafft Trugbilder von ganzen Armeen und bleibt dabei seit Jahrtausenden im Körper eines Kindes.',
@@ -1312,6 +1350,7 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Love ---------- */
   'love': 'Love ist Gorrs Tochter, die auf einer sterbenden Welt verhungerte und von Eternity zurückgegeben wird.',
+  'love-mit-stormbreaker': 'An Thors Seite wächst Love in die Rolle der Göttin des Donners hinein und trägt dabei Stormbreaker, die Axt, die Eitri für ihren Ziehvater geschmiedet hat.',
 
   /* ---------- Tanngrisnir und Tanngnjostr ---------- */
   'tanngrisnir-und-tanngnjostr': 'Tanngrisnir und Tanngnjostr sind zwei Ziegenböcke aus Indigarr, die Thors Boot durch den Weltraum ziehen und dabei ununterbrochen schreien.',
@@ -1395,6 +1434,11 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Adam Warlock ---------- */
   'adam-warlock': 'Adam Warlock schlüpfte zu früh aus seinem Kokon und handelt deshalb mit der Kraft eines Gottes und dem Verstand eines Kindes.',
+  'irani-rael-nova-force-unmaskiert': 'Als Nova Prime trägt Irani Rael die Rüstung des Nova Corps ohne Helm, wenn sie im Hauptquartier von Xandar Befehle gibt statt selbst zu fliegen.',
+  'irani-rael-nova-force-maskiert': 'Mit geschlossenem Helm steht die Rüstung unter der Nova Force, der Energie, aus der das Corps seine Flugkraft und seine Waffen zieht.',
+  'rhomann-dey-nova-force-unmaskiert': 'Denarian Rhomann Dey nimmt den Helm ab, sobald er aus dem Einsatz kommt. Unter der Rüstung steckt der Corpsman, der lieber verbindet als schießt.',
+  'rhomann-dey-nova-force-maskiert': 'Im geschlossenen Helm der Nova Force fliegt Dey die Streifen über Xandar und gehört zu der Sperrlinie, die Ronans Dark Aster aufhalten soll.',
+  'adam-warlock-guardians-uniform': 'Am Ende von Vol. 3 bleibt Adam bei den neuen Guardians und tauscht das goldene Gewand der Sovereign gegen die blaue Uniform der Mannschaft.',
 
   /* ---------- Lylla ---------- */
   'lylla': 'Lylla ist die Otterdame mit den mechanischen Vorderbeinen, die Rocket im Käfig der Versuchsreihe 89 als Erste ansprach und ihm seinen Namen gab.',
@@ -1470,6 +1514,7 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Heather Glenn ---------- */
   'heather-glenn': 'Heather Glenn führt eine Praxis für Paartherapie in New York, betreut das Ehepaar Fisk und ist zugleich mit Matt Murdock zusammen.',
+  'heather-glenn-mantel': 'Der lange Mantel gehört zu den Wegen außerhalb der Praxis, auf denen Heather Glenn zwischen ihren Klienten und Matt Murdock unterwegs ist.',
 
   /* ---------- Luke Cage ---------- */
   'luke-cage': 'Carl Lucas kam als Unschuldiger nach Seagate, wo ein Experiment ihm übermenschliche Kraft und undurchdringliche Haut hinterließ.',
@@ -1611,6 +1656,13 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Kurt Wagner ---------- */
   'kurt-wagner-nightcrawler': 'Kurt Wagner trat in einem deutschen Zirkus als Kunstspringer auf und setzt sich mit seiner Gabe von einem Ort zum nächsten.',
+
+  /* ---------- Nachtrag ----------  */
+  'augustus-pugliese': 'Augustus Pugliese ist Anwalt in derselben Kanzlei wie Jennifer Walters und der Erste, der ihr nach der Verwandlung ohne Umstände wieder gegenübertritt.',
+  'eliot-franklin-thunderball': 'Eliot Franklin schlägt als Thunderball mit einer Kugel an der Kette zu und gehört zu der Bande, die es auf das Blut von Jennifer Walters abgesehen hat.',
+  'henry-camp-bulldozer': 'Henry Camp geht als Bulldozer mit dem Helm voran durch jede Wand und gehört wie Thunderball zur Wrecking Crew.',
+  'jasper-sitwell': 'Jasper Sitwell arbeitet jahrelang als Agent von S.H.I.E.L.D. und gehört in Wahrheit zu Hydra, was Rogers und Romanoff ihm auf einem Hausdach abpressen.',
+  'die-hand': 'Die Hand ist ein Bund von Auftragsmördern aus dem Fernen Osten, dessen rot vermummte Kämpfer in Brand New Day durch New York ziehen.',
 };
 
 /* Der Satz zu einer Fassung, sonst ein leerer Text. */

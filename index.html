@@ -10,6 +10,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <!-- Ohne defer und vor allem anderen: Die Datei setzt die Klasse für den
+       hellen oder dunklen Modus und muss damit fertig sein, bevor der
+       erste Punkt gezeichnet ist. Sie baut auch den Knopf im Kopf. -->
+  <script src="js/theme.js"></script>
   <script>
     /* Sanfte Seiten-Einblendung: .js versteckt die Seite nur, wenn JS läuft;
        .page-ready startet die Überblendung nach dem ersten gerenderten Frame.
@@ -27,7 +31,17 @@
 </head>
 <body>
 
-  <canvas id="galaxy" aria-hidden="true"></canvas>
+  <!-- Der Grund der ganzen Seite: ein Feld feiner Fasern, das langsam
+       atmet und mit der gerade sichtbaren Phase die Farbe wechselt.
+       Gezeichnet wird es in js/ghost-fibers.js auf WebGL2, die Regler
+       stehen in js/ghost-fibers-config.js, die beiden Farben je Phase bei
+       der Phase selbst in js/data.js. Beides lässt sich im Vision-Studio
+       unter „Fasern“ mit laufender Vorschau einstellen.
+
+       Das Canvas liegt fest hinter allem (z-index: -1) und deckt die
+       Seite von Kante zu Kante. Kann der Browser kein WebGL2, bleibt die
+       Grundfarbe aus css/style.css stehen (--bg). -->
+  <canvas id="fibers" aria-hidden="true"></canvas>
 
   <!-- Zwei Bänder übereinander: oben der Seitenwechsel wie auf der
        Charakterseite, darunter ein eigenes Band nur für die Phasen. So
@@ -83,45 +97,60 @@
   </header>
 
   <main>
-    <!-- Der Track gibt dem Hero zusätzlichen Scrollweg; die Sektion selbst
-         klebt darin viewportfüllend fest (sticky). updateHero() in js/main.js
-         blendet die drei Textstufen nacheinander ein und aus. -->
-    <div class="hero-track" id="hero">
-    <section class="hero">
-      <video class="hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-        <source src="assets/theme/marvel-studios-theme.mp4" type="video/mp4">
-      </video>
-      <div class="hero-video-veil" aria-hidden="true"></div>
-      <div class="hero-stack">
-        <div class="hero-stage hero-stage-title">
-          <div class="hero-title">
-            <h1>Marvel Cinematic Universe</h1>
-          </div>
-        </div>
-        <div class="hero-stage hero-stage-kicker">
-          <p class="hero-kicker">Eine inoffizielle Fan-Timeline basierend auf den Fakten des offiziellen Marvel Cinematic Universe</p>
-        </div>
-        <div class="hero-stage hero-stage-subs">
-          <div class="hero-subs">
-            <p class="hero-sub">Alle Kinofilme &amp; Disney+-Serien des offiziellen Marvel Cinematic Universe.<br>Die Zeitskala orientiert sich an der Chronologie der Handlung innerhalb des Universums.</p>
-            <p class="hero-sub hero-sub-note"><span class="hero-sub-info">Spoiler-Warnung:</span> Informationen zu den einzelnen Filmen und Serien finden Sie in den jeweiligen Abschnitten und kann in den Einstellungen deaktiviert werden.</p>
-          </div>
-        </div>
+    <!-- Das Kopfband der Timeline. Es gleicht denen der beiden anderen
+         Seiten in jedem Maß: Höhe, Polster und Inhaltsbreite kommen aus
+         denselben Werten (--masthead-min-h, --masthead-pad,
+         --masthead-inner in css/style.css), damit die drei Seiten nicht
+         auseinanderlaufen können. Kicker, Titel und Zeile darunter
+         stehen dadurch überall auf demselben Pixel.
+
+         Ein eigenes Bild trägt es anders als dort nicht, und einen
+         eigenen Grund braucht es auch nicht mehr: Hinter der ganzen Seite
+         liegt das Faserfeld, siehe das Canvas oben. Das Band steht darauf
+         wie alles andere und geht in die Timeline über, statt sich als
+         eigene Fläche davon abzusetzen.
+
+         Der Titel ist eine Video-Maske: Der Text steht durchsichtig da,
+         und in seinen Buchstaben läuft marvel-timeline-bg. Gebaut wird
+         das in js/masked-heading.js, die Werte daneben sind die der
+         Vorlage.
+
+         Angefangen wird bei Sekunde 1,6 und nicht bei null. Der Film ist
+         nur 13 Sekunden lang und läuft dauernd von vorne, der Sprung vom
+         letzten zurück zum ersten Bild fällt also alle paar Atemzüge auf.
+         Die ersten anderthalb Sekunden sind dunkel, das Ende ist hell,
+         und dieser Sprung wäre der härteste im ganzen Film. Bei 1,6 steht
+         derselbe helle gelbe Schleier wie am Schluss, damit reiht sich
+         der Übergang unter die Schnitte ein, die der Film ohnehin hat.
+
+         Das Standbild daneben ist genau diese Stelle, im selben
+         Seitenverhältnis wie der Film. Es steht in den Buchstaben,
+         solange das Video noch lädt, und weil object-fit es dadurch genau
+         wie das Video beschneidet, ist der Wechsel darauf nicht zu
+         sehen. -->
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <p class="hero-kicker">Eine inoffizielle Fan-Timeline</p>
+
+        <h1 class="hero-title"
+            data-masked-heading
+            data-mh-media="video"
+            data-mh-src="assets/theme/marvel-timeline-bg.mp4"
+            data-mh-poster="assets/theme/marvel-timeline-bg-poster.webp"
+            data-mh-start="1.6"
+            data-mh-fill-scale="1.25"
+            data-mh-parallax="26"
+            data-mh-drift="18"
+            data-mh-reveal="rise"
+            data-mh-trigger="view"
+            data-mh-duration="1.1"
+            data-mh-stagger="0.09"
+            data-mh-text-scale="0">Marvel Timeline</h1>
+
+        <p class="hero-lead">Alle Kinofilme &amp; Disney+-Serien des offiziellen Marvel Cinematic Universe.
+        Die Zeitskala orientiert sich an der Chronologie der Handlung innerhalb des Universums.</p>
       </div>
-      <a class="scroll-hint" href="#phase-1" aria-label="Zur Timeline scrollen"><span></span></a>
-      <button class="hero-sound" id="hero-sound" type="button" aria-pressed="false" aria-label="Ton einschalten">
-        <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M11 5 6 9H3v6h3l5 4z"/>
-          <path d="M22 9l-6 6M16 9l6 6"/>
-        </svg>
-        <svg class="icon-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M11 5 6 9H3v6h3l5 4z"/>
-          <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
-          <path d="M18.5 6a9 9 0 0 1 0 12"/>
-        </svg>
-      </button>
     </section>
-    </div>
 
     <div id="phases"></div>
   </main>
@@ -135,9 +164,9 @@
   <script src="js/data.js"></script>
   <script src="js/chars.js"></script>
   <script src="js/logo-fit.js"></script>
-  <script src="js/galaxy-config.js"></script>
-  <script src="js/galaxy-canvas-2d.js"></script>
-  <script src="js/galaxy.js"></script>
+  <script src="js/ghost-fibers-config.js"></script>
+  <script src="js/ghost-fibers.js"></script>
+  <script src="js/masked-heading.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

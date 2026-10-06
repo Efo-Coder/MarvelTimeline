@@ -1,5 +1,5 @@
 /* ===== MCU Timeline – Fanpage ==========================================
-   Dunkles Galaxie-Design; --accent wird pro Phase gesetzt (Sektion) und
+   Dunkles Design auf einem Faserfeld; --accent wird pro Phase gesetzt (Sektion) und
    global auf <html> für Nav/Scrollbars der gerade sichtbaren Phase.
    ====================================================================== */
 
@@ -69,6 +69,13 @@
 
 :root {
   --accent: #4d8cff;
+  /* Das Rot des Seitenwechsels, --color-red-1 von marvel.com. Es steht
+     hier und nicht erst bei den hellen Seiten, weil es auf allen dreien
+     dasselbe ist: Der Strich unter dem offenen Seitenlink und die
+     Rollleiste gehören zur Seite als Ganzes und nicht zu der Phase, über
+     der man gerade steht. Der --accent daneben wandert dagegen mit der
+     Phase, js/main.js setzt ihn beim Rollen laufend neu. */
+  --marvel-red: #e62429;
   --info: #ff974d;
   --bg: #04060f;
   --text: #e9edf8;
@@ -101,6 +108,17 @@
   --stone-glow: 20px; /* Luft unter dem Zeitstrahl, damit der Scrollbereich
                          den Schein der Infinity-Steine nicht abschneidet */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Das Maß der drei Kopfbänder. Timeline, Filme und Charaktere sollen
+     gleich hoch aufmachen, und das können sie nur, wenn die Höhe an einer
+     einzigen Stelle steht: .hero hier und .chars-masthead dort greifen
+     beide auf diese zwei Werte zu. */
+  --masthead-min-h: clamp(24rem, 62vh, 40rem);
+  --masthead-pad: clamp(5rem, 10vh, 7rem) 1.4rem;
+  --masthead-inner: 1248px;   /* --screen-default von marvel.com */
+  /* Der Grund der drei Bänder, --color-dark-2 von marvel.com. Auf der
+     Charakterseite heißt dieselbe Farbe --m-ink, aber die steht erst im
+     Block der hellen Seiten und wäre auf der Timeline nicht da. */
+  --masthead-bg: #151515;
 }
 
 * { box-sizing: border-box; }
@@ -111,9 +129,27 @@ html {
      Seite über overflow: hidden – ohne stabile Rinne würde die Leiste dabei
      verschwinden und der ganze Inhalt um ihre Breite springen. */
   scrollbar-gutter: stable;
+  /* Die Rollleiste der Vorlage, Wert für Wert von dort übernommen
+     (marvel-fitt.css setzt am html genau scrollbar-color: red #111 und
+     scrollbar-width: thin). Sie gilt für alle drei Seiten, damit die
+     Leiste beim Wechseln stehen bleibt statt die Farbe zu tauschen.
+
+     Es ist bewusst das reine Rot des Browsers und nicht das etwas
+     dunklere --marvel-red der Flächen: Der Balken ist nur wenige Pixel
+     breit, und in dieser Breite setzt sich das kräftigere Rot gegen das
+     fast schwarze Gleis besser durch. Früher stand hier der Akzent der
+     Phase, aber eine Leiste, die beim Rollen die Farbe wechselt, zieht
+     den Blick genau dorthin, wo nichts passiert.
+
+     Kein ::-webkit-scrollbar dazu: Sobald eine Seite das benutzt, zeichnet
+     Chrome die Leiste komplett selbst und lässt diese beiden Angaben
+     liegen. Ohne das nimmt jeder Browser seine eigene schmale Leiste und
+     färbt nur ein, genau wie auf der Vorlage. */
+  scrollbar-color: red #111;
+  scrollbar-width: thin;
   /* Grundton liegt bewusst auf html statt body: Er bleibt so während der
      Seiten-Einblendung sichtbar (kein weißer Blitz) und der body bleibt
-     hintergrundlos, damit der Galaxy-Canvas (z-index: -1) nicht von einem
+     hintergrundlos, damit das Faser-Canvas (z-index: -1) nicht von einem
      undurchsichtigen body-Hintergrund verdeckt wird. */
   background: var(--bg);
 }
@@ -125,7 +161,7 @@ body {
   overflow-x: hidden;
   /* Spalte über die volle Fensterhöhe, damit der Footer auch bei kurzem
      Inhalt unten steht statt mitten im Bild zu enden (siehe margin-top
-     bei .site-footer). Kopf, Galaxie und alle Overlays liegen fixiert und
+     bei .site-footer). Kopf, Faserfeld und alle Overlays liegen fixiert und
      damit außerhalb des Flusses – flex-Kinder sind nur main und footer. */
   min-height: 100dvh;
   display: flex;
@@ -137,7 +173,7 @@ body {
   color: #fff;
 }
 
-/* Bilder & Galaxy-Canvas sind für den Mauszeiger durchlässig: Ein Rechtsklick
+/* Bilder & Canvas sind für den Mauszeiger durchlässig: Ein Rechtsklick
    trifft das Element dahinter, sodass der Browser das normale Seiten-
    Kontextmenü statt „Bild speichern …" zeigt. Klicks & Tooltips hängen an den
    Eltern-Elementen (a.brand, .logo-box) und funktionieren weiter. */
@@ -166,15 +202,24 @@ html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
 
-/* ===== Galaxie-Canvas =================================================== */
+/* ===== Faser-Canvas ===================================================== */
 
-/* Die Breite und Höhe müssen wirklich hier stehen. Ein Canvas ist ein
+/* Der Grund der ganzen Seite, gezeichnet in js/ghost-fibers.js. Er steht
+   fest im Fenster und bewegt sich beim Rollen nicht mit: Das Feld atmet
+   in seinem eigenen Takt, und ein zweiter, gescrollter Takt darüber sähe
+   nach Wackeln aus.
+
+   Die Breite und Höhe müssen wirklich hier stehen. Ein Canvas ist ein
    ersetztes Element, und bei width: auto behält so eines auch mit
-   inset: 0 seine Eigengröße von 300 x 150 Punkten. Früher setzte
-   js/galaxy.js die Maße bei jeder Größenänderung selbst in den Stil,
-   heute misst die Datei nur noch nach, damit dieselbe Galaxie auch in
-   einer Tafel des Bild-Studios laufen kann. */
-#galaxy {
+   inset: 0 seine Eigengröße von 300 x 150 Punkten. Die Datei misst nur
+   nach, damit dasselbe Feld auch in einer Tafel des Vision-Studios
+   laufen kann.
+
+   display: block ist keine Schönheit, sondern Notwehr: Ohne die Regel
+   wäre das Canvas kein Überzug, sondern ein gewöhnliches Kind des body
+   und schöbe als Flex-Element den ganzen main um seine eigene Höhe nach
+   unten. */
+#fibers {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -202,6 +247,7 @@ html.lenis, html.lenis body { height: auto; }
 }
 
 .header-bar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -349,8 +395,14 @@ html.lenis, html.lenis body { height: auto; }
   bottom: 0.22rem;
   height: 2px;
   border-radius: 2px;
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent);
+  /* Rot wie auf der Charakterseite und nicht in der Farbe der Phase: Der
+     Strich sagt, auf welcher Seite man steht, und das ändert sich beim
+     Rollen nicht. Der Strich unter den Phasen darüber nimmt die
+     Phasenfarbe weiterhin an, dort gehört sie hin. Das Leuchten bleibt,
+     es gehört zum Nachthimmel der Timeline und fällt auf den hellen
+     Seiten wieder weg. */
+  background: var(--marvel-red);
+  box-shadow: 0 0 10px var(--marvel-red);
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -362,21 +414,25 @@ html.lenis, html.lenis body { height: auto; }
 .page-link.active::after { opacity: 1; }
 
 .page-link:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--marvel-red);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* Drei Links statt sechs Phasen: Auto-Margins zentrieren sie wie die
-   Phasen-Nav und geben auf schmalen Screens den Platz wieder her. */
+/* Absolut statt über Flex-Freiraum zentriert: Marke links und Zahnrad
+   rechts sind unterschiedlich breit (Wortmarke gegen bloßes Icon), über
+   Auto-Margins läge die Mitte der Nav deshalb spürbar neben der Mitte
+   des Bandes. Losgelöst von den beiden Seiten trifft sie die echte
+   Bandmitte, ganz gleich wie breit Marke oder Zahnrad gerade sind. */
 #page-nav {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   gap: 0.2rem;
   min-width: 0;
 }
-
-#page-nav .page-link:first-child { margin-inline-start: auto; }
-#page-nav .page-link:last-child { margin-inline-end: auto; }
 
 /* ===== Header-Dropdowns ================================================
    Gemeinsame Basis für das Einstellungs-Menü und die Phasen-Menüs: Wer
@@ -682,263 +738,206 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ===== Hero ============================================================ */
 
-/* Der Track gibt dem gepinnten Hero seinen Scrollweg: Die Sektion klebt
-   viewportfüllend am oberen Rand, während zweieinhalb zusätzliche
-   Viewporthöhen durchlaufen werden. updateHero() (js/main.js) übersetzt
-   den Fortschritt durch den Track in die Textstufen Titel → Kicker →
-   Untertitel.
+/* Das Kopfband der Timeline. Es hat dasselbe Maß wie die Bänder auf den
+   beiden anderen Seiten, siehe --masthead-min-h und --masthead-pad, und
+   ist damit kein gepinnter Vollbild-Auftritt mehr, sondern ein ganz
+   gewöhnlicher Abschnitt im Fluss. Was früher über dreieinhalb
+   Viewporthöhen als Textfolge ablief, steht jetzt auf einen Blick da.
 
-   Der Weg war einmal eine Viewporthöhe länger. Gekürzt wurden die
-   Wartestrecken zwischen den Blenden, nicht die Blenden selbst: Deren
-   Fenster in main.js sind so nachgezogen, dass eine Stufe weiterhin über
-   rund eine halbe Viewporthöhe ein- und ausblendet. */
-.hero-track {
-  position: relative;
-  height: 350vh;
-}
-
+   Hinter ihm liegt kein eigenes Bild wie auf den Schwesterseiten und
+   auch kein eigener Grund mehr: Das Faserfeld deckt die ganze Seite,
+   siehe #fibers weiter oben. Das Band steht darauf wie die Timeline
+   darunter und geht ohne Kante in sie über. Auf den hellen Seiten
+   schneidet es an dieser Stelle hart ab, dort fängt aber auch ein weißes
+   Raster an. */
 .hero {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100dvh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--masthead-min-h);
+  padding: var(--masthead-pad);
   text-align: center;
-  will-change: opacity;
-  overflow: visible;
 }
 
-.hero-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.hero-video-veil {
-  position: absolute;
-  inset: 0;
+/* Der Kasten behält genau die Maße der .chars-masthead-inner auf den
+   anderen Seiten. Die eigene Ebene braucht er nicht mehr gegen das
+   Faserfeld, das liegt hinter der ganzen Seite; sie steht weiter hier,
+   damit der Text über allem bleibt, was im Band noch dazukommt. */
+.hero-inner {
+  position: relative;
   z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at center, transparent 30%, rgba(6, 8, 18, 0.55) 100%),
-    linear-gradient(to bottom, rgba(6, 8, 18, 0.35), rgba(6, 8, 18, 0.35));
+  max-width: var(--masthead-inner);
+  margin-inline: auto;
 }
 
-.hero-video,
-.hero-video-veil {
-  -webkit-mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 90%, transparent 100%);
-}
-
-/* Textstufen: liegen deckungsgleich übereinander, jede zentriert ihren
-   Inhalt im Viewport. Sichtbarkeit, Hub und Unschärfe schreibt
-   updateHero() scroll-gekoppelt pro Frame auf die Stufen-Wrapper – die
-   Intro-Choreografie (.hero.ready) animiert weiterhin die Elemente darin,
-   beides kommt sich so nicht in die Quere. Kicker und Untertitel starten
-   unsichtbar, damit vor dem ersten JS-Frame nichts aufblitzt.
-   pointer-events: none, damit unsichtbare Stufen keine Klicks auf
-   Scroll-Hinweis und Ton-Schalter abfangen. */
-.hero-stack,
-.hero-stage {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-stack {
-  z-index: 2;
-  pointer-events: none;
-}
-
-.hero-stage {
-  display: grid;
-  place-items: center;
-  padding: 3rem 1.5rem;
-  will-change: opacity, transform, filter;
-}
-
-.hero-stage-kicker,
-.hero-stage-subs { opacity: 0; }
-
-/* Ton-Schalter unten rechts im Hero: schaltet das Theme-Video stumm/laut.
-   Startet unsichtbar und blendet mit der Intro-Choreografie ein. */
-.hero-sound {
-  position: absolute;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 3;
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border-radius: 50%;
-  color: rgba(233, 236, 245, 0.85);
-  background: rgba(10, 14, 28, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 1s ease, color 0.2s ease, border-color 0.2s ease,
-    background 0.2s ease;
-}
-
-.hero.ready .hero-sound { opacity: 1; }
-
-.hero-sound:hover {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.32);
-  background: rgba(14, 20, 40, 0.6);
-}
-
-.hero-sound:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.hero-sound svg { width: 22px; height: 22px; display: block; }
-
-/* Standard: Video stumm => Mute-Icon zeigen, Laut-Icon verstecken.
-   Zustand .is-on (Ton an) dreht das um. */
-.hero-sound .icon-sound { display: none; }
-.hero-sound.is-on .icon-muted { display: none; }
-.hero-sound.is-on .icon-sound { display: block; }
-
-
-/* Der Kicker trägt seine Stufe allein, deshalb größer als früher über dem
-   Titel. Ein- und Ausblenden übernimmt der Stufen-Wrapper. Die Laufweite
-   steht fest auf 0.5em: Eine scroll-gekoppelte Tracking-Animation ließe
-   den satzlangen Text während der Blende neu umbrechen – sichtbare
-   Sprünge, das Gegenteil einer weichen Überblendung. text-wrap: balance
-   verteilt die Zeilen gleichmäßig, wo der Browser es kann. */
+/* Die Zeile über dem Titel, in Aufbau und Maß die der beiden anderen
+   Seiten (.chars-kicker). Der negative rechte Rand nimmt die Sperrung
+   des letzten Zeichens zurück, sonst stünde die Zeile um ein halbes Geviert
+   zu weit links unter ihrer eigenen Mitte. */
 .hero-kicker {
   font-family: var(--font-brand);
-  font-size: clamp(1.05rem, 2.4vw, 1.6rem);
-  line-height: 1.7;
+  font-size: 0.95rem;
   letter-spacing: 0.5em;
   text-transform: uppercase;
   color: var(--muted);
-  max-width: 72rem;
-  text-wrap: balance;
-  /* Weicher dunkler Schein: Der Kicker steht allein auf dem Video und
-     muss auch auf dessen hellen Frames lesbar bleiben. */
-  text-shadow: 0 2px 22px rgba(6, 8, 18, 0.9), 0 0 10px rgba(6, 8, 18, 0.6);
-  margin: 0 -0.5em 0 0;
+  margin: 0 -0.5em 0.6rem 0;
 }
 
+/* Die Zeile bricht auf schmalen Fenstern sonst mitten im Wort um: Bei
+   einer halben Geviert Sperrung ist sie breiter, als sie aussieht. */
+@media (max-width: 480px) {
+  .hero-kicker { letter-spacing: 0.3em; }
+}
+
+/* Der Titel. Seine Farbe kommt nicht aus einem Verlauf, sondern aus dem
+   Video, das js/masked-heading.js in seine Buchstaben legt.
+
+   Größe, Zeilenfall, Laufweite und Rand sind Wert für Wert die der
+   .chars-title auf den beiden anderen Seiten, damit die drei Bänder auch
+   in der Schrift zusammenpassen und nicht nur im Maß ihres Kastens.
+   Deshalb steht am <h1> auch data-mh-text-scale="0": Sonst rechnete sich
+   die Überschrift ihre Größe aus der eigenen Breite aus und liefe der
+   clamp()-Kurve hier davon.
+
+   Die Schrift bleibt der Benton des Marvel-Schriftzugs. Die Vorlage der
+   Animation schlägt Gewicht 700 und -0.03em Laufweite vor, beides ist auf
+   eine normalbreite Grotesk gerechnet: Der Benton hat nur seinen einen
+   schwarzen Schnitt, und schmal geschnitten wie er ist, liefe er bei
+   negativer Laufweite an den Rundungen ineinander. */
 .hero-title {
-  display: flex;
-  flex-direction: column;
-  margin: 0.6rem 0;
-}
-
-.hero h1 {
-  /* Der Auftakt der Seite trägt die Schrift des Schriftzugs selbst.
-     text-transform, weil Benton anders als Bebas echte Kleinbuchstaben
-     mitbringt. Ohne die Angabe stünde hier Gemischtschreibung. */
   font-family: var(--font-impact);
   font-weight: 400;
-  font-size: clamp(3rem, 9vw, 6.5rem);
+  font-size: clamp(2.6rem, 7vw, 4.4rem);
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin: -0.1em -0.03em -0.2em -0.03em;
-  background: linear-gradient(180deg, #ffffff 30%, #aab8e8);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  opacity: 0;
-  transform: translateY(34px) scale(0.985);
-  filter: blur(12px) drop-shadow(0 0 26px rgba(90, 120, 255, 0.35));
-  transition: opacity 1s ease 0.12s,
-              transform 1.2s var(--ease-out) 0.12s,
-              filter 1.2s var(--ease-out) 0.12s;
+  margin: 0;
 }
 
-.hero-sub {
-  font-family: var(--font-brand);
-  color: var(--muted);
-  font-size: 1.4rem;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  max-width: 70rem;
-  margin: 0.3rem;
-  opacity: 0;
-  transform: translateY(22px);
-  transition: opacity 0.9s ease 0.4s, transform 1s var(--ease-out) 0.4s;
-}
+/* Solange das Video keinen ersten Frame hat, stünde der Titel als leere
+   Fläche da. Bis dahin bleibt er ganz weg und nimmt seinen Platz nur ein,
+   damit beim Auftauchen nichts springt. */
+.hero-title[data-masked-heading] .masked-heading__reveal { visibility: hidden; }
+.hero-title.is-loaded .masked-heading__reveal { visibility: visible; }
 
-/* Der Hinweis unter dem Untertitel ist kein Schriftzug mehr, sondern ein
-   gelesener Satz: Fließschrift, gemischte Schreibung und ein enger
-   Zeichenabstand. In Versalien und mit der Sperrung der Zeile darüber
-   wäre er über drei Zeilen kaum zu lesen. */
-.hero-sub-note {
+/* Die Zeile unter dem Titel, Wert für Wert die .chars-lead der anderen
+   beiden Seiten. */
+.hero-lead {
+  max-width: 44rem;
+  margin: 1rem auto 0;
+  color: #fff;
   font-family: var(--font-body);
   font-size: 1rem;
-  letter-spacing: 0.02em;
-  line-height: 1.5;
-  text-transform: none;
-  /* auto an den Seiten: Der Hinweis ist schmaler als der Untertitel über
-     ihm und stünde als bloßer Block sonst links in dessen Kasten statt
-     unter seiner Mitte. */
-  max-width: 48rem;
-  margin: 2rem auto 0;
-  color: #72798d;
+  letter-spacing: 0.031em;
+  line-height: 1.3;
 }
 
-.hero-sub-info {
-  color: var(--info);
-  text-shadow: 0 0 14px var(--info);
-}
-
-.scroll-hint {
-  position: absolute;
-  bottom: 2.2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.6rem;
-  z-index: 2;
+/* Der Auftritt beim Laden. Der Titel bringt seinen eigenen mit (der Hub
+   der Buchstaben in js/masked-heading.js), die beiden Zeilen um ihn herum
+   kommen zeitversetzt hinterher. Gestartet wird über .ready, das
+   js/main.js setzt, sobald die Schriften stehen. */
+.hero-kicker,
+.hero-lead {
   opacity: 0;
-  transition: opacity 0.9s ease 0.78s;
+  transform: translateY(14px);
 }
 
-/* Browser mit text-box-trim beschneiden die Zeilenbox exakt auf Versal-
-   höhe und Grundlinie – font-unabhängig; nur die vertikale Margin-
-   Korrektur entfällt, die seitliche (Bearings) bleibt nötig. */
-@supports (text-box-trim: trim-both) {
-  .hero h1 {
-    margin-block: 0;
-    text-box-trim: trim-both;
-    text-box-edge: cap alphabetic;
+.hero.ready .hero-kicker,
+.hero.ready .hero-lead {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.9s ease, transform 1s var(--ease-out);
+}
+
+.hero.ready .hero-kicker { transition-delay: 0.1s; }
+.hero.ready .hero-lead   { transition-delay: 0.5s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-kicker,
+  .hero-lead {
+    opacity: 1;
+    transform: none;
   }
 }
 
-.hero.ready h1 {
-  opacity: 1;
-  transform: none;
-  filter: blur(0) drop-shadow(0 0 26px rgba(90, 120, 255, 0.35));
+/* ===== Überschrift mit Video in den Buchstaben ========================= */
+
+/* Die Regeln der Vorlage, unverändert bis auf die Kommentare. Was sie
+   tragen, steht im Kopf von js/masked-heading.js: Der Text im __measure
+   ist durchsichtig und gibt nur die Maße vor, __reveal legt das Video
+   darüber, und __clip schneidet daraus mit einem clipPath aus denselben
+   Wörtern die Buchstaben heraus. */
+.masked-heading {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-wrap: balance;
+  -webkit-font-smoothing: antialiased;
 }
 
-.hero.ready .hero-sub { opacity: 1; transform: none; }
+/* Durchsichtig, nicht versteckt. Ein display: none oder visibility:
+   hidden nähme dem Element seine Maße, und genau die braucht die
+   Schablone. Vorlesegeräte lesen den Text weiterhin. */
+.masked-heading__measure { color: transparent; }
 
-.hero.ready .scroll-hint { opacity: 1; }
+.masked-heading__word {
+  display: inline-block;
+  white-space: pre;
+}
 
-.scroll-hint span {
+/* Der Zwischenraum gehört ans Wort und nicht zwischen die Elemente: Ein
+   Leerzeichen im Markup wäre beim Umbruch weg, und die Schablone käme
+   auf andere Wortabstände als der gesetzte Text. */
+.masked-heading__word:not(:last-child)::after { content: ' '; }
+
+/* Der Punkt auf der Grundlinie. Ein Inline-Block ohne Höhe sitzt mit
+   seiner Unterkante genau dort, und weil er auch keine Höhe hat, ist das
+   zugleich seine Oberkante: offsetTop liefert damit die Grundlinie, und
+   an der hängt ein SVG-Text. */
+.masked-heading__baseline {
+  display: inline-block;
+  width: 0;
+  height: 0;
+}
+
+/* Der clipPath zeichnet selbst nichts, sein SVG darf also keinen Platz
+   beanspruchen. */
+.masked-heading__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.masked-heading__reveal {
+  position: absolute;
+  inset: 0;
   display: block;
-  width: 14px;
-  height: 14px;
-  border-right: 2px solid rgba(255, 255, 255, 0.7);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.7);
-  transform: rotate(45deg);
-  animation: hint-bob 1.8s ease-in-out infinite;
+  pointer-events: none;
 }
 
-@keyframes hint-bob {
-  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.55; }
-  50%      { transform: rotate(45deg) translate(5px, 5px); opacity: 1; }
+.masked-heading__clip {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.masked-heading__media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  will-change: transform, filter;
+}
+
+.masked-heading__source {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* ===== Phasen-Sektionen ================================================ */
@@ -957,6 +956,25 @@ html.lenis, html.lenis body { height: auto; }
   flex-direction: column;
   justify-content: center;
   padding: 4.5rem 0 2rem;
+}
+
+/* Die erste Phase ist die einzige, über der keine andere steht, sondern
+   das Kopfband. Alle anderen holen sich ihren Vorlauf aus der halben Luft,
+   die die Zentrierung im Viewport übrig lässt, und das ist genau
+   richtig, solange darüber eine Phase endet. Unter dem Band käme diese
+   Luft aber auf dessen eigenes Fußpolster obendrauf: zusammen über
+   dreihundert Punkte, in denen beim ersten Blick auf die Seite nichts
+   steht als der Sternenhimmel.
+
+   Sie richtet ihren Inhalt deshalb nach oben aus statt in die Mitte und
+   nimmt sich nur die Höhe, die er braucht. Die Polster bleiben an die
+   Fensterhöhe gebunden, damit sie auf einem flachen Fenster mitgehen,
+   und das untere ist das größere: Es trägt allein den Abstand zur
+   zweiten Phase, während das obere neben dem Band steht. */
+#phases > .phase:first-child .phase-pin {
+  min-height: 0;
+  justify-content: flex-start;
+  padding: clamp(5rem, 11vh, 8rem) 0 clamp(5rem, 13vh, 10rem);
 }
 
 /* Startzustand wie bei .entry: Die Kopfzeile wird scroll-gekoppelt
@@ -1879,32 +1897,42 @@ html.modal-open { overflow: hidden; }
    ====================================================================== */
 
 html.chars-page {
-  --accent: #e62429;      /* --color-red-1 */
+  --accent: var(--marvel-red);  /* --color-red-1 */
   --m-red-dark: #ca2020;  /* --color-red-4, gedrückter Zustand */
-  --m-ink: #151515;       /* --color-dark-2, Schrift und dunkle Flächen */
+  --m-ink: #151515;       /* --color-dark-2, Schrift */
   --m-night: #1e2029;     /* --color-blue-1, Grund der Namensblöcke */
   --m-body: #393939;      /* --color-dark-3, Fließtext */
   --m-meta: #767676;      /* --color-dark-4, Beschriftungen und Zahlen */
   --m-sub: #bbbbbb;       /* --color-gray-3, Zweitzeile auf dunklem Grund */
   --m-line: #e1e1e1;      /* --color-gray-2, Linien */
   --m-wash: #f2f2f2;      /* --color-gray-1, ruhige Flächen */
-  background: #fff;
-  /* Die Rollleiste der Vorlage, Wert für Wert von dort übernommen
-     (marvel-fitt.css setzt am html genau scrollbar-color: red #111 und
-     scrollbar-width: thin). Es ist bewusst das reine Rot des Browsers und
-     nicht das etwas dunklere Marvel-Rot der Flächen: Der Balken ist nur
-     wenige Pixel breit, und in dieser Breite setzt sich das kräftigere Rot
-     gegen das fast schwarze Gleis besser durch.
 
-     Kein ::-webkit-scrollbar dazu: Sobald eine Seite das benutzt, zeichnet
-     Chrome die Leiste komplett selbst und lässt diese beiden Angaben
-     liegen. Ohne das nimmt jeder Browser seine eigene schmale Leiste und
-     färbt nur ein, genau wie auf der Vorlage.
+  /* Die drei Flächenmarken. Sie stehen hier getrennt, obwohl im Hellen
+     zwei davon dasselbe Weiß tragen und die dritte das Schwarz der
+     Schrift, weil erst der dunkle Modus sie auseinanderzieht (siehe den
+     Block „Heller und dunkler Modus“ weiter unten).
 
-     Den Platz hält schon das scrollbar-gutter am html weiter oben frei,
-     dafür braucht es das overflow-y: scroll der Vorlage nicht. */
-  scrollbar-color: red #111;
-  scrollbar-width: thin;
+     --m-page   ist der Grund der Seite und zugleich jede Fläche, die auf
+                ihm liegt und im Hellen weiß ist: die Tafeln einer Figur,
+                die Reiter, die Felder der Daten.
+     --m-raise  gehört den beiden Tafeln, die über der Seite schweben und
+                einen Schatten werfen, dem Filtermenü und dem Fenster
+                eines Films. Im Dunklen heben sie sich vom Grund ab, wo
+                ein Schatten allein nichts mehr ausrichtet.
+     --m-bar    ist das Dunkel, das dunkel bleiben muss: die Kopfleiste,
+                der Namensbalken einer Fassung und die Tafel der
+                Fähigkeiten. Es ist im Hellen der Ton der Schrift, hängt
+                aber nicht an ihr, sonst würde die Kopfleiste im dunklen
+                Modus weiß. */
+  --m-page: #fff;
+  --m-raise: #fff;
+  --m-bar: #151515;
+
+  background: var(--m-page);
+  /* Die Rollleiste steht schon am html weiter oben und gilt dort für alle
+     drei Seiten, hier braucht es sie kein zweites Mal. Den Platz dafür
+     hält das scrollbar-gutter ebenfalls dort frei, das overflow-y: scroll
+     der Vorlage ist damit unnötig. */
 }
 
 html.chars-page body { color: var(--m-ink); }
@@ -1954,7 +1982,7 @@ html.chars-page.modal-open .site-header { right: var(--sb-width, 0px); }
    und ohne Schein. Ohne die Galerie dahinter gäbe es hier ohnehin nichts
    durchscheinen zu lassen. */
 html.chars-page .site-header {
-  background: var(--m-ink);
+  background: var(--m-bar);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   border-bottom: 0;
@@ -2005,9 +2033,9 @@ html.chars-page .site-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(24rem, 62vh, 40rem);
-  padding: clamp(5rem, 10vh, 7rem) 1.4rem;
-  background-color: var(--m-ink);
+  min-height: var(--masthead-min-h);
+  padding: var(--masthead-pad);
+  background-color: var(--masthead-bg);
   background-image:
     linear-gradient(rgba(21, 21, 21, 0.82), rgba(21, 21, 21, 0.92)),
     url('../assets/theme/marvel-comic-bg.webp');
@@ -2018,7 +2046,7 @@ html.chars-page .site-footer {
 }
 
 .chars-masthead-inner {
-  max-width: 1248px;   /* --screen-default von marvel.com */
+  max-width: var(--masthead-inner);
   margin-inline: auto;
 }
 
@@ -2261,7 +2289,7 @@ html.chars-page .site-footer {
   max-width: calc(100vw - 2rem);
   padding: 1rem 1.1rem 1.1rem;
   border: 1px solid var(--m-line);
-  background: #fff;
+  background: var(--m-raise);
   box-shadow: 0 18px 40px rgba(21, 21, 21, 0.16);
   display: flex;
   flex-direction: column;
@@ -2852,7 +2880,7 @@ a.char-film { text-decoration: none; }
 .char-full-bg {
   position: absolute;
   inset: 0;
-  background: #fff;
+  background: var(--m-page);
   opacity: 0;
   transition: opacity 0s;
 }
@@ -3008,6 +3036,26 @@ a.char-film { text-decoration: none; }
      ::-webkit-scrollbar, siehe html.chars-page. */
   scrollbar-width: thin;
   scrollbar-color: red #111;
+}
+
+/* Der Inhalt der Ansicht als eigene Lage in der rollenden Fläche. Er
+   trägt deren bisherige Aufteilung weiter, die beiden Bänder bleiben
+   also untereinander gestapelt.
+
+   Warum überhaupt eine Lage dazwischen: Beim Blättern wird sie verzogen
+   und nicht die Fläche selbst (siehe js/page-morph.js). Damit bleibt die
+   Rollleiste außen vor, denn sie hängt an der Fläche, und die Fläche
+   beschneidet zugleich, was der Übergang über die Kanten hinauszieht.
+   Ohne sie wellten sich die Ränder der ganzen Ansicht mit.
+
+   flex: none, weil die Lage so hoch sein soll wie ihr Inhalt: Als
+   schrumpfbares Kind einer Fläche mit max-height ließe sie sich auf
+   deren Höhe stauchen, und dann gäbe es nichts mehr zu rollen. */
+.char-full-flow {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 100%;
 }
 
 /* Beim Schließen wird die Leiste der Ansicht unsichtbar, sobald der erste
@@ -3199,6 +3247,89 @@ a.char-film { text-decoration: none; }
   object-fit: contain;
   object-position: right bottom;
 }
+
+/* Der Abzug des Inhalts, über den beim Blättern übergeblendet wird
+   (siehe js/page-morph.js). Er liegt auf einer eigenen Fläche über der
+   Ansicht und unter den drei Schaltflächen, die ihre eigene Lage haben
+   (siehe .char-full-actions mit z-index 2).
+
+   Die Fläche deckt sich mit dem sichtbaren Ausschnitt der rollenden
+   Ansicht, ohne deren Leiste, und beschneidet den Abzug: Der Übergang
+   zieht den Inhalt über die Kanten hinaus, und was dort landet, soll
+   verschwinden statt die Ränder wellig zu machen.
+
+   Maß und Ort setzt das Skript, denn beides kommt aus der Ansicht, die
+   er abbildet. Hier steht nur, was immer gilt. */
+.page-morph-stage {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.page-morph-ghost {
+  pointer-events: none;
+}
+
+/* Die Filter selbst nehmen keinen Platz ein: Sie stehen nur im Baum,
+   damit die beiden Schichten sie über ihre Kennung finden. */
+.page-morph-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Die Leinwände für den Übergang von einem Bild zum nächsten (siehe
+   js/portrait-morph.js). Eine liegt über dem Porträt hier oben, die
+   andere über dem Ganzkörperbild der Erscheinungsbühne weiter unten.
+   Jede liegt genau über dem Bild, das sie vertritt, und trägt, was sonst
+   an dem Bild hängt: hier die Maske, dort den Schlagschatten.
+
+   Sie stehen nur, solange der Übergang läuft, und tauschen sich dabei
+   mit dem Bild: Beide zeigen an ihren Enden dasselbe, deshalb fällt der
+   Wechsel zwischen ihnen nicht auf. Über visibility und nicht über
+   display, damit der Rahmen nicht bei jedem Wechsel neu vermessen wird. */
+.char-morph {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.char-morph--hero {
+  -webkit-mask-image: linear-gradient(to right,
+    transparent, #000 26%, #000 86%, transparent);
+  mask-image: linear-gradient(to right,
+    transparent, #000 26%, #000 86%, transparent);
+}
+
+/* Derselbe Schatten wie am Bild der Bühne, siehe .char-figure-frame img.
+   Ohne ihn stünde die Figur für die Dauer des Übergangs ohne Schatten
+   auf der Fläche und legte sich am Ende wieder hin. */
+.char-morph--stage {
+  filter: drop-shadow(0 14px 26px rgba(21, 21, 21, 0.3));
+}
+
+.char-hero-art.morphing .char-morph--hero,
+.char-figure-frame.morphing .char-morph--stage {
+  visibility: visible;
+}
+
+.char-hero-art.morphing .char-hero-shot,
+.char-figure-frame.morphing .char-figure-stack {
+  visibility: hidden;
+}
+
+/* Der Schatten bleibt dabei sichtbar. Die Leinwand des Übergangs trägt
+   nur die Figur, ihr Schatten geht auf seinen eigenen beiden Ebenen mit
+   über (siehe castMorph in js/characters.js). Verschwände er, stünde die
+   Figur für die Dauer des Übergangs ohne Boden unter den Füßen. */
+.char-figure-frame.morphing .char-figure-cast { visibility: visible; }
 
 /* Ohne Porträt bleiben die Anfangsbuchstaben, groß wie das Bild, das ihnen
    fehlt. */
@@ -3392,7 +3523,7 @@ a.char-film { text-decoration: none; }
      Käme er erst beim Öffnen dazu, sprängen alle anderen Reiter um seine
      Höhe nach unten. */
   border-top: 5px solid transparent;
-  background: #fff;
+  background: var(--m-page);
   color: var(--m-meta);
   font-family: var(--font-display);
   font-size: 1rem;
@@ -3437,7 +3568,7 @@ a.char-film { text-decoration: none; }
   /* Das Weiß gehört dem Band selbst und nicht mehr dem Grund dahinter.
      Nur so ist es ein Band, das hereinfährt, statt einer Fläche, die
      schon dasteht. */
-  background: #fff;
+  background: var(--m-page);
 
   /* Die Gegenform zur Schräge der Bühne.
 
@@ -3516,7 +3647,7 @@ a.char-film { text-decoration: none; }
   border: 1px solid var(--m-line);
   border-left: 5px solid var(--accent);
   border-radius: 0;
-  background: #fff;
+  background: var(--m-page);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   transition: background 0.15s ease-in-out, border-color 0.15s ease-in-out;
@@ -3624,7 +3755,7 @@ a.char-film { text-decoration: none; }
   position: relative;
   margin: 0;
   border: 1px solid var(--m-line);
-  background: #fff;
+  background: var(--m-page);
 
   /* Luft über der Leiste, in der die Tafel zu sehen ist. Ein festes Maß
      wie die Leiste selbst: Die Bühne rechnet mit beidem, und mit einem
@@ -3667,11 +3798,20 @@ a.char-film { text-decoration: none; }
      wie breit gerade das Fenster ist. Ein festes Vielfaches der
      Bühnenhöhe macht daraus ein Maß, das nur noch an der Figur hängt.
 
-     1.1 ist der Wert, den die Spalte auf den üblichen Fenstern ohnehin
-     hergibt. Elf der rund 720 Dateien sind breiter als das und stehen
-     damit etwas kleiner im Rahmen; dafür stehen alle immer gleich groß.
-     Dieselbe Zahl steht als RAHMEN_SEITEN in tools/portrait-studio. */
-  --frame-ratio: 1.1;
+     1.65 ist der Wert, den die Spalte ab etwa 1760 Pixeln Fensterbreite
+     hergibt, auf einem Fenster von 1920 also ganz. Von den rund 780
+     Dateien stoßen dann noch zwei seitlich an, und beide sind keine
+     stehende Figur: Arnim Zolas Bildschirm und Sam Wilson mit voller
+     Flügelspanne. Alles andere steht in seiner vollen Größe.
+
+     Der Wert stand nacheinander auf 1.1 und 1.3 und war beide Male zu
+     knapp: Er nahm gerade den breiten Posen Größe weg, für die die
+     Bühne da ist. Ein hoher Wert kostet nichts, solange die Spalte
+     reicht, denn eine stehende Figur ist ohnehin von der Höhe begrenzt
+     und merkt davon nichts.
+
+     Dieselbe Zahl steht als RAHMEN_SEITEN in vision-studio. */
+  --frame-ratio: 1.65;
   /* Bleibt der Spalte weniger übrig, darf die Figur in die Fugen neben
      ihr laufen – aber keinen Schritt weiter, sonst stünde sie auf der
      Fassungswahl oder im Filmtitel. Der Wert ist die Fuge der Bühne. */
@@ -4089,7 +4229,7 @@ a.char-film { text-decoration: none; }
 
    Die Vorlage trägt nur die Form und keine Farbe: Sie liegt als Maske
    über einer Fläche in der Farbe der Figur (siehe
-   tools/emblems/build-emblems.py). */
+   vision-studio/characters/emblems/build-emblems.py). */
 .char-stage-emblem.from-file {
   background: currentColor;
   opacity: var(--wappen-deckung);
@@ -4203,7 +4343,197 @@ a.char-film { text-decoration: none; }
     * var(--figure-scale, 1) * 0.82);
   max-height: calc(100%
     * min(1, var(--figure-scale, 1) * 0.82 / (1 - var(--figure-lift, 0))));
+  /* Unten mittig ist die Regel, FULLSIZE_SHIFT rückt einzelne Bilder
+     davon ab. Gemessen wird in Anteilen der Rahmenbreite, und genau das
+     sind Prozente an den Rändern: Sie beziehen sich auch senkrecht auf
+     die Breite des Rahmens. Links und rechts heben sich auf, damit die
+     Mitte die Mitte bleibt und nur der Versatz zählt. */
+  margin-left: calc(var(--figure-shift-x, 0) * 100%);
+  margin-right: calc(var(--figure-shift-x, 0) * -100%);
+  margin-bottom: calc(var(--figure-shift-y, 0) * -100%);
   filter: drop-shadow(0 14px 26px rgba(21, 21, 21, 0.3));
+}
+
+/* ---------- Der Schatten der Figur ----------
+
+   Die Figur wirft ihren eigenen Umriss auf die Fläche: dasselbe Bild
+   noch einmal, schwarz gerechnet und flach auf den Boden gelegt. Gebaut
+   wird er in js/characters.js (buildCast), gerechnet wird er hier.
+
+   Das Licht steht links oben und ein Stück vor der Figur, dort, wo auch
+   die helle Fläche der Kulisse herkommt. Der Wurf geht deshalb nach
+   rechts hinten.
+
+   Warum das eine Matrix ist und keine Kette aus Drehungen:
+
+   Ein Schatten wird nicht gedreht, er wird geworfen. Wo die Figur den
+   Boden berührt, liegt sein Anfang, und dieser Punkt bleibt, wo er ist:
+   Ein Punkt, der schon auf dem Boden liegt, wirft seinen Schatten auf
+   sich selbst. Nur was über dem Boden liegt, rückt vom Licht weg, und
+   zwar umso weiter, je höher es steht.
+
+   Eine Kette aus rotate und scale kann das nicht. Sie dreht das Bild als
+   Ganzes um einen einzigen Punkt und nimmt die Standlinie mit. Das geht
+   gut, solange die Figur genau in der Mitte ihrer Datei steht und beide
+   Füße nebeneinander. Steht sie schief, breitbeinig oder mit wehendem
+   Mantel im Bild, setzt der Wurf neben ihr an, und der Schatten hängt
+   sichtbar neben den Füßen in der Luft. Genau das war er vorher.
+
+   Die Matrix hier rechnet stattdessen die Projektion selbst. Für einen
+   Punkt der Datei in der Höhe h über der Standlinie und im seitlichen
+   Abstand u von der Mitte:
+
+     Boden-x = u + h * weite        das Licht schiebt ihn zur Seite
+     Boden-z = h * ferne            und in die Tiefe
+     Bild-x  = Boden-x / (1 + Boden-z / tiefe)     die Kamera
+     Bild-y  = -hoehe * Boden-z / (tiefe + Boden-z)
+
+   Für h = 0 bleibt Bild-x gleich u und Bild-y gleich null. Die ganze
+   Standlinie fällt auf sich selbst, also wirft jeder Fuß aus dem Punkt,
+   auf dem er steht, und zwei weit auseinanderstehende Füße werfen zwei
+   Schatten, die erst weiter hinten zusammenlaufen. Dass die Teilung
+   durch die Tiefe darin steckt, macht daraus zugleich eine echte
+   Fluchtpunktperspektive: Was weiter hinten liegt, wird schmaler.
+
+   In der Schreibweise von matrix3d, mit u und v als Punkt der Datei (v
+   zählt nach unten, die Standlinie ist v = 0):
+
+     x = (u - weite * v) / (1 - ferne / tiefe * v)
+     y = (hoehe * ferne / tiefe * v) / (1 - ferne / tiefe * v)
+
+   also m11 = 1, m21 = -weite, m22 = hoehe * ferne / tiefe und
+   m24 = -ferne / tiefe. Der Rest ist die Einheitsmatrix.
+
+   Was die vier Zahlen bedeuten:
+   --schatten-weite: wie weit der Wurf pro Höheneinheit zur Seite geht.
+     Das ist die Himmelsrichtung des Lichts.
+   --schatten-ferne: wie weit er dabei nach hinten geht. Beide zusammen
+     ergeben die Länge des Wurfs, also den Stand der Sonne.
+   --schatten-hoehe: wie hoch die Kamera über dem Boden steht, in Pixeln.
+     Je höher, desto mehr Boden sieht man und desto breiter liegt der
+     Schatten da. Sie hängt an der Bühne und nicht an der Figur: Die
+     Kamera bleibt stehen, auch wenn ein Waschbär vor ihr steht statt
+     eines Riesen.
+   --schatten-tiefe: der Abstand der Kamera zur Bühne, in Pixeln. Ein
+     kleiner Wert verzerrt stark, ein großer läuft auf eine
+     Parallelprojektion zu.
+
+   Beide Längen stehen als blanke Zahlen da und nicht als Pixelmaße, weil
+   matrix3d nur Zahlen nimmt. Sie meinen trotzdem Pixel.
+
+   Dazu kommt --schatten-ferse. Ein Fuß berührt den Boden nicht in einem
+   Punkt, sondern auf seiner ganzen Sohle, und die unterste Bildzeile der
+   Datei ist die Fußspitze. Von dort geworfen klebt der Schatten vorn am
+   Zeh und schiebt sich unter die Figur. Geworfen wird er aber von der
+   Ferse, und die liegt ein Stück weiter hinten. Genau um dieses Stück
+   rückt der fertige Wurf nach hinten, und nach hinten heißt auf dieser
+   Fläche nach oben. Ein Wert unter null zieht ihn nach vorn, weiter unter
+   die Füße.
+
+   Gemessen wird der Wert an der Höhe der Figur und nicht in Pixeln: Ein
+   großer Fuß gehört zu einem großen Körper, und ein Waschbär soll seinen
+   Schatten nicht so weit hinter sich werfen wie ein Riese. */
+.char-stage {
+  --schatten-weite: 0.78;
+  --schatten-ferne: 0.78;
+  --schatten-hoehe: 470;
+  --schatten-tiefe: 950;
+  --schatten-ferse: 3%;
+}
+
+/* Der Schatten liegt in derselben Ebene wie die Figur und deckt sich mit
+   ihrem Rahmen: Er bekommt damit dasselbe Maß, denselben Versatz und
+   dieselbe Schwebe wie sie (siehe .char-figure-frame img), und ein
+   Fassungswechsel blendet ihn mit über, ohne dass er davon wissen muss.
+   Nur nach oben steigt er nicht mit, siehe unten bei seinem Bild.
+
+   Zweimal dasselbe Bild und nicht einmal, weil ein Schatten mit dem
+   Abstand von seinem Werfer weicher wird. Ein einziger Wurf mit einem
+   einzigen Weichzeichner ist entweder am Fuß zu unscharf oder am Ende zu
+   hart, und beides sieht aus wie ein aufgeklebter Fleck. */
+.char-figure-cast {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  /* Hinter der Figur. Beide stehen gestellt im Raum, also entscheidet
+     die Zahl und nicht die Reihenfolge im Dokument. */
+  z-index: 0;
+}
+
+.char-figure-layer > img { position: relative; z-index: 1; }
+
+/* Warum die Unschärfe an der Hülle hängt und die Maske am Bild: Eine
+   Maske schneidet alles ab, was über den Kasten des Bildes hinausragt,
+   und die Unschärfe ragt genau dort hinaus. Am Bild bleibt deshalb nur,
+   was in seinem Kasten liegt – der Wurf und der Verlauf –, die
+   Unschärfe kommt eine Ebene darüber, im schon geworfenen Bild. Dort ist
+   sie auch richtig: Ein Saum ist auf der Fläche nach allen Seiten gleich
+   breit und nicht in Richtung des Wurfs gestaucht. */
+.char-figure-frame .char-figure-cast img {
+  /* Der Ursprung liegt auf der Standlinie. Wo genau auf ihr, ist
+     gleichgültig: Sie fällt in jedem Punkt auf sich selbst. Steht die
+     Figur in der Luft, ist der untere Teil ihrer Datei leer
+     (--figure-lift), und der Wurf setzt von selbst weiter hinten an,
+     genau wie bei einer fliegenden Figur. */
+  transform-origin: 50% 100%;
+  /* Rückt FULLSIZE_SHIFT eine Figur nach oben, schwebt sie ebenso. Ihr
+     Schatten bleibt dann auf dem Boden: Statt mit ihr zu steigen, bekommt
+     er unter dem Bild so viel leere Fläche, wie sie gestiegen ist, und die
+     zählt für den Wurf wie --figure-lift. Vorher stieg er mit und lag
+     unter Franklin auf einem Boden, den es nicht gibt.
+
+     Nach unten gerückt geht er weiter mit, dort steht die Figur auf einem
+     tieferen Boden. content-box, damit die Fläche zum Bild dazukommt,
+     statt es kleiner zu machen. */
+  box-sizing: content-box;
+  margin-bottom: calc(max(0, var(--figure-shift-y, 0)) * -100%);
+  padding-bottom: calc(max(0, -1 * var(--figure-shift-y, 0)) * 100%);
+  transform:
+    translateY(calc(-1 * var(--schatten-ferse)))
+    matrix3d(
+      1, 0, 0, 0,
+      calc(-1 * var(--schatten-weite)),
+      calc(var(--schatten-hoehe) * var(--schatten-ferne) / var(--schatten-tiefe)),
+      0,
+      calc(-1 * var(--schatten-ferne) / var(--schatten-tiefe)),
+      0, 0, 1, 0,
+      0, 0, 0, 1);
+  /* Schwarz gerechnet: Was von der Datei bleibt, ist ihr Umriss. Den
+     Schlagschatten der Figur trägt der Wurf nicht mit, ein Schatten
+     wirft keinen zweiten. */
+  filter: brightness(0);
+}
+
+/* Das nahe Stück: der Anschluss an den Fuß. Es ist fast scharf, denn wo
+   Figur und Fläche sich berühren, kommt kein Licht mehr dazwischen. Auf
+   zwei Dritteln der Strecke läuft es aus. */
+.char-figure-cast.nah {
+  filter: blur(1.5px);
+  opacity: 0.7;
+}
+
+.char-figure-cast.nah img {
+  -webkit-mask-image: linear-gradient(to top, #000 20%, transparent 68%);
+  mask-image: linear-gradient(to top, #000 20%, transparent 68%);
+}
+
+/* Das ferne Stück: der Rest des Wurfs. Je weiter er von seinem Werfer
+   wegkommt, desto breiter wird sein Saum und desto blasser seine Mitte.
+   Es setzt dort an, wo das nahe aufhört, und die beiden Verläufe
+   ergänzen sich auf dem Weg dorthin. */
+.char-figure-cast.fern {
+  filter: blur(5px);
+  opacity: 0.55;
+}
+
+.char-figure-cast.fern img {
+  -webkit-mask-image: linear-gradient(to top,
+    transparent 22%, #000 62%, rgba(0, 0, 0, 0.75) 100%);
+  mask-image: linear-gradient(to top,
+    transparent 22%, #000 62%, rgba(0, 0, 0, 0.75) 100%);
 }
 
 /* Ohne Bild bleibt der Platz stehen: Silhouette und Anfangsbuchstaben,
@@ -4463,7 +4793,7 @@ a.char-film { text-decoration: none; }
   bottom: 0;
   z-index: 3;
   padding: 0.3rem 0.5rem 0.35rem;
-  background: var(--m-ink);
+  background: var(--m-bar);
   color: #fff;
   font-family: var(--font-body);
   font-weight: 600;
@@ -4764,7 +5094,7 @@ a.char-film { text-decoration: none; }
   min-height: var(--panel-h);
   padding: clamp(1.4rem, 3vw, 2.6rem) 0 0 clamp(1.4rem, 3vw, 2.6rem);
   padding-top: calc(var(--mode-space, 0rem) + clamp(1rem, 2vw, 1.6rem));
-  background: var(--m-ink);
+  background: var(--m-bar);
   overflow: hidden;
 }
 
@@ -4794,7 +5124,8 @@ a.char-film { text-decoration: none; }
    und, weil die Reihe der Felder im Dokument nach ihr kommt, unter der
    weißen Kante am Fuß. Sie nimmt keine Zeiger an, die Felder darunter
    bleiben anklickbar. */
-.char-powers-art {
+.char-powers-art,
+.char-data-art {
   position: absolute;
   top: 0;
   right: 0;
@@ -4807,7 +5138,8 @@ a.char-film { text-decoration: none; }
   pointer-events: none;
 }
 
-.char-powers-art[hidden] { display: none; }
+.char-powers-art[hidden],
+.char-data-art[hidden] { display: none; }
 
 /* Dasselbe Maß wie auf der Bühne: die Körpergröße der Figur mal der
    Feinkorrektur ihrer Datei (fullsizeScale in js/chars.js). Ohne sie
@@ -4821,7 +5153,8 @@ a.char-film { text-decoration: none; }
 
    Die Schwebe zählt hier mit wie auf der Bühne, sonst stünde eine
    fliegende Figur auf dieser Tafel kleiner als auf der daneben. */
-.char-powers-art img {
+.char-powers-art img,
+.char-data-art img {
   display: block;
   width: auto;
   height: auto;
@@ -4961,7 +5294,7 @@ a.char-film { text-decoration: none; }
   padding-left: var(--kante);
   display: flex;
   align-items: stretch;
-  background: #fff;
+  background: var(--m-page);
   clip-path: polygon(calc(var(--kante) - 0.2rem) 0, 100% 0, 100% 100%, 0 100%);
   overflow-x: auto;
   overscroll-behavior-x: contain;
@@ -4984,7 +5317,7 @@ a.char-film { text-decoration: none; }
   border: 0;
   border-top: 5px solid transparent;
   border-right: 1px solid var(--m-line);
-  background: #fff;
+  background: var(--m-page);
   color: var(--m-meta);
   font-family: var(--font-display);
   font-size: 0.95rem;
@@ -5026,141 +5359,232 @@ a.char-film { text-decoration: none; }
 
 /* ---------- Tafel Daten ----------
 
-   Die dritte Tafel: die Angaben zur Figur als Blatt aus Feldern, jedes
-   mit seiner Bezeichnung klein darüber und dem Wert darunter. Grund und
-   Kulisse sind die der Bühne, damit der Wechsel zwischen beiden nicht
-   auch die Fläche wechselt. */
+   Die dritte Tafel, gebaut wie die der Fähigkeiten: links die Schrift,
+   rechts die Figur hinter derselben schrägen Kante und an derselben
+   Stelle. Anders ist nur der Grund. Die Fähigkeiten sind das dunkle Band
+   der Vorlage, die Daten stehen auf dem Grund der Seite, und die schräge
+   Fläche hinter der Figur trägt einen Hauch ihrer Farbe (--stage-light
+   und --stage-dark, siehe .char-full-profile).
+
+   Die Angaben selbst sind zwei Gruppen nebeneinander, jede eine Liste
+   aus Zeilen: die Bezeichnung klein über dem Wert, dazwischen eine
+   Haarlinie. Man liest von oben nach unten durch, statt in einem Raster
+   aus Kästchen nach der nächsten Angabe zu suchen. */
 .char-data {
+  /* Wie breit die Fläche hinter der Figur ist, als Anteil an der Tafel
+     und mit einer Obergrenze. Dasselbe Maß wie bei den Fähigkeiten, damit
+     die Figur beim Umschalten nicht verrutscht. Auf schmaleren Fenstern
+     gibt sie Platz ab, siehe die Regeln für 1400 und 1100 Pixel. */
+  --art-share: 0.48;
+  --art-max: 32rem;
+  --pad: clamp(1.4rem, 3vw, 2.6rem);
   position: relative;
   isolation: isolate;
   display: flex;
   flex-direction: column;
-  gap: 1.1rem;
+  justify-content: center;
   min-height: var(--panel-h);
-  padding: clamp(1.4rem, 3vw, 2.6rem);
+  padding: var(--pad);
   padding-top: calc(var(--mode-space, 0rem) + clamp(1rem, 2vw, 1.6rem));
-  background: linear-gradient(180deg, #fff, var(--m-wash));
+  background: var(--m-page);
   overflow: hidden;
 }
 
 .char-data::before {
   content: "";
   position: absolute;
-  inset: 0;
   z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(115% 92% at 50% 62%,
-      transparent 32%, rgba(21, 21, 21, 0.07) 100%);
-}
-
-/* Dasselbe Wappen wie hinter der Figur, hier weit nach rechts gerückt:
-   Es soll die leere Ecke füllen und nicht hinter den Feldern liegen. */
-.char-data-emblem {
-  position: absolute;
-  z-index: -1;
-  top: 50%;
-  right: -6rem;
-  width: min(28rem, 46%);
-  aspect-ratio: 1;
-  transform: translateY(-50%);
-  opacity: 0.7;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(150deg,
+    color-mix(in srgb, var(--stage-light) 16%, var(--m-wash)) 0%,
+    color-mix(in srgb, var(--stage-dark) 8%, var(--m-wash)) 78%);
+  clip-path: polygon(26% 0, 100% 0, 100% 100%, 0 100%);
   pointer-events: none;
 }
 
-.char-data-emblem svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
+.char-data::before,
+.char-data-art { width: min(var(--art-share) * 100%, var(--art-max)); }
 
-.char-data-emblem .burst { fill: rgba(230, 36, 41, 0.06); }
+/* Die Schrift endet vor der Fläche der Figur. Gerechnet wird mit der
+   Unterkante der Schräge, denn dort reicht die Fläche am weitesten nach
+   links, und dazu eine Fuge, damit kein Wert an ihr klebt.
 
-.char-data-emblem .ring {
-  fill: none;
-  stroke: rgba(230, 36, 41, 0.18);
-  stroke-width: 2;
-}
+   Die Fläche misst ihren Anteil an der ganzen Tafel samt Polster, ein
+   Anteil an dieser Stelle dagegen nur an der Breite innerhalb des
+   Polsters. Deshalb steht das Polster in der Rechnung, sonst stünde die
+   Schrift auf schmaleren Fenstern in der Schräge.
 
-.char-data-emblem .dash {
-  stroke: rgba(21, 21, 21, 0.12);
-  stroke-dasharray: 3 12;
-}
-
-.char-data-emblem .node { fill: rgba(230, 36, 41, 0.3); }
-
-/* Die Zeile über den Feldern, in derselben Form wie die Zeile über dem
-   Filmtitel auf der Bühne: die Marke, dahinter der Name des Abschnitts. */
-.char-data-kicker {
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: 0.64rem;
-  font-style: italic;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--m-meta);
-}
-
-.char-data-kicker svg {
-  flex: none;
-  width: 0.95rem;
-  height: 0.95rem;
-  color: var(--accent);
-}
-
-/* Ein Blatt aus Feldern. Die Linien dazwischen zeichnet jedes Feld
-   selbst als Kontur, und die Fuge von einem Pixel ist genau die Breite,
-   in der sich die Konturen zweier Nachbarn treffen. Läge stattdessen ein
-   grauer Grund unter dem Raster, stünde in der letzten Zeile neben dem
-   letzten Feld ein grauer Block bis zum Rand.
-
-   Das Blatt hängt an der Mittellinie der Tafel: Die Felder füllen die
-   Höhe der Bühne nicht aus, und oben angeschlagen ließen sie darunter
-   eine leere Wand stehen. */
-.char-data-list {
-  margin: auto 0;
+   Nach oben ist die Breite begrenzt: Auf einem großen Bildschirm liefen
+   die Zeilen sonst über eine halbe Bildschirmbreite, und ein kurzer Wert
+   wie „Mensch“ stünde verloren am Anfang einer langen Linie. */
+.char-data-sheet {
+  width: calc(100% + var(--pad)
+    - min(var(--art-share) * (100% + 2 * var(--pad)), var(--art-max)) - 2rem);
+  max-width: 46rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-  grid-auto-rows: minmax(4.6rem, auto);
-  gap: 1px;
-  background: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  column-gap: clamp(1.4rem, 3vw, 2.6rem);
+  row-gap: 1.8rem;
 }
 
-.char-data-cell {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.3rem;
-  padding: 0.9rem 1rem 1rem;
-  outline: 1px solid var(--m-line);
-  background: #fff;
-}
-
-/* Was in eine Spalte nicht passt, bekommt zwei: „S.H.I.E.L.D. · Howling
-   Commandos · SSR“ bräche sonst in eine Buchstabensäule. */
-.char-data-cell.wide { grid-column: span 2; }
-
-.char-data-key {
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--m-meta);
-}
-
-/* Die Werte in der Schrift der Namen: Es sind Angaben und keine Sätze,
-   und in der schmalen Versalschrift lesen sie sich wie ein Datenblatt. */
-.char-data-value {
+/* Der Kopf einer Gruppe in der Schrift der Abschnitte darunter
+   („4 Auftritte“, „Connections“), nur kleiner. Unter ihm liegt eine
+   kräftige Linie mit einem roten Anfang, wie der Balken über einem
+   offenen Reiter. */
+.char-data-head {
+  position: relative;
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  line-height: 1.2;
-  letter-spacing: 0.03em;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--m-ink);
+  font-family: var(--font-subhead);
+  font-weight: 400;
+  font-size: clamp(1.05rem, 1.45vw, 1.3rem);
+  line-height: 1;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--m-ink);
+  -webkit-text-stroke: 0.022em currentColor;
+}
+
+.char-data-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 2.4rem;
+  height: 2px;
+  background: var(--accent);
+}
+
+/* Jede Zeile nimmt die ganze Breite, nur kurze Angaben wie Größe und
+   Status teilen sich eine. Gebaut als umbrechende Reihe und nicht als
+   Raster, weil die Hälften nicht immer gleich breit sind: Die Zahl der
+   Auftritte braucht kaum Platz, die Leiste der Phasen daneben jeden. */
+.char-data-list {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1.2rem;
+}
+
+.char-data-row {
+  flex: 1 0 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.8rem 0 0.85rem;
+  border-bottom: 1px solid var(--m-line);
+}
+
+.char-data-row.half { flex: 1 1 0; }
+
+.char-data-row.half:has(> .count) { flex: 0 0 5.5rem; }
+
+/* Die Linie gehört zur Zeile darüber und nicht zur Zeile darunter. Nur so
+   ist sie unter einem Paar in der Mitte unterbrochen, wo die beiden
+   Hälften auseinanderstehen, und unter einer ganzen Zeile durchgezogen,
+   auch wenn darunter ein Paar folgt.
+
+   Die letzte Zeile braucht keine, unter ihr endet die Gruppe. Ist sie die
+   zweite Hälfte eines Paars, gilt das auch für die erste. */
+.char-data-row:last-child,
+.char-data-row.half:nth-last-child(2):has(+ .half) { border-bottom: 0; }
+
+.char-data-key {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.625rem;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--m-meta);
+}
+
+/* Die Werte in der Lesegröße der Seite und nicht in Versalien: Eine
+   Herkunft wie „Brooklyn, New York City, New York“ liest sich in
+   Groß- und Kleinschreibung auf einen Blick. */
+.char-data-value {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--m-ink);
+}
+
+/* Das Jahr hinter dem ersten Film, leiser als der Titel. */
+.char-data-note {
+  margin-left: 0.5em;
+  color: var(--m-meta);
+}
+
+/* Listen wie die Zugehörigkeit stehen Eintrag für Eintrag untereinander,
+   jeder mit einem kurzen roten Strich davor. Ohne ihn läse sich ein
+   langer Eintrag, der umbricht, wie zwei: „Confederated Global“ und
+   darunter „Investments“. Mit ihm steht die zweite Zeile eingerückt
+   unter der ersten. */
+.char-data-lines {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.char-data-lines li {
+  position: relative;
+  padding-left: 0.9rem;
+}
+
+.char-data-lines li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.68em;
+  width: 0.4rem;
+  height: 2px;
+  background: var(--accent);
+}
+
+/* Die Zahl der Auftritte nur eine Stufe größer als die übrigen Werte und
+   in derselben dünnen Schrift. Sie stand früher groß und fett wie die
+   Nummer der Fähigkeiten, damit war ihre Zeile höher als jede andere und
+   rückte weiter von ihrer Bezeichnung ab. Die Zeilenhöhe ist die der
+   übrigen Werte, so bleibt der Abstand zur Bezeichnung überall gleich. */
+.char-data-value.count {
+  font-size: 1.25rem;
+  line-height: 1.4rem;
+}
+
+/* Die Phasen als Leiste aus sieben Feldern, die vergebenen gefüllt. Ein
+   Feld ist genau so hoch wie eine Zeile Text daneben, die Leiste sitzt
+   also mit demselben Abstand unter ihrer Bezeichnung wie jeder Wert. */
+.char-data-phases {
+  display: flex;
+  gap: 2px;
+}
+
+.char-data-phase {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 1.6rem;
+  border: 1px solid var(--m-line);
+  font-family: var(--font-subhead);
+  font-size: 0.8rem;
+  line-height: calc(1.4rem - 2px);
+  text-align: center;
+  color: var(--m-meta);
+}
+
+.char-data-phase.saga-start { margin-left: 0.4rem; }
+
+.char-data-phase.on {
+  border-color: var(--m-ink);
+  background: var(--m-ink);
+  color: var(--m-page);
 }
 
 /* ---------- Connections ----------
@@ -5558,29 +5982,300 @@ a.char-film { text-decoration: none; }
    Titel, dessen roter Balken beim Zeigen von oben nach unten vollläuft.
    ====================================================================== */
 
-/* Ein eigenes Bild im Kopfband. Die Charakterseite trägt dort das
-   Comic-Plakat mit den Figuren, hier steht der MARVEL-Schriftzug, dessen
-   Buchstaben mit Figuren gefüllt sind – auf einer Seite über Titel ist
-   der Titel selbst das Motiv.
+/* ----- Die Plakatwand im Kopfband -----
 
-   Zwei Schichten wie dort: unten das Bild, darüber ein Schleier in der
-   Farbe, die die Fläche sonst allein hätte. Er ist blasser als der der
-   Charakterseite, weil die Vorlage hier ohnehin fast nur aus Schwarz
-   besteht und nur die Buchstaben Farbe tragen. Nach unten wird er
-   dichter: Dort fängt gleich das weiße Raster an, und ein heller Fleck
-   genau an der Kante ließe die beiden Flächen ineinanderlaufen. */
+   Die Charakterseite trägt in ihrem Kopfband ein Bild, das Comic-Plakat
+   mit den Figuren. Hier steht statt eines Bildes eine Bewegung: eine
+   Wand aus Filmplakaten, die schräg im Raum steht und in Spalten
+   aneinander vorbeizieht, eine nach oben, die nächste nach unten.
+
+   Auf einer Seite über Filme sind die Plakate das Motiv, und es sind
+   dieselben Dateien wie in den Kacheln darunter, nur klein gerechnet
+   (assets/covers/wall/, siehe vision-studio/films/covers/build-wall-covers.py).
+
+   Gebaut, gezeichnet und bewegt wird die Wand in js/drift-wall.js, auf
+   einem einzigen Canvas. Hier steht nur der Rahmen dafür und der Schleier
+   über allem. Die Vorlage ist DriftWall von ReactBits, ohne alles, was
+   dort auf den Zeiger reagiert.
+
+   Der Grundton der Fläche bleibt, wo er war. Die Wand kommt erst, wenn
+   alle Plakate geladen sind, und bis dahin steht das Band einfach dunkel
+   da. */
 html.films-page .chars-masthead {
-  background-image:
-    linear-gradient(rgba(21, 21, 21, 0.62), rgba(21, 21, 21, 0.86)),
-    url('../assets/theme/marvel-cinematic-bg.webp');
-  /* Der Ausschnitt sitzt etwas über der Mitte, das Bild rückt damit nach
-     unten. Die Vorlage ist hochkant, das Band ist flach: Von den gut
-     tausend Pixeln Höhe steht nur ein Streifen im Bild, und wo dieser
-     Streifen liegt, entscheidet dieser Wert. Bei 50 Prozent stand der
-     Schriftzug eine Spur zu hoch und ließ unter sich einen schwarzen
-     Saum, bei 40 sitzt er in der Mitte des Bandes. Die erste Angabe gilt
-     dem Schleier darüber, der hat nichts zu verschieben. */
-  background-position: center, center 43%;
+  background-image: none;
+  /* Die Wand liegt hinter Titel, Zeile und Uhr und trotzdem über dem
+     Grundton der Fläche. Ein negativer z-index allein reicht dafür
+     nicht: Er sucht sich die nächste Ebene, und das wäre ohne diese
+     Zeile die der ganzen Seite. Dort läge die Wand hinter dem weißen
+     Grund und wäre nirgends zu sehen. */
+  isolation: isolate;
+}
+
+/* Der Kasten, in dem das Canvas liegt. Wie die Wand aussieht, steht
+   nicht hier, sondern in js/drift-wall-config.js: Lage, Kachelmaß und
+   Tempo gehen von dort an den Shader, nur der Schleier weiter unten holt
+   sich seine Werte als eigene Eigenschaften am Kopfband. */
+.drift-wall {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+
+  /* Aufgeblendet wird erst, wenn die Wand steht. Vorher ist sie nicht
+     nur unsichtbar, sondern leer. */
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.drift-wall.ready { opacity: 1; }
+
+/* Das Canvas deckt das Band genau. Die Rechnung im Shader geht von
+   dieser Fläche aus, eine andere Größe verzöge die Wand. */
+.drift-wall__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Der Schleier über der Wand, in der Farbe, die die Fläche vorher allein
+   hatte. Er liegt auf derselben Ebene wie die Wand und im Markup dahinter,
+   deckt sie also ab und lässt Titel, Zeile und Uhr darüber frei.
+
+   Vier Verläufe, und sie haben zwei verschiedene Aufgaben.
+
+   Die ersten beiden dämpfen: in der Mitte ein weicher Fleck, damit der
+   Titel auf ruhigem Grund steht, und von oben nach unten dichter
+   werdend. Unten fängt gleich das weiße Raster an, und ein heller Fleck
+   genau an der Kante ließe die beiden Flächen ineinanderlaufen.
+
+   Die letzten beiden nehmen die Ränder ganz weg und ersetzen damit die
+   Maske, die vorher an der Wand hing. Das ist keine Näherung, sondern
+   dasselbe Bild: Eine Maske lässt die Wand mit dem Anteil m stehen und
+   den Grundton mit 1 - m durchscheinen, und derselbe Grundton mit der
+   Deckung 1 - m obendrauf ergibt Punkt für Punkt dieselbe Farbe. Nur
+   entsteht er hier einmal und dort bei jedem Bild neu. */
+html.films-page .chars-masthead::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    /* der Fleck hinter dem Titel */
+    radial-gradient(ellipse 58% 56% at 50% 48%,
+      color-mix(in srgb, var(--dw-overlay) calc(var(--dw-scrim) * 100%), transparent),
+      transparent 74%),
+    /* nach unten dichter */
+    linear-gradient(
+      color-mix(in srgb, var(--dw-overlay) calc(var(--dw-top) * 100%), transparent),
+      color-mix(in srgb, var(--dw-overlay)
+        calc((var(--dw-top) * 0.5 + var(--dw-bottom) * 0.5) * 100%), transparent) 55%,
+      color-mix(in srgb, var(--dw-overlay) calc(var(--dw-bottom) * 100%), transparent)),
+    /* die Dämpfung, die vorher an jeder einzelnen Kachel hing */
+    linear-gradient(
+      color-mix(in srgb, var(--dw-overlay) calc(var(--dw-dim) * 100%), transparent),
+      color-mix(in srgb, var(--dw-overlay) calc(var(--dw-dim) * 100%), transparent)),
+    /* und die beiden, die statt einer Maske die Ränder wegnehmen */
+    radial-gradient(ellipse 78% 82% at 50% 46%,
+      transparent var(--dw-edge), var(--dw-overlay) 100%),
+    linear-gradient(to top, transparent var(--dw-edge), var(--dw-overlay) 100%);
+}
+
+/* Wer keine Bewegung will, bekommt die Wand als stehendes Bild. Die
+   Spalten halten dann an ihrem versetzten Anfang (siehe js/drift-wall.js),
+   und auch das Aufblenden fällt weg. */
+@media (prefers-reduced-motion: reduce) {
+  .drift-wall { transition: none; }
+}
+
+/* ----- Countdown im Kopfband -----
+
+   Unter der Zeile im Kopfband läuft die Zeit bis zum nächsten Start ab.
+   Gebaut wird die Uhr in js/films.js, gedreht werden ihre Räder in
+   js/counter.js; hier steht nur, wie sie aussieht.
+
+   Zwei Schriften wie überall auf der Seite: die Ziffern in Bebas Neue, der
+   Schrift der Überschriften, die Beschriftungen darunter gesperrt in
+   derselben Größe wie die Zeile über dem Titel. */
+.film-countdown {
+  margin-top: clamp(2rem, 4vh, 3rem);
+}
+
+/* Steht kein Start mehr aus, baut films.js nichts, und der leere Kasten
+   soll dann auch keinen Abstand hinterlassen. */
+.film-countdown:empty { display: none; }
+
+/* Die Uhr gehört an die untere Kante des Bandes, und der Text darüber soll
+   dabei genau dort stehen, wo er ohne sie stünde. Beides zusammen geht nur
+   außerhalb des Flusses: Das Band zentriert seinen Inhalt, und alles, was
+   in diesem Inhalt steht, schiebt Kicker, Titel und Zeile nach oben. Die
+   Uhr hängt deshalb absolut am Band selbst.
+
+   Im Markup bleibt sie trotzdem, wo sie inhaltlich hingehört, nämlich im
+   .chars-masthead-inner hinter der Zeile. Das geht, weil der innere Kasten
+   selbst nicht positioniert ist: Der Bezug einer absoluten Angabe ist der
+   nächste positionierte Vorfahr, und das ist das Band.
+
+   Erst ab einer gewissen Fensterhöhe, denn der Platz zwischen Zeile und
+   Bandkante ist nicht immer da. Das Band ist mindestens 24 rem hoch und
+   sonst 62 vh; auf einem flachen Fenster bleibt unter der Zeile weniger
+   übrig, als die Uhr braucht, und sie liefe in den Text hinein. Unterhalb
+   der Schwelle steht sie deshalb wie jeder andere Absatz einfach unter der
+   Zeile. */
+.chars-masthead { position: relative; }
+
+@media (min-height: 780px) {
+  .film-countdown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(1.2rem, 3vh, 2.6rem);
+    margin-top: 0;
+  }
+}
+
+.film-countdown-line {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  letter-spacing: 0.031em;
+  color: var(--m-sub);
+}
+
+/* Der Titel führt ins selbe Fenster wie eine Kachel darunter. Er ist ein
+   Knopf und soll trotzdem wie Text aussehen: Der Strich darunter sagt,
+   dass es weitergeht, und wechselt beim Zeigen die Farbe. */
+.film-countdown-link {
+  font: inherit;
+  color: #fff;
+  background: none;
+  border: 0;
+  padding: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+
+.film-countdown-link:hover,
+.film-countdown-link:focus-visible {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.film-countdown-clock {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.4vw, 1rem);
+  font-family: var(--font-display);
+  /* Die Höhe steht mit in der Rechnung und nicht nur die Breite: Am
+     unteren Bandrand ist der Platz nach unten begrenzt, und auf einem
+     flachen, breiten Fenster wären Ziffern nach 6,5 vw viel zu groß für
+     das, was zwischen Zeile und Kante frei ist. */
+  font-size: clamp(2.4rem, min(6.5vw, 7.5vh), 4.6rem);
+  line-height: 1;
+  color: #fff;
+  /* Zwei Maße, und sie sind ausdrücklich nicht dasselbe:
+
+     --counter-window ist der Ausschnitt, durch den man auf das Rad sieht.
+     Er ist so knapp wie möglich, nur eben weit genug, dass die stehende
+     Ziffer nicht an den Rand stößt.
+
+     --counter-pitch ist der Weg, den das Rad je Ziffer zurücklegt. Er ist
+     deutlich größer als der Ausschnitt, und das ist der ganze Punkt: Wären
+     beide gleich, stünde auf halbem Weg die halbe alte und die halbe neue
+     Ziffer gleichzeitig im Fenster, und aus einer Bewegung würden zwei
+     Zeilen. Mit dem größeren Schritt schiebt sich die alte Ziffer aus dem
+     Ausschnitt, bevor die neue hereinkommt; zu sehen bleibt ein Streifen
+     von beiden, gerade so viel, dass die Bewegung zusammenhängt.
+
+     Nachgemessen an der laufenden Schrift: Eine Ziffer der Bebas Neue ist
+     0,73 em hoch. Bei einem Ausschnitt von 0,92 em und einem Schritt von
+     1,55 em bleibt auf halbem Weg von der alten wie von der neuen Ziffer
+     noch knapp ein Zwölftel stehen, gerade genug, dass die Bewegung
+     zusammenhängt.
+
+     Die Vorlage aus React kennt diesen Unterschied nicht und legt statt
+     dessen einen Verlauf über die Kanten. Der bräuchte hier einen
+     einfarbigen Grund, und im Kopfband steht ein Bild. */
+  --counter-window: 0.92em;
+  --counter-pitch: 1.55em;
+}
+
+.film-countdown-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Der Doppelpunkt steht auf der Höhe der Ziffern und nicht auf der ihrer
+   Beschriftung, deshalb bekommt er die Höhe des Ausschnitts. */
+.film-countdown-colon {
+  display: flex;
+  align-items: center;
+  height: var(--counter-window);
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.film-countdown-label {
+  margin-top: 0.7rem;
+  font-family: var(--font-brand);
+  font-size: 0.8rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--m-sub);
+  /* Die Sperrung hängt hinter dem letzten Buchstaben in der Luft und
+     schöbe das Wort sonst nach links aus der Mitte. */
+  margin-right: -0.28em;
+}
+
+/* ----- Das Zahlenwerk selbst -----
+
+   Der Teil, der nichts vom Countdown weiß und auch anderswo stehen könnte
+   (js/counter.js). Größe, Schrift und Farbe erbt er von seinem Platz, hier
+   steht nur der Bau: ein Fenster, hinter dem für jede Stelle ein Rad mit
+   zehn Ziffern hängt. Neun davon stehen jederzeit außerhalb des Fensters,
+   sichtbar ist immer nur die eine, die gerade oben steht. */
+.counter {
+  position: relative;
+  display: inline-block;
+}
+
+/* Der Ausschnitt. Die Räder dahinter sind höher als er und stehen oben und
+   unten gleich weit über, deshalb align-items: center statt der
+   Voreinstellung stretch – sonst zöge der Kasten die Stelle auf seine
+   eigene Höhe und der Schritt wäre wieder so groß wie das Fenster. */
+.counter-track {
+  display: flex;
+  align-items: center;
+  height: var(--counter-window, 0.92em);
+  overflow: hidden;
+  line-height: 1;
+}
+
+/* Eine Stelle ist so breit wie eine Ziffer der laufenden Schrift (1ch) und
+   so hoch wie der Schritt, den ihr Rad je Ziffer macht. Beide Maße stehen
+   hier und nicht im Skript: js/counter.js misst die Höhe nach und rechnet
+   damit, so darf das Stylesheet die Größe bestimmen. */
+.counter-digit {
+  position: relative;
+  flex: none;
+  width: 1ch;
+  height: var(--counter-pitch, 1.5em);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Alle zehn Ziffern liegen übereinander auf demselben Fleck; was sie
+   auseinanderhält, ist allein das translateY aus js/counter.js. */
+.counter-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .film-main { padding-top: 2.4rem; }
@@ -6106,7 +6801,7 @@ html.films-page .chars-masthead {
   grid-template-columns: min(calc(var(--poster-h) * 2 / 3), 40%) minmax(0, 1fr);
   gap: clamp(1.5rem, 3vw, 3rem);
   padding: var(--panel-pad);
-  background: #fff;
+  background: var(--m-raise);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
   opacity: 0;
   transform: scale(0.985);
@@ -6386,6 +7081,146 @@ html.films-page .chars-masthead {
   margin-inline: auto;
 }
 
+/* ===== Heller und dunkler Modus ========================================
+
+   Die Timeline stand von Anfang an im Nachthimmel, hell sind allein die
+   Filmseite und die Charakterseite. Der dunkle Modus gilt deshalb diesen
+   beiden, und der Knopf im Kopf steht trotzdem auf allen dreien: Er merkt
+   sich die Wahl für die ganze Fanpage, sodass die Filmseite schon dunkel
+   dasteht, wenn man von der Charakterseite kommt. Auf der Timeline
+   wechselt nur das Zeichen im Knopf, ihr Grund ist ohnehin die Nacht.
+
+   Umgeschaltet wird über die Klasse html.theme-dark, gesetzt von
+   js/theme.js noch vor dem ersten gezeichneten Bild. Ohne eigene Wahl
+   entscheidet die Einstellung des Betriebssystems.
+
+   Der Modus tauscht keine Regel aus, sondern nur die Werte der Marken aus
+   html.chars-page. Alles, was auf diesen Seiten schon dunkel war, bleibt
+   es auch: die Kopfleiste, das Kopfband, die Namensblöcke der Karten und
+   die Bühne einer geöffneten Figur hängen an eigenen Marken und rühren
+   sich nicht.
+
+   Die Töne sind die der Timeline und kein zweites Grau. --m-ink ist ihr
+   --text, die Gründe liegen auf demselben kühlen Blauschwarz wie --bg.
+   So bleibt die Fanpage im Dunklen eine Seite und nicht zwei.
+   ====================================================================== */
+
+/* Damit Eingabefelder, Auswahlmenüs und Rollleisten des Browsers im
+   dunklen Modus von selbst mitziehen. Die Rollleiste der Seite bringt
+   ihre Farben schon von oben mit (siehe html), das Suchfeld der
+   Charakterseite dagegen nicht. */
+html.theme-dark { color-scheme: dark; }
+
+html.chars-page.theme-dark {
+  --m-ink: #e9edf8;    /* wie --text der Timeline */
+  --m-body: #c2c9dc;
+  --m-meta: #868ea6;
+  --m-line: #262c3a;
+  --m-wash: #171b25;
+  --m-page: #0f121a;
+  --m-raise: #1a1f2b;
+  --m-bar: #080a11;
+  /* --m-night und --m-sub bleiben stehen. Die Namensblöcke der Karten
+     waren immer dunkel, und ihre Zweitzeile steht darauf schon richtig. */
+}
+
+/* Im Hellen trennt ein Schatten die schwebenden Tafeln vom Grund. Auf
+   dunklem Grund richtet ein Schatten nichts mehr aus, dort trennt sie der
+   hellere Ton aus --m-raise. Der Schatten bleibt trotzdem und wird
+   kräftiger: Er ist jetzt die Tiefe unter der Tafel und nicht mehr ihre
+   Kante. */
+html.chars-page.theme-dark .chars-filter-panel {
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+
+html.chars-page.theme-dark .film-view-panel {
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.72);
+}
+
+/* Der Schleier vor dem Fenster eines Films ist im Hellen ein Grau, das
+   die weiße Seite dahinter zurücknimmt. Über dem dunklen Grund reicht das
+   nicht mehr aus, dort muss er wirklich schwarz werden. */
+html.chars-page.theme-dark .film-view-veil { background: rgba(0, 0, 0, 0.78); }
+
+/* Auf dem roten Sortierschalter wird die Schrift beim Zeigen schwarz.
+   --m-ink ist im dunklen Modus fast weiß und damit derselbe Ton, den der
+   Schalter ohnehin trägt, es gäbe also keine Rückmeldung mehr. Deshalb
+   steht hier das Schwarz der Vorlage fest. */
+html.chars-page.theme-dark .chars-filter--sort:hover { color: #151515; }
+
+/* Ein zarter Schleier, der im Hellen dunkel ist und deshalb umgedreht
+   wird: die leeren Felder der Fassungswahl, die heller stehen als die
+   besetzten. Er behält seine Aufgabe nur, wenn er die Richtung
+   wechselt. */
+html.chars-page.theme-dark .char-look-blank {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+/* Beim Zeigen zieht die Kachel eines Auftritts ihre Kante an. Im Hellen
+   ist --m-sub dafür eine Spur dunkler als die ruhende Linie, im Dunklen
+   wäre dasselbe Grau ein greller Sprung nach oben. --m-meta hält denselben
+   einen Schritt Abstand, nur in die andere Richtung. */
+html.chars-page.theme-dark .char-full-films .char-film:hover,
+html.chars-page.theme-dark .char-full-films .char-film:focus-visible {
+  border-color: var(--m-meta);
+}
+
+/* ----- Der Knopf im Kopf -----
+
+   Gebaut wie das Zahnrad daneben und mit demselben Maß, damit die beiden
+   auf der Timeline als ein Paar nebeneinanderstehen. Die Zeichen sind
+   FiSun und FiMoon aus react-icons, Linie für Linie übernommen; gesetzt
+   werden sie in js/theme.js.
+
+   Beide liegen übereinander im selben Kasten und blenden ineinander über.
+   Zu sehen ist immer das Ziel und nicht der Stand: Im Hellen steht der
+   Mond da, weil ein Klick in die Nacht führt, im Dunklen die Sonne.
+
+   Bewegt wird dabei nichts, weder beim Zeigen noch beim Umschalten. Das
+   Zahnrad dreht sich unter dem Zeiger, weil ein Zahnrad das tut, eine
+   Sonne täte es nicht. */
+.theme-toggle {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;   /* nur für den Fokusring der Tastaturbedienung */
+  background: none;
+  color: rgba(233, 237, 248, 0.6);
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+
+.theme-toggle:hover { color: #fff; }
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Absolut und mit Auto-Rändern mittig gestellt: Übereinander liegen die
+   beiden nur, wenn keines von beiden Platz im Kasten einnimmt. */
+.theme-icon {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+.theme-icon--sun { opacity: 0; }
+.theme-icon--moon { opacity: 1; }
+
+html.theme-dark .theme-icon--sun { opacity: 1; }
+html.theme-dark .theme-icon--moon { opacity: 0; }
+
 /* ===== Responsive ====================================================== */
 
 /* Phasen-Dropdowns nur dort, wo sie auch hinpassen und bedienbar sind:
@@ -6423,12 +7258,12 @@ html.films-page .chars-masthead {
    Stelle das Doppelte und bleibt von hier bis hinunter zu 860 Pixeln
    gleich groß.
 
-   Weiter hinauf geht die Grenze nicht, obwohl die Spalte erst ab 1360
-   für jede Pose reicht: Zweispaltig rückt der Film unter die Figur, die
-   Bühne bekommt eine zweite Zeile und wird höher als --panel-h. Von
-   1250 bis 1360 stehen die elf breitesten Dateien deshalb bis zu einem
-   Achtel kleiner, dafür springt der Kasten auf den üblichen Laptops
-   nicht mehr, wenn jemand auf Fähigkeiten oder Daten umschaltet. */
+   Weiter hinauf geht die Grenze nicht, obwohl die Spalte erst ab etwa
+   1760 für jede Pose reicht: Zweispaltig rückt der Film unter die Figur,
+   die Bühne bekommt eine zweite Zeile und wird höher als --panel-h. Von
+   1250 bis 1760 stehen die breitesten Dateien deshalb kleiner, dafür
+   springt der Kasten auf den üblichen Laptops nicht mehr, wenn jemand
+   auf Fähigkeiten oder Daten umschaltet. */
 @media (max-width: 1250px) {
   /* Flacher als auf großen Fenstern, weil der Film jetzt unter der Figur
      steht und die Tafeln sonst über den Bildrand hinausliefen. Fest
@@ -6472,6 +7307,23 @@ html.films-page .chars-masthead {
     height: 4.6rem;
     justify-content: flex-start;
   }
+}
+
+/* Die Tafel Daten auf mittleren Fenstern. Ab 1400 Pixeln abwärts
+   reichte der Platz neben der Figur nur noch für Spalten von gut 200
+   Pixeln, und Filmtitel wie Herkunft brächen in jeder zweiten Zeile um.
+   Die Fläche der Figur gibt deshalb erst einen Teil ihrer Breite ab und
+   fällt unter 1100 Pixeln ganz weg. Die beiden Gruppen stehen dann über
+   die ganze Tafel nebeneinander. */
+@media (max-width: 1400px) {
+  .char-data { --art-share: 0.36; }
+}
+
+@media (max-width: 1100px) {
+  .char-data::before,
+  .char-data-art { display: none; }
+
+  .char-data-sheet { width: 100%; }
 }
 
 /* Auf schmalen Fenstern bekommt der Text die Breite, die er dringender
@@ -6676,9 +7528,8 @@ html.films-page .chars-masthead {
     letter-spacing: 0.1em;
   }
 
-  /* Zwei Felder nebeneinander sind auf dieser Breite eines zu viel. */
-  .char-data-list { grid-template-columns: minmax(0, 1fr); }
-  .char-data-cell.wide { grid-column: span 1; }
+  /* Die Gruppen der Daten stehen untereinander statt nebeneinander. */
+  .char-data-sheet { grid-template-columns: minmax(0, 1fr); }
 
   /* Der Name der Leiste kostet Platz, den die Wahl selbst braucht. Auch
      die Einträge rücken enger zusammen, damit alle drei nebeneinander
@@ -6711,6 +7562,10 @@ html.films-page .chars-masthead {
      Anders als bei den Phasen darüber steht hier kein Dropdown daran, das
      ein Scroll-Container abschneiden könnte. */
   #page-nav {
+    /* Absolut zentriert nimmt die Nav sonst genau ihre Inhaltsbreite an –
+       ohne Deckel liefe sie unter Logo und Zahnrad. 8rem reserviert deren
+       Platz auf beiden Seiten, den Rest holt sich der Scroll-Container. */
+    max-width: calc(100% - 8rem);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -6901,57 +7756,10 @@ html.films-page .chars-masthead {
 
   html.js .phase-pin { --reveal: 1; }
 
-  /* Ohne Bewegung entfällt die gepinnte Textsequenz: Der Hero wird wieder
-     eine normale viewportfüllende Sektion, die Stufen stehen untereinander
-     (Kicker über dem Titel wie früher) und sind alle sichtbar. relative
-     statt static, damit der Text über Video und Veil bleibt (z-index 2). */
-  .hero-track { height: auto; }
-
-  .hero {
-    position: static;
-    height: auto;
-    min-height: 100vh;
-  }
-
-  .hero-stack {
-    position: relative;
-    inset: auto;
-    pointer-events: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.2rem;
-    min-height: 100vh;
-    padding: 3rem 1.5rem;
-  }
-
-  .hero-stage {
-    position: static;
-    opacity: 1;
-    padding: 0;
-  }
-
-  .hero-stage-kicker { order: -1; }
-
-  .hero-kicker,
-  .hero h1,
-  .hero-sub,
-  .scroll-hint,
-  .hero-sound {
-    opacity: 1;
-    transition: none;
-  }
-
-  .hero h1 {
-    transform: none;
-    filter: drop-shadow(0 0 26px rgba(90, 120, 255, 0.35));
-  }
-
-  .hero-sub { transform: none; }
-
-  .scroll-hint span { animation: none; }
-
+  /* Ohne Bewegung steht das Kopfband einfach da. Der Auftritt der drei
+     Zeilen ist schon in ihrer eigenen Regel abgeschaltet, hier bleibt der
+     Titel: Sein Video wandert nicht und seine Buchstaben steigen nicht
+     herauf, das regelt js/masked-heading.js. */
   .scroll-arrow span { animation: none; }
 
   .movie-tip { transition: none; }
@@ -6981,6 +7789,8 @@ html.films-page .chars-masthead {
   .char-cell:focus-visible .char-shot img { transform: scale(1.0001); }
 
   .settings-btn,
+  .theme-toggle,
+  .theme-icon,
   .has-dropdown::after,
   .dropdown-panel,
   .nav-title,

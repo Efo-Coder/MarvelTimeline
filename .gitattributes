@@ -7,7 +7,7 @@
 # die ganze Datei.
 #
 # Vorher war das hier gemischt: css/style.css, js/chars.js, js/looks.js
-# und das Bild-Studio hatten CRLF, der Rest LF. Die Einstellung
+# und das Vision-Studio hatten CRLF, der Rest LF. Die Einstellung
 # core.autocrlf=true auf diesem Rechner hat beim Auschecken zusätzlich
 # CRLF erzwungen, was bei jedem `git add` die Meldung "LF will be
 # replaced by CRLF" gebracht hat.

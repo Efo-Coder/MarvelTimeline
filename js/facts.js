@@ -26,7 +26,7 @@
 
    Die Datei hat zwei Teile. CHAR_FACTS zwischen den Marken @wiki:anfang
    und @wiki:ende stammt aus den beiden Marvel-Wikis und wird von
-   tools/portrait-studio/services/biography/fetch-facts.py und tools/portrait-studio/services/biography/build-facts.py erzeugt: Spezies, Status
+   vision-studio/characters/biography/fetch-facts.py und vision-studio/characters/biography/build-facts.py erzeugt: Spezies, Status
    und Zugehörigkeit aus dem MCU-Wiki, Größe und Geburtsort aus der
    Marvel Database (Earth-199999). Von Hand geändert wird dort nichts,
    der nächste Lauf überschriebe es.
@@ -1729,6 +1729,11 @@ const CHAR_FACTS = {
 /* Ergänzungen und Korrekturen von Hand. Ein Feld hier gilt, auch wenn
    das Wiki oben etwas anderes sagt. */
 const CHAR_FACTS_EXTRA = {
+  'augustus-pugliese': { origin: 'USA', species: 'Mensch', teams: ['Goodman, Lieber, Kurtzberg & Holliway'] },
+  'eliot-franklin-thunderball': { origin: 'USA', species: 'Mensch mit asgardischem Vibranium', teams: ['Wrecking Crew', 'Intelligencia'] },
+  'henry-camp-bulldozer': { origin: 'USA', species: 'Mensch mit asgardischem Vibranium', teams: ['Wrecking Crew', 'Intelligencia'] },
+  'jasper-sitwell': { origin: 'USA', species: 'Mensch', teams: ['Hydra', 'S.H.I.E.L.D.'], status: 'Verstorben' },
+  'die-hand': { origin: 'Ferner Osten', species: 'Menschen', teams: ['Die Hand'] },
   /* ---------- Phase One ---------- */
   'steve-rogers': {
     species: 'Mensch, verstärkt durch das Supersoldaten-Serum',
@@ -3397,6 +3402,18 @@ const CHAR_FACTS_EXTRA = {
     species: 'Kree (Kybernetisch verstärkt)',
     teams: ['Starforce', 'Kree-Imperium', 'Ronans Truppe'],
     status: 'Verstorben',
+  },
+  'irani-rael': {
+    origin: 'Xandar',
+    species: 'Xandarianerin',
+    teams: ['Nova Corps'],
+    status: 'Am Leben',
+  },
+  'rhomann-dey': {
+    origin: 'Xandar',
+    species: 'Xandarianer',
+    teams: ['Nova Corps'],
+    status: 'Am Leben',
   },
   'namora': {
     origin: 'Talokan',

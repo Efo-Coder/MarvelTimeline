@@ -52,8 +52,10 @@
    der Streaming-Bereich der Infobox ausgeblendet. Nur die Sony-
    Spider-Man-Filme weichen ab (streaming: ["prime"]).
 
-   nebula = [Akzent A, Akzent B, kühle Basis] als RGB-Werte für die
-   Galaxie-Nebel der jeweiligen Phase. accent = Akzentfarbe fürs UI. */
+   fibers = [Farbe der Fasern, Farbe des Scheins] als Hexwerte. Das
+   Faserfeld hinter der ganzen Seite blendet auf sie über, sobald diese
+   Phase im Bild steht, siehe js/ghost-fibers.js. accent = Akzentfarbe
+   fürs UI. */
 
 const PHASES = [
   {
@@ -63,7 +65,7 @@ const PHASES = [
     saga: "The Infinity Saga",
     years: "2008 – 2012",
     accent: "#4d8cff",
-    nebula: [[72, 140, 255], [56, 84, 230], [140, 80, 230]],
+    fibers: ["#0e1c34", "#345ba2"],
     movies: [
       {
         title: "Captain America: The First Avenger",
@@ -206,7 +208,7 @@ const PHASES = [
           "Zurück in Asgard stoppt Thor Lokis Plan, Jotunheim komplett zu vernichten, und zerschlägt dafür den Bifröst. Loki lässt sich daraufhin ins Nichts fallen.",
           "Nach dem Abspann zeigt Fury dem Wissenschaftler Selvig den Tesserakt, heimlich beobachtet von Loki.",
         ],
-        characters: ["Thor", "Loki", "Dr. Jane Foster", "Odin", "Heimdall", "Nick Fury", "Sif", "Fandral", "Hogun", "Volstagg", "Laufey", "Destroyer", "Erik Selvig", "Phil Coulson", "Darcy Lewis", "Clint Barton / Hawkeye", "Frigga"],
+        characters: ["Thor", "Loki", "Dr. Jane Foster", "Odin Borson / Odin", "Heimdall", "Nick Fury", "Sif", "Fandral", "Hogun", "Volstagg", "Laufey", "Destroyer", "Erik Selvig", "Phil Coulson", "Darcy Lewis", "Clint Barton / Hawkeye", "Frigga", "Jasper Sitwell"],
         meets: [
           ["thor", "loki", "odin", "heimdall", "sif", "fandral", "hogun", "volstagg"],
           ["thor", "loki", "odin", "sif", "fandral", "hogun", "volstagg", "laufey"],
@@ -234,7 +236,7 @@ const PHASES = [
           "Tony fliegt eine Atomrakete durchs Portal und zerstört das Chitauri-Mutterschiff. Natasha schließt das Portal mit dem Zepter.",
           "Thor bringt Loki und den Tesserakt nach Asgard. Nach dem Abspann zeigt sich erstmals Thanos.",
         ],
-        characters: ["Tony Stark / Iron Man", "Steve Rogers / Captain America", "Thor", "Bruce Banner / Hulk", "Natasha Romanoff / Black Widow", "Clint Barton / Hawkeye", "Loki", "Nick Fury", "Thanos", "Pepper Potts", "Maria Hill", "Phil Coulson", "Erik Selvig", "Der Andere"],
+        characters: ["Tony Stark / Iron Man", "Steve Rogers / Captain America", "Thor", "Bruce Banner / Hulk", "Natasha Romanoff / Black Widow", "Clint Barton / Hawkeye", "Loki", "Nick Fury", "Thanos", "Pepper Potts", "Maria Hill", "Phil Coulson", "Erik Selvig", "Der Andere", "Jasper Sitwell"],
         meets: [
           ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "loki", "nick-fury", "maria-hill", "phil-coulson", "erik-selvig"],
           ["tony-stark", "pepper-potts", "phil-coulson"],
@@ -250,7 +252,7 @@ const PHASES = [
     saga: "The Infinity Saga",
     years: "2013 – 2015",
     accent: "#ff4d4d",
-    nebula: [[255, 0, 0], [255, 0, 0], [230, 0, 0]],
+    fibers: ["#340e0e", "#a23434"],
     movies: [
       {
         title: "Thor: The Dark World",
@@ -268,7 +270,7 @@ const PHASES = [
           "Im Finale in Greenwich besiegt Thor Malekith, während die Konvergenz die Kämpfer durch Portale quer über die Welten schleudert.",
           "Der Äther, die flüssige Form des Realitätssteins, wird dem Collector übergeben. Auf Asgards Thron sitzt derweil Loki, getarnt als Odin.",
         ],
-        characters: ["Thor", "Loki", "Dr. Jane Foster", "Malekith", "Algrim / Kurse", "Frigga", "Odin", "Taneleer Tivan / The Collector", "Sif", "Fandral", "Volstagg", "Erik Selvig", "Heimdall", "Hogun", "Darcy Lewis"],
+        characters: ["Thor", "Loki", "Dr. Jane Foster", "Malekith", "Algrim / Kurse", "Frigga", "Odin Borson / Odin", "Taneleer Tivan / The Collector", "Sif", "Fandral", "Volstagg", "Erik Selvig", "Heimdall", "Hogun", "Darcy Lewis"],
         meets: [
           ["thor", "loki", "odin", "frigga", "heimdall", "sif", "fandral", "volstagg", "hogun", "jane-foster"],
           ["thor", "loki", "jane-foster", "malekith", "erik-selvig", "darcy-lewis"],
@@ -315,12 +317,13 @@ const PHASES = [
           "Mit Sam Wilson alias Falcon und dem quicklebendigen Fury tauschen sie die Zielchips. Die Helicarrier schießen sich gegenseitig ab, und S.H.I.E.L.D. zerbricht vor den Augen der Welt.",
           "Bucky zieht Steve bewusstlos aus dem Potomac und verschwindet. Nach dem Abspann tauchen erstmals Wanda und Pietro Maximoff auf, die sich mitsamt dem Zepter in HYDRAs Gewahrsam befinden.",
         ],
-        characters: ["Steve Rogers / Captain America", "Natasha Romanoff / Black Widow", "Bucky Barnes / Winter Soldier", "Sam Wilson / Falcon", "Nick Fury", "Maria Hill", "Alexander Pierce", "Brock Rumlow / Crossbones", "Wanda Maximoff / Scarlet Witch", "Pietro Maximoff / Quicksilver", "Sharon Carter", "Arnim Zola", "Georges Batroc", "Peggy Carter"],
+        characters: ["Steve Rogers / Captain America", "Natasha Romanoff / Black Widow", "Bucky Barnes / Winter Soldier", "Sam Wilson / Falcon", "Nick Fury", "Maria Hill", "Alexander Pierce", "Brock Rumlow / Crossbones", "Wanda Maximoff / Scarlet Witch", "Pietro Maximoff / Quicksilver", "Sharon Carter", "Arnim Zola", "Georges Batroc", "Peggy Carter", "Jasper Sitwell"],
         meets: [
           ["steve-rogers", "natasha-romanoff", "bucky-barnes", "sam-wilson", "nick-fury", "maria-hill", "alexander-pierce", "crossbones", "sharon-carter"],
           ["wanda-maximoff", "pietro-maximoff"],
           ["georges-batroc", "steve-rogers", "natasha-romanoff"],
           ["arnim-zola", "steve-rogers", "natasha-romanoff"],
+          ["jasper-sitwell", "steve-rogers", "natasha-romanoff", "sam-wilson"],
           ["peggy-carter", "steve-rogers"],
         ],
       },
@@ -341,7 +344,7 @@ const PHASES = [
           "Quill fängt den Stein mit bloßer Hand. Nur weil die Guardians die Last gemeinsam tragen, überlebt er, und Ronan wird vernichtet.",
           "Der Stein bleibt beim Nova Corps. Quill erfährt, dass er nur zur Hälfte Mensch ist, und aus einem Steckling wächst Baby Groot.",
         ],
-        characters: ["Peter Quill / Star-Lord", "Gamora", "Drax", "Rocket Raccoon", "Groot", "Yondu", "Kraglin", "Ronan der Ankläger", "Nebula", "Thanos", "Taneleer Tivan / The Collector", "Howard the Duck", "Der Andere", "Eson der Sucher", "Korath der Verfolger", "Cosmo"],
+        characters: ["Peter Quill / Star-Lord", "Gamora", "Drax", "Rocket Raccoon", "Groot", "Yondu", "Kraglin", "Ronan der Ankläger", "Nebula", "Thanos", "Taneleer Tivan / The Collector", "Howard the Duck", "Der Andere", "Eson der Sucher", "Korath der Verfolger", "Cosmo", "Irani Rael / Nova Prime", "Rhomann Dey"],
         meets: [
           ["peter-quill", "gamora", "drax", "rocket", "groot", "yondu", "ronan", "nebula"],
           ["peter-quill", "gamora", "drax", "rocket", "groot", "the-collector"],
@@ -354,6 +357,10 @@ const PHASES = [
           ["korath-der-verfolger", "drax", "peter-quill", "gamora", "rocket", "groot"],
           ["howard-the-duck", "the-collector"],
           ["cosmo", "the-collector", "peter-quill", "gamora", "drax", "rocket", "groot"],
+          ["irani-rael", "rhomann-dey"],
+          ["rhomann-dey", "peter-quill", "gamora", "drax", "rocket", "groot"],
+          ["irani-rael", "peter-quill", "gamora", "drax", "rocket", "groot"],
+          ["irani-rael", "ronan"],
         ],
       },
       {
@@ -451,7 +458,7 @@ const PHASES = [
     saga: "The Infinity Saga",
     years: "2016 – 2019",
     accent: "#ffd93c",
-    nebula: [[156, 166, 7], [225, 255, 0], [210, 206, 70]],
+    fibers: ["#342d0e", "#a28c34"],
     movies: [
       {
         title: "Captain America: Civil War",
@@ -598,7 +605,7 @@ const PHASES = [
           "Um Hela zu vernichten, lässt Thor Ragnarök bewusst geschehen. Loki entfesselt Surtur, Asgard vergeht, und das Volk entkommt auf einem Raumschiff.",
           "Loki nimmt heimlich den Tesserakt mit. Nach dem Abspann fängt ein gewaltiges Schiff die Flüchtlinge ab, das Thanos gehört.",
         ],
-        characters: ["Thor", "Bruce Banner / Hulk", "Loki", "Hela", "Brunnhilde / Valkyrie", "Grandmaster", "Topaz", "Heimdall", "Odin", "Skurge", "Surtur", "Hogun", "Fandral", "Volstagg", "Stephen Strange / Doctor Strange", "Korg", "Miek"],
+        characters: ["Thor", "Bruce Banner / Hulk", "Loki", "Hela", "Brunnhilde / Valkyrie", "Grandmaster", "Topaz", "Heimdall", "Odin Borson / Odin", "Skurge", "Surtur", "Hogun", "Fandral", "Volstagg", "Stephen Strange / Doctor Strange", "Korg", "Miek"],
         meets: [
           ["thor", "loki", "stephen-strange", "odin"],
           ["thor", "loki", "hela", "heimdall", "valkyrie", "skurge", "bruce-banner", "korg"],
@@ -714,7 +721,7 @@ const PHASES = [
     saga: "The Multiverse Saga",
     years: "2021 – 2022",
     accent: "#a855f7",
-    nebula: [[170, 82, 255], [216, 0, 219], [76, 0, 255]],
+    fibers: ["#220e34", "#6c34a2"],
     movies: [
       {
         title: "Loki – Staffel 1",
@@ -1081,7 +1088,7 @@ const PHASES = [
           "Vor Eternity wünscht sich der sterbende Gorr nicht die Vernichtung der Götter, sondern seine Tochter zurück. Thor nimmt das Mädchen an, „Love and Thunder“.",
           "Jane stirbt in Thors Armen und erreicht Walhalla. In der Abspannszene schickt der gedemütigte Zeus seinen Sohn Hercules los.",
         ],
-        characters: ["Thor", "Dr. Jane Foster / Mighty Thor", "Gorr der Götterschlächter", "Brunnhilde / Valkyrie", "Korg", "Zeus", "Peter Quill / Star-Lord", "Drax", "Rocket Raccoon", "Groot", "Mantis", "Nebula", "Sif", "Hercules", "Love", "Miek", "Tanngrisnir und Tanngnjostr"],
+        characters: ["Thor", "Dr. Jane Foster / Mighty Thor", "Gorr der Götterschlächter", "Brunnhilde / Valkyrie", "Korg", "Zeus", "Peter Quill / Star-Lord", "Drax", "Rocket Raccoon", "Groot", "Mantis", "Nebula", "Sif", "Hercules", "Love", "Miek", "Tanngrisnir und Tanngnjostr / The Goats"],
         meets: [
           ["thor", "peter-quill", "drax", "rocket", "groot", "mantis", "nebula", "korg", "miek"],
           ["thor", "korg", "sif", "valkyrie", "jane-foster"],
@@ -1107,9 +1114,11 @@ const PHASES = [
           "Das Finale sprengt die vierte Wand komplett. Jen klettert aus dem Disney+-Menü ins Marvel-Studio und verhandelt mit der Drehbuch-KI K.E.V.I.N. ihr eigenes Serienende neu.",
           "Im neuen Ausgang wird Drahtzieher Todd verhaftet, Bruce präsentiert seinen Sohn Skaar, und Matt kommt zum Familienessen.",
         ],
-        characters: ["Jennifer Walters / She-Hulk", "Bruce Banner / Hulk", "Nikki Ramos", "Titania", "Matt Murdock / Daredevil", "Emil Blonsky / Abomination", "Wong", "Piledriver", "Alejandro Montoya / El Águila", "Alexander Gentry / Porcupine", "Dirk Garthwaite / Wrecker", "Muzzafar Lambert / Saracen", "William Taurens / Man-Bull", "Craig Hollis / Mr. Immortal", "Donny Blaze", "Eugene Patilio / Leapfrog", "Luke Jacobson", "Mallory Book", "Skaar", "Todd Phelps / HulkKing"],
+        characters: ["Jennifer Walters / She-Hulk", "Bruce Banner / Hulk", "Nikki Ramos", "Titania", "Matt Murdock / Daredevil", "Emil Blonsky / Abomination", "Wong", "Brian Phillip Calusky / Piledriver", "Alejandro Montoya / El Águila", "Alexander Gentry / Porcupine", "Dirk Garthwaite / Wrecker", "Muzzafar Lambert / Saracen", "William Taurens / Man-Bull", "Craig Hollis / Mr. Immortal", "Donny Blaze", "Eugene Patilio / Leapfrog", "Luke Jacobson", "Mallory Book", "Skaar", "Todd Phelps / HulkKing", "Augustus Pugliese", "Eliot Franklin / Thunderball", "Henry Camp / Bulldozer"],
         meets: [
           ["piledriver", "jennifer-walters-she-hulk", "titania"],
+          ["jennifer-walters-she-hulk", "dirk-garthwaite-wrecker", "piledriver", "eliot-franklin-thunderball", "henry-camp-bulldozer"],
+          ["jennifer-walters-she-hulk", "nikki-ramos", "mallory-book", "augustus-pugliese"],
           ["jennifer-walters-she-hulk", "emil-blonsky-abomination", "alejandro-montoya-el-aguila", "alexander-gentry-porcupine", "dirk-garthwaite-wrecker", "muzzafar-lambert-saracen", "william-taurens-man-bull"],
           ["jennifer-walters-she-hulk", "nikki-ramos", "mallory-book", "craig-hollis-mr-immortal"],
           ["todd-phelps", "jennifer-walters-she-hulk", "mallory-book", "nikki-ramos"],
@@ -1156,7 +1165,7 @@ const PHASES = [
     saga: "The Multiverse Saga",
     years: "2023 – 2025",
     accent: "#34d6a0",
-    nebula: [[52, 214, 160], [0, 255, 30], [46, 220, 199]],
+    fibers: ["#0e3428", "#34a27d"],
     movies: [
       {
         title: "Loki – Staffel 2",
@@ -1427,7 +1436,7 @@ const PHASES = [
     saga: "The Multiverse Saga",
     years: "2025 – 2027",
     accent: "#ffa63c",
-    nebula: [[122, 63, 0], [235, 139, 5], [205, 156, 71]],
+    fibers: ["#34230e", "#a27034"],
     movies: [
       {
         title: "The Fantastic Four: First Steps",
@@ -1539,7 +1548,7 @@ const PHASES = [
           "Peter legt seinen Inhibitor ab, nimmt beide Seiten seiner selbst an und kämpft sich durch die versklavte Hand zu Jean durch. In seiner Erinnerung an May findet sie endlich Mitgefühl, dann fängt Peter die Scharfschützenkugel ab, die Castle auf sie abfeuert, und überlebt nur knapp.",
           "Am Ende verlässt Jean die Stadt, Metzger ist untergetaucht, und Yelena ermittelt gegen Damage Control. Peter stellt sich Ned einfach als Peter vor, und beim alten Handschlag erkennt sein Freund ihn wieder. Zuletzt ortet die Spidey-Tracker-App Spider-Man irgendwo im Weltall.",
         ],
-        characters: ["Peter Parker / Spider-Man", "Michelle Jones-Watson / MJ", "Jean Grey", "Ned Leeds", "Frank Castle / Punisher", "Bruce Banner / Hulk", "Yelena Belova", "Mac Gargan / Scorpion", "William Metzger / Bill", "Jean DeWolff", "E.V.", "May Parker", "Sara Grey", "Paul Rabin", "Lonnie Lincoln / Tombstone", "Fred Myers / Boomerang", "Anton Miguel Rodriguez / Tarantula", "Snow", "Ramrod"],
+        characters: ["Peter Parker / Spider-Man", "Michelle Jones-Watson / MJ", "Jean Grey", "Ned Leeds", "Frank Castle / Punisher", "Bruce Banner / Hulk", "Yelena Belova", "Mac Gargan / Scorpion", "William Metzger / Bill", "Jean DeWolff", "E.V.", "May Parker", "Sara Grey", "Paul Rabin", "Lonnie Lincoln / Tombstone", "Fred Myers / Boomerang", "Anton Miguel Rodriguez / Tarantula", "Snow", "Ramrod", "Flash Thompson", "Die Hand"],
         meets: [
           ["peter-parker", "jean-dewolff"],
           ["peter-parker", "snow"],
@@ -1636,7 +1645,7 @@ const PHASES = [
     saga: "The Mutant Saga",
     years: "ab 2028",
     accent: "#ff4dc4",
-    nebula: [[255, 77, 196], [255, 0, 96], [130, 18, 138]],
+    fibers: ["#340e28", "#a2347e"],
     movies: [
       {
         title: "X-Men",
@@ -1704,6 +1713,10 @@ const PHASES = [
    (Rocket: Stimme und Motion Capture). Noch nicht besetzte Figuren fehlen
    bewusst, dann bleibt die Zeile in der Übersicht einfach weg. */
 const ACTORS = {
+  "augustus-pugliese": "Josh Segarra",
+  "eliot-franklin-thunderball": "Justin Eaton",
+  "henry-camp-bulldozer": "Tennison Barry III",
+  "jasper-sitwell": "Maximiliano Hernández",
   "steve-rogers": "Chris Evans",
   "peggy-carter": "Hayley Atwell",
   "bucky-barnes": "Sebastian Stan",
@@ -1992,6 +2005,8 @@ const ACTORS = {
   "ulysses-klaue": "Andy Serkis",
   "eros-starfox": "Harry Styles",
   "cosmo": "Maria Bakalova",
+  "irani-rael": "Glenn Close",
+  "rhomann-dey": "John C. Reilly",
   "lylla": "Linda Cardellini",
   "teefs": "Asim Chaudhry",
   "floor": "Mikaela Hoover",
@@ -2134,6 +2149,11 @@ const ACTORS = {
    sich keine Biografie ausdenken und umgekehrt. Fehlt ein Eintrag, bleibt
    der jeweilige Teil der Karte einfach weg. */
 const BIOS = {
+  "augustus-pugliese": "Der Anwalt der Abteilung für Superhelden-Recht heißt bei allen nur Pug, empfängt Jennifer Walters mit einem Willkommenskorb und bleibt ihr Freund, auch als die Kanzlei sie längst nur noch als She-Hulk führt.",
+  "eliot-franklin-thunderball": "Der Mann an der Kette der Wrecking Crew führt eine Kugel aus asgardischem Vibranium und scheitert daran, Jennifer Walters mit einer Nadel Blut abzunehmen.",
+  "henry-camp-bulldozer": "Der Rammbock der Wrecking Crew geht mit einem asgardischen Helm durch jede Wand und bekommt She-Hulk als Einziger der Bande überhaupt zu fassen.",
+  "jasper-sitwell": "Der Agent mit der Freigabe der Stufe sieben dient S.H.I.E.L.D. jahrelang untadelig und gehört in Wahrheit seit der Ausbildung zu Hydra, was ihn auf einem Hausdach in Washington das Leben kostet.",
+  "die-hand": "Der Bund der Auftragsmörder aus dem Fernen Osten hat New York schon einmal beinahe genommen und schickt in Brand New Day wieder seine rot vermummten Kämpfer durch die Stadt.",
   "steve-rogers": "Der schmächtige Junge aus Brooklyn wird 1943 durch das Supersoldaten-Serum zu Captain America und führt die Avengers als einer der mächtigsten Helden der Erde an.",
   "peggy-carter": "Die britische Offizierin kämpft im Zweiten Weltkrieg an Captain Americas Seite, gründet danach S.H.I.E.L.D. mit und bleibt für Steve Rogers die Liebe, zu der er am Ende zurückkehrt.",
   "bucky-barnes": "Steves ältester Freund gilt seit 1945 als tot und wird von HYDRA zum programmierten Killer Winter Soldier gemacht, bis seine Freunde ihn befreien und er wieder an der Seite der Avengers kämpft.",
@@ -2436,6 +2456,8 @@ const BIOS = {
   "tiamut": "Der Celestial reift seit Jahrtausenden im Innern der Erde heran, bis Sersi ihn im Augenblick des Erwachens in Stein verwandelt und seine Hand für immer aus dem Indischen Ozean ragt.",
   "nezarr": "Einer der Celestials in Arishems Diensten, der neue Welten hervorbringt und in den Rückblenden auf die Erschaffung der Eternals erscheint.",
   "eros-starfox": "Thanos' Bruder wuchs auf Titan auf und nahm alle Freuden des Lebens mit, tritt so charmant auf, wie sein Bruder finster war, und bietet den Eternals seine Hilfe an.",
+  "irani-rael": "Als Nova Prime führt sie das Nova Corps und damit die Verteidigung von Xandar. Sie traut den Guardians zuerst kein Wort zu und übergibt ihnen am Ende trotzdem den Machtstein zur Verwahrung.",
+  "rhomann-dey": "Der Denarian des Nova Corps nimmt Peter Quill auf Xandar fest und wird zu dem, der für ihn bürgt. In der Schlacht um Xandar fliegt er mit der Sperrlinie aus Nova-Jägern gegen Ronans Dark Aster.",
   "cosmo": "Die von der Sowjetunion ins All geschossene Hündin verfügt über Telekinese, verwaltet Knowhere mit und wünscht sich nichts sehnlicher, als ein braves Mädchen genannt zu werden.",
   "lylla": "Die Otterdame mit den mechanischen Vorderbeinen ist Rockets erste Freundin in den Käfigen des High Evolutionary und diejenige, die ihm seinen Namen gibt.",
   "teefs": "Das Walross mit Rädern statt Flossen sitzt mit Rocket in Batch 89 und träumt wie die anderen von einem Himmel ohne Gitter.",
@@ -2568,11 +2590,7 @@ const BIOS = {
   "toussaint": "Der Sohn von T'Challa und Nakia wuchs unter dem Namen Toussaint fern von Wakanda in Haiti auf und greift als Erwachsener nach dem Thron seines Vaters.",
 };
 
-/* Nebelfarben, solange keine Phase aktiv ist (Hero/Seitenanfang):
-   die Akzentfarben aller sieben Phasen – die Galaxie zeigt dort also das
-   komplette Spektrum der Timeline. */
-const DEFAULT_NEBULA = PHASES.map(p => {
-  const n = parseInt(p.accent.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-});
+/* Solange keine Phase gilt (Kopfband, Seitenanfang), steht das Faserfeld
+   auf den Farben aus js/ghost-fibers-config.js. Eine Voreinstellung
+   braucht es hier deshalb nur für den Akzent. */
 const DEFAULT_ACCENT = "#4d8cff";

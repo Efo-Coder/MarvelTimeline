@@ -3444,6 +3444,22 @@ const CHAR_POWERS = {
       'Er hat dieselbe Schule wie der Rest der Einheit durchlaufen und hält sich an ihre Ordnung. Von Torfa bis zur Erde folgt er Yon-Rogg ohne Nachfrage.'],
   ],
 
+  'irani-rael': [
+    ['Führung',
+      'Als Nova Prime steht sie an der Spitze des Nova Corps und trifft die Entscheidungen, an denen Xandar hängt. In der Schlacht gibt sie die Sperrlinie aus, die Ronan das Landen verwehrt.'],
+    ['Taktik',
+      'Sie hört auf die Leute, die näher an der Sache sind, statt auf den Rang. Weil sie Rhomann Dey glaubt, lässt sie die Guardians gewähren und rettet damit den Planeten.'],
+    ['Diplomatie',
+      'Der tausend Jahre alte Krieg zwischen Kree und Xandarianern endet unter ihrer Führung am Verhandlungstisch. Dem Kree-Botschafter tritt sie danach ohne Scheu entgegen.'],
+  ],
+  'rhomann-dey': [
+    ['Gefechtsmedizin',
+      'Das Nova Corps hat ihn zum Sanitäter ausgebildet, und er versorgt Wunden auch dann, wenn der Verletzte eigentlich zur Gegenseite gehört.'],
+    ['Pilot',
+      'Er fliegt die Streifenschiffe des Corps und setzt sie auf offener Straße ab, als er Quill, Gamora, Rocket und Groot einsammelt.'],
+    ['Menschenkenntnis',
+      'Er schätzt richtig ein, wem zu trauen ist. Seine Bürgschaft für einen Dieb, den er selbst zweimal festgenommen hat, entscheidet die Schlacht um Xandar.'],
+  ],
   'korath-der-verfolger': [
     ['Kybernetische Verstärkung',
       'Sein Körper ist mit Kree-Technik durchsetzt, die Kraft, Ausdauer und Sinne anhebt. Was von außen wie Rüstung aussieht, gehört zu ihm.'],

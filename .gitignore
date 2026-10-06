@@ -8,32 +8,23 @@ __pycache__/
 Thumbs.db
 desktop.ini
 
-# Arbeitsordner: Rohmaterial und Zwischenstände, aus denen die fertigen
-# WebP-Dateien unter assets/characters/ entstehen. Das Ergebnis liegt im
-# Repo, die Vorlagen mit mehreren hundert Megabyte gehören nicht hinein.
-assets/ersetzen/
+# Bilder, Plakate, Logos, Embleme, Video und Schriften. Der Ordner bleibt
+# auf diesem Rechner und kommt nicht mehr ins Repo, samt seinen
+# Arbeitsordnern wie assets/ersetzen und den Sicherungen des
+# Vision-Studios darin. Was früher schon eingecheckt war, steht nur noch
+# in der Geschichte.
+assets/
+
+# Arbeitsordner für Zwischenstände.
 vorschau/
 
-# Kopien der überschriebenen Emblem-Vorlagen und Masken, die das
-# Bild-Studio vor jedem Austausch anlegt. Wie tools/portrait-studio/.sicherung
-# eine reine Rückfallebene für diesen Rechner. Die Vorlagen selbst unter
-# assets/emblems/source gehören ins Repo, aus ihnen entstehen die Masken.
-assets/emblems/.sicherung/
-
-# Real-ESRGAN für das Bild-Studio: rund 50 MB Binärdateien und Modelle,
+# Real-ESRGAN für das Vision-Studio: rund 50 MB Binärdateien und Modelle,
 # die nicht in die Versionsverwaltung gehören. Der Server sucht die
-# Engine an dieser Stelle, siehe tools/portrait-studio/server.js.
-tools/portrait-studio/vendor/
+# Engine an dieser Stelle, siehe vision-studio/server.js.
+vision-studio/vendor/
 
 # Gesichtsmodelle: Fremdcode und Modellgewichte, zusammen rund 800 MB.
 # Beides holt services/facial-recognition/install-models.py wieder her,
 # die eigenen Skripte daneben bleiben im Repo.
-tools/portrait-studio/services/facial-recognition/vendor/
-tools/portrait-studio/services/facial-recognition/models/
-
-# Prüfwerkzeug für den Galaxie-Hintergrund: die Bilder jedes Laufs und
-# der Browser-Treiber, den es sich mit `npm i puppeteer-core` selbst holt.
-tools/galaxy-diff/out/
-tools/galaxy-diff/node_modules/
-tools/galaxy-diff/package.json
-tools/galaxy-diff/package-lock.json
+vision-studio/characters/facial-recognition/vendor/
+vision-studio/characters/facial-recognition/models/
