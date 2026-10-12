@@ -1691,6 +1691,11 @@
     const scene = el('div', 'char-stage-scene');
     scene.setAttribute('aria-hidden', 'true');
     scene.append(el('div', 'char-stage-photo'), el('div', 'char-stage-tone'));
+    /* Die eine Ausnahme vom Farbton: Wer in STAGE_BLACK steht
+       (js/chars.js), bekommt dieselbe Wand in Schwarz und kein Wappen.
+       Die Klasse hängt an der Bühne und nicht an der Szene, weil das
+       Wappen in der Figurenspalte liegt und sie sonst nicht erreichte. */
+    if (STAGE_BLACK.has(item.char.slug)) figure.classList.add('black');
     scene.insertAdjacentHTML('beforeend', STAGE_SCENE);
     figure.append(scene);
 

@@ -43,10 +43,11 @@ const FULLSIZE_NOTES = {
   'tony-stark-mark-xlv': 'Den fünfundvierzigsten Anzug trug Stark vor allem in der Schlacht von Sokovia gegen Ultron.',
   'tony-stark-mark-xlviii-hulkbuster-2-0': 'Der achtundvierzigste Anzug war als zweiter Hulkbuster gedacht, um Hulk notfalls zu bändigen, in der Schlacht von Wakanda steckte darin aber Bruce Banner.',
   'tony-stark-mark-l': 'Der fünfzigste Anzug ist der erste aus Nanotechnik, die aus dem Brustelement über den Körper wächst, und kämpfte auf Titan gegen Thanos.',
-  'tony-stark-mark-lxxxv': 'Der fünfundachtzigste und letzte Anzug begleitete Stark durch den Zeitraub und die Schlacht um die Erde, in der er die Steine ein letztes Mal in die Hand nahm.',
+  'tony-stark-mark-lxxxv-1': 'Der fünfundachtzigste und letzte Anzug begleitete Stark durch den Zeitraub und die Schlacht um die Erde, in der er die Steine ein letztes Mal in die Hand nahm.',
   'tony-stark-quantum-suit': 'Für den Zeitraub trägt auch Stark den weißen Quantenanzug nach Scott Langs Bauplan und geht darin zurück ins Jahr 1970.',
   'tony-stark-civil': 'Ohne Rüstung ist Stark der Kopf von Stark Industries, der seine Identität als Iron Man vor laufenden Kameras selbst preisgegeben hat.',
   'tony-stark-mark-xlvii': 'Der siebenundvierzigste Anzug entstand als Ersatz, nachdem Captain America den Mark XLVI in Leipzig beschädigt hatte.',
+  'tony-stark-mark-lxxxv-2': 'Mit der schon gezeichneten Rüstung nimmt Stark Thanos die Steine ab, setzt sie in seinen eigenen Handschuh und schnipst.',
 
   /* ---------- Marc Spector / Steven Grant ---------- */
   'marc-spector-steven-grant-moon-knight': 'Der Zeremonienpanzer ist die Rüstung, die Khonshu seinen Avataren verleiht und die sich auf Ruf anlegt und wieder auflöst.',
@@ -112,10 +113,11 @@ const FULLSIZE_NOTES = {
   'bucky-barnes-captain-america-the-winter-soldier-2': 'In der Rückblende von Civil War fährt der Winter Soldier 1991 mit Maulkorbmaske und Schutzbrille den Wagen der Starks von der Straße.',
   'bucky-barnes-ausgehuniform': 'Als Sergeant des 107. Regiments trägt Barnes die braune Ausgehuniform der Army, in der ihn Steve Rogers vor dem Abmarsch nach Europa zuletzt sieht.',
   'bucky-barnes-thunderbolts': 'Für die Einsätze der Truppe legt Barnes den Anzug des Abgeordneten ab und trägt Schwarz, wobei der Metallarm frei bleibt.',
+  'bucky-barnes-avengers-endgame': 'Nach fünf Jahren als Staub kehrt Barnes zur Schlacht um die Erde zurück und verabschiedet sich danach von Steve Rogers, bevor der die Steine an ihre Orte zurückbringt.',
+  'bucky-barnes-lederjacke': 'Als Abgeordneter ist Barnes Valentina de Fontaine auf der Spur und trägt dabei statt des Anzugs aus dem Kongress Lederjacke und Stiefel.',
+  'bucky-barnes-new-avengers': 'Valentina de Fontaine stellt die Truppe am Ende als New Avengers vor, und Barnes tritt mit ihr im schwarzen Einsatzanzug mit dem neuen Abzeichen auf.',
 
   /* ---------- Taskmaster ---------- */
-  'taskmaster-black-widow-2': 'Der Taskmaster-Anzug wurde für Antonia Dreykov gebaut, die über ihr Visier die Bewegungen jedes Gegners abliest und sofort nachahmt.',
-  'taskmaster-black-widow-1': 'Unter der Maske steckt Antonia Dreykov, die ihr Vater nach einer Explosion mit einem Implantat im Kopf zur willenlosen Waffe machte.',
   'taskmaster-thunderbolts': 'Von Dreykovs Steuerung befreit arbeitet Antonia als Söldnerin für Valentina Allegra de Fontaine und läuft mit ihr in die Falle im Bunker.',
 
   /* ---------- Natasha Romanoff ---------- */
@@ -207,8 +209,11 @@ const FULLSIZE_NOTES = {
   /* ---------- Carol Danvers ---------- */
   'carol-danvers': 'Der rot-blaue Anzug entsteht, als Danvers die Farben der Kree-Uniform selbst wählt und sich zu ihrer Herkunft auf der Erde bekennt.',
   'carol-danvers-the-marvels': 'In The Marvels trägt Danvers ihren überarbeiteten Anzug mit Schärpe und ist durch den Sprungfehler mit Kamala Khan und Monica Rambeau verbunden.',
-  'carol-danvers-starforce': 'Die Starforce-Uniform ist die grün-schwarze Ausrüstung der Kree-Elitetruppe, in der Danvers als Vers gegen die Skrulls kämpfte.',
+  'carol-danvers-starforce-1': 'Die Starforce-Uniform ist die grün-schwarze Ausrüstung der Kree-Elitetruppe, in der Danvers als Vers gegen die Skrulls kämpfte.',
   'carol-danvers-aladna': 'Auf Aladna gilt Danvers als Prinzgemahl und trägt zur Hochzeitszeremonie das festliche Gewand des Planeten, auf dem gesungen statt gesprochen wird.',
+  'carol-danvers-starforce-2': 'Ohne Helm zeigt die Uniform der Starforce das Gesicht der Kriegerin Vers, die noch nicht weiß, dass sie einmal die Pilotin Carol Danvers war.',
+  'carol-danvers-ms-marvel': 'In der Abspannszene der Serie tauscht der Armreif Kamala Khan gegen Danvers aus, die sich plötzlich in deren Zimmer in Jersey City wiederfindet.',
+  'carol-danvers-stehend': 'In The Marvels ist Danvers mit Monica Rambeau und Kamala Khan verbunden, und jedes Mal, wenn eine von ihnen ihre Kräfte einsetzt, tauschen die drei die Plätze.',
 
   /* ---------- Shuri ---------- */
   'shuri': 'Als Prinzessin von Wakanda führt Shuri die Wakandan Design Group und baut die Technik, die ihr Bruder als Black Panther benutzt.',
@@ -604,7 +609,6 @@ const FULLSIZE_NOTES = {
 
   /* ---------- Mac Gargan ---------- */
   'scorpion-pose-1': 'Mac Gargan gehörte zu Adrian Toomes Kundschaft und wurde bei der Fährenaktion von Spider-Man festgenommen.',
-  'scorpion-zivil': 'Die Tätowierung eines Skorpions im Nacken ist das Zeichen, unter dem Gargan in den Comics zum gleichnamigen Gegner wird.',
   'scorpion-lederjacke': 'In Lederjacke und Kapuzenpulli tritt Gargan als Käufer auf, der bei Adrian Toomes Waffen aus fremder Technik bestellt.',
 
   /* ---------- Ned Leeds ---------- */
@@ -701,7 +705,6 @@ const FULLSIZE_NOTES = {
   'stephen-strange-supreme-strange': 'Als Sorcerer Supreme trägt Strange das Auge von Agamotto und den Umhang der Levitation, der sich selbst entscheidet, wem er folgt.',
 
   /* ---------- Vanessa Fisk ---------- */
-  'vanessa-fisk': 'Vanessa Fisk führte das Geschäft ihres Mannes weiter, während er im Gefängnis saß, und trat dabei härter auf als er.',
   'vanessa-fisk-rotes-kleid': 'An der Seite des Bürgermeisters ist Vanessa die Frau, die Wilson Fisk vor der Stadt menschlich wirken lässt.',
 
   /* ---------- Wong ---------- */

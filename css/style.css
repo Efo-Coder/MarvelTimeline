@@ -1674,6 +1674,36 @@ html.js .phase-pin { --reveal: 0; }
 /* Charaktere ohne Porträt (Platzhalter wie „Noch unbekannt“) */
 .modal-card .char-chip.no-avatar,
 .modal-card .tip-chars li.char-plain { padding-left: 0.9rem; }
+
+/* Im Modal steht die Besetzung nach Rollengröße in Gruppen: Hauptrollen,
+   Nebenrollen, Cameos (castGroups() in js/main.js). Jede Gruppe beginnt
+   mit einer kleinen Zeile, die sich der Überschrift „Erscheinungen“
+   unterordnet: Fließschrift statt Display, gedämpft statt Akzent. Die
+   Haarlinie dahinter läuft bis zum Kartenrand und trennt die Gruppen. */
+.tip-tier {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 1rem 0 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Die erste Gruppe schließt dicht an die Überschrift an. */
+.tip-cast > .tip-tier:first-child { margin-top: 0.15rem; }
+
+.tip-tier::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--accent) 22%, rgba(255, 255, 255, 0.08));
+}
+
+/* Wie viele Figuren die Gruppe hat, in der Farbe der Laufzeit im Kopf. */
+.tip-tier-count { color: color-mix(in srgb, var(--accent) 75%, #fff); }
 .modal-card .tip-stream img { width: 44px; height: 44px; border-radius: 11px; }
 
 /* Blättern und Schließen als eine Reihe oben rechts. Bezugspunkt ist
@@ -4167,6 +4197,46 @@ a.char-film { text-decoration: none; }
   mix-blend-mode: color;
   opacity: 0.72;
 }
+
+/* Die Ausnahme vom Farbton: Figuren aus STAGE_BLACK (js/chars.js) stehen
+   vor derselben Wand, nur in Schwarz. Die Farbebene fällt weg, das Foto
+   bleibt und wird abgedunkelt, damit das Muster der Wand und die Fugen
+   des Bodens weiter zu sehen sind.
+
+   Erst der Kontrast, dann die Helligkeit: Die Facetten der Wand liegen
+   im Foto nur wenige Stufen auseinander, und auf ein Siebtel gedrückt
+   gingen sie in einer Fläche unter. Der doppelte Kontrast zieht sie
+   vorher auseinander, und er schiebt die dunkle Ecke rechts ganz ins
+   Schwarz. Leiste und Schrift behalten die Farbe der Figur.
+
+   Mit 0.14 liegt die hellste Stelle der Wand bei rund 34 von 255, und
+   die Facetten sind noch gut zehn Stufen auseinander. Der Wert stand
+   zuerst auf 0.2, damit war die Wand eher grau als schwarz.
+
+   Das Wappen fällt mit weg: Auf Schwarz ist es keine Aufhellung im Ton
+   der Wand mehr, sondern eine graue Scheibe, und was davon hinter der
+   Figur hervorschaut, sieht aus wie ein Rest. */
+.char-stage.black .char-stage-scene { background: #000; }
+
+.char-stage.black .char-stage-photo {
+  filter: grayscale(1) contrast(2) brightness(0.05);
+}
+
+.char-stage.black .char-stage-tone,
+.char-stage.black .char-stage-emblem { display: none; }
+
+/* Die Fassungswahl steht auf der hellen Seite der Wand und rechnet mit
+   deren Helligkeit: Im hellen Modus ist ihre Zahl dunkel, und ihre leeren
+   Tafeln sind ein dunkler Hauch. Die schwarze Wand hat keine helle Seite,
+   die Zahl verschwände darauf. Dort gelten für die Wahl deshalb die
+   Marken des dunklen Modus, gleich welcher gerade an ist. */
+.char-stage.black .char-stage-rail {
+  --m-ink: #e9edf8;
+  --m-meta: #868ea6;
+  --m-line: #262c3a;
+}
+
+.char-stage.black .char-look-blank { background: rgba(255, 255, 255, 0.045); }
 
 .stage-art {
   width: 100%;

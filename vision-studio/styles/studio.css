@@ -4587,21 +4587,119 @@ button.mit-symbol {
   vector-effect: non-scaling-stroke;
 }
 
-/* Die Auswahl der Figur sitzt im Kopf der Tafel, zwischen der Marke und
-   den Knöpfen. Sie trägt die Form der übrigen Felder des Studios. */
-.schatten-wahl {
-  margin-left: 0.6rem;
-  max-width: 15rem;
-  padding: 0.28rem 0.5rem;
-  background: var(--flaeche);
-  border: 1px solid var(--linie);
-  color: var(--text);
-  font: 500 0.78rem/1.2 var(--font-body);
+/* Die Bank des Schattens steht neben der Figurenliste. Zwei Tafeln
+   nebeneinander wie bei Plakatwand und Fasern ließen der Bühne dort nur
+   einen schmalen Streifen, und unter ihr bliebe die halbe Höhe leer. Die
+   Regler stehen deshalb unter der Vorschau und laufen in die Breite. */
+.schatten-bank {
+  display: flex;
+  flex-direction: column;
 }
 
-.schatten-wahl:focus-visible {
-  outline: 1px solid var(--accent);
-  outline-offset: 1px;
+.schatten-bank > .galaxie-tafel { flex: 1 1 0; }
+
+/* Die Regler nehmen die Höhe, die sie brauchen, aber nie mehr als die
+   Hälfte. Reicht das einmal nicht, rollt ihre Spalte wie sonst auch. */
+.schatten-bank > .galaxie-regler-tafel {
+  flex: 0 1 auto;
+  max-height: 50%;
+  container: schatten-regler / inline-size;
+}
+
+/* Die Bühne füllt die Fläche über den Reglern, so weit ihr
+   Seitenverhältnis es erlaubt. Auf einem breiten, flachen Schirm stößt
+   sie oben und unten an und steht in der Mitte, auf einem schmalen füllt
+   sie die Breite. Die Fläche ist dafür ein Container, an dessen Maßen
+   die Bühne mit cqw und cqh rechnet. Das Seitenverhältnis setzt
+   ui-components/frame-crop.js, und die Höhe folgt daraus über
+   aspect-ratio. Gestreckt wird die Bühne deshalb nicht. */
+.schatten-bank .galaxie-vorschau {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.schatten-flaeche {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  container: schatten-flaeche / size;
+}
+
+.schatten-flaeche > .schatten-buehne {
+  flex: none;
+  width: min(100cqw, 100cqh * var(--ausschnitt-seiten, 16 / 9));
+}
+
+/* Die Zeile darunter steht mittig wie die Bühne über ihr. */
+.schatten-bank .galaxie-fuss { text-align: center; }
+
+/* Vorn stehen die Gruppen nebeneinander, jede so breit, wie ihre längste
+   Aufschrift es verlangt. Die Erklärung der Griffe steht darunter und
+   rückt erst rechts daneben, wo die Tafel breit genug ist, dass ihre
+   Zeilen nicht zu kurz werden. Die Regler sind das, wonach man greift,
+   deshalb stehen sie vorn. */
+.schatten-bank .galaxie-spalte {
+  display: grid;
+  grid-template-areas: "regler" "hilfe";
+  gap: 0.5rem 2.4rem;
+  align-items: start;
+}
+
+/* Die Gruppen bleiben in einer Reihe. Wird es eng, geben zuerst die
+   Schieber nach, alle gleich viel, bis hinunter auf 6rem. Umgebrochen
+   wird nicht: Eine Gruppe allein in einer zweiten Zeile nähme der Bühne
+   eine ganze Zeile Höhe, ein etwas kürzerer Schieber dagegen kaum
+   etwas. */
+#schatten-regler {
+  grid-area: regler;
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: start;
+  column-gap: 2.2rem;
+}
+
+/* Unter den Gruppen liefe die Erklärung sonst über die ganze Breite, mit
+   Zeilen von zweihundert Zeichen. In zwei Spalten liest sie sich besser
+   und wird dabei eher flacher als höher. Ist ihr Platz schmaler als zwei
+   Spalten, bleibt es bei einer. */
+.schatten-hilfe {
+  grid-area: hilfe;
+  columns: 2 28rem;
+  column-gap: 2.4rem;
+}
+
+.schatten-hilfe .galaxie-gruppe-marke { column-span: all; }
+
+.schatten-bank .galaxie-gruppe { margin-bottom: 0; }
+.schatten-hilfe .galaxie-hinweis:last-child { margin-bottom: 0; }
+
+@container schatten-regler (min-width: 88rem) {
+  .schatten-bank .galaxie-spalte {
+    grid-template-areas: "regler hilfe";
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+}
+
+/* In einer Gruppe teilen sich die Zeilen ein Raster: Die Aufschriften
+   stehen auf der Breite der längsten, und alle Schieber beginnen an
+   derselben Stelle. Das Raster gehört hier der Gruppe und nicht wie in
+   den übrigen Bänken der ganzen Spalte, sonst bekäme jede Gruppe den
+   Platz für „Kamera über dem Boden“, auch die mit der Ferse. */
+#schatten-regler .galaxie-gruppe {
+  display: grid;
+  grid-template-columns: max-content minmax(6rem, 11rem) 2.6rem;
+  column-gap: 0.5rem;
+}
+
+#schatten-regler .galaxie-gruppe-marke { grid-column: 1 / -1; }
+
+#schatten-regler .galaxie-zeile {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
 }
 
 /* ---------- Embleme ----------
