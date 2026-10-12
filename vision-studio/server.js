@@ -2471,6 +2471,35 @@ function begegnungenSaeubern(quelle, filmTitel, slug) {
   return { quelle: zeilen.join(bruch), entfernt };
 }
 
+/* Dasselbe gilt für die Rollengröße: leads und cameos nennen die Figur
+   als Slug und zeigten ohne den Auftritt ebenso ins Leere. Eine leere
+   cameos-Zeile fällt ganz weg. leads bleibt auch leer stehen, denn das
+   Feld sagt der Timeline, dass der Titel eingeteilt ist. */
+function rollenSaeubern(quelle, filmTitel, slug) {
+  const bruch = bruchVon(quelle);
+  const zeilen = quelle.split(/\r?\n/);
+  const film = filmZeile(zeilen, filmTitel);
+  if (film === -1) return { quelle, entfernt: 0 };
+  let entfernt = 0;
+  for (let i = film + 1; i < zeilen.length && i <= film + 60; i += 1) {
+    /* Die nächste title-Zeile ist der nächste Film. */
+    if (zeilen[i].trim().startsWith('title: "')) break;
+    const t = /^(\s*)(leads|cameos): \[(.*)\],\s*$/.exec(zeilen[i]);
+    if (!t) continue;
+    const liste = t[3].length ? JSON.parse('[' + t[3] + ']') : [];
+    const rest = liste.filter((s) => s !== slug);
+    if (rest.length === liste.length) continue;
+    entfernt += 1;
+    if (!rest.length && t[2] === 'cameos') {
+      zeilen.splice(i, 1);
+      i -= 1;
+      continue;
+    }
+    zeilen[i] = `${t[1]}${t[2]}: [${rest.map((s) => JSON.stringify(s)).join(', ')}],`;
+  }
+  return { quelle: zeilen.join(bruch), entfernt };
+}
+
 /* --- Die Änderungen zusammensetzen --- */
 
 /* Beide Quellen zusammen laden, ohne sie zu schreiben. So lässt sich
@@ -2694,7 +2723,7 @@ function figurLoeschen(slug) {
       }
     }
     const sauber = begegnungenSaeubern(data, filmTitel, slug);
-    data = sauber.quelle;
+    data = rollenSaeubern(sauber.quelle, filmTitel, slug).quelle;
     bericht.begegnungen += sauber.entfernt;
   }
   for (const tabelle of ['BIOS', 'ACTORS']) {
@@ -2727,7 +2756,8 @@ function figurLoeschen(slug) {
     const naechste = neueVariantenQuelle(chars, stamm, 1);
     if (naechste !== null) chars = naechste;
   }
-  chars = ohneStimme(chars, slug);
+  chars = ohneInMenge(chars, 'CHAR_VOICE_ONLY', slug);
+  chars = ohneInMenge(chars, 'STAGE_BLACK', slug);
 
   /* --- js/profiles.js, js/facts.js, js/powers.js --- */
   const profileAlt = fs.readFileSync(PROFILES, 'utf8');
@@ -2824,18 +2854,20 @@ function figurLoeschen(slug) {
   return { geaendert: true, slug, name: figur.ueberschrift, ...bericht };
 }
 
-/* CHAR_VOICE_ONLY ist eine Menge in einer Zeile und kein Block mit
-   Einträgen. Sie fällt deshalb aus dem Muster der übrigen Tabellen. */
-function ohneStimme(quelle, slug) {
+/* CHAR_VOICE_ONLY und STAGE_BLACK sind Mengen in einer Zeile und keine
+   Blöcke mit Einträgen. Sie fallen deshalb aus dem Muster der übrigen
+   Tabellen. */
+function ohneInMenge(quelle, menge, slug) {
+  const kopf = `const ${menge} = new Set([`;
   const zeilen = quelle.split(/\r?\n/);
-  const i = zeilen.findIndex((z) => z.startsWith('const CHAR_VOICE_ONLY = new Set(['));
+  const i = zeilen.findIndex((z) => z.startsWith(kopf));
   if (i === -1) return quelle;
-  const t = /^const CHAR_VOICE_ONLY = new Set\(\[(.*)\]\);\s*$/.exec(zeilen[i]);
+  const t = /^(.*)\]\);\s*$/.exec(zeilen[i].slice(kopf.length));
   if (!t) return quelle;
   const drin = t[1].trim() ? JSON.parse('[' + t[1].replace(/'/g, '"') + ']') : [];
   const rest = drin.filter((s) => s !== slug);
   if (rest.length === drin.length) return quelle;
-  zeilen[i] = `const CHAR_VOICE_ONLY = new Set([${rest.map((s) => `'${s}'`).join(', ')}]);`;
+  zeilen[i] = `${kopf}${rest.map((s) => `'${s}'`).join(', ')}]);`;
   return zeilen.join(bruchVon(quelle));
 }
 
@@ -2880,7 +2912,7 @@ function auftrittAendern(filmTitel, name, dabei, slug) {
   let begegnungen = 0;
   if (!dabei) {
     const sauber = begegnungenSaeubern(quelle, filmTitel, slug);
-    quelle = sauber.quelle;
+    quelle = rollenSaeubern(sauber.quelle, filmTitel, slug).quelle;
     begegnungen = sauber.entfernt;
   }
   probeLaden(quelle, fs.readFileSync(CHARS, 'utf8'));   // muss sich laden lassen

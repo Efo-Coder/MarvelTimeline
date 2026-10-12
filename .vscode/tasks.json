@@ -32,6 +32,29 @@
         "clear": true
       },
       "problemMatcher": []
+    },
+    // Dieselben Server, nur ist die Fanpage zusätzlich vom Handy aus zu
+    // sehen, solange es im selben WLAN hängt. Die Aufgabe läuft nie von
+    // selbst an, weil der Laptop auch in fremden WLANs unterwegs ist. Sie
+    // löst die Aufgabe oben ab: Der neueste Start gewinnt, siehe
+    // start.js. Das Terminal geht hier auf, denn dort steht die Adresse
+    // fürs Handy.
+    {
+      "label": "Server: auch fürs Handy im WLAN",
+      "detail": "Wie oben, die Fanpage zusätzlich unter der WLAN-Adresse",
+      "type": "shell",
+      "command": "node",
+      "args": ["start.js", "--beobachten", "--kein-browser", "--netz"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "server",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": []
     }
   ]
 }

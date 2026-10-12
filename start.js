@@ -6,11 +6,16 @@
        node start.js --port 8080 --studio-port 5000 --kein-browser
        node start.js --ohne-studio
        node start.js --beobachten --kein-browser
+       node start.js --netz
 
    Danach steht die Fanpage unter http://127.0.0.1:4320 und das Vision-Studio
    unter http://127.0.0.1:4321. Beide Server lauschen nur auf der
    Loopback-Adresse, sie sind Werkzeuge für diesen Rechner und nicht fürs
    Netz gedacht. Strg+C beendet beide zusammen.
+
+   Mit --netz ist die Fanpage zusätzlich vom Handy aus zu sehen, solange es
+   im selben WLAN hängt. Das Studio bleibt dabei, wo es ist. Mehr dazu
+   unter „Die Fanpage im WLAN“ weiter unten.
 
    Der neueste Start gewinnt: Hält ein hängen gebliebener früherer Start
    noch einen der Ports, wird er beendet statt den neuen zu blockieren.
@@ -41,6 +46,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
+const os = require('os');
 const path = require('path');
 const { spawn, execSync } = require('child_process');
 
@@ -53,6 +59,7 @@ const STUDIO_PORT = Number(wert('--studio-port') || 4321);
 const OEFFNEN = !argv.includes('--kein-browser');
 const MIT_STUDIO = !argv.includes('--ohne-studio');
 const BEOBACHTEN = argv.includes('--beobachten');
+const IM_NETZ = argv.includes('--netz');
 
 function wert(flagge) {
   const i = argv.indexOf(flagge);
@@ -105,6 +112,13 @@ const server = http.createServer((req, res) => {
     return sende(res, 403, 'Verboten.', req.method);
   }
   if (istOrdner(ziel)) ziel = path.join(ziel, 'index.html');
+
+  /* Ein fremdes Gerät bekommt nur die Seite selbst, siehe fuersNetz. Die
+     Antwort ist dieselbe wie bei einer Datei, die es nicht gibt. */
+  if (!vonHier(req) && !fuersNetz(ziel)) {
+    console.log(`  gesperrt  ${pfad}  (Anfrage von ${req.socket.remoteAddress})`);
+    return sende(res, 404, `Nicht gefunden: ${pfad}`, req.method);
+  }
 
   const typ = TYPEN[path.extname(ziel).toLowerCase()] || 'application/octet-stream';
 
@@ -188,6 +202,59 @@ function istOrdner(pfad) {
   } catch {
     return false;
   }
+}
+
+/* ---------- Die Fanpage im WLAN ----------
+
+   Mit --netz lauscht die Fanpage auf allen Adressen des Rechners statt nur
+   auf der Loopback-Adresse. Ein Handy im selben WLAN erreicht sie dann
+   unter der Adresse, die beim Start in der Konsole steht, und sieht
+   Änderungen genauso von selbst wie der Tab auf dem Rechner.
+
+   Das ist ein Schalter und nicht die Vorgabe, weil ein Laptop auch in
+   fremden WLANs hängt: Dort soll nicht jeder im Raum die Seite aufrufen
+   können, nur weil der Server gerade läuft.
+
+   Das Studio bleibt in jedem Fall auf der Loopback-Adresse. Es schreibt
+   Bilder und Dateien, und das gehört nicht ins Netz.
+
+   Wer von außen kommt, sieht außerdem nur die Seite selbst: die
+   HTML-Dateien im Wurzelordner und was in css/, js/ und assets/ liegt.
+   Dieser Server gibt sonst das ganze Repo heraus, also auch .git, .claude
+   und das Studio mit seinen Arbeitsordnern, und das geht ein fremdes Gerät
+   nichts an. Geprüft wird der aufgelöste Pfad und nicht die Adresse aus
+   der Anfrage: Ein verschlüsselter Rückstrich (%5C) sieht in der Adresse
+   harmlos aus und ist für Windows trotzdem ein Trenner. */
+
+const NETZORDNER = new Set(['css', 'js', 'assets']);
+
+function vonHier(req) {
+  const adresse = req.socket.remoteAddress || '';
+  return adresse === '127.0.0.1' || adresse === '::1' || adresse === '::ffff:127.0.0.1';
+}
+
+function fuersNetz(ziel) {
+  const teile = path.relative(REPO, ziel).split(path.sep);
+  /* Was mit einem Punkt anfängt, ist nie Teil der Seite. In den
+     Bilderordnern gehört es dem Studio. */
+  if (teile.some((teil) => teil.startsWith('.'))) return false;
+  if (teile.length === 1) return teile[0].toLowerCase().endsWith('.html');
+  return NETZORDNER.has(teile[0].toLowerCase());
+}
+
+/* Die Adressen, unter denen andere Geräte diesen Rechner finden. 169.254
+   vergibt Windows sich selbst, wenn eine Karte kein Netz hat, und dorthin
+   führt von außen kein Weg. */
+function netzAdressen() {
+  const adressen = [];
+  for (const karten of Object.values(os.networkInterfaces())) {
+    for (const karte of karten || []) {
+      if (karte.family !== 'IPv4' || karte.internal) continue;
+      if (karte.address.startsWith('169.254.')) continue;
+      adressen.push(karte.address);
+    }
+  }
+  return adressen;
 }
 
 /* Kein Zwischenspeicher: Wer an data.js oder style.css schreibt, will das
@@ -669,13 +736,22 @@ function los() {
 }
 
 function lauschen() {
-  server.listen(PORT, '127.0.0.1', () => {
+  server.listen(PORT, IM_NETZ ? '0.0.0.0' : '127.0.0.1', () => {
     const adresse = `http://127.0.0.1:${PORT}`;
     console.log('MCU Timeline – Fanpage');
     console.log(`  ${adresse}            Timeline`);
     console.log(`  ${adresse}/characters.html   Charaktere`);
     if (MIT_STUDIO) {
       console.log(`  http://127.0.0.1:${STUDIO_PORT}            Vision-Studio`);
+    }
+    if (IM_NETZ) {
+      const adressen = netzAdressen();
+      for (const netz of adressen) {
+        console.log(`  http://${netz}:${PORT}       fürs Handy im selben WLAN`);
+      }
+      if (!adressen.length) {
+        console.log('  Für --netz fehlt eine Netzadresse. Ist das WLAN an?');
+      }
     }
     console.log('  Die Seite wird beobachtet: Änderungen kommen ohne Neuladen an.');
     if (MIT_STUDIO && BEOBACHTEN) {

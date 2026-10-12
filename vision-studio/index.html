@@ -330,7 +330,7 @@ try {
                und wird nicht gespeichert. Von selbst liegt nichts darin,
                die Wahl steht auf „Ohne“, siehe baueReferenzWahl(). -->
           <div class="referenz-feld" id="referenz-feld"
-               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Sie steht auf „Ohne“, bis eine Fassung gewählt ist, und was von Hand gewählt ist, bleibt bis zur nächsten Figur stehen. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert.">
+               title="Eine vorhandene Fassung halb durchsichtig über die Bühne legen, als Anhalt. Sie steht auf „Ohne“, bis eine Fassung gewählt ist, und was von Hand gewählt ist, bleibt bis zur nächsten Figur stehen. Mit dem Rahmen steht sie in ihrer eigenen Größe auf derselben Bodenlinie: Liegen beide Köpfe auf der Linie, stehen die Fassungen später gleich groß im Rahmen. Hat ihre Fassung eine eigene Position im Rahmen, steht sie dort. Ohne Rahmen füllt sie den Ausschnitt und zeigt die Pose. Sie lässt sich nicht verschieben und wird nicht mitgespeichert. Wird ihre Fassung gespeichert, zieht sie von selbst nach.">
             <label for="referenz">Referenz</label>
             <select id="referenz" disabled><option value="">Ohne</option></select>
             <input type="range" id="referenz-alpha" min="10" max="90" value="45" disabled
@@ -938,14 +938,19 @@ try {
 
          Anders als bei den drei Bänken darüber stehen die Werte nicht in
          einer eigenen Konfigurationsdatei, sondern im Stylesheet der
-         Seite selbst, bei .char-stage in css/style.css. -->
+         Seite selbst, bei .char-stage in css/style.css.
+
+         Die Figur auf der Bühne kommt aus der Liste zur Linken, wie bei
+         Porträts, Fassungen und Biografie. Ihr Name steht im Kopf darüber,
+         die Bank selbst wählt nichts. Neben der Liste stehen die Regler
+         deshalb unter der Vorschau und nicht daneben, sonst bliebe für die
+         Bühne nur ein schmaler Streifen. Die Fläche um die Bühne und die
+         Anordnung der Regler regelt studio.css bei .schatten-bank. -->
     <div class="galaxie-bank schatten-bank" id="schatten-bank" hidden>
 
       <section class="tafel galaxie-tafel">
         <div class="panel-kopf">
           <span class="panel-marke">Vorschau</span>
-          <select id="schatten-figur" class="schatten-wahl"
-                  aria-label="Figur in der Vorschau"></select>
           <span class="galaxie-offen" id="schatten-offen" hidden>Nicht gespeichert</span>
           <button type="button" class="knopf leise" id="schatten-zurueck" disabled
                   data-symbol="zuruecksetzen"
@@ -956,11 +961,13 @@ try {
         </div>
 
         <div class="galaxie-vorschau">
-          <div class="galaxie-buehne wand-buehne schatten-buehne" id="schatten-buehne">
-            <iframe id="schatten-rahmen" title="Charaktere"
-                    referrerpolicy="no-referrer"></iframe>
-            <svg class="schatten-griffe" id="schatten-griffe"
-                 viewBox="0 0 1600 900" preserveAspectRatio="none"></svg>
+          <div class="schatten-flaeche">
+            <div class="galaxie-buehne wand-buehne schatten-buehne" id="schatten-buehne">
+              <iframe id="schatten-rahmen" title="Charaktere"
+                      referrerpolicy="no-referrer"></iframe>
+              <svg class="schatten-griffe" id="schatten-griffe"
+                   viewBox="0 0 1600 900" preserveAspectRatio="none"></svg>
+            </div>
           </div>
           <p class="galaxie-fuss">
             Die Vorschau zeigt die Bühne aus <b>characters.html</b> mit den echten
@@ -977,7 +984,7 @@ try {
         </div>
 
         <div class="galaxie-spalte">
-          <div class="galaxie-gruppe">
+          <div class="galaxie-gruppe schatten-hilfe">
             <p class="galaxie-gruppe-marke">Die Griffe</p>
             <p class="galaxie-hinweis">
               <b>Innen ziehen</b> verschiebt den Wurf.
@@ -1014,15 +1021,18 @@ try {
          darunter stehen nur die Reiter, die zu ihr gehören. Hinter der
          <b>Timeline</b> liegen die Galaxie und die Fasern, hinter <b>Filme
          &amp; Serien</b> die Plakatwand, und alles, was eine Figur betrifft,
-         steht bei den <b>Charakteren</b>: Porträts, Fassungen, Biografie und
-         Embleme. Wer eine Seite verlässt und wiederkommt, landet auf dem
-         Reiter, den er dort zuletzt offen hatte.</p>
+         steht bei den <b>Charakteren</b>: Porträts, Fassungen, Biografie,
+         Embleme und Schatten. Wer eine Seite verlässt und wiederkommt,
+         landet auf dem Reiter, den er dort zuletzt offen hatte.</p>
 
       <h2>Figur wählen</h2>
       <p>Links steht jede Figur aus der Datenbank. Ein Klick öffnet ihr Bild:
          bei <b>Porträts</b> die Fassung mit dem Kreis, der daraus das
          Profilbild wird, bei <b>Fassungen</b> das Bild selbst mit dem
-         Rechteck, das randlos an der Figur sitzen soll.</p>
+         Rechteck, das randlos an der Figur sitzen soll. Beim <b>Schatten</b>
+         stellt der Klick die Figur auf die Bühne der Charakterseite, und
+         dort lässt sich ihr Wurf ziehen. Die Liste führt dann nur, wer ein
+         fertiges Ganzkörperbild hat und auf der Seite steht.</p>
       <ul class="hilfe">
         <li><b>Ziehen im Kreis</b> verschiebt den Ausschnitt, <b>Mausrad</b> ändert seine Größe.</li>
         <li>Die <b>Ecken</b> lassen sich anfassen, <b>Pfeiltasten</b> schieben pixelweise.</li>
@@ -1072,7 +1082,9 @@ try {
             Regler sich bewegt.</li>
         <li>Die <b>Referenz</b> steht dann in ihrer eigenen Größe auf derselben
             Bodenlinie. Bildkorrektur schieben, bis die Köpfe zusammenpassen, und alle
-            Fassungen einer Figur sind im Rahmen gleich groß.</li>
+            Fassungen einer Figur sind im Rahmen gleich groß. Sie zeigt den
+            gespeicherten Stand ihrer Fassung samt deren Position im Rahmen, und
+            wird diese Fassung gespeichert, zieht sie nach.</li>
         <li><b>Speichern</b> schreibt bei der Fassung beide Werte mit nach
             js/chars.js, Zuschnitt und Größe sind ein Schritt.</li>
         <li><b>Upscale</b> rechnet eine zu kleine Vorlage mit Real&#8209;ESRGAN hoch,

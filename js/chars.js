@@ -178,6 +178,7 @@ const CHAR_UNRELEASED = new Set([
   'emma-frost',
   'jocasta-angekuendigt',
   'johnny-blaze-ghost-rider',
+  'kurt-wagner-nightcrawler',
   'lila-barton',
   'nathaniel-barton',
   'nathaniel-milbury-mister-sinister',
@@ -198,6 +199,21 @@ const CHAR_UNRELEASED = new Set([
    Gestalt ihrer Darstellerin an und N.A.T.A.L.I.E. das Gesicht von Lyric
    Ross. Sie bleiben deshalb bei „gespielt von“. */
 const CHAR_VOICE_ONLY = new Set(['e-v', 'e-d-i-t-h', 'miss-minutes', 'h-e-r-b-i-e']);
+
+/* Figuren, deren Bühne schwarz ist statt in ihrem Farbton. Das ist die
+   Ausnahme und nicht die Regel: Jede Figur steht vor derselben Wand in
+   ihrer eigenen Farbe, und genau das hält die Bühnen zusammen. Die Wand
+   selbst bleibt auch hier stehen, ihr Muster ist weiter zu sehen, nur
+   eben ohne Farbe und abgedunkelt. Das Wappen hinter der Figur fällt
+   dabei weg.
+
+   Dormammu ist kein Körper mit einer festen Kante, sondern ein Gesicht,
+   das am Rand in Rauch ausläuft. Vor der hellen Wand steht dieser Rauch
+   als schmutziger Saum um ihn, vor Schwarz geht er in die Dunkle
+   Dimension über, aus der er kommt. Schlüssel ist der Charakter-Slug aus
+   charSlug(), die Regel dazu steht bei .char-stage.black im
+   Stylesheet. */
+const STAGE_BLACK = new Set(['dormammu']);
 
 function charSlug(name) {
   return (CHAR_ALIAS[name] || name).toLowerCase()
@@ -358,11 +374,14 @@ const FULLSIZE_LOOKS = {
     ['Captain America: The First Avenger', 'bucky-barnes-captain-america-the-first-avenger', 'captain-america-the-first-avenger'],
     ['Ausgehuniform', 'bucky-barnes-ausgehuniform', 'captain-america-the-first-avenger'],
     ['Captain America: The Winter Soldier', 'bucky-barnes-captain-america-the-winter-soldier', 'captain-america-the-winter-soldier'],
+    ['Avengers: Endgame', 'bucky-barnes-avengers-endgame', 'avengers-endgame'],
     ['Thunderbolts*', 'bucky-barnes-thunderbolts', 'thunderbolts'],
+    ['Lederjacke', 'bucky-barnes-lederjacke', 'thunderbolts'],
+    ['New Avengers', 'bucky-barnes-new-avengers', 'thunderbolts'],
   ],
   'taskmaster': [
-    ['Black Widow', 'taskmaster-black-widow', 'black-widow'],
     ['Thunderbolts', 'taskmaster-thunderbolts', 'thunderbolts'],
+    ['Black widow 1', 'taskmaster-black-widow-1'],
   ],
   'natasha-romanoff': [
     ['Black Widow - Black Suit', 'natasha-romanoff-black-widow-black-suit', 'black-widow'],
@@ -450,6 +469,8 @@ const FULLSIZE_LOOKS = {
     ['The Marvels', 'carol-danvers-the-marvels', 'the-marvels'],
     ['Starforce', 'carol-danvers-starforce', 'captain-marvel'],
     ['Aladna', 'carol-danvers-aladna', 'the-marvels'],
+    ['Ms. Marvel', 'carol-danvers-ms-marvel', 'ms-marvel'],
+    ['Stehend', 'carol-danvers-stehend', 'the-marvels'],
   ],
   'shuri': [
     ['Shuri', 'shuri', 'black-panther'],
@@ -810,7 +831,6 @@ const FULLSIZE_LOOKS = {
   'scorpion': [
     ['Pose 1', 'scorpion-pose-1', 'spider-man-brand-new-day'],
     ['Lederjacke', 'scorpion-lederjacke', 'spider-man-homecoming'],
-    ['Zivil', 'scorpion-zivil', 'spider-man-homecoming'],
   ],
   'ned-leeds': [
     ['Standard', 'ned-leeds', 'spider-man-homecoming'],
@@ -901,7 +921,6 @@ const FULLSIZE_LOOKS = {
     ['Chirurg', 'stephen-strange-chirurg', 'doctor-strange'],
   ],
   'vanessa-fisk': [
-    ['Vanessa Fisk', 'vanessa-fisk', 'daredevil-born-again'],
     ['Rotes Kleid', 'vanessa-fisk-rotes-kleid', 'daredevil-born-again'],
   ],
   'wong': [
@@ -1064,6 +1083,7 @@ const FULLSIZE_VARIANTS = {
   'bucky-barnes-captain-america-the-winter-soldier': 3,
   'bullseye': 2,
   'callisto': 2,
+  'carol-danvers-starforce': 2,
   'cassie-lang-ant-man-and-the-wasp-quantumania': 2,
   'elder-beast': 2,
   'jessica-jones': 2,
@@ -1081,7 +1101,8 @@ const FULLSIZE_VARIANTS = {
   'simon-williams': 2,
   'steve-rogers-stealth-suit-maskiert': 2,
   't-challa': 3,
-  'taskmaster-black-widow': 4,
+  'taskmaster-black-widow-1': 3,
+  'tony-stark-mark-lxxxv': 2,
   'wade-wilson-deadpool': 2,
   'ying-li-ceremonial': 2,
 };
@@ -1295,6 +1316,7 @@ const FULLSIZE_SCALE = {
   'emil-blonsky-abomination-2008': 1.22,
   'tony-stark-mark-xlviii-hulkbuster-2-0': 1.22,
   'emil-blonsky-abomination-green': 1.22,
+  'taweret': 1.22,
 
   // Jenseits jeder Skala, deshalb am oberen Anschlag
   'dormammu': 1.22,
@@ -1330,9 +1352,11 @@ const FULLSIZE_SCALE = {
    nicht werden: Da ist der Rahmen voll. */
 const FULLSIZE_FIT = {
   'adrian-toomes-vulture-flight': 1.002,
+  'alexander-gentry-porcupine': 1.075,
   'alligator-loki': 0.56,
   'attuma': 1.086,
-  'carol-danvers-starforce': 1.05,
+  'billy-maximoff-wiccan-wandavision': 0.715,
+  'carol-danvers-starforce-1': 1.05,
   'cassie-lang-ant-man': 0.67,
   'cassie-lang-ant-man-and-the-wasp': 0.77,
   'clint-barton-ronin': 1.1,
@@ -1349,9 +1373,11 @@ const FULLSIZE_FIT = {
   'g-iah-kind': 0.82,
   'g-iah-skrull': 0.98,
   'giganto': 1.22,
+  'harvey-elder-mole-man': 0.95,
   'heimdall-waechterruestung': 1.1,
   'howard-stark': 1.03,
   'jean-grey': 0.96,
+  'jessica-jones-2': 0.927,
   'kazi-kazimierczak': 0.97,
   'kid-loki': 0.85,
   'kidpool': 0.85,
@@ -1363,27 +1389,29 @@ const FULLSIZE_FIT = {
   'ma-gnucci': 0.83,
   'natasha-romanoff-infinity-war': 0.92,
   'parker-robbins-the-hood': 0.96,
+  'pepper-potts-mark-49-rescue': 0.837,
   'peter-parker-garfield-1': 0.97,
   'peter-parker-iron-spider': 1.17,
   'peter-parker-selbstgebauter-anzug': 0.76,
   'remy-lebeau-gambit-pose-1-2': 0.93,
   'rocket-guradians-of-the-galaxy': 0.65,
-  'rocket-guradians-of-the-galaxy-vol-2': 0.79,
+  'rocket-guradians-of-the-galaxy-vol-2': 0.606,
   'rocket-guardians-uniform': 0.65,
   'rocket-guradians-of-the-galaxy-vol-3': 0.65,
   'rocket-endgame': 0.66,
   'rocket-quantum-suit': 0.66,
   'scorpion-pose-1': 1.22,
   'scott-lang-masked-1': 0.967,
+  'silver-surfer': 0.934,
   'skaar': 1.22,
   'skurge': 1.1,
   'snow': 0.64,
   't-challa-2': 0.965,
-  'taskmaster-black-widow-3': 0.993,
-  'taskmaster-black-widow-4': 0.776,
   'taskmaster-thunderbolts': 1.01,
   'thor-endgame': 0.95,
+  'toad': 0.846,
   'todd-phelps-hulkking': 1.22,
+  'zelma-stanton': 0.927,
 };
 
 /* ---------- Schwebe: leere Fläche unter der Figur ----------
@@ -1431,12 +1459,21 @@ const FULLSIZE_LIFT = {
    Figur im Rahmen dorthin, wo sie stehen soll. Ohne Eintrag gilt [0, 0],
    dann steht sie unten mittig. */
 const FULLSIZE_SHIFT = {
+  'billy-maximoff-wiccan-wandavision': [0.019, 0],
   'bucky-barnes-captain-america-the-winter-soldier-2': [0.012, 0],
   'erik-killmonger-black-panther': [-0.007, 0],
   'franklin-richards': [0, -0.147],
   'hunter-b-15': [0.011, 0],
   'john-walker-captain-america': [0.008, 0],
+  'pepper-potts-civil': [0.022, 0],
+  'pepper-potts-iron-man-2': [0.014, 0],
+  'pepper-potts-iron-man-3': [0.01, 0],
+  'pepper-potts-mark-49-rescue': [-0.021, -0.041],
+  'rocket-guradians-of-the-galaxy-vol-2': [0.038, 0],
   'shuri-black-panther-2': [0.047, 0],
+  'taskmaster-black-widow-1-2': [-0.024, 0],
+  'taskmaster-black-widow-1-3': [-0.023, 0],
+  'taweret': [-0.034, 0],
   'the-ancient-one': [-0.065, 0],
 };
 

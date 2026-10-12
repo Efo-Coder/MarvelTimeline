@@ -72,7 +72,7 @@ const S = {
   alpha: true,
   hilfslinien: true,
   rahmen: true,        // Rahmen der Charakterseite über der Bühne
-  referenz: null,      // { datei, bild, bereich }: Schablone im Ausschnitt, nur Anhalt
+  referenz: null,      // { datei, bild, bereich, url }: Schablone im Ausschnitt, nur Anhalt
   referenzAlpha: 0.45,
   kasten: null,        // Hülle des sichtbaren Inhalts, Quelle der Führungslinien
   eingerastet: { x: null, y: null },
@@ -170,21 +170,33 @@ const zeichen = () => S.bereich === 'emblem';
    wird sie in films/wall-panel.js, das auf das Ereignis
    „bereichwechsel“ hört.
 
-   Sie heißen im Folgenden zusammen „bankbereiche“: Sie hängen an keiner
-   Figur, stellen eine eigene Bank an die Stelle der Werkbank und richten
-   die Oberfläche gleich ein. */
+   Sie heißen im Folgenden zusammen „bankbereiche“: Sie stellen eine
+   eigene Bank an die Stelle der Werkbank und zählen nichts im Kopf. */
 const plakate = () => S.bereich === 'wand';
 
 /* Und dasselbe für das Faserfeld hinter der Startseite. Bedient wird es
    in timeline/fibers-panel.js. */
 const fasern = () => S.bereich === 'fasern';
 
-/* Und der Schatten der Figuren auf der Erscheinungsbühne. Er gehört zur
-   Charakterseite, arbeitet aber wie die drei darüber: eine eigene Bank
-   mit Vorschau und Reglern, ohne Figurenliste daneben. Welche Figur in
-   der Vorschau steht, wählt die Bank selbst. */
+/* Und der Schatten der Figuren auf der Erscheinungsbühne, bedient in
+   characters/shadow-panel.js. Er ist der eine Bankbereich, der an einer
+   Figur hängt: Seine Werte gelten für alle, gezeigt wird der Wurf aber
+   an einer bestimmten. Die wird links in der Liste gewählt wie in den
+   übrigen Bereichen der Charakterseite, und ihr Name steht im Kopf über
+   der Bank. */
 const schattenwurf = () => S.bereich === 'schatten';
 const eigeneBank = () => plakate() || fasern() || schattenwurf();
+
+/* Die Bankbereiche, die an gar keiner Figur hängen. Bei ihnen fällt die
+   Liste zur Linken ganz weg. */
+const ohneListe = () => plakate() || fasern();
+
+/* Im Schatten führt die Liste nur, wer auf der Bühne der Charakterseite
+   einen werfen kann: Die Figur braucht ein fertiges Ganzkörperbild, und
+   sie muss auf der Seite stehen. Wer in CHAR_UNRELEASED steht, den kennt
+   die Seite gar nicht, und ihre Bühne bliebe leer. */
+const wirftSchatten = (figur) => figur.veroeffentlicht !== false
+  && (figur.ganzkoerper || []).some((z) => z.zustand === 'fertig');
 
 /* Die Vorlage ist das bestehende Porträt selbst. Es liegt dann nicht als
    Schablone daneben, sondern auf der Bühne, und lässt sich neu
@@ -477,7 +489,7 @@ function hoereFortschritt() {
    sagt, welcher Bereich gemeint ist; die Porträts sind der Normalfall und
    tragen keines. */
 const MARKE = { portrait: '', ganzkoerper: 'gk:', biografie: 'bio:', emblem: 'em:',
-  wand: 'pw:', fasern: 'fa:' };
+  wand: 'pw:', fasern: 'fa:', schatten: 'sw:' };
 
 /* ---------- Seiten und ihre Reiter ----------
 
@@ -549,6 +561,8 @@ async function start() {
       ladeZeichen().then(() => {
         if (marke && S.zeichen.some((z) => z.name === marke)) waehleZeichen(marke);
       });
+    } else if (schattenwurf()) {
+      oeffneSchatten(marke);
     } else if (marke && S.figuren.some((f) => f.slug === marke)) {
       waehleFigur(marke);
     }
@@ -779,13 +793,15 @@ function richteBereichEin() {
   const pw = plakate();
   const fa = fasern();
   const sw = schattenwurf();
-  /* Plakatwand, Fasern und Schatten verhalten sich in allem, was hier
-     folgt, gleich: eigene Bank, keine Liste, kein Stand. */
+  /* Plakatwand, Fasern und Schatten stellen eine eigene Bank auf und
+     haben keinen Stand. Eine Liste führt davon nur der Schatten, die
+     beiden anderen hängen an keiner Figur. */
   const bank = pw || fa || sw;
+  const ohne = pw || fa;
 
   /* Die Werkbank und die Konsole darüber gehören den Bildern einer Figur.
-     Der Textbetrieb, die Zeichen, die Fasern und die Plakatwand haben
-     beides nicht, sie stellen eine eigene Bank an dieselbe Stelle. */
+     Der Textbetrieb, die Zeichen und die Bankbereiche haben beides
+     nicht, sie stellen eine eigene Bank an dieselbe Stelle. */
   document.querySelector('.werkbank').hidden = bio || em || bank;
   $('biografie-bank').hidden = !bio;
   $('emblem-bank').hidden = !em;
@@ -795,25 +811,28 @@ function richteBereichEin() {
   document.querySelector('.konsole').hidden = bio || em || bank;
   /* Der Kopf über der Bank nennt die offene Figur. Die Zeichen, die
      Fasern und die Wand haben keine, ihr Name steht in der Bank
-     selbst. */
-  document.querySelector('.arbeit-kopf').hidden = em || bank;
+     selbst. Beim Schatten ist es die, deren Wurf die Bühne zeigt. */
+  document.querySelector('.arbeit-kopf').hidden = em || ohne;
 
-  /* Beide kennen weder Figuren noch Zeichen. Die linke Spalte hat dort
-     nichts zu führen und fällt ganz weg, der Schalter dazu ebenso. Ihre
-     Breite macht das Raster in studio.css. */
-  /* Der Stand im Kopf zählt Figuren und Dateien. Auch den gibt es dort
-     nicht, dort bleibt die Reihe weg, statt eine Zahl zu erfinden. */
+  /* Der Stand im Kopf zählt Figuren und Dateien. In den Bankbereichen
+     bleibt die Reihe weg, statt eine Zahl zu erfinden: Wand und Fasern
+     haben nichts zu zählen, und die Werte des Schattens gelten für alle
+     Figuren zugleich. */
   $('zaehler').hidden = bank;
 
+  /* Wand und Fasern kennen weder Figuren noch Zeichen. Die linke Spalte
+     hat dort nichts zu führen und fällt ganz weg, der Schalter dazu
+     ebenso. Ihre Breite macht das Raster in studio.css. */
   const raster = document.querySelector('.raster');
-  raster.classList.toggle('ohne-liste', bank);
-  $('liste-schalter').hidden = bank;
+  raster.classList.toggle('ohne-liste', ohne);
+  $('liste-schalter').hidden = ohne;
   /* Eingeklappt ist die Liste schon für die Tabulatortaste weg, siehe
      zeigeListe. In diesen beiden Bereichen ist sie es zusätzlich. */
-  $('spalte-liste').inert = bank || raster.classList.contains('zu');
+  $('spalte-liste').inert = ohne || raster.classList.contains('zu');
 
   /* Sie füllen die Arbeitsfläche ohne eine Figur. Wer sie verlässt und
-     nichts offen hat, sieht wieder die Bedienung. */
+     nichts offen hat, sieht wieder die Bedienung. Der Schatten wählt
+     sich beim Öffnen selbst eine, siehe oeffneSchatten. */
   if (bank) {
     $('leerzustand').hidden = true;
     $('arbeit').hidden = false;
@@ -826,17 +845,26 @@ function richteBereichEin() {
      Sie hören hier mit, statt dass studio.js in ihnen herumgriffe. */
   window.dispatchEvent(new CustomEvent('bereichwechsel', { detail: { bereich: S.bereich } }));
 
-  if (bank) return;
+  if (ohne) return;
 
   /* Die linke Spalte führt im Emblembereich keine Figuren. Ihre
      Aufschriften sagen das auch, sonst suchte man dort nach Rollen und
      Dateinamen, die es gar nicht gibt. */
   $('listen-marke').textContent = em ? 'Zeichen' : 'Figuren';
   $('suche').placeholder = em ? 'Name des Zeichens' : 'Figur, Rolle oder Dateiname';
-  document.querySelector('.listenfuss').hidden = em;
+  /* Eine neue Figur hat noch kein Bild und stünde im Schatten gar nicht
+     erst in der Liste. */
+  document.querySelector('.listenfuss').hidden = em || sw;
   /* Nach der Herkunft fragt nur der Emblembereich. Eine Figur ist weder
      Film noch Charakter, bei ihr hätte die Reihe nichts zu sieben. */
   $('zeichen-filter').hidden = !em;
+  /* Nach dem Stand der Arbeit fragt der Schatten nicht. Seine Werte
+     gelten für alle Figuren, offen oder fertig ist dort keine. */
+  $('filter').hidden = sw;
+
+  /* Alles Weitere richtet die Werkbank ein, und die hat der Schatten
+     nicht. */
+  if (sw) return;
 
   document.querySelector('.werkbank').classList.toggle('gk', gk);
   $('vorschau-portrait').hidden = gk;
@@ -883,9 +911,9 @@ function wechsleBereich(bereich) {
   for (const b of $('bereich').children) b.classList.toggle('an', b.dataset.bereich === bereich);
   richteBereichEin();
 
-  /* Die eigenen Bänke haben weder Liste noch Stand. Ihre Adresse merkt
+  /* Wand und Fasern haben weder Liste noch Stand. Ihre Adresse merkt
      sich trotzdem, wo man war: Ein Neuladen kommt hierher zurück. */
-  if (eigeneBank()) {
+  if (ohneListe()) {
     history.replaceState(null, '', '#' + MARKE[S.bereich]);
     return true;
   }
@@ -902,10 +930,28 @@ function wechsleBereich(bereich) {
     return true;
   }
 
+  /* Der Schatten steht nie ohne Figur da, sonst bliebe seine Bühne
+     leer. */
+  if (schattenwurf()) {
+    oeffneSchatten();
+    return true;
+  }
+
   zeigeZaehler(true);
   if (S.figur) waehleFigur(S.figur.slug);
   else filtern();
   return true;
+}
+
+/* Welche Figur der Schatten zeigt, wenn er aufgeht: die aus der Adresse,
+   sonst die offene, sonst die erste der Liste. Wer keinen Wurf hat,
+   kommt dabei nicht in Frage, er steht dort gar nicht. Gibt es keine
+   einzige solche Figur, merkt sich die Adresse wenigstens den Bereich. */
+function oeffneSchatten(slug) {
+  const figur = [S.figuren.find((f) => f.slug === slug), S.figur,
+    ...sichtbareFiguren(), ...S.figuren].find((f) => f && wirftSchatten(f));
+  if (figur) waehleFigur(figur.slug);
+  else history.replaceState(null, '', '#' + MARKE.schatten);
 }
 
 /* Die Seite wechseln heißt: auf den Reiter gehen, der dort zuletzt offen
@@ -973,6 +1019,13 @@ function figurZustand(figur) {
 }
 
 function listenBild(figur) {
+  /* Den Schatten wirft das Ganzkörperbild, und das zeigt die Liste dort
+     auch: das erste fertige, also die Fassung, mit der die Bühne der
+     Charakterseite aufgeht. */
+  if (schattenwurf()) {
+    const bild = figur.ganzkoerper.find((z) => z.zustand === 'fertig');
+    return bildUrl(bild ? bild.datei : figur.slug, 'fullsize');
+  }
   const ziele = zieleVon(figur);
   return bildUrl(ziele.length ? ziele[0].datei : figur.slug);
 }
@@ -1060,7 +1113,7 @@ function baueListe() {
     const li = document.createElement('li');
     const knopf = document.createElement('button');
     knopf.type = 'button';
-    knopf.className = 'eintrag' + (ganz() ? ' gk' : '');
+    knopf.className = 'eintrag' + (ganz() || schattenwurf() ? ' gk' : '');
     knopf.dataset.slug = figur.slug;
 
     const bild = document.createElement('img');
@@ -1087,7 +1140,9 @@ function baueListe() {
     text.append(name, unten);
 
     knopf.append(bild, text);
-    const anzahl = fassungsZahl(figur);
+    /* Die Bühne des Schattens zeigt immer nur die erste Fassung. Wie
+       viele es sonst noch gibt, spielt dort keine Rolle. */
+    const anzahl = schattenwurf() ? 0 : fassungsZahl(figur);
     if (anzahl > 1) {
       const marke = document.createElement('span');
       marke.className = 'marke';
@@ -1096,6 +1151,11 @@ function baueListe() {
     }
     const punkt = document.createElement('span');
     punkt.className = 'punkt ' + figurZustand(figur);
+    /* Einen Stand der Arbeit hat der Schatten nicht, seine Werte gelten
+       für alle Figuren. Der Punkt bleibt dort trotzdem im Eintrag, nur
+       unsichtbar: Das Zeichen für Unveröffentlichte hängt sich vor ihn,
+       siehe frischeSichtbarkeit. */
+    punkt.hidden = schattenwurf();
     knopf.append(punkt);
 
     knopf.addEventListener('click', () => waehleFigur(figur.slug));
@@ -1130,6 +1190,9 @@ function filtern() {
       || (S.filter === 'offen' && zustand !== 'fertig')
       || (S.filter === 'fertig' && zustand === 'fertig')
       || (S.filter === 'fehlt' && zustand === 'fehlt');
+    /* Im Schatten sind die Knöpfe zum Stand ausgeblendet. Dort zählt
+       nur, ob die Figur einen Wurf hat. */
+    if (schattenwurf()) passt = wirftSchatten(figur);
     if (passt && suche) {
       const heuhaufen = [figur.name, figur.ueberschrift, figur.rolle, figur.welt, figur.slug,
         ...zieleVon(figur).map((z) => z.datei), ...figur.filme].join(' ').toLowerCase();
@@ -1184,6 +1247,21 @@ async function waehleFigur(slug) {
   /* Der Haken gehört der Figur und nicht dem Bild: Er steht deshalb im
      Kopf und gilt in jedem Bereich, in dem eine Figur offen ist. */
   $('veroeffentlicht').checked = figur.veroeffentlicht !== false;
+
+  /* Wer außerhalb dieser Datei an der offenen Figur hängt, hört hier mit
+     wie bei „bereichwechsel“. Das ist die Bühne des Schattens, siehe
+     characters/shadow-panel.js. Eine Werkbank hat der Schatten nicht,
+     für ihn ist die Wahl damit erledigt.
+
+     Ein Bild ist dort auch nicht in Arbeit. Bliebe das Ziel der Figur
+     davor stehen, holte neuLaden nach einer Umbenennung dessen Vorlage
+     auf die unsichtbare Werkbank. */
+  window.dispatchEvent(new CustomEvent('figurwahl',
+    { detail: { slug: figur.slug, bereich: S.bereich } }));
+  if (schattenwurf()) {
+    S.ziel = null;
+    return;
+  }
 
   if (texte()) return ladeTexte(figur);
   /* Eine neue Figur heißt: Die Schablone der alten ist erledigt, auch
@@ -2015,6 +2093,10 @@ async function holeVorschlag(merken) {
    ganzen Übung, denn dieselbe Figur soll in jeder Fassung dieselbe
    Körpergröße haben.
 
+   Auch ihre Stelle im Rahmen ist die eigene: Rückt FULLSIZE_SHIFT sie
+   von unten mittig ab, steht sie hier genauso abgerückt. Sie zeigt damit
+   in allem den Stand, der für ihre Datei gespeichert ist.
+
    **Ohne Rahmen** wird sie wie bisher höhengleich in den Ausschnitt
    gelegt. Dann geht es nicht um die Größe, sondern um die Pose: Steht
    die Figur in der Schablone, sitzt der Zuschnitt. */
@@ -2030,7 +2112,7 @@ let referenzVonHand = false;
    Datei lädt, und in der Zeit kann die Wahl schon wieder neu gebaut
    werden. Ohne diesen Merker liefe dann ein zweiter Ladevorgang für
    dasselbe Bild los. */
-let referenzWunsch = { datei: '', bereich: null };
+let referenzWunsch = { datei: '', bereich: null, url: '' };
 
 function baueReferenzWahl() {
   const wahl = $('referenz');
@@ -2062,7 +2144,11 @@ function baueReferenzWahl() {
 
 async function setzeReferenz(datei) {
   const meiner = ++referenzLauf;
-  referenzWunsch = { datei: datei || '', bereich: S.bereich };
+  /* Die Adresse trägt den Stempel der Datei. An ihr sieht
+     frischeReferenz(), ob unter demselben Namen inzwischen ein anderes
+     Bild liegt. */
+  const url = datei ? bildUrl(datei) : '';
+  referenzWunsch = { datei: datei || '', bereich: S.bereich, url };
   if (!datei) {
     S.referenz = null;
     $('referenz-alpha').disabled = true;
@@ -2074,19 +2160,33 @@ async function setzeReferenz(datei) {
        Ordner das Bild kommt, und entscheidet später, ob die Wahl einen
        Wechsel übersteht. */
     const bereich = S.bereich;
-    const bild = await bildLaden(bildUrl(datei));
+    const bild = await bildLaden(url);
     if (meiner !== referenzLauf) return;
-    S.referenz = { datei, bild, bereich };
+    S.referenz = { datei, bild, bereich, url };
     $('referenz-alpha').disabled = false;
   } catch (fehler) {
     if (meiner !== referenzLauf) return;
     S.referenz = null;
-    referenzWunsch = { datei: '', bereich: S.bereich };
+    referenzWunsch = { datei: '', bereich: S.bereich, url: '' };
     $('referenz').value = '';
     $('referenz-alpha').disabled = true;
     melde('Referenz nicht lesbar: ' + fehler.message, true);
   }
   zeichne();
+}
+
+/* Die Schablone zeigt eine Datei, und die kann sich unter ihr ändern: Wer
+   die Fassung speichert, die zugleich als Schablone liegt, schreibt ihr
+   Bild neu. Ohne diesen Blick bliebe das alte über der Bühne stehen,
+   während Bühne und Vorschau längst das neue zeigen.
+
+   Gewechselt wird erst, wenn das neue Bild da ist. Bis dahin bleibt das
+   alte liegen, sonst blitzte die Schablone bei jedem Speichern weg. */
+function frischeReferenz() {
+  const wunsch = referenzWunsch;
+  if (!wunsch.datei || wunsch.bereich !== S.bereich) return null;
+  if (bildUrl(wunsch.datei) === wunsch.url) return null;
+  return setzeReferenz(wunsch.datei);
 }
 
 /* ---------- Bühne ---------- */
@@ -2478,7 +2578,12 @@ function blickHoehe() {
    folgt ihren eigenen Werten samt ihrer eigenen Schwebe, und wird sie
    dabei breiter als der Rahmen, begrenzt ihn die Breite. Dieselben
    beiden Schranken stehen als max-width und max-height in
-   css/style.css. */
+   css/style.css.
+
+   Ebenso ihre Stelle: FULLSIZE_SHIFT rückt sie von unten mittig ab,
+   gemessen in Anteilen der Rahmenbreite. Gelesen wird beides bei jedem
+   Malen aus dem Eintrag der Fassung. Was ein Speichern dort nachträgt,
+   steht deshalb ohne weiteres Zutun auch an der Schablone. */
 function referenzMasse(mass) {
   if (!S.referenz || !mass || !S.figur) return null;
   const eintrag = zieleVon(S.figur).find((z) => z.datei === S.referenz.datei);
@@ -2493,7 +2598,9 @@ function referenzMasse(mass) {
     breite = mass.breite * wert * RAHMEN_LUFT;
     hoehe = breite / seiten;
   }
-  return { hoehe, breite, wert };
+  const stelle = (eintrag && eintrag.versatz) || [0, 0];
+  return { hoehe, breite, wert,
+    quer: (stelle[0] || 0) * mass.breite, hoch: (stelle[1] || 0) * mass.breite };
 }
 
 /* Die Schablone in Rahmengröße, dazu die Linie an ihrem Scheitel. Liegen
@@ -2502,8 +2609,8 @@ function maleReferenz(mass) {
   const ref = referenzMasse(mass);
   if (!ref) return;
   const r = S.rect;
-  const boden = vy(r.y + r.hoehe);
-  const mitte = vx(r.x + r.breite / 2);
+  const boden = vy(r.y + r.hoehe + ref.hoch);
+  const mitte = vx(r.x + r.breite / 2 + ref.quer);
   const rh = ref.hoehe * view.k;
   const rb = ref.breite * view.k;
 
@@ -3354,6 +3461,10 @@ async function speichern() {
      die gerade zu sehen ist. Sonst zeigte das Studio beim Zurückwechseln
      weiter das Bild von vorhin. */
   S.frisch.set(auftrag.ordner + '/' + ziel.datei, Date.now());
+  /* Liegt genau diese Datei als Schablone über der Bühne, zieht sie mit.
+     Das gilt auch, wenn inzwischen eine andere Fassung offen ist: Eine
+     von Hand gewählte Schablone bleibt über den Wechsel hinweg liegen. */
+  const schablone = frischeReferenz();
   pruefeStand(antwort.stand);
   frischerVerlauf(antwort.verlauf);
   zeigeZaehler();
@@ -3406,9 +3517,14 @@ async function speichern() {
 
      Beim Porträt bleibt es beim Alten: Vorlage ist dort das
      Ganzkörperbild, aus dem der Kopf kommt, und das soll nach dem
-     Schneiden nicht gegen das Porträt getauscht werden. */
+     Schneiden nicht gegen das Porträt getauscht werden.
+
+     Die Schablone kommt zuerst. Ihre Werte stehen schon im Eintrag, ihr
+     neues Bild lädt noch, und malte die Bühne dazwischen, stünde für
+     einen Augenblick das alte Bild im neuen Maß da. */
   if (!auftrag.quadrat && nochDa()) {
-    await waehleQuelle({ typ: 'fullsize', name: ziel.datei });
+    await schablone;
+    if (nochDa()) await waehleQuelle({ typ: 'fullsize', name: ziel.datei });
   }
 }
 
@@ -7112,6 +7228,9 @@ $('skala-speichern').addEventListener('click', async () => {
     ziel.korrektur = korrektur;
     frischerVerlauf(antwort.verlauf);
     if (S.ziel === ziel) vorschau();
+    /* Die Schablone liest ihre Größe aus demselben Eintrag. Liegt diese
+       Fassung über der Bühne, steht sie mit dem nächsten Malen neu da. */
+    if (S.referenz && S.referenz.datei === ziel.datei) zeichne();
     melde(skala === 1 && korrektur === 1
       ? `${ziel.datei} steht wieder auf der Standardgröße, chars.js führt die Datei nicht mehr.`
       : `Körpergröße ${skala.toFixed(2)}`

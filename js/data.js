@@ -35,6 +35,16 @@
    "Realname / Heldenname". Daraus entstehen Porträt, Auftrittszahl und
    Slug, siehe js/chars.js.
 
+   leads, cameos = wie groß die Rolle in genau diesem Titel ist, als Slugs
+   wie bei meets. leads sind die Hauptrollen, also die Figuren, die die
+   Handlung tragen, samt Gegenspieler. cameos sind die Kurzauftritte
+   bekannter Figuren: eine Abspannszene, eine Rückblende, ein einzelner
+   Moment. Wer in characters steht und in keiner der beiden Listen, spielt
+   eine Nebenrolle. Das Fenster der Timeline teilt die Besetzung danach
+   auf (js/main.js). Fehlen beide Felder, wie bei Titeln, die noch nicht
+   gelaufen sind, bleibt sie dort eine einzige Liste. Die Reihenfolge
+   innerhalb einer Gruppe kommt aus characters.
+
    meets = wer sich darin tatsächlich trifft, als Gruppen von Slugs.
    Ohne dieses Feld gilt die ganze characters-Liste als eine Gruppe, und
    das ist bei den meisten Titeln auch richtig. Gebraucht wird es
@@ -86,6 +96,7 @@ const PHASES = [
           "Knapp 70 Jahre später erwacht Steve in der Gegenwart und findet sich in einer völlig fremden Welt wieder.",
         ],
         characters: ["Steve Rogers / Captain America", "Peggy Carter", "Bucky Barnes / Winter Soldier", "Johann Schmidt / Red Skull", "Howard Stark", "Abraham Erskine", "Arnim Zola", "Chester Phillips"],
+        leads: ["steve-rogers", "peggy-carter", "johann-schmidt-red-skull"],
         meets: [
           ["steve-rogers", "peggy-carter", "bucky-barnes", "howard-stark"],
           ["steve-rogers", "peggy-carter", "howard-stark", "abraham-erskine", "chester-phillips"],
@@ -115,6 +126,8 @@ const PHASES = [
           "Zum Abschied gibt Carol Fury einen Pager für Notfälle und inspiriert ihn zur Avengers-Initiative, benannt nach ihrem Rufzeichen „Avenger“.",
         ],
         characters: ["Carol Danvers / Captain Marvel", "Nick Fury", "Talos", "Yon-Rogg", "Maria Rambeau", "Goose", "Supreme Intelligence", "Phil Coulson", "Ronan der Ankläger", "Att-Lass", "Bron-Char", "Korath der Verfolger", "G'iah"],
+        leads: ["carol-danvers", "nick-fury", "talos", "yon-rogg"],
+        cameos: ["g-iah"],
         meets: [
           ["carol-danvers", "nick-fury", "talos", "maria-rambeau", "goose", "phil-coulson", "yon-rogg"],
           ["carol-danvers", "yon-rogg", "ronan"],
@@ -142,6 +155,8 @@ const PHASES = [
           "Auf der Pressekonferenz wirft Tony das vorbereitete Skript beiseite und erklärt der Welt: „I am Iron Man.“ Nach dem Abspann spricht Nick Fury ihn erstmals auf die Avengers-Initiative an.",
         ],
         characters: ["Tony Stark / Iron Man", "Pepper Potts", "James Rhodes / War Machine", "Obadiah Stane / Iron Monger", "Nick Fury", "Happy Hogan", "Phil Coulson", "Raza Hamidmi Al-Wazar"],
+        leads: ["tony-stark", "pepper-potts", "james-rhodes", "obadiah-stane"],
+        cameos: ["nick-fury"],
         meets: [
           ["tony-stark", "pepper-potts", "james-rhodes", "obadiah-stane", "happy-hogan", "phil-coulson"],
           ["tony-stark", "raza", "obadiah-stane"],
@@ -164,6 +179,7 @@ const PHASES = [
           "Auf der Stark Expo übernehmen Vankos Drohnen die Kontrolle. Tony und Rhodey besiegen sie und Whiplash Seite an Seite.",
         ],
         characters: ["Tony Stark / Iron Man", "Natasha Romanoff / Black Widow", "James Rhodes / War Machine", "Ivan Vanko / Whiplash", "Justin Hammer", "Pepper Potts", "Nick Fury", "Happy Hogan", "Phil Coulson", "Howard Stark"],
+        leads: ["tony-stark", "pepper-potts", "james-rhodes", "natasha-romanoff", "ivan-vanko-whiplash", "justin-hammer"],
         meets: [
           ["tony-stark", "natasha-romanoff", "james-rhodes", "pepper-potts", "nick-fury", "happy-hogan", "phil-coulson"],
           ["tony-stark", "natasha-romanoff", "james-rhodes", "pepper-potts", "happy-hogan", "ivan-vanko-whiplash", "justin-hammer"],
@@ -186,6 +202,8 @@ const PHASES = [
           "Am Ende beginnt Banner im Exil, die Verwandlung zu kontrollieren. Tony Stark spricht Ross derweil auf ein „Team“ an.",
         ],
         characters: ["Bruce Banner / Hulk", "Betty Ross", "General Thaddeus „Thunderbolt“ Ross", "Emil Blonsky / Abomination", "Samuel Sterns / The Leader", "Tony Stark / Iron Man"],
+        leads: ["bruce-banner", "betty-ross", "thaddeus-ross", "emil-blonsky-abomination"],
+        cameos: ["tony-stark"],
         meets: [
           ["bruce-banner", "betty-ross", "thaddeus-ross", "emil-blonsky-abomination"],
           ["bruce-banner", "betty-ross", "emil-blonsky-abomination", "samuel-sterns-the-leader"],
@@ -209,6 +227,8 @@ const PHASES = [
           "Nach dem Abspann zeigt Fury dem Wissenschaftler Selvig den Tesserakt, heimlich beobachtet von Loki.",
         ],
         characters: ["Thor", "Loki", "Dr. Jane Foster", "Odin Borson / Odin", "Heimdall", "Nick Fury", "Sif", "Fandral", "Hogun", "Volstagg", "Laufey", "Destroyer", "Erik Selvig", "Phil Coulson", "Darcy Lewis", "Clint Barton / Hawkeye", "Frigga", "Jasper Sitwell"],
+        leads: ["thor", "loki", "jane-foster", "odin"],
+        cameos: ["nick-fury", "clint-barton"],
         meets: [
           ["thor", "loki", "odin", "heimdall", "sif", "fandral", "hogun", "volstagg"],
           ["thor", "loki", "odin", "sif", "fandral", "hogun", "volstagg", "laufey"],
@@ -237,6 +257,8 @@ const PHASES = [
           "Thor bringt Loki und den Tesserakt nach Asgard. Nach dem Abspann zeigt sich erstmals Thanos.",
         ],
         characters: ["Tony Stark / Iron Man", "Steve Rogers / Captain America", "Thor", "Bruce Banner / Hulk", "Natasha Romanoff / Black Widow", "Clint Barton / Hawkeye", "Loki", "Nick Fury", "Thanos", "Pepper Potts", "Maria Hill", "Phil Coulson", "Erik Selvig", "Der Andere", "Jasper Sitwell"],
+        leads: ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "loki", "nick-fury"],
+        cameos: ["thanos"],
         meets: [
           ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "loki", "nick-fury", "maria-hill", "phil-coulson", "erik-selvig"],
           ["tony-stark", "pepper-potts", "phil-coulson"],
@@ -271,6 +293,8 @@ const PHASES = [
           "Der Äther, die flüssige Form des Realitätssteins, wird dem Collector übergeben. Auf Asgards Thron sitzt derweil Loki, getarnt als Odin.",
         ],
         characters: ["Thor", "Loki", "Dr. Jane Foster", "Malekith", "Algrim / Kurse", "Frigga", "Odin Borson / Odin", "Taneleer Tivan / The Collector", "Sif", "Fandral", "Volstagg", "Erik Selvig", "Heimdall", "Hogun", "Darcy Lewis"],
+        leads: ["thor", "loki", "jane-foster", "malekith"],
+        cameos: ["the-collector", "hogun"],
         meets: [
           ["thor", "loki", "odin", "frigga", "heimdall", "sif", "fandral", "volstagg", "hogun", "jane-foster"],
           ["thor", "loki", "jane-foster", "malekith", "erik-selvig", "darcy-lewis"],
@@ -296,6 +320,7 @@ const PHASES = [
           "Tony sprengt symbolisch alle Anzüge, lässt sich die Granatsplitter aus der Brust operieren und wirft seinen alten Reaktor ins Meer.",
         ],
         characters: ["Tony Stark / Iron Man", "Pepper Potts", "Aldrich Killian", "James Rhodes / War Machine", "Happy Hogan", "Trevor Slattery / Mandarin"],
+        leads: ["tony-stark", "pepper-potts", "james-rhodes", "aldrich-killian"],
         meets: [
           ["tony-stark", "pepper-potts", "aldrich-killian", "james-rhodes", "happy-hogan"],
           ["tony-stark", "aldrich-killian", "trevor-slattery"],
@@ -318,6 +343,8 @@ const PHASES = [
           "Bucky zieht Steve bewusstlos aus dem Potomac und verschwindet. Nach dem Abspann tauchen erstmals Wanda und Pietro Maximoff auf, die sich mitsamt dem Zepter in HYDRAs Gewahrsam befinden.",
         ],
         characters: ["Steve Rogers / Captain America", "Natasha Romanoff / Black Widow", "Bucky Barnes / Winter Soldier", "Sam Wilson / Falcon", "Nick Fury", "Maria Hill", "Alexander Pierce", "Brock Rumlow / Crossbones", "Wanda Maximoff / Scarlet Witch", "Pietro Maximoff / Quicksilver", "Sharon Carter", "Arnim Zola", "Georges Batroc", "Peggy Carter", "Jasper Sitwell"],
+        leads: ["steve-rogers", "natasha-romanoff", "sam-wilson", "bucky-barnes", "nick-fury", "alexander-pierce"],
+        cameos: ["wanda-maximoff", "pietro-maximoff", "peggy-carter"],
         meets: [
           ["steve-rogers", "natasha-romanoff", "bucky-barnes", "sam-wilson", "nick-fury", "maria-hill", "alexander-pierce", "crossbones", "sharon-carter"],
           ["wanda-maximoff", "pietro-maximoff"],
@@ -345,6 +372,8 @@ const PHASES = [
           "Der Stein bleibt beim Nova Corps. Quill erfährt, dass er nur zur Hälfte Mensch ist, und aus einem Steckling wächst Baby Groot.",
         ],
         characters: ["Peter Quill / Star-Lord", "Gamora", "Drax", "Rocket Raccoon", "Groot", "Yondu", "Kraglin", "Ronan der Ankläger", "Nebula", "Thanos", "Taneleer Tivan / The Collector", "Howard the Duck", "Der Andere", "Eson der Sucher", "Korath der Verfolger", "Cosmo", "Irani Rael / Nova Prime", "Rhomann Dey"],
+        leads: ["peter-quill", "gamora", "drax", "rocket", "groot", "ronan"],
+        cameos: ["thanos", "der-andere", "howard-the-duck", "cosmo", "eson"],
         meets: [
           ["peter-quill", "gamora", "drax", "rocket", "groot", "yondu", "ronan", "nebula"],
           ["peter-quill", "gamora", "drax", "rocket", "groot", "the-collector"],
@@ -380,6 +409,8 @@ const PHASES = [
           "Nebula zieht allein los, um Thanos zu töten. In einer Abspannszene kündigen die Sovereign ihre neue Schöpfung namens Adam an.",
         ],
         characters: ["Peter Quill / Star-Lord", "Ego", "Yondu", "Kraglin", "Gamora", "Nebula", "Rocket Raccoon", "Baby Groot", "Mantis", "Taserface", "Stakar Ogord", "Krugarr", "Drax", "Ayesha", "Martinex"],
+        leads: ["peter-quill", "gamora", "drax", "rocket", "groot", "yondu", "ego"],
+        cameos: ["krugarr", "martinex"],
         meets: [
           ["peter-quill", "ego", "gamora", "drax", "mantis", "nebula", "rocket", "groot", "yondu"],
           ["yondu", "kraglin", "rocket", "groot", "nebula", "taserface"],
@@ -410,6 +441,8 @@ const PHASES = [
           "Nach dem Sieg formiert sich ein neues Avengers-Team um Wanda, Vision, Falcon und War Machine. Nach dem Abspann greift Thanos selbst zum Infinity-Handschuh.",
         ],
         characters: ["Tony Stark / Iron Man", "Steve Rogers / Captain America", "Thor", "Bruce Banner / Hulk", "Natasha Romanoff / Black Widow", "Clint Barton / Hawkeye", "Ultron", "Wanda Maximoff / Scarlet Witch", "Pietro Maximoff / Quicksilver", "Vision", "James Rhodes / War Machine", "Sam Wilson / Falcon", "Thanos", "Nick Fury", "Maria Hill", "Erik Selvig", "Wolfgang von Strucker", "Ulysses Klaue", "Laura Barton", "Cooper Barton", "Lila Barton"],
+        leads: ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "ultron", "wanda-maximoff", "pietro-maximoff"],
+        cameos: ["thanos", "sam-wilson"],
         meets: [
           ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "ultron", "wanda-maximoff", "pietro-maximoff", "vision", "james-rhodes", "nick-fury", "maria-hill"],
           ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "james-rhodes", "sam-wilson", "maria-hill"],
@@ -438,6 +471,8 @@ const PHASES = [
           "Hank zeigt Hope daraufhin einen neuen Wasp-Anzug. Falcon merkt sich derweil: „Ich kenne da einen Typen.“",
         ],
         characters: ["Scott Lang / Ant-Man", "Hank Pym", "Hope van Dyne / Wasp", "Darren Cross / Yellowjacket", "Sam Wilson / Falcon", "Luis", "Cassie Lang", "Dave", "Jim Paxton", "Kurt Goreshter", "Maggie Lang", "Janet van Dyne", "Howard Stark", "Peggy Carter", "Steve Rogers / Captain America", "Bucky Barnes / Winter Soldier"],
+        leads: ["scott-lang", "hank-pym", "hope-van-dyne", "darren-cross"],
+        cameos: ["sam-wilson", "janet-van-dyne", "howard-stark", "peggy-carter", "steve-rogers", "bucky-barnes"],
         meets: [
           ["scott-lang", "hank-pym", "hope-van-dyne", "darren-cross", "luis"],
           ["scott-lang", "cassie-lang", "darren-cross", "luis"],
@@ -478,6 +513,8 @@ const PHASES = [
           "Zum Schluss befreit Steve seine Mitstreiter aus dem Hochsicherheitsgefängnis Raft. Die Avengers sind zerbrochen.",
         ],
         characters: ["Steve Rogers / Captain America", "Tony Stark / Iron Man", "Bucky Barnes / Winter Soldier", "T'Challa / Black Panther", "Peter Parker / Spider-Man", "Helmut Zemo", "Natasha Romanoff / Black Widow", "Wanda Maximoff / Scarlet Witch", "General Thaddeus „Thunderbolt“ Ross", "James Rhodes / War Machine", "Brock Rumlow / Crossbones", "T'Chaka", "Sam Wilson / Falcon", "Clint Barton / Hawkeye", "Scott Lang / Ant-Man", "Vision", "Sharon Carter", "May Parker", "Everett Ross", "Ayo", "Howard Stark"],
+        leads: ["steve-rogers", "tony-stark", "bucky-barnes", "natasha-romanoff", "sam-wilson", "t-challa", "helmut-zemo"],
+        cameos: ["may-parker", "ayo", "howard-stark"],
         meets: [
           ["steve-rogers", "tony-stark", "bucky-barnes", "t-challa", "peter-parker", "natasha-romanoff", "wanda-maximoff", "james-rhodes", "sam-wilson", "clint-barton", "scott-lang", "vision"],
           ["steve-rogers", "tony-stark", "natasha-romanoff", "sam-wilson", "james-rhodes", "wanda-maximoff", "vision", "thaddeus-ross", "t-challa"],
@@ -508,6 +545,8 @@ const PHASES = [
           "Die Abspannszene spielt nach Endgame an Natashas Grab. Dort gibt Valentina Yelena ein neues Ziel: Clint Barton.",
         ],
         characters: ["Natasha Romanoff / Black Widow", "Yelena Belova", "Alexei / Red Guardian", "Melina Vostokoff", "Antonia Dreykov / Taskmaster", "General Dreykov", "General Thaddeus „Thunderbolt“ Ross", "Rick Mason", "Valentina Allegra de Fontaine"],
+        leads: ["natasha-romanoff", "yelena-belova", "alexei", "melina-vostokoff"],
+        cameos: ["valentina-allegra-de-fontaine"],
         meets: [
           ["natasha-romanoff", "yelena-belova", "alexei", "melina-vostokoff", "taskmaster", "general-dreykov"],
           ["natasha-romanoff", "rick-mason"],
@@ -532,6 +571,7 @@ const PHASES = [
           "T'Challa beendet Wakandas Isolation und öffnet Wissen und Hilfe des Landes erstmals der Welt.",
         ],
         characters: ["T'Challa / Black Panther", "Erik Killmonger", "Shuri", "Okoye", "Nakia", "M'Baku", "Everett Ross", "T'Chaka", "W'Kabi", "Zuri", "Königin Ramonda", "Ulysses Klaue", "Ayo"],
+        leads: ["t-challa", "erik-killmonger", "nakia", "okoye", "shuri"],
         meets: [
           ["t-challa", "erik-killmonger", "shuri", "okoye", "nakia", "m-baku", "everett-ross", "w-kabi", "zuri", "koenigin-ramonda", "ayo"],
           ["t-challa", "t-chaka", "zuri", "erik-killmonger"],
@@ -555,6 +595,8 @@ const PHASES = [
           "Peter lehnt Tonys Angebot ab, offiziell Avenger zu werden. In der letzten Szene entdeckt Tante May sein Geheimnis.",
         ],
         characters: ["Peter Parker / Spider-Man", "Tony Stark / Iron Man", "Adrian Toomes / Vulture", "Mac Gargan / Scorpion", "Ned Leeds", "May Parker", "Happy Hogan", "Pepper Potts", "Michelle Jones-Watson / MJ", "Herman Schultz / Shocker", "Flash Thompson", "Liz Allan", "Steve Rogers / Captain America"],
+        leads: ["peter-parker", "adrian-toomes-vulture", "tony-stark"],
+        cameos: ["pepper-potts", "steve-rogers"],
         meets: [
           ["peter-parker", "tony-stark", "adrian-toomes-vulture", "ned-leeds", "may-parker", "happy-hogan", "michelle-jones-watson"],
           ["tony-stark", "pepper-potts", "happy-hogan", "peter-parker"],
@@ -581,6 +623,8 @@ const PHASES = [
           "Mordo wendet sich enttäuscht von den Regelbrüchen der Zauberer ab. In der Abspannszene bietet Strange Thor seine Hilfe an.",
         ],
         characters: ["Stephen Strange / Doctor Strange", "The Ancient One", "Karl Mordo", "Wong", "Kaecilius", "Dormammu", "Thor", "Christine Palmer"],
+        leads: ["stephen-strange", "the-ancient-one", "karl-mordo", "kaecilius"],
+        cameos: ["thor"],
         meets: [
           ["stephen-strange", "the-ancient-one", "karl-mordo", "wong", "kaecilius"],
           ["stephen-strange", "christine-palmer"],
@@ -606,6 +650,8 @@ const PHASES = [
           "Loki nimmt heimlich den Tesserakt mit. Nach dem Abspann fängt ein gewaltiges Schiff die Flüchtlinge ab, das Thanos gehört.",
         ],
         characters: ["Thor", "Bruce Banner / Hulk", "Loki", "Hela", "Brunnhilde / Valkyrie", "Grandmaster", "Topaz", "Heimdall", "Odin Borson / Odin", "Skurge", "Surtur", "Hogun", "Fandral", "Volstagg", "Stephen Strange / Doctor Strange", "Korg", "Miek"],
+        leads: ["thor", "loki", "bruce-banner", "hela", "valkyrie"],
+        cameos: ["stephen-strange", "hogun", "fandral", "volstagg"],
         meets: [
           ["thor", "loki", "stephen-strange", "odin"],
           ["thor", "loki", "hela", "heimdall", "valkyrie", "skurge", "bruce-banner", "korg"],
@@ -632,6 +678,7 @@ const PHASES = [
           "Die Mid-Credit-Szene ändert alles. Während Scott im Quantenraum Partikel sammelt, zerfallen Hank, Janet und Hope durch Thanos' Snap zu Staub, und Scott sitzt fest.",
         ],
         characters: ["Scott Lang / Ant-Man", "Hope van Dyne / Wasp", "Hank Pym", "Janet van Dyne", "Ava Starr / Ghost", "Luis", "Cassie Lang", "Bill Foster / Goliath", "Dave", "Jim Paxton", "Kurt Goreshter", "Maggie Lang", "Sonny Burch", "Jimmy Woo"],
+        leads: ["scott-lang", "hope-van-dyne", "hank-pym", "ava-starr"],
         meets: [
           ["scott-lang", "hope-van-dyne", "hank-pym", "janet-van-dyne", "ava-starr", "luis"],
           ["scott-lang", "cassie-lang", "luis"],
@@ -660,6 +707,8 @@ const PHASES = [
           "Nach dem Abspann funkt Fury im letzten Moment einen Pager an, auf dem das Logo von Captain Marvel erscheint.",
         ],
         characters: ["Thanos", "Tony Stark / Iron Man", "Stephen Strange / Doctor Strange", "Peter Parker / Spider-Man", "Thor", "Steve Rogers / Captain America", "Peter Quill / Star-Lord", "Gamora", "Drax", "Rocket Raccoon", "Groot", "Mantis", "Wanda Maximoff / Scarlet Witch", "Vision", "Loki", "Heimdall", "Shuri", "Johann Schmidt / Red Skull", "Nick Fury", "General Thaddeus „Thunderbolt“ Ross", "Pepper Potts", "James Rhodes / War Machine", "Wong", "Bucky Barnes / Winter Soldier", "Sam Wilson / Falcon", "Natasha Romanoff / Black Widow", "Bruce Banner / Hulk", "Nebula", "T'Challa / Black Panther", "Okoye", "M'Baku", "Maria Hill", "Ebony Maw", "Corvus Glaive", "Proxima Midnight", "Cull Obsidian", "Eitri", "Ayo", "The Collector"],
+        leads: ["thanos", "tony-stark", "stephen-strange", "peter-parker", "thor", "steve-rogers", "peter-quill", "gamora", "wanda-maximoff", "vision"],
+        cameos: ["johann-schmidt-red-skull", "nick-fury", "maria-hill", "the-collector", "thaddeus-ross", "ayo"],
         meets: [
           ["tony-stark", "pepper-potts"],
           ["tony-stark", "stephen-strange", "wong", "bruce-banner", "peter-parker"],
@@ -700,6 +749,8 @@ const PHASES = [
           "Steve bringt die Steine in ihre Zeiten zurück und bleibt in der Vergangenheit bei Peggy. Als alter Mann übergibt er den Schild an Sam Wilson.",
         ],
         characters: ["Tony Stark / Iron Man", "Steve Rogers / Captain America", "Thor", "Bruce Banner / Hulk", "Natasha Romanoff / Black Widow", "Clint Barton / Hawkeye", "Thanos", "Thanos (2014)", "Carol Danvers / Captain Marvel", "Nebula", "Nebula (2014)", "Scott Lang / Ant-Man", "Peggy Carter", "Sam Wilson / Falcon", "Nick Fury", "Happy Hogan", "Pepper Potts", "James Rhodes / War Machine", "Wong", "Rocket Raccoon", "Bucky Barnes / Winter Soldier", "T'Challa / Black Panther", "Peter Parker / Spider-Man", "Stephen Strange / Doctor Strange", "Wanda Maximoff / Scarlet Witch", "Okoye", "Shuri", "Brunnhilde / Valkyrie", "Korg", "Peter Quill / Star-Lord", "Gamora (2014)", "Drax", "Groot", "Mantis", "Hank Pym", "Janet van Dyne", "Hope van Dyne / Wasp", "Howard Stark", "Loki", "Frigga", "Dr. Jane Foster", "Maria Hill", "The Ancient One", "Alexander Pierce", "Brock Rumlow / Crossbones", "Johann Schmidt / Red Skull", "Ebony Maw (2014)", "Corvus Glaive (2014)", "Proxima Midnight (2014)", "Cull Obsidian (2014)", "Howard the Duck", "Laura Barton", "Cooper Barton", "Lila Barton", "Nathaniel Barton", "Miek"],
+        leads: ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "clint-barton", "scott-lang", "nebula", "james-rhodes", "rocket", "thanos-2014"],
+        cameos: ["happy-hogan", "wong", "peggy-carter", "howard-stark", "the-ancient-one", "frigga", "jane-foster", "loki", "alexander-pierce", "crossbones", "johann-schmidt-red-skull", "hank-pym", "janet-van-dyne", "drax", "groot", "mantis", "shuri", "maria-hill", "nick-fury", "howard-the-duck", "laura-barton", "cooper-barton", "lila-barton", "nathaniel-barton", "miek"],
         meets: [
           ["tony-stark", "steve-rogers", "thor", "bruce-banner", "natasha-romanoff", "james-rhodes", "carol-danvers", "nebula", "rocket", "thanos", "clint-barton", "scott-lang", "okoye", "pepper-potts"],
           ["tony-stark", "steve-rogers", "bruce-banner", "scott-lang", "loki", "alexander-pierce", "crossbones", "the-ancient-one"],
@@ -742,6 +793,8 @@ const PHASES = [
           "Loki strandet in einer fremden TVA, in der Mobius ihn nicht kennt. Dort steht eine Statue des Mannes, der eben noch starb.",
         ],
         characters: ["Loki", "Sylvie", "Mobius", "Ravonna Renslayer", "Hunter B-15", "Miss Minutes", "Throg", "Alioth", "Jener der bleibt", "Classic Loki", "Kid Loki", "Boastful Loki", "Alligator Loki", "President Loki", "Sif"],
+        leads: ["loki", "sylvie", "mobius"],
+        cameos: ["president-loki", "throg", "sif"],
         meets: [
           ["loki", "sylvie", "mobius", "ravonna-renslayer", "miss-minutes"],
           ["loki", "sylvie", "miss-minutes"],
@@ -773,6 +826,7 @@ const PHASES = [
           "In der Abspannszene studiert Wanda in einer einsamen Berghütte den Darkhold und hört ihre Kinder um Hilfe rufen.",
         ],
         characters: ["Wanda Maximoff / Scarlet Witch", "Vision", "White Vision", "Agatha Harkness", "Monica Rambeau", "Darcy Lewis", "Jimmy Woo", "Billy Maximoff / Wiccan", "Sharon Davis / Mrs. Hart", "Tyler Hayward"],
+        leads: ["wanda-maximoff", "vision", "agatha-harkness", "monica-rambeau"],
         meets: [
           ["wanda-maximoff", "vision", "agatha-harkness", "monica-rambeau", "billy-maximoff-wiccan", "darcy-lewis"],
           ["monica-rambeau", "darcy-lewis", "jimmy-woo", "wanda-maximoff", "agatha-harkness"],
@@ -798,6 +852,8 @@ const PHASES = [
           "In der Abspannszene untersuchen Wong, Captain Marvel und Bruce Banner die Ringe, die ein Signal an ein unbekanntes Ziel senden. Xialing übernimmt derweil die Organisation ihres Vaters.",
         ],
         characters: ["Shang-Chi", "Katy", "Wenwu / Mandarin", "Xialing", "Razor Fist", "Trevor Slattery / Mandarin", "Wong", "Carol Danvers / Captain Marvel", "Bruce Banner / Hulk", "Emil Blonsky / Abomination", "Ying Li", "Ying Nan", "Li Ching-Lin / Death Dealer", "Morris", "Der Große Beschützer"],
+        leads: ["shang-chi", "katy", "wenwu-mandarin", "xialing"],
+        cameos: ["wong", "emil-blonsky-abomination", "carol-danvers", "bruce-banner"],
         meets: [
           ["shang-chi", "katy", "wenwu-mandarin", "xialing", "razor-fist", "trevor-slattery"],
           ["shang-chi", "katy", "wong", "carol-danvers", "bruce-banner"],
@@ -826,6 +882,8 @@ const PHASES = [
           "Isaiah erhält seinen Platz im Smithsonian. Walker wird von Valentina als „U.S. Agent“ rekrutiert.",
         ],
         characters: ["Sam Wilson / Falcon", "Bucky Barnes / Winter Soldier", "John Walker", "Karli Morgenthau", "Helmut Zemo", "Sharon Carter", "Isaiah Bradley", "Joaquin Torres", "Valentina Allegra de Fontaine", "Ayo", "Eli Bradley", "Georges Batroc"],
+        leads: ["sam-wilson", "bucky-barnes", "john-walker", "karli-morgenthau", "helmut-zemo"],
+        cameos: ["valentina-allegra-de-fontaine"],
         meets: [
           ["sam-wilson", "bucky-barnes", "john-walker", "karli-morgenthau", "helmut-zemo", "sharon-carter", "joaquin-torres-falcon"],
           ["bucky-barnes", "isaiah-bradley", "sam-wilson"],
@@ -853,6 +911,8 @@ const PHASES = [
           "Die Mid-Credit-Szene schlägt ein wie eine Bombe. Ein manipuliertes Video macht Peter zum Mörder Mysterios und enthüllt der ganzen Welt seine Identität.",
         ],
         characters: ["Peter Parker / Spider-Man", "Quentin Beck / Mysterio", "Michelle Jones-Watson / MJ", "Nick Fury", "Happy Hogan", "Ned Leeds", "May Parker", "Talos", "E.D.I.T.H.", "J. Jonah Jameson", "Dimitri Smerdyakov", "Flash Thompson"],
+        leads: ["peter-parker", "quentin-beck-mysterio", "michelle-jones-watson", "nick-fury"],
+        cameos: ["j-jonah-jameson", "talos"],
         meets: [
           ["j-jonah-jameson", "peter-parker", "quentin-beck-mysterio"],
           ["talos", "peter-parker", "e-d-i-t-h"],
@@ -882,6 +942,8 @@ const PHASES = [
           "Arishem entführt Sersi, Phastos und Kingo, um über die Erde zu richten. In den Abspannszenen treten Thanos' Bruder Eros und Dane Whitmans Ebony Blade auf.",
         ],
         characters: ["Sersi", "Ikaris", "Thena", "Kingo", "Sprite", "Druig", "Makkari", "Phastos", "Ajak", "Gilgamesh", "Kro", "Dane Whitman / Black Knight", "Arishem der Richter", "Tiamut der Kommunikator", "Nezarr der Rechner", "Eros / Starfox", "Jemiah der Analytiker", "Karun Patel", "Pip der Troll"],
+        leads: ["sersi", "ikaris", "thena", "kingo", "sprite", "druig", "makkari", "phastos", "ajak", "gilgamesh"],
+        cameos: ["eros-starfox", "pip-der-troll", "nezarr", "jemiah"],
         meets: [
           ["sersi", "ikaris", "thena", "kingo", "sprite", "druig", "makkari", "phastos", "ajak", "gilgamesh"],
           ["dane-whitman", "sersi", "sprite", "ikaris", "kingo", "kro"],
@@ -912,6 +974,8 @@ const PHASES = [
           "Peter beginnt allein von vorn, in einer kleinen Wohnung und mit selbstgenähtem Anzug.",
         ],
         characters: ["Peter Parker / Spider-Man", "Peter Parker / Spider-Man (Maguire)", "Peter Parker / Spider-Man (Garfield)", "Stephen Strange / Doctor Strange", "Norman Osborn / Green Goblin", "Otto Octavius / Doctor Octopus", "Max Dillon / Electro", "Curt Connors / Lizard", "Flint Marko / Sandman", "Michelle Jones-Watson / MJ", "Ned Leeds", "Happy Hogan", "Wong", "May Parker", "Matt Murdock / Daredevil", "J. Jonah Jameson", "Agent Cleary", "Flash Thompson"],
+        leads: ["peter-parker", "peter-parker-maguire", "peter-parker-garfield", "michelle-jones-watson", "ned-leeds", "stephen-strange", "green-goblin", "doc-ock"],
+        cameos: ["matt-murdock-daredevil", "wong"],
         meets: [
           ["peter-parker", "stephen-strange", "green-goblin", "doc-ock", "electro", "curt-connors", "sandman", "michelle-jones-watson", "ned-leeds", "happy-hogan", "may-parker"],
           ["peter-parker", "stephen-strange", "wong"],
@@ -940,6 +1004,8 @@ const PHASES = [
           "Strange trägt als Rechnung für den Darkhold fortan ein drittes Auge. In der Abspannszene holt ihn die Zauberin Clea in die Dunkle Dimension.",
         ],
         characters: ["Stephen Strange / Doctor Strange", "Wanda Maximoff / Scarlet Witch", "America Chavez", "Wong", "Christine Palmer", "Charles Xavier / Professor X", "Black Bolt", "Clea", "Rintrah", "Stephen Strange / Defender Strange (Erde-617)", "Reed Richards / Mister Fantastic (Erde-838)", "Karl Mordo / Baron Mordo (Erde-838)", "Peggy Carter / Captain Carter (Erde-838)", "Maria Rambeau / Captain Marvel (Erde-838)", "Christine Palmer (Erde-838)", "Wanda Maximoff / Scarlet Witch (Erde-838)", "Stephen Strange / Sinister Strange (andere Welt)", "Elder Beast"],
+        leads: ["stephen-strange", "wanda-maximoff", "america-chavez", "wong"],
+        cameos: ["reed-richards-838", "peggy-carter-838", "maria-rambeau-838", "charles-xavier-professor-x", "black-bolt", "clea"],
         meets: [
           ["stephen-strange", "wanda-maximoff", "america-chavez", "wong", "christine-palmer"],
           ["defender-strange", "america-chavez"],
@@ -970,6 +1036,8 @@ const PHASES = [
           "Clint nimmt Kate mit zu seiner Familie aufs Land, ein Neuanfang für beide Hawkeyes.",
         ],
         characters: ["Clint Barton / Hawkeye", "Kate Bishop", "Yelena Belova", "Maya Lopez / Echo", "Wilson Fisk / Kingpin", "Eleanor Bishop", "Jack Duquesne", "Kazi Kazimierczak", "Laura Barton", "Cooper Barton", "Lila Barton", "Nathaniel Barton", "William Lopez", "Ivan Banionis", "Tomas", "Enrique", "Dmitri", "Wendy Conrad", "Lucky", "Valentina Allegra de Fontaine"],
+        leads: ["clint-barton", "kate-bishop"],
+        cameos: ["valentina-allegra-de-fontaine"],
         meets: [
           ["clint-barton", "kate-bishop", "yelena-belova", "maya-lopez-echo"],
           ["kate-bishop", "wilson-fisk-kingpin", "maya-lopez-echo"],
@@ -1005,6 +1073,8 @@ const PHASES = [
           "Logan bleibt in Wades Universum und findet dort eine neue Ersatzfamilie inklusive Dogpool.",
         ],
         characters: ["Wade Wilson / Deadpool", "Logan / Wolverine", "Cassandra Nova", "Mr. Paradox", "Dogpool (Earth-TRN872)", "Wade Wilson / Nicepool (Earth-TRN872)", "Eric Brooks / Blade", "Remy LeBeau / Gambit", "Cain Marko / Juggernaut", "Toad", "Azazel", "Piotr Rasputin / Colossus", "Alioth", "Wade Winston Wilson / Cowboypool (Earth-TRN872)", "Johnny Storm / Human Torch (Erde-121698)", "Kidpool (Earth-66345)", "Wanda Wilson / Ladypool (Earth-TRN872)", "Laura / X-23", "Watari / Samuraipool (Earth-11542)", "Warda Wilson / Deadpool 2099", "Wade Winston Wilson / Zenpool", "Victor Creed / Sabretooth", "John Allerdyce / Pyro", "Elektra Natchios (Earth-701306)", "Althea / Blind Al", "Ellie Phimister / Negasonic Teenage Warhead", "Yukio", "Peter Wisdom / Peterpool", "Rusty / Shatterstar", "Headpool", "Callisto", "Quill", "Yuriko Oyama / Lady Deathstrike"],
+        leads: ["wade-wilson-deadpool", "logan-wolverine", "cassandra-nova", "mr-paradox"],
+        cameos: ["johnny-storm-121698", "juggernaut", "toad", "azazel", "victor-creed-sabretooth", "lady-deathstrike", "callisto", "quill", "cowboypool", "kidpool", "ladypool", "samuraipool", "deadpool-2099", "zenpool", "headpool", "colossus", "negasonic-teenage-warhead", "yukio", "shatterstar"],
         meets: [
           ["wade-wilson-deadpool", "logan-wolverine", "cassandra-nova", "blade", "remy-lebeau-gambit", "dogpool"],
           ["wade-wilson-deadpool", "nicepool", "dogpool", "logan-wolverine"],
@@ -1043,6 +1113,7 @@ const PHASES = [
           "Die Abspannszene enthüllt eine dritte Persönlichkeit namens Jake Lockley, der Harrow in Khonshus Auftrag erschießt.",
         ],
         characters: ["Marc Spector / Steven Grant / Moon Knight", "Layla El-Faouly", "Arthur Harrow", "Khonshu", "Ammit", "Taweret"],
+        leads: ["marc-spector-steven-grant-moon-knight", "layla-el-faouly", "arthur-harrow"],
       },
       {
         title: "Ms. Marvel",
@@ -1061,6 +1132,8 @@ const PHASES = [
           "Bruno entdeckt in Kamalas Genen eine Besonderheit, und zum ersten Mal im MCU fällt das Wort „Mutation“. In der Abspannszene tauscht der Armreif Kamala gegen Carol Danvers aus.",
         ],
         characters: ["Kamala Khan / Ms. Marvel", "Bruno Carrelli", "Nakia Bahadir", "Kamran", "Muneeba Khan", "Aamir Khan", "Sana Ali", "Carol Danvers / Captain Marvel", "Agent Cleary", "Kareem / Red Dagger", "Yusuf Khan"],
+        leads: ["kamala-khan-ms-marvel", "bruno-carrelli", "nakia-bahadir", "kamran"],
+        cameos: ["carol-danvers"],
         meets: [
           ["kamala-khan-ms-marvel", "bruno-carrelli", "nakia-bahadir", "kamran", "muneeba-khan"],
           ["kamala-khan-ms-marvel", "carol-danvers"],
@@ -1089,6 +1162,8 @@ const PHASES = [
           "Jane stirbt in Thors Armen und erreicht Walhalla. In der Abspannszene schickt der gedemütigte Zeus seinen Sohn Hercules los.",
         ],
         characters: ["Thor", "Dr. Jane Foster / Mighty Thor", "Gorr der Götterschlächter", "Brunnhilde / Valkyrie", "Korg", "Zeus", "Peter Quill / Star-Lord", "Drax", "Rocket Raccoon", "Groot", "Mantis", "Nebula", "Sif", "Hercules", "Love", "Miek", "Tanngrisnir und Tanngnjostr / The Goats"],
+        leads: ["thor", "jane-foster", "gorr", "valkyrie", "korg"],
+        cameos: ["peter-quill", "drax", "rocket", "groot", "mantis", "nebula", "sif", "hercules"],
         meets: [
           ["thor", "peter-quill", "drax", "rocket", "groot", "mantis", "nebula", "korg", "miek"],
           ["thor", "korg", "sif", "valkyrie", "jane-foster"],
@@ -1115,6 +1190,8 @@ const PHASES = [
           "Im neuen Ausgang wird Drahtzieher Todd verhaftet, Bruce präsentiert seinen Sohn Skaar, und Matt kommt zum Familienessen.",
         ],
         characters: ["Jennifer Walters / She-Hulk", "Bruce Banner / Hulk", "Nikki Ramos", "Titania", "Matt Murdock / Daredevil", "Emil Blonsky / Abomination", "Wong", "Brian Phillip Calusky / Piledriver", "Alejandro Montoya / El Águila", "Alexander Gentry / Porcupine", "Dirk Garthwaite / Wrecker", "Muzzafar Lambert / Saracen", "William Taurens / Man-Bull", "Craig Hollis / Mr. Immortal", "Donny Blaze", "Eugene Patilio / Leapfrog", "Luke Jacobson", "Mallory Book", "Skaar", "Todd Phelps / HulkKing", "Augustus Pugliese", "Eliot Franklin / Thunderball", "Henry Camp / Bulldozer"],
+        leads: ["jennifer-walters-she-hulk", "nikki-ramos", "titania"],
+        cameos: ["skaar"],
         meets: [
           ["piledriver", "jennifer-walters-she-hulk", "titania"],
           ["jennifer-walters-she-hulk", "dirk-garthwaite-wrecker", "piledriver", "eliot-franklin-thunderball", "henry-camp-bulldozer"],
@@ -1149,6 +1226,8 @@ const PHASES = [
           "In Haiti verbrennt Shuri ihre Trauerkleidung. Nakia stellt ihr den kleinen Toussaint vor, T'Challas geheimen Sohn.",
         ],
         characters: ["Shuri / Black Panther", "Namor", "Okoye", "Königin Ramonda", "Riri Williams / Ironheart", "M'Baku", "Erik Killmonger", "Nakia", "Everett Ross", "Valentina Allegra de Fontaine", "Aneka", "Attuma", "Ayo", "Namora"],
+        leads: ["shuri", "namor", "okoye", "koenigin-ramonda", "riri-williams", "nakia"],
+        cameos: ["erik-killmonger"],
         meets: [
           ["shuri", "namor", "okoye", "koenigin-ramonda", "riri-williams", "m-baku", "nakia", "everett-ross", "ayo", "aneka"],
           ["shuri", "erik-killmonger"],
@@ -1185,6 +1264,7 @@ const PHASES = [
           "Als Gott der Geschichten hält Loki fortan alle Zeitlinien wie einen lebenden Baum zusammen, allein auf dem Thron am Ende der Zeit.",
         ],
         characters: ["Loki", "Mobius", "Sylvie", "Ouroboros (O.B.)", "Victor Timely", "Miss Minutes", "Ravonna Renslayer", "Hunter B-15", "Jener der bleibt"],
+        leads: ["loki", "mobius", "sylvie", "ouroboros-o-b"],
       },
       {
         title: "Ant-Man and the Wasp: Quantumania",
@@ -1203,6 +1283,8 @@ const PHASES = [
           "Die Mid-Credit-Szene zeigt das wahre Ausmaß, denn unzählige Kang-Varianten versammeln sich zum Rat, und der Eroberer war nur einer von vielen.",
         ],
         characters: ["Scott Lang / Ant-Man", "Hope van Dyne / Wasp", "Cassie Lang", "Janet van Dyne", "Hank Pym", "Kang der Eroberer", "Darren Cross / MODOK", "Rama-Tut", "Veb", "Jentorra", "Krylar", "Quaz", "Immortus", "Scarlet Centurion"],
+        leads: ["scott-lang", "hope-van-dyne", "cassie-lang", "janet-van-dyne", "hank-pym", "kang-der-eroberer"],
+        cameos: ["krylar", "rama-tut", "immortus", "scarlet-centurion"],
         meets: [
           ["scott-lang", "hope-van-dyne", "cassie-lang", "janet-van-dyne", "hank-pym", "kang-der-eroberer", "darren-cross"],
           ["kang-der-eroberer", "rama-tut"],
@@ -1230,6 +1312,8 @@ const PHASES = [
           "Beim Abschied kehrt Gamora zu den Ravagers zurück, Mantis geht ihren eigenen Weg, Nebula und Drax ziehen die geretteten Kinder groß, Quill besucht seinen Großvater auf der Erde, und Rocket führt die neuen Guardians an.",
         ],
         characters: ["Rocket Raccoon", "Peter Quill / Star-Lord", "Gamora (2014)", "Nebula", "Drax", "Mantis", "Groot", "Kraglin", "High Evolutionary", "Adam Warlock", "Stakar Ogord", "Ayesha", "Cosmo", "Lylla", "Teefs", "Floor", "Phyla-Vell", "Martinex"],
+        leads: ["rocket", "peter-quill", "gamora-2014", "nebula", "drax", "mantis", "groot", "high-evolutionary"],
+        cameos: ["martinex"],
         meets: [
           ["rocket", "peter-quill", "gamora-2014", "nebula", "drax", "mantis", "groot", "high-evolutionary", "adam-warlock"],
           ["rocket", "peter-quill", "gamora-2014", "nebula", "drax", "groot", "stakar-ogord"],
@@ -1259,6 +1343,7 @@ const PHASES = [
           "Präsident Ritson erklärt alle Aliens zu Feinden. Zurück bleibt ein Klima totalen Misstrauens, während Fury zur Raumstation S.A.B.E.R. aufbricht.",
         ],
         characters: ["Nick Fury", "Talos", "Gravik", "G'iah", "Sonya Falsworth", "Präsident James Ritson", "James Rhodes / War Machine", "Maria Hill", "Pagon", "Varra / Priscilla Davis"],
+        leads: ["nick-fury", "talos", "gravik", "g-iah", "sonya-falsworth"],
         meets: [
           ["nick-fury", "talos", "gravik", "g-iah", "maria-hill", "sonya-falsworth"],
           ["nick-fury", "james-rhodes", "praesident-james-ritson", "sonya-falsworth", "gravik"],
@@ -1283,6 +1368,7 @@ const PHASES = [
           "In der Abspannszene fasst Fisk einen neuen Plan, nämlich die Bürgermeisterwahl von New York.",
         ],
         characters: ["Maya Lopez / Echo", "Wilson Fisk / Kingpin", "Chula", "Bonnie", "Henry Lopez"],
+        leads: ["maya-lopez-echo", "wilson-fisk-kingpin"],
       },
       {
         title: "The Marvels",
@@ -1301,6 +1387,8 @@ const PHASES = [
           "Kamala rekrutiert daheim in bester Fury-Manier Kate Bishop. In der Abspannszene erwacht Monica in einer Welt mit Binary und dem Beast der X-Men.",
         ],
         characters: ["Carol Danvers / Captain Marvel", "Monica Rambeau", "Kamala Khan / Ms. Marvel", "Dar-Benn", "Nick Fury", "Kate Bishop", "Hank McCoy / Beast (Earth-10005)", "Goose", "Muneeba Khan", "Bruno Carrelli", "Maria Rambeau / Binary (Earth-10005)", "Prinz Yan", "Yusuf Khan"],
+        leads: ["carol-danvers", "monica-rambeau", "kamala-khan-ms-marvel", "dar-benn"],
+        cameos: ["kate-bishop", "hank-mccoy-beast", "maria-rambeau-binary"],
         meets: [
           ["carol-danvers", "monica-rambeau", "kamala-khan-ms-marvel", "dar-benn", "nick-fury", "goose", "muneeba-khan", "bruno-carrelli"],
           ["monica-rambeau", "hank-mccoy-beast", "maria-rambeau-binary"],
@@ -1327,6 +1415,7 @@ const PHASES = [
           "Agatha opfert sich und nimmt mit einem Kuss den Tod auf sich, der Billy galt. Als Geist an seiner Seite sucht sie mit ihm nach Tommy, dem zweiten Zwilling.",
         ],
         characters: ["Agatha Harkness", "Billy Maximoff / Wiccan", "Rio Vidal", "Lilia Calderu", "Jennifer Kale", "Alice Wu-Gulliver", "Sharon Davis / Mrs. Hart"],
+        leads: ["agatha-harkness", "billy-maximoff-wiccan", "rio-vidal"],
         meets: [
           ["agatha-harkness", "billy-maximoff-wiccan", "lilia-calderu", "jennifer-kale", "alice-wu-gulliver", "mrs-hart"],
           ["agatha-harkness", "rio-vidal"],
@@ -1350,6 +1439,8 @@ const PHASES = [
           "Ross tritt zurück und geht in den Raft, und Isaiah wird rehabilitiert. Aus seiner Zelle warnt Sterns vor dem, was noch kommt.",
         ],
         characters: ["Sam Wilson / Captain America", "General Thaddeus „Thunderbolt“ Ross / Red Hulk", "Joaquin Torres / Falcon", "Isaiah Bradley", "Samuel Sterns / The Leader", "Betty Ross", "Leila Taylor"],
+        leads: ["sam-wilson", "thaddeus-ross", "joaquin-torres-falcon"],
+        cameos: ["betty-ross"],
         meets: [
           ["sam-wilson", "thaddeus-ross", "joaquin-torres-falcon", "isaiah-bradley", "samuel-sterns-the-leader"],
           ["sam-wilson", "thaddeus-ross", "betty-ross", "joaquin-torres-falcon"],
@@ -1373,6 +1464,8 @@ const PHASES = [
           "Im Finale putscht sich Fisk faktisch zur Alleinherrschaft mit Ausnahmezustand und Jagd auf alle Maskierten. Matt, Karen und Frank Castle formieren den Widerstand aus dem Untergrund.",
         ],
         characters: ["Matt Murdock / Daredevil", "Wilson Fisk / Kingpin", "Benjamin Poindexter / Bullseye", "Frank Castle / Punisher", "Vanessa Fisk", "Muse", "Karen Page", "Connor Powell", "Cole North", "Hector Ayala / White Tiger", "Jack Duquesne / Swordsman", "Mr. Charles", "Franklin Nelson / Foggy", "Heather Glenn", "Luke Cage"],
+        leads: ["matt-murdock-daredevil", "wilson-fisk-kingpin"],
+        cameos: ["luke-cage"],
         meets: [
           ["matt-murdock-daredevil", "wilson-fisk-kingpin", "vanessa-fisk", "karen-page", "muse", "cole-north", "white-tiger", "connor-powell"],
           ["matt-murdock-daredevil", "bullseye", "karen-page", "frank-castle-punisher"],
@@ -1400,6 +1493,7 @@ const PHASES = [
           "Dann folgt der folgenschwere Pakt, denn Mephisto, die Quelle der Kapuze, bietet Riri an, die echte Natalie zurückzubringen. Sie schlägt ein, und dunkle Adern zeichnen ihren Arm.",
         ],
         characters: ["Riri Williams / Ironheart", "Parker Robbins / The Hood", "N.A.T.A.L.I.E.", "Ezekiel Stane / Joe McGillicuddy", "Mephisto", "Clown", "Jeri Blood", "John King", "Landon", "Ronnie Williams", "Roz Blood", "Slug", "Zelma Stanton"],
+        leads: ["riri-williams", "parker-robbins-the-hood", "n-a-t-a-l-i-e"],
         meets: [
           ["riri-williams", "parker-robbins-the-hood", "n-a-t-a-l-i-e", "ezekiel-stane"],
           ["parker-robbins-the-hood", "mephisto"],
@@ -1426,6 +1520,8 @@ const PHASES = [
           "Valentina dreht den PR-Spieß um und präsentiert die Truppe der Welt als „New Avengers“. In der Abspannszene, 14 Monate später, erscheint am Himmel ein Schiff mit dem Logo der Fantastic Four.",
         ],
         characters: ["Yelena Belova", "Bucky Barnes / Winter Soldier", "Alexei / Red Guardian", "Ava Starr / Ghost", "John Walker / U.S. Agent", "Bob / Sentry", "Valentina Allegra de Fontaine", "Antonia Dreykov / Taskmaster", "Mel"],
+        leads: ["yelena-belova", "bucky-barnes", "alexei", "ava-starr", "john-walker", "bob-sentry", "valentina-allegra-de-fontaine"],
+        cameos: ["taskmaster"],
       },
     ],
   },
@@ -1455,6 +1551,8 @@ const PHASES = [
           "In der Abspannszene, Jahre später, steht ein Fremder mit grüner Kapuze und Maske bei Franklin, nämlich Doom.",
         ],
         characters: ["Reed Richards / Mister Fantastic", "Sue Storm / Invisible Woman", "Johnny Storm / Human Torch", "Ben Grimm / The Thing", "Galactus", "Shalla-Bal / Silver Surfer", "Doctor Doom", "H.E.R.B.I.E.", "Franklin Richards", "Giganto", "Harvey Elder / Mole Man", "Rachel Rozman"],
+        leads: ["reed-richards-mister-fantastic", "sue-storm-invisible-woman", "johnny-storm-human-torch", "ben-grimm-the-thing", "galactus", "silver-surfer"],
+        cameos: ["doctor-doom", "giganto"],
         meets: [
           ["reed-richards-mister-fantastic", "sue-storm-invisible-woman", "johnny-storm-human-torch", "ben-grimm-the-thing", "galactus", "silver-surfer", "franklin-richards"],
           ["h-e-r-b-i-e", "reed-richards-mister-fantastic", "sue-storm-invisible-woman", "johnny-storm-human-torch", "ben-grimm-the-thing"],
@@ -1478,6 +1576,7 @@ const PHASES = [
           "An seiner Seite wittert Trevor Slattery, der einstige Fake-Mandarin, sein ganz großes Comeback.",
         ],
         characters: ["Simon Williams / Wonder Man", "Trevor Slattery / Mandarin", "Regisseur Von Kovak", "Agent Cleary", "DeMarr Davis / Doorman", "Eric Williams", "Janelle Jackson", "Martha Williams", "Sanford Williams"],
+        leads: ["simon-williams", "trevor-slattery"],
         meets: [
           ["simon-williams", "eric-williams", "martha-williams", "janelle-jackson", "trevor-slattery"],
           ["simon-williams", "sanford-williams", "eric-williams", "martha-williams"],
@@ -1499,6 +1598,7 @@ const PHASES = [
           "Ihr MCU-Debüt gibt Jessica Jones, die superstarke Privatdetektivin aus den alten Netflix-Serien.",
         ],
         characters: ["Matt Murdock / Daredevil", "Wilson Fisk / Kingpin", "Jessica Jones", "Frank Castle / Punisher", "Jack Duquesne / Swordsman", "Karen Page"],
+        leads: ["matt-murdock-daredevil", "wilson-fisk-kingpin", "karen-page"],
         meets: [
           ["matt-murdock-daredevil", "jessica-jones", "frank-castle-punisher", "wilson-fisk-kingpin"],
           ["jack-duquesne", "wilson-fisk-kingpin"],
@@ -1523,6 +1623,8 @@ const PHASES = [
           "Am Ende legt er die Papierblume eines geretteten Mädchens auf das Grab seiner Tochter, holt den Schlüssel zurück und nimmt den Punisher wieder auf.",
         ],
         characters: ["Frank Castle / Punisher", "Karen Page", "Curtis Hoyle", "Isabella Gnucci / Ma Gnucci"],
+        leads: ["frank-castle-punisher", "ma-gnucci"],
+        cameos: ["karen-page"],
         meets: [
           ["frank-castle-punisher", "curtis-hoyle"],
           ["frank-castle-punisher", "karen-page"],
@@ -1549,6 +1651,8 @@ const PHASES = [
           "Am Ende verlässt Jean die Stadt, Metzger ist untergetaucht, und Yelena ermittelt gegen Damage Control. Peter stellt sich Ned einfach als Peter vor, und beim alten Handschlag erkennt sein Freund ihn wieder. Zuletzt ortet die Spidey-Tracker-App Spider-Man irgendwo im Weltall.",
         ],
         characters: ["Peter Parker / Spider-Man", "Michelle Jones-Watson / MJ", "Jean Grey", "Ned Leeds", "Frank Castle / Punisher", "Bruce Banner / Hulk", "Yelena Belova", "Mac Gargan / Scorpion", "William Metzger / Bill", "Jean DeWolff", "E.V.", "May Parker", "Sara Grey", "Paul Rabin", "Lonnie Lincoln / Tombstone", "Fred Myers / Boomerang", "Anton Miguel Rodriguez / Tarantula", "Snow", "Ramrod", "Flash Thompson", "Die Hand"],
+        leads: ["peter-parker", "jean-grey", "michelle-jones-watson"],
+        cameos: ["may-parker"],
         meets: [
           ["peter-parker", "jean-dewolff"],
           ["peter-parker", "snow"],

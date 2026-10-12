@@ -156,6 +156,13 @@ Ein neues Zeichen braucht drei Zeilen: den Umriss in `EMBLEM_ART`, das
 Farbpaar in `EMBLEM_TINT` und den Eintrag, wer es trägt. Danach zeigt es
 sich ohne weiteres Zutun auf jeder Bühne, die dazu passt.
 
+Eine Ausnahme gibt es: Wer in `STAGE_BLACK` in `js/chars.js` steht, bekommt
+die Wand in Schwarz statt in seinem Farbton. Bisher ist das allein
+Dormammu, dessen Bild am Rand in Rauch ausläuft und vor einer hellen Wand
+einen schmutzigen Saum zeigt. Das Muster der Wand bleibt dabei zu sehen,
+nur ohne Farbe und abgedunkelt. Das Wappen hinter der Figur fällt weg,
+Leiste und Schrift behalten ihre Farbe (`.char-stage.black`).
+
 Die Maße der Bänder stehen als `--band-h` und `--band-skew` an
 `.char-stage`. Zweispaltig, also unter 1250 Pixeln, rückt die Filmspalte
 unter die Figur und ihre letzte Zeile an den Fuß der Bühne; damit sie
@@ -678,7 +685,8 @@ und startet das Vision-Studio unter
 gehen im Browser auf. Die Ausgabe des Studios steht eingerückt in
 derselben Konsole, Strg+C beendet beide. Die Ports lassen sich mit
 `--port` und `--studio-port` verschieben, `--kein-browser` lässt den
-Browser zu, `--ohne-studio` startet nur die Seite.
+Browser zu, `--ohne-studio` startet nur die Seite. `--netz` gibt die
+Fanpage zusätzlich im WLAN frei, siehe [Auf dem Handy](#auf-dem-handy).
 
 ### Änderungen ohne F5
 
@@ -706,6 +714,38 @@ ebenso –, löst deshalb nichts aus. Sonst holte die offene Seite bei jedem
 Abgleich reihenweise Bilder neu oder lud gleich ganz neu, und ein
 Neuladen der Charakterseite kostet gut eine Sekunde und die Stelle, an
 der man gerade war.
+
+### Auf dem Handy
+
+Von sich aus lauschen beide Server nur auf diesem Rechner. Mit `--netz`
+ist die Fanpage zusätzlich für jedes Gerät im selben WLAN zu sehen:
+
+```
+node start.js --netz
+```
+
+Beim Start steht dann eine weitere Adresse in der Konsole, etwa
+`http://192.168.178.28:4320`. Die tippt man einmal im Handy ein und legt
+sie sich auf den Startbildschirm. Änderungen kommen dort genauso von
+selbst an wie im Tab auf dem Rechner. In VS Code erledigt das die Aufgabe
+„Server: auch fürs Handy im WLAN“ über Strg+Umschalt+P und
+„Tasks: Run Task“.
+
+Drei Dinge sind dabei mit Absicht so:
+
+- `--netz` ist ein Schalter und nicht die Vorgabe. Ein Laptop hängt auch
+  in fremden WLANs, und dort soll nicht jeder im Raum die Seite aufrufen
+  können, nur weil der Server läuft.
+- Das Vision-Studio bleibt auf diesem Rechner. Es schreibt Bilder und
+  Dateien und gehört nicht ins Netz.
+- Ein fremdes Gerät bekommt nur die Seite selbst, also die HTML-Dateien
+  im Wurzelordner und den Inhalt von `css/`, `js/` und `assets/`. Alles
+  andere im Repo beantwortet der Server von außen mit 404.
+
+Die Adresse vergibt der Router. Ändert er sie, steht die neue beim
+nächsten Start in der Konsole. Der Rechner muss dafür an sein und der
+Server laufen, außerhalb des eigenen WLANs ist die Seite so nicht zu
+erreichen.
 
 ### In VS Code
 
@@ -876,7 +916,7 @@ ein Ordner pro Seite. Wer etwas zum Faserfeld sucht, schaut in
 | `styles/` | Das Stilblatt `studio.css`. |
 | `timeline/` | Was die Timeline angeht: `fibers-panel.js` ist die Tafel des Reiters **Fasern**, also des Feldes hinter der Seite und der Farben jeder Phase. |
 | `films/` | Was die Film- und Serienseite angeht: `wall-panel.js` ist die Tafel der Plakatwand, `covers/` holt die Titelbilder (`import-covers.py`) und beschneidet sie für die Wand (`build-wall-covers.py`). |
-| `characters/` | Was die Charakterseite angeht, und das ist das meiste. Oben liegt, was alle Bilder einer Figur bedient: `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst, `offen.json` merkt sich die von Hand als offen markierten Bilder. Darunter steht je ein Ordner für einen Reiter: `portraits/` mit `pending-portraits.js`, `fullsize/` mit `crop-fullsize.py`, `biography/` mit `fetch-facts.py`, `build-facts.py` und `bond-labels.json`, `emblems/` mit `cutout-emblems.py` und `build-emblems.py`. |
+| `characters/` | Was die Charakterseite angeht, und das ist das meiste. Oben liegt, was alle Bilder einer Figur bedient: `crop-image.py` schneidet zu, `remove-background.py` nimmt den Hintergrund weg, `facial-recognition/` baut Gesichter neu auf und holt sich seine Modelle mit `install-models.py` selbst, `offen.json` merkt sich die von Hand als offen markierten Bilder. Darunter steht je ein Ordner für einen Reiter: `portraits/` mit `pending-portraits.js`, `fullsize/` mit `crop-fullsize.py` und `soft-key.py`, das für Figuren ohne Silhouette die Deckung aus der Helligkeit eines Bildes vor Schwarz rechnet, `biography/` mit `fetch-facts.py`, `build-facts.py` und `bond-labels.json`, `emblems/` mit `cutout-emblems.py` und `build-emblems.py`. |
 | `vendor/` | Fremdes, hier nur Real-ESRGAN zum Hochrechnen. Rund 50 MB Binärdateien, die nicht im Repo liegen. |
 
 Dazu kommen die versteckten Ordner, die zur Sitzung und nicht zum Quelltext
@@ -1146,7 +1186,8 @@ liegt vorher eine Kopie in `vision-studio/.sicherung`.
 **Auftritte …** listet alle Filme und Serien mit einem Kontrollkästchen.
 Ein Haken schreibt die Besetzungsliste des Films sofort um. Beim
 Streichen fallen auch die Begegnungen (`meets`) mit dieser Figur in dem
-Film weg, sonst zeigten sie ins Leere. Wer den letzten Auftritt streicht,
+Film weg und ihr Eintrag bei den Rollengrößen (`leads`, `cameos`), sonst
+zeigten sie ins Leere. Wer den letzten Auftritt streicht,
 bekommt einen Hinweis: Ohne Auftritt steht die Figur in keiner Liste mehr
 und verschwindet aus der Datenbank.
 
@@ -1160,9 +1201,9 @@ Dateien liegen. In einem Zug gehen deshalb weg:
 
 | Was | Wo es steht |
 | --- | --- |
-| Auftritte und Begegnungen | `characters` und `meets` in `js/data.js` |
+| Auftritte, Rollengrößen und Begegnungen | `characters`, `leads`, `cameos` und `meets` in `js/data.js` |
 | Kurzbiografie und Besetzung | `BIOS` und `ACTORS` in `js/data.js` |
-| Alias, Ansichten, Fassungen, Körpergrößen, Stimme | `CHAR_ALIAS`, `CHAR_LOOKS`, `FULLSIZE_LOOKS`, `FULLSIZE_STANDARD`, `FULLSIZE_SCALE`, `FULLSIZE_FIT`, `CHAR_VOICE_ONLY` in `js/chars.js` |
+| Alias, Ansichten, Fassungen, Körpergrößen, Stimme, schwarze Bühne | `CHAR_ALIAS`, `CHAR_LOOKS`, `FULLSIZE_LOOKS`, `FULLSIZE_STANDARD`, `FULLSIZE_SCALE`, `FULLSIZE_FIT`, `CHAR_VOICE_ONLY`, `STAGE_BLACK` in `js/chars.js` |
 | Biografie | `PROFILES` in `js/profiles.js` |
 | Steckbrief und Beziehungen | `CHAR_FACTS`, `CHAR_FACTS_EXTRA`, `CHAR_BONDS` in `js/facts.js` |
 | Fähigkeiten | `CHAR_POWERS` in `js/powers.js` |
@@ -1476,6 +1517,11 @@ einer Figur stehen später gleich groß im Rahmen. Ohne den Rahmen füllt
 die Referenz wie eh und je den Ausschnitt, dann geht es um die Pose
 statt um die Größe.
 
+Die Referenz zeigt immer den gespeicherten Stand ihrer Fassung, also
+auch deren Position im Rahmen. Wer genau die Fassung speichert, die als
+Referenz über der Bühne liegt, sieht sie deshalb sofort mit dem neuen
+Bild, der neuen Größe und an der neuen Stelle.
+
 Im Rahmen zählt das Produkt aus beidem, und die Zeile darunter zeigt es.
 Sie warnt auch, wenn es aus dem Bereich 0.2 bis 1.22 läuft, denn mehr
 zeigt der Rahmen nicht.
@@ -1547,7 +1593,16 @@ Was der Server gefunden hat, steht beim Start in seiner Ausgabe.
   als „Realname / Heldenname“. Im Modal ist jeder Name anklickbar und
   öffnet eine Charakterübersicht mit Porträt, allen Rollen und sämtlichen
   Auftritten in Handlungsreihenfolge. Von dort führt jeder Auftritt zurück
-  ins Film-Modal. Dieselben Figuren stehen auf der Charakterseite im
+  ins Film-Modal. Das Modal teilt die Besetzung nach Rollengröße in
+  **Hauptrollen**, **Nebenrollen** und **Cameos** auf. Dafür stehen neben
+  `characters` zwei kurze Listen mit Slugs: `leads` nennt die Figuren, die
+  die Handlung tragen, samt Gegenspieler, und `cameos` die Kurzauftritte
+  bekannter Figuren, etwa in einer Abspannszene oder Rückblende. Wer in
+  keiner der beiden steht, ist eine Nebenrolle, eine neue Figur landet
+  also von selbst dort. Titel ohne beide Felder, das sind die noch nicht
+  gelaufenen, zeigen die Besetzung als eine Liste. Die Hover-Infobox
+  bleibt bei der einen Liste.
+  Dieselben Figuren stehen auf der Charakterseite im
   Raster, sie braucht keine eigene Pflege. Das Porträt liegt unter
   `assets/characters/portraits/<slug>.webp`, der Slug entsteht aus dem Namen
   (Kleinbuchstaben, Bindestriche). Dieselbe Datei steht auf der Bühne der

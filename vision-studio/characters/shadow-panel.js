@@ -58,7 +58,6 @@
   const $$ = (id) => document.getElementById(id);
   const rahmen = $$('schatten-rahmen');
   const netz = $$('schatten-griffe');
-  const wahl = $$('schatten-figur');
 
   const NS = 'http://www.w3.org/2000/svg';
   /* Der Rahmen ist fest so groß und wird verkleinert angezeigt, damit die
@@ -274,36 +273,21 @@
 
   /* ---------- Die Figurenwahl ----------
 
-     In der Liste steht, wer ein Ganzkörperbild hat: Ohne Bild gäbe es auf
-     der Bühne nichts, was einen Schatten wirft. Die Namen kommen aus dem
-     Bestand, den studio.js beim Start geholt hat. */
-  function baueWahl() {
-    /* S ist die lexikalische Bindung aus studio.js: eine Konstante der
-       obersten Ebene, also keine Eigenschaft von window. Angesprochen
-       wird sie deshalb beim Namen, abgesichert über typeof. */
-    const figuren = (typeof S !== 'undefined' && S.figuren) || [];
-    const mitBild = figuren.filter((f) => (f.ganzkoerper || [])
-      .some((g) => g.zustand === 'fertig'));
-    wahl.replaceChildren();
-    for (const f of mitBild) {
-      const o = document.createElement('option');
-      o.value = f.slug;
-      o.textContent = f.ueberschrift || f.real || f.slug;
-      wahl.append(o);
-    }
-    if (!mitBild.length) return '';
-    /* Wer im Studio gerade offen ist, steht auch hier vorn. Sonst die
-       erste Figur mit Bild. */
-    const jetzt = typeof S !== 'undefined' && S.figur;
-    const offen = jetzt && (jetzt.slug || jetzt);
-    const start = mitBild.some((f) => f.slug === offen) ? offen : mitBild[0].slug;
-    wahl.value = start;
-    return start;
-  }
+     Welche Figur auf der Bühne steht, wird links in der Figurenliste des
+     Studios gewählt, wie in den übrigen Bereichen der Charakterseite.
+     Dort steht im Schatten auch nur, wer einen werfen kann, siehe
+     wirftSchatten in studio.js. Jede Wahl kommt als „figurwahl“ hier an.
 
-  wahl.addEventListener('change', () => {
+     Gemeldet wird auch, was in den anderen Bereichen gewählt wird. Der
+     Rahmen bleibt dann, wie er ist: Geladen wird erst, wenn der Schatten
+     offen ist, und beim Öffnen meldet studio.js die Figur noch einmal.
+     Dieselbe Figur ein zweites Mal lädt ebenfalls nicht neu, das brächte
+     nur eine leere Bühne für die Dauer des Ladens. */
+  window.addEventListener('figurwahl', (e) => {
+    if (e.detail.bereich !== 'schatten') return;
+    if (e.detail.slug === rahmen.dataset.figur) return;
     mass = null;
-    starteVorschau(wahl.value);
+    starteVorschau(e.detail.slug);
   });
 
   /* ---------- Die Zeichnung ----------
@@ -641,13 +625,6 @@
   $$('schatten-sichern').addEventListener('click', sichere);
   $$('schatten-zurueck').addEventListener('click', stelleZurueck);
 
-  /* Gebaut wird erst, wenn der Bereich zum ersten Mal offen ist. Wer nur
-     Porträts schneidet, soll dafür weder die Werte holen noch die halbe
-     Charakterseite in einem Rahmen laufen lassen.
-
-     Danach wird bei jedem Öffnen neu gezeichnet: Die Bühne im Rahmen
-     steht zwar noch, ihre Lage im Fenster kann sich aber geändert
-     haben. */
   /* ---------- Der laufende Blick auf den Rahmen ----------
 
      Wo die Figur im Rahmen steht, kann sich jederzeit ändern, ohne dass
@@ -670,14 +647,18 @@
     takt = 0;
   }
 
+  /* Gebaut wird erst, wenn der Bereich zum ersten Mal offen ist. Wer nur
+     Porträts schneidet, soll dafür weder die Werte holen noch die halbe
+     Charakterseite in einem Rahmen laufen lassen. Die Figur dazu kommt
+     gleich hinterher, über „figurwahl“.
+
+     Danach wird bei jedem Öffnen neu gezeichnet: Die Bühne im Rahmen
+     steht zwar noch, ihre Lage im Fenster kann sich aber geändert
+     haben. */
   window.addEventListener('bereichwechsel', async (e) => {
     if (e.detail.bereich !== 'schatten') { haltTakt(); return; }
     starteTakt();
     await hole();
-    if (!rahmen.dataset.figur) {
-      const slug = baueWahl();
-      if (slug) starteVorschau(slug);
-    }
     passeZoom();
     zeichne();
   });

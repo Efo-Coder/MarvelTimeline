@@ -302,6 +302,46 @@
     return li;
   }
 
+  /* Die Besetzung eines Titels nach Rollengröße. movie.leads und
+     movie.cameos (js/data.js) nennen die Hauptrollen und die Cameos als
+     Slugs, alle übrigen Namen sind Nebenrollen. Innerhalb einer Gruppe
+     bleibt die Reihenfolge aus movie.characters stehen. Ohne die beiden
+     Felder gibt es nichts aufzuteilen, dann kommt eine einzige Gruppe
+     ohne Überschrift zurück. Das trifft die Titel, die noch nicht
+     gelaufen sind: Wer dort wie viel zu tun hat, weiß noch niemand. */
+  const CAST_TIERS = [
+    ['leads', 'Hauptrollen'],
+    ['supporting', 'Nebenrollen'],
+    ['cameos', 'Cameos'],
+  ];
+
+  function castGroups(movie) {
+    const names = movie.characters || [];
+    if (!movie.leads && !movie.cameos) return [{ label: '', names }];
+    const leads = new Set(movie.leads);
+    const cameos = new Set(movie.cameos);
+    const tiers = { leads: [], supporting: [], cameos: [] };
+    for (const name of names) {
+      const slug = charSlug(name);
+      tiers[leads.has(slug) ? 'leads' : cameos.has(slug) ? 'cameos' : 'supporting'].push(name);
+    }
+    return CAST_TIERS.map(([key, label]) => ({ label, names: tiers[key] }))
+      .filter(group => group.names.length);
+  }
+
+  /* Eine Gruppe im Modal: die Rollengröße als kleine Zeile mit der Zahl
+     dahinter, darunter die Namen. Die Gruppe ohne Überschrift ist die
+     ungeteilte Liste und steht da wie bisher. */
+  function castGroup(group, movie) {
+    const list = el('ul', 'tip-chars');
+    list.append(...group.names.map(name => charItem(name, movie)));
+    if (!group.label) return [list];
+    const head = el('p', 'tip-tier', group.label);
+    head.append(el('span', 'tip-tier-count', String(group.names.length)));
+    list.setAttribute('aria-label', group.label);
+    return [head, list];
+  }
+
   /* Hover-Infobox und Klick-Modal sind bis auf den Handlungsteil gleich
      aufgebaut, deshalb baut buildPanel() beide und fillPanel() befüllt
      sie aus einem Film. Der Unterschied: Die Hover-Box zeigt nur die
@@ -315,7 +355,9 @@
       title: el('p', 'tip-title'),
       date: el('p', 'tip-date'),
       body: detailed ? el('ul', 'tip-story') : el('p', 'tip-summary'),
-      chars: el('ul', 'tip-chars'),
+      /* Im Modal ein Rahmen für die Gruppen nach Rollengröße, in der
+         Hover-Box die Liste selbst. */
+      chars: detailed ? el('div', 'tip-cast') : el('ul', 'tip-chars'),
       streamLabel: el('p', 'tip-label', 'Streaminganbieter'),
       stream: el('div', 'tip-stream'),
     };
@@ -338,10 +380,16 @@
     } else {
       panel.body.textContent = movie.summary || '';
     }
-    /* Nur das Modal zeigt Porträts – die Hover-Box soll im Vorbeifahren
-       kompakt bleiben und behält die reinen Namens-Pillen. */
-    panel.chars.replaceChildren(...(movie.characters || [])
-      .map(name => (panel.detailed ? charItem(name, movie) : el('li', null, name))));
+    /* Nur das Modal zeigt Porträts und teilt nach Rollengröße auf – die
+       Hover-Box soll im Vorbeifahren kompakt bleiben und behält die
+       reinen Namens-Pillen in einer Liste. */
+    if (panel.detailed) {
+      panel.chars.replaceChildren(...castGroups(movie)
+        .flatMap(group => castGroup(group, movie)));
+    } else {
+      panel.chars.replaceChildren(...(movie.characters || [])
+        .map(name => el('li', null, name)));
+    }
     const services = (movie.streaming || (movie.upcoming ? [] : ['disney+']))
       .map(key => STREAMING[key]).filter(Boolean);
     panel.stream.replaceChildren(...services.map(s => {
